@@ -1,6 +1,6 @@
 PyPoE
 ========
-Collection of Python Tools for Path of Exile.
+Collection of Python Tools for [Path of Exile](https://www.pathofexile.com/).
 
 Parts:
 * Library toolkit for programmers (PyPoE/poe)
@@ -24,3 +24,17 @@ Quick Setup Guide
 * run ```python setup.py develop ```
 * For extra ui support,  run ```pip install -e .[ui]```
 * For extra development libs, run```pip install -e .[dev]```
+
+Credits
+--------
+* [Grinding Gear Games](http://www.grindinggear.com/) - they created many of the file formats and [Path of Exile](https://www.pathofexile.com/) obviously, so do not reuse their files anywhere without their permission and support them if you are able :)
+* [Chriskang](http://pathofexile.gamepedia.com/User:Chriskang) and the original [VisualGGPK2](http://pathofexile.gamepedia.com/User:Chriskang/VisualGGPK2)
+
+Credits - Libraries
+-------
+* [pyside](https://wiki.qt.io/Category:LanguageBindings::PySide) ([pypi](https://pypi.python.org/pypi/PySide))
+* [configobj](http://www.voidspace.org.uk/python/configobj.html) ([pypi](https://pypi.python.org/pypi/configobj))
+* colorama ([pypi](https://pypi.python.org/pypi/colorama))
+* sphinx ([pypi](https://pypi.python.org/pypi/sphinx))
+* pytest ([pypi](https://pypi.python.org/pypi/pytest))
+* PyOpenGL ([pypi](https://pypi.python.org/pypi/PyOpenGL))
