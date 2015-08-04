@@ -35,6 +35,9 @@ import re
 
 class BaseRecord(object):
     tag = None
+
+    __slots__ = ['_container', 'length', 'offset']
+
     def __init__(self, container, length, offset):
         self._container = container
         self.length = length
@@ -71,6 +74,9 @@ class GGPKRecord(BaseRecord):
     offsets
     """
     tag = 'GGPK'
+
+    __slots__ = BaseRecord.__slots__.copy() + ['offsets']
+
     def read(self, ggpkfile):
         # Should be 2, TODO?
         records = struct.unpack('<i', ggpkfile.read(4))[0]
@@ -84,7 +90,7 @@ class GGPKRecord(BaseRecord):
         # Should always be 2
         ggpkfile.write(struct.pack('<i', 2))
         for i in range(0, len(offsets)):
-            ggpkfile_write(struct.unpack('<q', offsets[i]))
+            ggpkfile.write(struct.unpack('<q', offsets[i]))
 
 class DirectoryRecordEntry(object):
     def __init__(self, hash, offset):
@@ -93,6 +99,9 @@ class DirectoryRecordEntry(object):
             
 class DirectoryRecord(MixinRecord, BaseRecord):
     tag = 'PDIR'
+
+    __slots__ = BaseRecord.__slots__.copy() + ['_name', '_name_length', 'entries_length', 'hash', 'entries']
+
     def __init__(self, *args, **kwargs):
         super(DirectoryRecord, self).__init__(*args, **kwargs)
         
@@ -134,6 +143,9 @@ class DirectoryRecord(MixinRecord, BaseRecord):
     
 class FileRecord(MixinRecord, BaseRecord):
     tag = 'FILE'
+
+    __slots__ = BaseRecord.__slots__.copy() + ['_name', '_name_length', 'hash', 'data_start', 'data_length']
+
     def __init__(self, *args, **kwargs):
         super(FileRecord, self).__init__(*args, **kwargs)
         
@@ -200,6 +212,8 @@ class FreeRecord(BaseRecord):
     next_free: 
     """
     tag = 'FREE'
+
+    __slots__ = BaseRecord.__slots__.copy() + ['next_free']
     
     def read(self, ggpkfile):
         self.next_free = struct.unpack('<q', ggpkfile.read(8))[0]
@@ -210,16 +224,19 @@ class FreeRecord(BaseRecord):
         super(FreeRecord, self).write(ggpkfile)
         ggpkfile.write(struct.pack('<q', self.next_free))
     
-records = (GGPKRecord, DirectoryRecord, FileRecord, FreeRecord)
+recordsc = (GGPKRecord, DirectoryRecord, FileRecord, FreeRecord)
 
 
 class DirectoryNode(object):
     """
     Node's record type is always DirectoryRecord
     """
-    def __init__(self, record, hash):
+
+    __slots__ = ['children', 'parent', 'record', 'hash']
+
+    def __init__(self, record, hash, parent):
         self.children = []
-        self.parent = None
+        self.parent = parent
         self.record = record
         self.hash = hash
 
@@ -374,17 +391,29 @@ class GGPKFile(object):
             return self.directory
         return self.directory[item]
     
-    def _read_record(self, ggpkfile, offset):
+    def _read_record(self, records, ggpkfile, offset):
         length = struct.unpack('<i', ggpkfile.read(4))[0]
         tag = ggpkfile.read(4).decode('ascii')
         
-        for recordcls in records:
+        '''for recordcls in recordsc:
             if recordcls.tag == tag:
                 break
-            
-        record = recordcls(self, length, offset)
+
+        record = recordcls(self, length, offset)'''
+
+        if tag == 'FILE':
+            record = FileRecord(self, length, offset)
+        elif tag == 'FREE':
+            record = FreeRecord(self, length, offset)
+        elif tag == 'PDIR':
+            record = DirectoryRecord(self, length, offset)
+        elif tag == 'GGPK':
+            record = GGPKRecord(self, length, offset)
+        else:
+            raise ValueError()
+
         record.read(ggpkfile)
-        return record
+        records[offset] = record
     
     def directory_build(self, parent=None):
         """
@@ -412,7 +441,7 @@ class GGPKFile(object):
                 raise TypeError('GGPKRecord does not contain a DirectoryRecord,\
                     got %s' % type(record))
 
-            root = DirectoryNode(record, None)
+            root = DirectoryNode(record, None, None)
 
             self.directory = root
         else:
@@ -422,16 +451,18 @@ class GGPKFile(object):
         for entry in root.record.entries:
             l.append((entry.offset, entry.hash, root))
 
-        while len(l):
-            offset, hash, parent = l.pop()
-            record = self.records[offset]
-            node = DirectoryNode(record, hash)
-            node.parent = parent
-            parent.children.append(node)
+        try:
+            while True:
+                offset, hash, parent = l.pop()
+                record = self.records[offset]
+                node = DirectoryNode(record, hash, parent)
+                parent.children.append(node)
 
-            if isinstance(record, DirectoryRecord):
-                for entry in record.entries:
-                    l.append((entry.offset, entry.hash, node))
+                if isinstance(record, DirectoryRecord):
+                    for entry in record.entries:
+                        l.append((entry.offset, entry.hash, node))
+        except IndexError:
+            pass
 
         return root
         
@@ -448,7 +479,7 @@ class GGPKFile(object):
             ggpkfile.seek(0, os.SEEK_SET)
             
             while(offset < size):
-                records[offset] = self._read_record(ggpkfile, offset)
+                self._read_record(records, ggpkfile, offset)
                 '''records.append({
                     'Offset': offset, 
                     'Record': self._read_record(ggpkfile),
@@ -458,16 +489,20 @@ class GGPKFile(object):
 
 
 if __name__ == '__main__':
-    ggpk = GGPKFile(r'C:\Games\PoE Beta\Content.ggpk')
-    ggpk.read()
-    ggpk.directory_build()
-    #ggpk.directory.directories[2].extract_to('N:/')
-    #rex = '\.(bmp|gif|jpg|png|pbm|pgm|ppm|tiff|xbm|xpm)$'
-    rex = re.compile('((d|D)ivination|(c|C)ard)')
-    result = ggpk.directory.search(rex, search_directories=False)
-    for item in result:
-        p = item.get_parent(make_list=True)
-        p = [n.name for n in p]
-        print('/'.join(p))
+    import cProfile
+    from line_profiler import LineProfiler
+    profiler = LineProfiler()
+    '''profiler.add_function(GGPKFile.read)
+    profiler.add_function(GGPKFile._read_record)
+    for record in recordsc:
+        profiler.add_function(record.read)'''
 
-    #for ggpk.directory.walk()
+    ggpk = GGPKFile(r'C:\Games\PoE Beta\Content.ggpk')
+    #ggpk.read()
+    #profiler.run("ggpk.read()")
+
+    #profiler.add_function(GGPKFile.directory_build)
+    #profiler.add_function(DirectoryNode.__init__)
+    #profiler.run("ggpk.directory_build()")
+    #ggpk.directory.directories[2].extract_to('N:/')
+    profiler.print_stats()

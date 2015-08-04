@@ -82,7 +82,7 @@ class ContextToolbar(QToolBar):
 
         p = self.parent()
         target_dir = QFileDialog.getExistingDirectory(self, self.tr('Select directory to extract to'))
-        p._write_log(self.tr('Extracting file(s)...'))
+        p._write_log(self.tr('Extracting file(s) to "%s"...' % target_dir))
         node = indexes[0].internalPointer()
         node.extract_to(target_dir)
         p._write_log(self.tr('Done.'))
