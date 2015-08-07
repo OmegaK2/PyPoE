@@ -21,7 +21,8 @@ See PyPoE/LICENSE
 
 TODO
 
-optimize
+optimize __hash__ - very slow atm; or remove, but it is needed for the diffs
+
 """
 
 # =============================================================================
@@ -66,10 +67,41 @@ regex_tokens = re.compile(r"""(?:^"(?P<header>.*)"$)
 class UnknownIdentifierWarning(UserWarning):
     pass
 
+class DuplicateIdentifierWarning(UserWarning):
+    pass
+
 class Translation(object):
+
+    __slots__ = ['languages', 'ids']
+
     def __init__(self):
         self.languages = []
         self.ids = []
+
+    def __eq__(self, other):
+        if not isinstance(other, Translation):
+            return False
+
+        if self.ids != other.ids:
+            return False
+
+        if self.languages != other.languages:
+            return False
+
+        return True
+
+    def __hash__(self):
+        return hash((tuple(self.languages), tuple(self.ids)))
+
+    def diff(self, other):
+        if not isinstance(other, Translation):
+            raise TypeError()
+
+        if self.ids != other.ids:
+            _diff_list(self.ids, other.ids, diff=False)
+
+        if self.languages != other.languages:
+            _diff_list(self.languages, other.languages)
 
     def get_language(self, language):
         etr = None
@@ -82,11 +114,39 @@ class Translation(object):
         return etr
 
 class TranslationLanguage(object):
+
+    __slots__ = ['parent', 'language', 'strings']
+
     def __init__(self, language, parent):
         parent.languages.append(self)
         self.parent = parent
         self.language = language
         self.strings = []
+
+    def __eq__(self, other):
+        if not isinstance(other, TranslationLanguage):
+            return False
+
+        if self.language != other.language:
+            return False
+
+        if self.strings != other.strings:
+            return False
+
+        return True
+
+    def __hash__(self):
+        return hash((self.language, tuple(self.strings)))
+
+    def diff(self, other):
+        if not isinstance(other, TranslationLanguage):
+            raise TypeError()
+
+        if self.language != other.language:
+            print('Self: %s, other: %s' % (self.language, other.language))
+
+        if self.strings != other.strings:
+            _diff_list(self.strings, other.strings)
 
     def get_string(self, values, indexes):
         valid_strings = []
@@ -96,7 +156,8 @@ class TranslationLanguage(object):
         test_values = []
         short_values = []
         for item in values:
-            if isinstance(item, Iterable):
+            # faster then isinstance(item, Iterable)
+            if hasattr(item, '__iter__'):
                 test_values.append(item[0])
                 if item[0] == item[1]:
                     short_values.append(item[0])
@@ -128,12 +189,49 @@ class TranslationLanguage(object):
 
 
 class TranslationString(object):
+
+    __slots__ = ['parent', 'quantifier', 'range', 'string']
+
     def __init__(self, parent):
         parent.strings.append(self)
         self.parent = parent
         self.quantifier = TranslationQuantifier()
         self.range = []
         self.string = ''
+
+    def __eq__(self, other):
+        if not isinstance(other, TranslationString):
+            return False
+
+        if self.quantifier != other.quantifier:
+            return False
+
+        if self.range != other.range:
+            return False
+
+        if self.string != other.string:
+            return False
+
+        return True
+
+    def __hash__(self):
+        return hash((self.string, tuple(self.range), self.quantifier))
+
+    def __repr__(self):
+        return 'TranslationString(string=%s, range=%s, quantifier=%s)' % (self.string, self.range, self.quantifier)
+
+    def diff(self, other):
+        if not isinstance(other, TranslationString):
+            raise TypeError()
+
+        if self.quantifier != other.quantifier:
+            self.quantifier.diff(other.quantifier)
+
+        if self.range != other.range:
+            _diff_list(self.range, other.range)
+
+        if self.string != other.string:
+            print('String mismatch: %s vs %s' % (self.string, other.string))
 
     def format_string(self, values, is_range):
         values = self.quantifier.handle(values, is_range)
@@ -154,6 +252,9 @@ class TranslationString(object):
         return rating
 
 class TranslationRange(object):
+
+    __slots__ = ['parent', 'min', 'max']
+
     def __init__(self, min, max, parent):
         parent.range.append(self)
         self.parent = parent
@@ -161,7 +262,22 @@ class TranslationRange(object):
         self.max = max
 
     def __repr__(self):
-        return 'TranslationRange(%s, %s, %s)' % (self.min, self.max, hex(id(self.parent)))
+        return 'TranslationRange(min=%s, max=%s, parent=%s)' % (self.min, self.max, hex(id(self.parent)))
+
+    def __eq__(self, other):
+        if not isinstance(other, TranslationRange):
+            return False
+
+        if self.min != other.min:
+            return False
+
+        if self.max != other.max:
+            return False
+
+        return True
+
+    def __hash__(self):
+        return hash((self.min, self.max))
 
     def in_range(self, value):
         # Any range is accepted
@@ -201,15 +317,50 @@ class TranslationQuantifier(object):
         'mod_value_to_item_class': lambda v: v,
     }
 
+    __slots__ = ['registered_handlers']
+
     def __init__(self):
-        for handler_name in self.handlers:
-            setattr(self, 'q_' + handler_name, [])
+        self.registered_handlers = {}
+
+    def __repr__(self):
+        return 'TranslationQuantifier(registered_handlers=%s)' % (self.registered_handlers, )
+
+    def __eq__(self, other):
+        if not isinstance(other, TranslationQuantifier):
+            return False
+
+        if self.registered_handlers != other.registered_handlers:
+            return False
+
+        return True
+
+    def __hash__(self):
+        #return hash((tuple(self.registered_handlers.keys()), tuple(self.registered_handlers.values())))
+        return hash(tuple(self.registered_handlers.keys()))
+
+    def diff(self, other):
+        if not isinstance(other, TranslationQuantifier):
+            raise TypeError
+
+        #if self.registered_handlers != other.registered_handlers:
+        _diff_dict(self.registered_handlers, other.registered_handlers)
+
+
+
+
+    def register(self, handler, index):
+        if handler in self.registered_handlers:
+            self.registered_handlers[handler].append(index)
+        elif handler in self.handlers:
+            self.registered_handlers[handler] = [index, ]
+        else:
+            warnings.warn('Warning, uncaptured! %s' % handler, UnknownIdentifierWarning)
 
     def handle(self, values, is_range):
         values = list(values)
-        for handler_name in self.handlers:
+        for handler_name in self.registered_handlers:
             f = self.handlers[handler_name]
-            for index in getattr(self, 'q_' + handler_name):
+            for index in self.registered_handlers[handler_name]:
                 index -= 1
                 if is_range[index]:
                     values[index] = (f(values[index][0]), f(values[index][1]))
@@ -223,6 +374,7 @@ class DescriptionFile(object):
 
     def __init__(self, file_path=None):
         self._translations = []
+        self._translations_hash = {}
 
         # Note str must be first since strings are iterable as well
         if isinstance(file_path, str):
@@ -307,18 +459,23 @@ class DescriptionFile(object):
                         quant = ts_match.group('quantifier').strip().split()
                         tmp = iter(range(0, len(quant)))
                         for i in tmp:
-                            quantifier_name = 'q_' + quant[i]
-                            # Adding q_ should avoid random clashes
-                            if hasattr(ts.quantifier, quantifier_name):
-                                getattr(ts.quantifier, quantifier_name).append(int(quant[i+1]))
-                                tmp.__next__()
-                            else:
-                                #print(ts_match.group(), ids)
-                                #raise Exception('Warning, uncaptured! %s' % quantifier_name[2:])
-                                warnings.warn('Warning, uncaptured! %s' % quantifier_name[2:], UnknownIdentifierWarning)
+                            ts.quantifier.register(quant[i], int(quant[i+1]))
+                            tmp.__next__()
 
                     offset = offset_next_lang
 
+
+                for translation_id in translation.ids:
+                    if translation_id in self._translations_hash:
+                        other = self._translations_hash[translation_id]
+                        # Identical, ignore
+                        if other == translation:
+                            continue
+                        '''print('Diff for id: %s' % translation_id)
+                        translation.diff(other)
+                        print('')'''
+                        warnings.warn('Duplicate id "%s", overriding.' % translation_id, DuplicateIdentifierWarning)
+                    self._translations_hash[translation_id] = translation
                 self._translations.append(translation)
             elif match.group('no_description'):
                 pass
@@ -334,6 +491,7 @@ class DescriptionFile(object):
         if not isinstance(other, DescriptionFile):
             TypeError('Wrong type: %s' % type(other))
         self._translations += other._translations
+        self._translations_hash.update(other._translation_hash)
 
     def get_translation(self, tags, values, lang='English'):
         # A single translation might have multiple references
@@ -342,21 +500,23 @@ class DescriptionFile(object):
         if isinstance(tags, str):
             tags = [tags, ]
 
-        trans_found = {}
+        trans_found = []
+        trans_found_indexes = []
         for tag in tags:
-            for tr in self._translations:
-                try:
-                    index = tr.ids.index(tag)
-                except ValueError:
-                    continue
-                if tr in trans_found:
-                    trans_found[tr].append(index)
-                    continue
-                trans_found[tr] = [index, ]
+            if tag not in self._translations_hash:
+                continue
+            tr = self._translations_hash[tag]
+            index = tr.ids.index(tag)
+            if tr in trans_found:
+                trans_found_indexes[trans_found.index(tr)].append(index)
+            else:
+                trans_found.append(tr)
+                trans_found_indexes.append([index, ])
 
         trans_lines = []
-        for tr in trans_found:
-            indexes = trans_found[tr]
+        for i in range(0, len(trans_found)):
+            tr = trans_found[i]
+            indexes = trans_found_indexes[i]
 
             tl = tr.get_language(lang)
             result = tl.get_string(values, indexes)
@@ -364,7 +524,63 @@ class DescriptionFile(object):
                 trans_lines += result
         return trans_lines
 
+
+# =============================================================================
+# Functions
+# =============================================================================
+
+def _diff_list(self, other, diff=True):
+    len_self = len(self)
+    len_other = len(other)
+    if len_self != len_other:
+        print('Different length, %s vs %s' % (len_self, len_other))
+
+        set_self = set(self)
+        set_other = set(other)
+        print('Extra items in self: %s' % set_self.difference(set_other))
+        print('Extra item in other: %s' % set_other.difference(set_self))
+        return
+
+    if diff:
+        for i in range(0, len_self):
+            self[i].diff(other[i])
+
+def _diff_dict(self, other):
+    key_self = set(tuple(self.keys()))
+    key_other = set(tuple(other.keys()))
+
+    kdiff_self = key_self.difference(key_other)
+    kdiff_other = key_other.difference(key_self)
+
+    if kdiff_self:
+        print('Extra keys in self:')
+        for key in kdiff_self:
+            print('Key "%s": Value "%s"' % (key, self[key]))
+
+    if kdiff_other:
+        print('Extra keys in other:')
+        for key in kdiff_other:
+            print('Key "%s": Value "%s"' % (key, other[key]))
+
+# =============================================================================
+# Misc
+# =============================================================================
+
 if __name__ == '__main__':
-    s = DescriptionFile('C:/Temp/stat_descriptions.txt')
-    t = s.get_translation(tags=['life_regeneration_rate_+%'], values=(-2, ))
+    from line_profiler import LineProfiler
+
+    profiler = LineProfiler()
+
+    #profiler.add_function(DescriptionFile.get_translation)
+    #profiler.add_function(DescriptionFile._read)
+    #profiler.add_function(Translation.get_language)
+    #profiler.add_function(TranslationQuantifier.handle)
+    #profiler.add_function(TranslationRange.in_range)
+    #profiler.add_function(TranslationLanguage.get_string)
+
+    profiler.run("s = DescriptionFile('C:/Temp/stat_descriptions.txt')")
+    profiler.run("for i in range(0, 100): t = s.get_translation(tags=['life_regeneration_rate_+%'], values=(-2, ))")
+
+    profiler.print_stats()
+
     print('Translation:', t)
