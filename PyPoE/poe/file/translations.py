@@ -21,7 +21,7 @@ See PyPoE/LICENSE
 
 TODO
 
-...
+rewrite the reader so it isn't line based anymore. Kinda sucks right now.
 """
 
 # =============================================================================
@@ -66,12 +66,22 @@ class TranslationLanguage(object):
         valid_strings = []
 
         # Support for ranges
-        if len(values) and isinstance(values[0], Iterable):
-            test_values = [value[0] for value in values]
-            is_range = True
-        else:
-            test_values = values
-            is_range = False
+        is_range = []
+        test_values = []
+        short_values = []
+        for item in values:
+            if isinstance(item, Iterable):
+                test_values.append(item[0])
+                if item[0] == item[1]:
+                    short_values.append(item[0])
+                    is_range.append(False)
+                else:
+                    short_values.append(item)
+                    is_range.append(True)
+            else:
+                test_values.append(item)
+                short_values.append(item)
+                is_range.append(False)
 
         temp = []
         for ts in self.strings:
@@ -86,7 +96,7 @@ class TranslationLanguage(object):
         temp.sort(key=lambda x: -x[0])
         ts = temp[0][1]
 
-        valid_strings.append(ts.format_string(values, is_range))
+        valid_strings.append(ts.format_string(short_values, is_range))
 
         return valid_strings
 
@@ -103,7 +113,7 @@ class TranslationString(object):
         values = self.quantifier.handle(values, is_range)
         s = self.string.replace('%%', '%')
         for i in range(0, len(values)):
-            if is_range:
+            if is_range[i]:
                 rpl = '(%s to %s)' % tuple(values[i])
             else:
                 rpl = str(values[i])
@@ -175,7 +185,7 @@ class TranslationQuantifier(object):
             f = self.handlers[handler_name]
             for index in getattr(self, 'q_' + handler_name):
                 index -= 1
-                if is_range:
+                if is_range[index]:
                     values[index] = (f(values[index][0]), f(values[index][1]))
                 else:
                     values[index] = f(values[index])
