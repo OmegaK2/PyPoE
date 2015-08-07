@@ -21,7 +21,7 @@ See PyPoE/LICENSE
 
 TODO
 
-rewrite the reader so it isn't line based anymore. Kinda sucks right now.
+optimize
 """
 
 # =============================================================================
@@ -32,6 +32,32 @@ rewrite the reader so it isn't line based anymore. Kinda sucks right now.
 import re
 import warnings
 from collections import Iterable
+
+# =============================================================================
+# Globals
+# =============================================================================
+
+__all__ = ['DescriptionFile']
+
+regex_translation_string = re.compile('''^
+[\s]*
+(?P<minmax>(?:[0-9\-\|#]+[ \t]+)+)
+"(?P<description>.*)"
+(?P<quantifier>(?:[ \t]+[\w]+[ \t]+[0-9]+)*)
+[ \t]*
+$'''.replace('\n', ''), re.UNICODE | re.MULTILINE)
+
+regex_ids = re.compile('([0-9])(?(1)(.*))', re.UNICODE)
+regex_id_strings = re.compile('([\S]+)', re.UNICODE)
+regex_strings = re.compile('(?:"(.+)")|([\S]+)+', re.UNICODE)
+regex_int = re.compile('[0-9]+', re.UNICODE)
+regex_isnumber = re.compile('^[0-9\-]+$', re.UNICODE)
+regex_lang = re.compile('^[\s]*lang "(?P<language>[\w ]+)"[\s]*$', re.UNICODE | re.MULTILINE)
+regex_tokens = re.compile(r"""(?:^"(?P<header>.*)"$)
+|(?:^include "(?P<include>.*)"$)
+|(?:^no_description (?P<no_description>[\w+%]*)$)
+|(?P<description>^description)
+""", re.UNICODE | re.MULTILINE)
 
 # =============================================================================
 # Classes
@@ -193,11 +219,7 @@ class TranslationQuantifier(object):
         return values
 
 class DescriptionFile(object):
-    regex_ids = re.compile('([0-9])(?(1)(.*))', re.UNICODE)
-    regex_id_strings = re.compile('([\S]+)', re.UNICODE)
-    regex_strings = re.compile('(?:"(.+)")|([\S]+)+', re.UNICODE)
-    regex_int = re.compile('[0-9]+', re.UNICODE)
-    regex_isnumber = re.compile('^[0-9\-]+$', re.UNICODE)
+
 
     def __init__(self, file_path=None):
         self._translations = []
@@ -209,102 +231,104 @@ class DescriptionFile(object):
             for path in file_path:
                 self.merge(DescriptionFile(path))
 
-    def _get_next(self, lines, regex):
-        """
-        Continues until the regex for the next line is non-empty
-
-        :param lines:
-        :param regex:
-        :return:
-        """
-        while True:
-            l = lines.__next__()
-            result = re.findall(regex, l)
-            if result:
-                return result
-
-    def _abc(self, translation, lines, lang=None):
-        tl = TranslationLanguage(lang, parent=translation)
-        tcount = int(self._get_next(lines, self.regex_int)[0])
-        for i in range(0, tcount):
-            data = self._get_next(lines, self.regex_strings)
-
-            ts = TranslationString(parent=tl)
-            ids_len = len(translation.ids)
-
-            for i in range(0, ids_len):
-                match = data[i][1]
-                if match == '#':
-                    TranslationRange(None, None, parent=ts)
-                elif re.match(self.regex_isnumber, match):
-                    value = int(match)
-                    TranslationRange(value, value, parent=ts)
-                elif '|' in match:
-                    minmax = match.split('|')
-                    min = int(minmax[0]) if minmax[0] != '#' else None
-                    max = int(minmax[1]) if minmax[1] != '#' else None
-                    TranslationRange(min, max, parent=ts)
-                else:
-                    raise Exception(match)
-
-            ts.string = data[ids_len][0]
-
-
-            tmp = iter(range(ids_len+1, len(data)))
-            for i in tmp:
-                match = data[i][1]
-                # Adding q_ should avoid random clashes
-                if hasattr(ts.quantifier, 'q_' + match):
-                    getattr(ts.quantifier, 'q_' + match).append(int(data[i+1][1]))
-                    tmp.__next__()
-                else:
-                    warnings.warn('Warning, uncaptured! %s' % match, UnknownIdentifierWarning)
-
     def _read(self, file_path):
         self._translations = []
         with open(file_path, encoding='utf-16_le') as descfile:
-            lines = iter(descfile.readlines())
-        try:
-            item = None
-            while True:
-                if item is None:
-                    item = lines.__next__()
-                if not item.startswith('description'):
-                    item = None
-                    continue
+            data = descfile.read()
 
+        # starts with bom?
+        offset = 0
+        match =regex_tokens.search(data, offset)
+        while match is not None:
+            offset = match.end()
+            match_next = regex_tokens.search(data, offset)
+            offset_max = match_next.start() if match_next else len(data)
+            if match.group('description'):
                 translation = Translation()
 
-                # N(Ids) ID1 ID2 ... IDn
-                ids = self._get_next(lines, self.regex_ids)
-                if not ids:
-                    warnings.warning('WTF')
-                id_count = int(ids[0][0])
-                ids = re.findall(self.regex_id_strings, ids[0][1])
+                # Parse the IDs for the translations
+                ids = regex_ids.search(data, offset, offset_max)
+                if ids is None:
+                    warnings.warning('Missing ID after description')
+
+                offset = ids.end()
+
+                ids = ids.group().split(maxsplit=1)
+                id_count = int(ids[0])
+                ids = re.findall(regex_id_strings, ids[1])
 
                 if len(ids) != id_count:
                     warnings.warn('Length mismatch for %s' % ids)
                 translation.ids = ids
-
-                # English Translation doesnt have a tag, so we can start this
-                # way lazily
+                t = True
                 language = 'English'
-                while True:
-                    self._abc(translation, lines, language)
+                while t:
+                    tl = TranslationLanguage(language, parent=translation)
+                    tcount = regex_int.search(data, offset, offset_max)
+                    offset = tcount.end()
+                    language_match = regex_lang.search(data, offset, offset_max)
 
-                    # Do not replace with _get_next or it will skip new lines
-                    # between descriptions and cause it to miss >_>
-                    result = self._get_next(lines, self.regex_strings)
-                    if len(result) != 2 or result[0][1] == 'description':
-                        # sets item to description
-                        item = result[0][1]
-                        break
+                    if language_match is None:
+                        offset_next_lang = offset_max
+                        t = False
+                    else:
+                        offset_next_lang = language_match.start()
+                        language = language_match.group('language')
 
-                    language = ''.join(result[1])
+                    for i in range(0, int(tcount.group())):
+                        ts_match = regex_translation_string.search(data, offset, offset_next_lang)
+                        if not ts_match:
+                            print(data[offset:offset_max])
+                            raise Exception()
+
+                        offset = ts_match.end()
+
+                        ts = TranslationString(parent=tl)
+
+                        # Min/Max limiter
+                        limiter = ts_match.group('minmax').strip().split()
+                        for i in range(0, id_count):
+                            matchstr = limiter[i]
+                            if matchstr == '#':
+                                TranslationRange(None, None, parent=ts)
+                            elif regex_isnumber.match(matchstr):
+                                value = int(matchstr)
+                                TranslationRange(value, value, parent=ts)
+                            elif '|' in matchstr:
+                                minmax = matchstr.split('|')
+                                min = int(minmax[0]) if minmax[0] != '#' else None
+                                max = int(minmax[1]) if minmax[1] != '#' else None
+                                TranslationRange(min, max, parent=ts)
+                            else:
+                                raise Exception(matchstr)
+
+                        ts.string = ts_match.group('description')
+
+                        quant = ts_match.group('quantifier').strip().split()
+                        tmp = iter(range(0, len(quant)))
+                        for i in tmp:
+                            quantifier_name = 'q_' + quant[i]
+                            # Adding q_ should avoid random clashes
+                            if hasattr(ts.quantifier, quantifier_name):
+                                getattr(ts.quantifier, quantifier_name).append(int(quant[i+1]))
+                                tmp.__next__()
+                            else:
+                                #print(ts_match.group(), ids)
+                                #raise Exception('Warning, uncaptured! %s' % quantifier_name[2:])
+                                warnings.warn('Warning, uncaptured! %s' % quantifier_name[2:], UnknownIdentifierWarning)
+
+                    offset = offset_next_lang
 
                 self._translations.append(translation)
-        except StopIteration:
-            pass
+            elif match.group('no_description'):
+                pass
+            elif match.group('include'):
+                pass
+            elif match.group('header'):
+                pass
+
+            # Done, search next
+            match = match_next
 
     def merge(self, other):
         if not isinstance(other, DescriptionFile):
@@ -343,4 +367,4 @@ class DescriptionFile(object):
 if __name__ == '__main__':
     s = DescriptionFile('C:/Temp/stat_descriptions.txt')
     t = s.get_translation(tags=['life_regeneration_rate_+%'], values=(-2, ))
-    print(t)
+    print('Translation:', t)
