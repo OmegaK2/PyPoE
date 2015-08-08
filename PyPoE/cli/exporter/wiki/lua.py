@@ -140,7 +140,7 @@ class QuestRewardReader(object):
         outdata = []
         for row in self.quest_rewards.table_data:
             # Find the corressponding keys
-            itemid = row['ItemKey']
+            itemid = row['BaseItemTypesKey']
             for item in self.base_item_types.table_data:
                 if item.rowid == itemid:
                     break
@@ -176,9 +176,9 @@ class QuestRewardReader(object):
             if itemcls != 'item':
                 data['type'] = itemcls
 
-            data['class'] = class_map[row['Class']]
+            data['class'] = class_map[row['CharactersKey']]
             # TODO: Unused atm, only for sorting
-            data['class_id'] = row['Class']
+            data['class_id'] = row['CharactersKey']
 
             r = row['Rarity']
             rarity = rarities[r] if r in rarities else '???'
@@ -227,7 +227,7 @@ class QuestRewardReader(object):
         for row in self.quest_vendor_rewards.table_data:
             # Find the corresponding keys
             quest_keys = []
-            quest_state_key = row['QuestStateKey']
+            quest_state_key = row['QuestState']
 
             for quest_state_row in self.quest_states.table_data:
                 if quest_state_key not in quest_state_row['QuestStates']:
@@ -252,7 +252,7 @@ class QuestRewardReader(object):
                 continue
 
             items = []
-            item_keys = row['ItemKeys']
+            item_keys = row['BaseItemTypesKeys']
             for item in self.base_item_types.table_data:
                 for key in item_keys:
                     if key == item.rowid:
@@ -264,7 +264,7 @@ class QuestRewardReader(object):
                 warnings.warn('Row %s: No corressponding items found for given item ids' % row.rowid)
                 continue
 
-            classes = row['ClassKeys']
+            classes = row['CharactersKeys']
 
             for npc in self.npcs.table_data:
                 if npc.rowid == row['NPCKey']:
