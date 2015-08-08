@@ -138,4 +138,8 @@ class MiscMenu(QMenu):
         self.parent().menuBar().addMenu(self)
 
     def _reload_specifications(self):
+        p = self.parent()
+
+        p._write_log(self.tr('Reloading default specification...'))
         dat.reload_default_spec()
+        p._write_log('Done.')

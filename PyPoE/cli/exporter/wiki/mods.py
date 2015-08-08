@@ -18,7 +18,7 @@ See PyPoE/LICENSE
 
 TODO
 
-...
+FIX the jewel generator
 """
 
 # =============================================================================
@@ -68,12 +68,12 @@ class ModParser(object):
 
     def __init__(self, path):
         data_path = os.path.join(path, 'Data')
-        desc_path = os.path.join(path, 'Metadata')
+        self.desc_path = os.path.join(path, 'Metadata')
 
         self.mods = DatFile('Mods.dat', read_file=data_path)
         self.stats = DatFile('Stats.dat', read_file=data_path)
 
-        self.stat_descriptions = DescriptionFile(desc_path + '/stat_descriptions.txt')
+        self.descriptions = DescriptionFile(self.desc_path + '/stat_descriptions.txt')
         #self.stat_descriptions = DescriptionFile(glob(desc_path + '/*_descriptions.txt'))
 
     def _get_stats(self, mod):
@@ -89,7 +89,7 @@ class ModParser(object):
             j = i + 1
             values = [mod['Stat%sMin' % j], mod['Stat%sMax' % j]]
 
-            t = self.stat_descriptions.get_translation(stat['Id'], (values, ))
+            t = self.descriptions.get_translation(stat['Id'], (values, ))
             if t:
                 effects.append('%s' % t[0])
             else:
@@ -98,6 +98,25 @@ class ModParser(object):
                 effects.append('%s %s' % (stat['Id'], values))
 
         return effects
+
+    def map(self):
+        #self.descriptions.merge(DescriptionFile(self.desc_path + '/map_stat_descriptions.txt'))
+
+        mods = []
+        for mod in self.mods.table_data:
+            if mod['Domain'] != 5:
+                continue
+            if mod['GenerationType'] not in (1, 2):
+                continue
+            mods.append(mod)
+
+        for mod in mods:
+            try:
+                effects = self._get_stats(mod)
+                print(mod['Name'], effects)
+            except:
+                pass
+
 
     def tempest(self):
         # Filter by tempest mods
@@ -127,7 +146,7 @@ class ModParser(object):
                 values = [mod['Stat%sMin' % j], mod['Stat%sMax' % j]]
                 if values[0] == values[1]:
                     values.pop(1)
-                t= self.stat_descriptions.get_translation([stat['Id'], ], values)
+                t= self.descriptions.get_translation([stat['Id'], ], values)
                 if t:
                     effects.append('* %s' % t[0])
                 else:
@@ -166,21 +185,21 @@ class ModParser(object):
                 'GroupWeight': [],
             }
             # Jewels: Strange...
-            lg = len(mod['SpawnItemIdData'])
+            lg = len(mod['SpawnWeight_TagsKeys'])
 
             #
-            for v in mod['SpawnItemIdData']:
+            for v in mod['SpawnWeight_TagsKeys']:
                 tset.add(v)
             if lg == 1:
-                listformat['0'] = mod['SpawnWeightData'][0]
+                listformat['0'] = mod['SpawnWeight_Values'][0]
             else:
                 # Last two entries are reversed for no apparent reason other then to confuse us
-                listformat[str(mod['SpawnItemIdData'][-1])] = str(mod['SpawnWeightData'][-2])
-                listformat[str(mod['SpawnItemIdData'][-2])] = str(mod['SpawnWeightData'][-1])
+                listformat[str(mod['SpawnWeight_TagsKeys'][-1])] = str(mod['SpawnWeight_Values'][-2])
+                listformat[str(mod['SpawnWeight_TagsKeys'][-2])] = str(mod['SpawnWeight_Values'][-1])
                 # These seem to be in order..
                 for i in range(0, lg-2):
-                    group_id = mod['SpawnItemIdData'][i]
-                    weight = mod['SpawnWeightData'][i]
+                    group_id = mod['SpawnWeight_TagsKeys'][i]
+                    weight = mod['SpawnWeight_Values'][i]
                     if group_id in (0, 29, 30, 31):
                         listformat[str(group_id)] = weight
                     else:
@@ -211,5 +230,5 @@ class ModParser(object):
 if __name__ == '__main__':
     path = 'C:/Temp'
     m = ModParser(path)
-    #m.jewel('suffix')
-    m.tempest()
+    m.jewel('suffix')
+    #m.map()
