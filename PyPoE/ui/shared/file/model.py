@@ -54,13 +54,13 @@ class DatModelShared(QAbstractTableModel):
 class DatTableModel(DatModelShared):
     def _sort_value(self, dat_value):
         if self._master.option_dereference_pointer.isChecked():
-            if dat_value.is_list:
-                return self._show_value(dat_value)
-            elif dat_value.is_pointer:
-                return dat_value.child.value
+            # DatValue instances now support comprehensions
+            return dat_value
         if dat_value.is_list:
             return dat_value.value[1]
-        return dat_value.value
+        elif dat_value.is_pointer:
+            return dat_value.value
+        return dat_value
 
     def rowCount(self, parent=QModelIndex()):
         return len(self._dat_file.table_data)

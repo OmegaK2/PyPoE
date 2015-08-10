@@ -70,120 +70,175 @@ def test_reload_default_spec():
     dat.reload_default_spec()
     assert id(old) != id(dat._default_spec), 'Specification wasn\'t reloaded'
 
+#
+# DatValue
+#
 # DatValue instances are created by the script, so they don't contain any
 # error checking upon creation themselves.
 # Hence we just test for them working correctly with correct information.
 
-def test_dat_value_basic():
-    """
-    Test for a basic DatValue instance.
-    """
-    dv = dat.DatValue(value=5, offset=0, size=4, parent=None, specification=None)
+class TestDatValue:
+    # Basic Data
+    dv_basic = dat.DatValue(value=5, offset=0, size=4, parent=None, specification=None)
+    dv_basic_int_negative = dat.DatValue(value=-42, offset=0, size=4, parent=None, specification=None)
+    dv_basic_int_positive = dat.DatValue(value=1337, offset=0, size=4, parent=None, specification=None)
+    dv_basic_str_test = dat.DatValue(value='test', offset=0, size=4*2+4, parent=None, specification=None)
+    dv_basic_str_a = dat.DatValue(value='a', offset=0, size=1*2+4, parent=None, specification=None)
+    dv_basic_str_z = dat.DatValue(value='z', offset=0, size=1*2+4, parent=None, specification=None)
 
-    # Function tests
-    assert dv.get_value() == 5, 'Value should be identical'
+    # Raw
+    dv_raw = dat.DatValue(value=b'\x00\x00', offset=0, size=2, parent=None, specification=None)
 
-    # Property Tests
-    with pytest.raises(TypeError):
-        dv.data_size
-        dv.data_start_offset
-        dv.data_end_offset
-    assert dv.is_data == False, 'Should not be data'
-    assert dv.has_data == False, 'Should not have any data'
-    assert dv.is_pointer == False, 'Should not be a pointer'
-    assert dv.is_list == False, 'Should not be a list'
-    assert dv.is_parsed == True, 'Should count as parsed value'
+    # Pointers
+    dv_pointer = dat.DatValue(value=8, offset=0, size=4, parent=None, specification=None)
+    dv_pointer.child = dat.DatValue(value='test', offset=8, size=4*2+4, parent=dv_pointer, specification=None)
 
-def test_dat_value_raw():
-    """
-    Test for a basic DatValue instance with raw data.
-    """
-    dv = dat.DatValue(value=b'\x00\x00', offset=0, size=2, parent=None, specification=None)
+    dv_pointer_int_negative = dat.DatValue(value=8, offset=0, size=4, parent=None, specification=None)
+    dv_pointer_int_negative.child = dat.DatValue(value=-42, offset=8, size=4, parent=dv_pointer_int_negative, specification=None)
 
-    # Function tests
-    assert dv.get_value() == b'\x00\x00', 'Value should be identical'
+    dv_pointer_int_positive = dat.DatValue(value=8, offset=0, size=4, parent=None, specification=None)
+    dv_pointer_int_positive.child = dat.DatValue(value=1337, offset=8, size=4, parent=dv_pointer_int_positive, specification=None)
 
-    # Property Tests
-    with pytest.raises(TypeError):
-        dv.data_size
-        dv.data_start_offset
-        dv.data_end_offset
-    assert dv.is_data == False, 'Should not be data'
-    assert dv.has_data == False, 'Should not have any data'
-    assert dv.is_pointer == False, 'Should not be a pointer'
-    assert dv.is_list == False, 'Should not be a list'
-    assert dv.is_parsed == False, 'Should count as unparsed/binary value'
-
-def test_dat_value_pointer():
-    """
-    Test for a pointer DatValue instance.
-    """
-    dv_data = dat.DatValue(value=5, offset=0, size=4, parent=None, specification=None)
-
-    dv = dat.DatValue(value=8, offset=0, size=4, parent=None, specification=None)
-    dv.child = dat.DatValue(value='test', offset=8, size=4*2+4, parent=dv, specification=None)
-
-    # Function tests
-    assert dv.get_value() == 'test', 'Value should be identical'
-
-    # Property Tests
-    assert dv.data_size == dv.child.size, 'Should return the size of the child'
-    assert dv.data_start_offset == dv.value, 'Should return the dv.value, i.e. the pointer'
-    assert dv.data_end_offset == dv.value + dv.data_size, 'Should be the pointer + sizeof(child)'
-    assert dv.is_data == False, 'Should not be data'
-    assert dv.has_data == True, 'Should have data'
-    assert dv.is_pointer == True, 'Should be a pointer'
-    assert dv.is_list == False, 'Should not be a list'
-    assert dv.is_parsed == True, 'Should count as parsed value'
-
-    # Child Property tests
-    with pytest.raises(TypeError):
-        dv.child.data_size
-        dv.child.data_start_offset
-        dv.child.data_end_offset
-    assert dv.child.is_data == True, 'Should be data'
-    assert dv.child.has_data == False, 'Should not have any data'
-    assert dv.child.is_pointer == False, 'Should not be a pointer'
-    assert dv.child.is_list == False, 'Should not be a list'
-    assert dv.child.is_parsed == True, 'Should count as parsed value'
-
-def test_dat_value_list():
-    """
-    Test for a list DatValue instance.
-    """
-    dv = dat.DatValue(value=(3, 8), offset=0, size=8, parent=None, specification=None)
-    dv.children = [
-        dat.DatValue(value=1, offset=8, size=4, parent=dv, specification=None),
-        dat.DatValue(value=2, offset=12, size=4, parent=dv, specification=None),
-        dat.DatValue(value=3, offset=16, size=4, parent=dv, specification=None),
+    # Lists
+    dv_list = dat.DatValue(value=(3, 8), offset=0, size=8, parent=None, specification=None)
+    dv_list.children = [
+        dat.DatValue(value=1, offset=8, size=4, parent=dv_list, specification=None),
+        dat.DatValue(value=2, offset=12, size=4, parent=dv_list, specification=None),
+        dat.DatValue(value=3, offset=16, size=4, parent=dv_list, specification=None),
     ]
 
-    # Function tests
-    assert dv.get_value() == [1,2,3], 'Value should be identical'
+    dv_list_reversed = dat.DatValue(value=(3, 8), offset=0, size=8, parent=None, specification=None)
+    dv_list_reversed.children = [
+        dat.DatValue(value=3, offset=8, size=4, parent=dv_list_reversed, specification=None),
+        dat.DatValue(value=2, offset=12, size=4, parent=dv_list_reversed, specification=None),
+        dat.DatValue(value=1, offset=16, size=4, parent=dv_list_reversed, specification=None),
+    ]
 
-    # Property Tests
-    assert dv.data_size == dv.value[0] * dv.children[0].size, 'Should return sizeof(self) + sizeof(child)'
-    assert dv.data_start_offset == dv.value[1], 'Should return the dv.value, i.e. the pointer'
-    assert dv.data_end_offset == dv.value[1] + dv.data_size, 'Should be the pointer + sizeof(child)'
-    assert dv.is_data == False, 'Should not be data'
-    assert dv.has_data == True, 'Should have data'
-    assert dv.is_pointer == False, 'Should not be a pointer'
-    assert dv.is_list == True, 'Should be a list'
-    assert dv.is_parsed == True, 'Should count as parsed value'
 
-    # Child property tests
-    for i in range(0, len(dv.children)):
-        child = dv.children[i]
+    def test_instance_basic(self):
+        """
+        Test for a basic DatValue instance.
+        """
+        # Function tests
+        assert self.dv_basic.get_value() == 5, 'Value should be identical'
+
+        # Property Tests
         with pytest.raises(TypeError):
-            child.data_size
-            child.data_start_offset
-            child.data_end_offset
-        assert child.is_data == True, 'Should be data'
-        assert child.has_data == False, 'Should not have any data'
-        assert child.is_pointer == False, 'Should not be a pointer'
-        assert child.is_list == False, 'Should not be a list'
-        assert child.is_parsed == True, 'Should count as parsed value'
+            self.dv_basic.data_size
+            self.dv_basic.data_start_offset
+            self.dv_basic.data_end_offset
+        assert self.dv_basic.is_data == False, 'Should not be data'
+        assert self.dv_basic.has_data == False, 'Should not have any data'
+        assert self.dv_basic.is_pointer == False, 'Should not be a pointer'
+        assert self.dv_basic.is_list == False, 'Should not be a list'
+        assert self.dv_basic.is_parsed == True, 'Should count as parsed value'
 
+    def test_instance_raw(self):
+        """
+        Test for a basic DatValue instance with raw data.
+        """
+        # Function tests
+        assert self.dv_raw.get_value() == b'\x00\x00', 'Value should be identical'
+
+        # Property Tests
+        with pytest.raises(TypeError):
+            self.dv_raw.data_size
+            self.dv_raw.data_start_offset
+            self.dv_raw.data_end_offset
+        assert self.dv_raw.is_data == False, 'Should not be data'
+        assert self.dv_raw.has_data == False, 'Should not have any data'
+        assert self.dv_raw.is_pointer == False, 'Should not be a pointer'
+        assert self.dv_raw.is_list == False, 'Should not be a list'
+        assert self.dv_raw.is_parsed == False, 'Should count as unparsed/binary value'
+
+    def test_instance_pointer(self):
+        """
+        Test for a pointer DatValue instance.
+        """
+        # Function tests
+        assert self.dv_pointer.get_value() == 'test', 'Value should be identical'
+
+        # Property Tests
+        assert self.dv_pointer.data_size == self.dv_pointer.child.size, 'Should return the size of the child'
+        assert self.dv_pointer.data_start_offset == self.dv_pointer.value, 'Should return the self.dv_pointer.value, i.e. the pointer'
+        assert self.dv_pointer.data_end_offset == self.dv_pointer.value + self.dv_pointer.data_size, 'Should be the pointer + sizeof(child)'
+        assert self.dv_pointer.is_data == False, 'Should not be data'
+        assert self.dv_pointer.has_data == True, 'Should have data'
+        assert self.dv_pointer.is_pointer == True, 'Should be a pointer'
+        assert self.dv_pointer.is_list == False, 'Should not be a list'
+        assert self.dv_pointer.is_parsed == True, 'Should count as parsed value'
+
+        # Child Property tests
+        with pytest.raises(TypeError):
+            self.dv_pointer.child.data_size
+            self.dv_pointer.child.data_start_offset
+            self.dv_pointer.child.data_end_offset
+        assert self.dv_pointer.child.is_data == True, 'Should be data'
+        assert self.dv_pointer.child.has_data == False, 'Should not have any data'
+        assert self.dv_pointer.child.is_pointer == False, 'Should not be a pointer'
+        assert self.dv_pointer.child.is_list == False, 'Should not be a list'
+        assert self.dv_pointer.child.is_parsed == True, 'Should count as parsed value'
+
+    def test_instance_list(self):
+        """
+        Test for a list DatValue instance.
+        """
+        # Function tests
+        assert self.dv_list.get_value() == [1,2,3], 'Value should be identical'
+
+        # Property Tests
+        assert self.dv_list.data_size == self.dv_list.value[0] * self.dv_list.children[0].size, 'Should return sizeof(self) + sizeof(child)'
+        assert self.dv_list.data_start_offset == self.dv_list.value[1], 'Should return the self.dv_list.value, i.e. the pointer'
+        assert self.dv_list.data_end_offset == self.dv_list.value[1] + self.dv_list.data_size, 'Should be the pointer + sizeof(child)'
+        assert self.dv_list.is_data == False, 'Should not be data'
+        assert self.dv_list.has_data == True, 'Should have data'
+        assert self.dv_list.is_pointer == False, 'Should not be a pointer'
+        assert self.dv_list.is_list == True, 'Should be a list'
+        assert self.dv_list.is_parsed == True, 'Should count as parsed value'
+
+        # Child property tests
+        for i in range(0, len(self.dv_list.children)):
+            child = self.dv_list.children[i]
+            with pytest.raises(TypeError):
+                child.data_size
+                child.data_start_offset
+                child.data_end_offset
+            assert child.is_data == True, 'Should be data'
+            assert child.has_data == False, 'Should not have any data'
+            assert child.is_pointer == False, 'Should not be a pointer'
+            assert child.is_list == False, 'Should not be a list'
+            assert child.is_parsed == True, 'Should count as parsed value'
+
+    # comprehensions are performed on the values, not the datvalues themselves
+
+    types = ['__lt__', '__le__', '__eq__', '__ne__', '__gt__', '__ge__']
+    cmp_tests = []
+
+    # Basic Tests
+    basic_tests = [
+        [dv_basic_int_negative, dv_basic],
+        [dv_basic, dv_basic_int_positive],
+        [dv_basic_int_negative, 0],
+        [dv_basic_int_negative, dv_pointer_int_positive],
+        [dv_basic_str_a, dv_basic_str_z],
+        [dv_basic_str_a, 'test'],
+        [dv_basic_str_a, dv_pointer],
+        [dv_list, dv_list_reversed],
+        [dv_list, [8]],
+    ]
+    for item in zip(types, [True, True, False, True, False, False]):
+        item = list(item)
+        for vars in basic_tests:
+            cmp_tests.append(item + vars)
+
+    @pytest.mark.parametrize('cmp_type,result,a,b', cmp_tests)
+    def test_cmp(self, cmp_type, result, a, b):
+        assert getattr(a, cmp_type)(b) == result, '%s for %s and %s should return %s' % (cmp_type, a, b, result)
+
+
+#
+# DatFile tests
+#
 
 def test_dat_file():
     # One row
