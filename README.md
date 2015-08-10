@@ -25,6 +25,11 @@ Quick Setup Guide
 * For extra ui support,  run ```pip install -e .[ui]```
 * For extra development libs, run```pip install -e .[dev]```
 
+Usage
+--------
+* UI: ```python scripts/pypoe_ui.py```
+* CLI: ```python scripts/pypoe_exporter.py``` (follow the instructions)
+
 Credits
 --------
 * [Grinding Gear Games](http://www.grindinggear.com/) - they created many of the file formats and [Path of Exile](https://www.pathofexile.com/) obviously, so do not reuse their files anywhere without their permission and support them if you are able :)
