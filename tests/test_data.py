@@ -42,7 +42,7 @@ from PyPoE.poe.file import dat, ggpk
 # =============================================================================
 
 def test_definitions():
-    path = PoEPath(version=PoEPath.VERSION_BETA).get_installation_paths()
+    path = PoEPath(version=PoEPath.VERSION_STABLE).get_installation_paths()
     if path:
         path = path[0]
     else:
@@ -66,7 +66,10 @@ def test_definitions():
         if name not in spec_set:
             continue
 
-        df = dat.DatFile(name)
+        opt = {
+            'use_dat_value': False,
+        }
+        df = dat.DatFile(name, options=opt)
         try:
             df.read_from_raw(node.record.extract())
         except Exception as e:

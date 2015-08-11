@@ -63,10 +63,10 @@ class DatTableModel(DatModelShared):
         return dat_value
 
     def rowCount(self, parent=QModelIndex()):
-        return len(self._dat_file.table_data)
+        return len(self._dat_file.reader.table_data)
 
     def columnCount(self, parent=QModelIndex()):
-        return len(self._dat_file.table_columns) + 1
+        return len(self._dat_file.reader.table_columns) + 1
 
     def data(self, index, role=Qt.DisplayRole):
         if not index.isValid():
@@ -76,9 +76,9 @@ class DatTableModel(DatModelShared):
 
         c = index.column()
         if c == 0:
-            return self._dat_file.table_data[index.row()].rowid
+            return self._dat_file.reader.table_data[index.row()].rowid
         else:
-            return self._dat_file.table_data[index.row()][c-1]
+            return self._dat_file.reader.table_data[index.row()][c-1]
 
     def headerData(self, section, orientation, role):
         if role != Qt.DisplayRole:
@@ -87,7 +87,7 @@ class DatTableModel(DatModelShared):
         if orientation == Qt.Horizontal:
             # Is a specification entry
             if section > 0:
-                s = self._dat_file.table_columns[section-1]
+                s = self._dat_file.reader.table_columns[section-1]
                 return s['display'].replace('\\n','\n') if s['display'] else s.name
             return self.tr('RowID')
         return None
@@ -98,7 +98,7 @@ class DatTableModel(DatModelShared):
             sorter = lambda x: self._sort_value(x[column-1])
         else:
             sorter = lambda x: x.rowid
-        self._dat_file.table_data.sort(key=sorter, reverse=reverse)
+        self._dat_file.reader.table_data.sort(key=sorter, reverse=reverse)
         self.dataChanged.emit(0,0)
 
 class DatDataModel(DatModelShared):
@@ -112,12 +112,12 @@ class DatDataModel(DatModelShared):
         ]
 
         self._data = []
-        if len(self._dat_file.data_parsed) > 1:
-            last = self._dat_file.data_parsed[0]
+        if len(self._dat_file.reader.data_parsed) > 1:
+            last = self._dat_file.reader.data_parsed[0]
             self._data.append(last)
             # Remove duplicates for easier reading
             # TODO add option this?
-            for item in self._dat_file.data_parsed[1:]:
+            for item in self._dat_file.reader.data_parsed[1:]:
                 #if (last.data_start_offset == item.data_start_offset and
                 #    last.data_end_offset == item.data_end_offset and
                 #    last.data_start_offset == last.data_end_offset):

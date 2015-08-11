@@ -89,22 +89,26 @@ item_format_order = [
 
 class QuestRewardReader(object):
     def __init__(self, data_path):
-        self.base_item_types = DatFile('BaseItemTypes.dat', read_file=data_path)
+        opt = {
+            'use_dat_value': False,
+        }
 
-        self.difficulties = DatFile('Difficulties.dat', read_file=data_path)
+        self.base_item_types = DatFile('BaseItemTypes.dat', read_file=data_path, options=opt).reader
+
+        self.difficulties = DatFile('Difficulties.dat', read_file=data_path, options=opt).reader
 
         #base_item_classes = DatFile('ItemClassesDisplay.dat')
         #base_item_classes.read_from_file(path)
 
-        self.npcs = DatFile('NPCs.dat', read_file=data_path)
+        self.npcs = DatFile('NPCs.dat', read_file=data_path, options=opt).reader
 
-        self.quests = DatFile('Quest.dat', read_file=data_path)
+        self.quests = DatFile('Quest.dat', read_file=data_path, options=opt).reader
 
-        self.quest_states = DatFile('QuestStates.dat', read_file=data_path)
+        self.quest_states = DatFile('QuestStates.dat', read_file=data_path, options=opt).reader
 
-        self.quest_rewards = DatFile('QuestRewards.dat', read_file=data_path)
+        self.quest_rewards = DatFile('QuestRewards.dat', read_file=data_path, options=opt).reader
 
-        self.quest_vendor_rewards = DatFile('QuestVendorRewards.dat', read_file=data_path)
+        self.quest_vendor_rewards = DatFile('QuestVendorRewards.dat', read_file=data_path, options=opt).reader
 
     def _write_lua(self, outfile, outdata, data_type):
         # Pre-sort

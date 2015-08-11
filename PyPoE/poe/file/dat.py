@@ -294,7 +294,6 @@ class DatValue(object):
             return self.value
 
 class RecordList(list):
-
     __slots__ = ['parent', 'rowid']
 
     def __init__(self, parent, rowid):
@@ -318,7 +317,7 @@ class RecordList(list):
 
     def __repr__(self):
         stuff = ["{%s: %s}" %  (self.parent.table_columns[i].name, self[i]) for i in range(0, len(self))]
-        return '[{%s}]' % ', '.join(stuff)
+        return '[%s]' % ', '.join(stuff)
     '''def find_all(self, key, value):
         row_index = self._get_column_index(key)
         values = []
@@ -330,16 +329,8 @@ class RecordList(list):
     def keys(self):
         return [s.name for s in self.parent.table_columns]
 
-class DatFile(object):
-    """
-    
-    Variables:
-    data_parsed:
-    table_data:
-    table_length:
-    table_record_length:
-    table_rows:
-    """
+
+class DatReader(object):
     _table_offset = 4
     _cast_table = {
         'bool': ['?', 1],
@@ -353,29 +344,61 @@ class DatFile(object):
         'ulong': ['Q', 8],
     }
     _data_magic_number = b'\xBB\xbb\xBB\xbb\xBB\xbb\xBB\xbb'
-    
-    def __init__(self, file_name, *args, read_file=None, read_raw=None):
-        self._file_name = file_name
+
+    def __init__(self, file_name, *args, use_dat_value=True, specification=None):
+        self.table_columns = []
         self.data_parsed = []
         self.data_offset = 0
         self.file_length = 0
-        self._file_raw = None
+        self._file_raw = b''
         self.table_data = []
-        self.table_columns = []
+
         self.table_length = 0
         self.table_record_length = 0
         self.table_rows = 0
 
-        if read_file and read_raw:
-            raise ValueError('Only one of read_file and read_raw should be set.')
+        #
+        self.use_dat_value = use_dat_value
 
-        if read_file:
-            self.read_from_file(read_file)
-        elif read_raw:
-            self.read_from_raw(read_raw)
+        # Process specification
+        if specification is None:
+            if file_name in _default_spec:
+                specification = _default_spec[file_name]
+        else:
+            specification = specification[file_name]
+        self.specification = specification
+
+        # Prepare the casts
+        self.table_columns = []
+        self.cast_size = 0
+        self.cast_spec = []
+        self.cast_row = []
+        if specification:
+            for key in specification['fields']:
+                k = specification['fields'][key]
+                self.table_columns.append(k)
+                casts = []
+                remainder = k['type']
+                while remainder:
+                    remainder, cast_type = self._get_cast_type(remainder)
+                    casts.append(cast_type)
+                self.cast_size += casts[0][1]
+
+                self.cast_spec.append((k, casts))
+                self.cast_row.append(casts[0][2])
+
+            self.cast_row = '<' + ''.join(self.cast_row)
+
+        else:
+            s = configobj.Section(None, 0, None)
+            s.name = 'Unparsed'
+            self.table_columns.append(s)
 
     def __iter__(self):
         return iter(self.table_data)
+
+    def __getitem__(self, item):
+        return self.table_data[item]
 
     def _get_cast_type(self, caststr):
         size = None
@@ -400,15 +423,16 @@ class DatFile(object):
         return remainder, (cast_type, size, cast)
 
     def _cast_from_spec(self, specification, casts, parent=None, offset=None, data=None, queue_data=None):
-        #cast = casts[0]
-
         if casts[0][0] == 1:
             ivalue = data[0] if data else struct.unpack('<' + casts[0][2], self._file_raw[offset:offset+casts[0][1]])[0]
-            
+
             if ivalue in (-0x1010102, 0xFEFEFEFE, -0x101010101010102, 0xFEFEFEFEFEFEFEFE):
                 ivalue = -1
-            
-            value = DatValue(ivalue, offset, casts[0][1], parent, specification)
+
+            if self.use_dat_value:
+                value = DatValue(ivalue, offset, casts[0][1], parent, specification)
+            else:
+                value = ivalue
         elif casts[0][0] == 2:
             # Beginning of the sequence, +1 to adjust for it
             offset_new = self._file_raw.find(b'\x00\x00\x00\x00', offset)
@@ -419,47 +443,57 @@ class DatFile(object):
                 # It's possible that a string ends in \x00 and the next starts
                 # with \x00
                 # UTF-16 must be at least a multiple of 2
-                while ((offset_new-offset) % 2):
+                while (offset_new-offset) % 2:
                     offset_new = self._file_raw.find(b'\x00\x00\x00\x00', offset_new+1)
                 string = self._file_raw[offset:offset_new].decode('utf-16')
             # Store the offset including the null terminator
-            value = DatValue(string, offset, offset_new-offset+4, parent, specification)
+            if self.use_dat_value:
+                value = DatValue(string, offset, offset_new-offset+4, parent, specification)
+            else:
+                value = string
 
         elif casts[0][0] >= 3:
             data = data if data else struct.unpack('<' + casts[0][2], self._file_raw[offset:offset+casts[0][1]])
             data_offset = data[-1] + self.data_offset
 
             # Instance..
-            value = DatValue(data[0] if casts[0][0] == 4 else data, offset, casts[0][1], parent, specification)
+            if self.use_dat_value:
+                value = DatValue(data[0] if casts[0][0] == 4 else data, offset, casts[0][1], parent, specification)
 
-            if casts[0][0] == 3:
-                value.children = []
-                for i in range(0, data[0]):
-                    '''if offset < self._data_offset_current:
-                        print(self._data_offset_current, offset)
-                        raise SpecificationError("Overlapping offset for cast %s:%s" % (parent.is_list, casts[0]))'''
-                    value.children.append(self._cast_from_spec(specification, casts[1:], value, data_offset+i*casts[1:][0][1]))
-            elif casts[0][0] == 4:
-                value.child = self._cast_from_spec(specification, casts[1:], value, data_offset)
-            self.data_parsed.append(value)
-            
+                if casts[0][0] == 3:
+                    value.children = []
+                    for i in range(0, data[0]):
+                        '''if offset < self._data_offset_current:
+                            print(self._data_offset_current, offset)
+                            raise SpecificationError("Overlapping offset for cast %s:%s" % (parent.is_list, casts[0]))'''
+                        value.children.append(self._cast_from_spec(specification, casts[1:], value, data_offset+i*casts[1:][0][1]))
+                elif casts[0][0] == 4:
+                    value.child = self._cast_from_spec(specification, casts[1:], value, data_offset)
+                self.data_parsed.append(value)
+            else:
+                if casts[0][0] == 3:
+                    value = []
+                    for i in range(0, data[0]):
+                        value.append(self._cast_from_spec(specification, casts[1:], value, data_offset+i*casts[1:][0][1]))
+                elif casts[0][0] == 4:
+                    value = self._cast_from_spec(specification, casts[1:], None, data_offset)
         # TODO
         #if parent:
         #    self._data_offset_current = offset
         #    self.data_parsed.append(value)
-            
+
         return value
 
     def _process_row(self, rowid):
         offset = 4 + rowid * self.table_record_length
         row_data = RecordList(self, rowid)
         data_raw = self._file_raw[offset:offset+self.table_record_length]
-        if self.tempspec:
+        if self.cast_spec:
             # Unpacking the entire row in one go will help breaking down the
             # function calls significantly
-            row_unpacked = struct.unpack(self.row_cast, data_raw)
+            row_unpacked = struct.unpack(self.cast_row, data_raw)
             i = 0
-            for spec, casts in self.tempspec:
+            for spec, casts in self.cast_spec:
                 if casts[0][0] == 3:
                     cell_data = row_unpacked[i:i+2]
                     i += 1
@@ -475,27 +509,7 @@ class DatFile(object):
 
         return row_data
 
-    def _process_return_data(self, data):
-        self.table_data.append(data[0])
-        self.data_parsed += data[1]
-
-    def print_data(self):
-        for row in d.table_data:
-            print('Row: %s' % row.rowid)
-            for k in row.keys():
-                v = row[k]
-                print('|- %s: %s' % (k, v))
-    
-    def read_from_file(self, path, specification=None):
-        file_path = os.path.join(path, self._file_name)
-        with open(file_path, mode='br') as datfile:
-            raw = datfile.read()
-        self.read_from_raw(raw, specification)
-    
-    def read_from_raw(self, raw, specification=None):
-        """
-        Specification as _ordered_ dictionary key:value format
-        """
+    def read(self, raw):
         # TODO consider memory issues for saving raw contents
         if isinstance(raw, bytes):
             self._file_raw = raw
@@ -505,19 +519,10 @@ class DatFile(object):
             raise TypeError('Raw must be bytes or BytesIO instance, got %s' %
                             type)
 
-        if specification is None:
-            if self._file_name in _default_spec:
-                specification = _default_spec[self._file_name]
-        else:
-            specification = specification[self._file_name]
-
-        self.specification = specification
-
         # Jump to last byte to get length
         self.file_length = len(self._file_raw)
 
         self.data_offset = self._file_raw.find(self._data_magic_number)
-        self._data_offset_current = 0
 
         if self.data_offset == -1:
             raise ValueError("Did not find data magic number")
@@ -532,50 +537,22 @@ class DatFile(object):
             #TODO
             raise ValueError("WTF")
 
+        if self.specification is None:
+            self.cast_size = self.table_record_length
+
+        if self.cast_size != self.table_record_length:
+            raise SpecificationError('Row size %s vs actual size %s' % (self.cast_size, self.table_record_length))
+
         self.table_data = []
-        self.table_columns = []
-
-        # Parse the specification in a way that's faster to access
-        self.tempspec = []
-        if specification:
-            self.row_cast = []
-            size = 0
-            for key in specification['fields']:
-                k = specification['fields'][key]
-                self.table_columns.append(k)
-                casts = []
-                remainder = k['type']
-                while remainder:
-                    remainder, cast_type = self._get_cast_type(remainder)
-                    casts.append(cast_type)
-                size += casts[0][1]
-
-                self.tempspec.append((k, casts))
-                self.row_cast.append(casts[0][2])
-
-            if size != self.table_record_length:
-                raise SpecificationError('Row size %s vs actual size %s' % (size, self.table_record_length))
-
-            self.row_cast = '<' + ''.join(self.row_cast)
-
-        else:
-            s = configobj.Section(None, 0, None)
-            s.name = 'Unparsed'
-            self.table_columns.append(s)
 
         # Prepare data section
         self.data_parsed = list()
 
+
         for i in range(0, self.table_rows):
             self.table_data.append(self._process_row(i))
 
-        '''with multiprocessing.Pool() as pool:
-            pool.map(self._process_row, range(0, self.table_rows))'''
-
-        '''try:
-            self.table_data.append(q_table_data.get())
-        except multiprocessing.queue.empty:
-            pass'''
+        return self.table_data
 
     def export_to_html(self, export_table=True, export_data=False):
         outstr = []
@@ -625,6 +602,45 @@ class DatFile(object):
             outstr.append('</table>')
         return ''.join(outstr)
 
+
+class DatFile(object):
+    """
+    """
+    
+    def __init__(self, file_name, *args, read_file=None, read_raw=None, options={}):
+        self._file_name = file_name
+        self.reader = None
+
+        if read_file and read_raw:
+            raise ValueError('Only one of read_file and read_raw should be set.')
+
+        if read_file:
+            self.read_from_file(read_file, **options)
+        elif read_raw:
+            self.read_from_raw(read_raw, **options)
+
+    def print_data(self):
+        for row in d.table_data:
+            print('Row: %s' % row.rowid)
+            for k in row.keys():
+                v = row[k]
+                print('|- %s: %s' % (k, v))
+    
+    def read_from_file(self, path, **options):
+        file_path = os.path.join(path, self._file_name)
+        with open(file_path, mode='br') as datfile:
+            raw = datfile.read()
+        return self.read_from_raw(raw, **options)
+    
+    def read_from_raw(self, raw, **options):
+        """
+        Specification as _ordered_ dictionary key:value format
+        """
+        self.reader = DatReader(self._file_name, **options)
+        self.reader.read(raw)
+
+        return self.reader
+
 def load_spec(path=None):
     if path is None:
         path = DAT_SPECIFICATION
@@ -647,14 +663,16 @@ if __name__ == '__main__':
     from line_profiler import LineProfiler
     profiler = LineProfiler()
     #profiler.add_function(DatValue.__init__)
-    profiler.add_function(DatFile._cast_from_spec)
-    profiler.add_function(DatFile._process_row)
-    #profiler.add_function(DatFile.read_from_file)
-    #profiler.add_function(DatFile.read_from_raw)
+    profiler.add_function(DatReader._cast_from_spec)
+    profiler.add_function(DatReader._process_row)
+    #profiler.add_function(DatReader.read_from_file)
+    #profiler.add_function(DatReader.read_from_raw)
 
 
-    #profiler.run("d = DatFile('GrantedEffects.dat', read_file='C:/Temp/Data')")
+    profiler.run("d = DatFile('GrantedEffects.dat', read_file='C:/Temp/Data')")
     #profiler.print_stats()
+
+    print(d.reader[0])
 
     #print(d.table_data)
     import cProfile

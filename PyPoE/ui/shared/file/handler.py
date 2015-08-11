@@ -180,19 +180,19 @@ class DatFrame(QFrame):
         self.row_label = QLabel(self.tr('Rows:'), parent=self.frame_info)
         self.frame_info_layout.addWidget(self.row_label, 0, 0)
 
-        self.row_value = QLabel(str(dat_file.table_rows), parent=self.frame_info)
+        self.row_value = QLabel(str(dat_file.reader.table_rows), parent=self.frame_info)
         self.frame_info_layout.addWidget(self.row_value, 0, 1)
 
         self.length_label = QLabel(self.tr('Record Length:'), parent=self.frame_info)
         self.frame_info_layout.addWidget(self.length_label, 0, 2)
 
-        self.length_value = QLabel(str(dat_file.table_record_length), parent=self.frame_info)
+        self.length_value = QLabel(str(dat_file.reader.table_record_length), parent=self.frame_info)
         self.frame_info_layout.addWidget(self.length_value, 0, 3)
 
         self.data_length_label = QLabel(self.tr('Data Length:'), parent=self.frame_info)
         self.frame_info_layout.addWidget(self.data_length_label, 0, 4)
 
-        self.data_length_value = QLabel(str(dat_file.file_length-dat_file.data_offset), parent=self.frame_info)
+        self.data_length_value = QLabel(str(dat_file.reader.file_length-dat_file.reader.data_offset), parent=self.frame_info)
         self.frame_info_layout.addWidget(self.data_length_value, 0, 5)
 
 
@@ -253,7 +253,8 @@ class DatFrame(QFrame):
 class DatDataHandler(FileDataHandler):
     def get_widget(self, file_data, file_name='', parent=None, *args, **kwargs):
         dat_file = DatFile(file_name)
-        dat_file.read_from_raw(file_data)
+        # We want dat values here
+        dat_file.read_from_raw(file_data, use_dat_value=True)
 
         frame = DatFrame(dat_file=dat_file, parent=parent)
 

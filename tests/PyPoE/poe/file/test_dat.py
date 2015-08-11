@@ -280,9 +280,9 @@ def test_dat_file():
     spec = test_load_spec()
 
     df = dat.DatFile('TestSpec.dat')
-    df.read_from_raw(temp_file, specification=spec)
+    dr = df.read_from_raw(temp_file, specification=spec)
 
-    for row in df.table_data:
+    for row in dr:
         for test in test_data:
             assert row[test[0]] == test[2], 'Value mismatch - int'
         assert row['ref|string'] == test_str, 'Value mismatch - string'

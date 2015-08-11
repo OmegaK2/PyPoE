@@ -44,17 +44,22 @@ class WarbandsParser(object):
         data_path = os.path.join(path, 'Data')
         desc_path = os.path.join(path, 'Metadata')
 
-        #self.mods = DatFile('Mods.dat', read_file=data_path)
-        #self.stats = DatFile('Stats.dat', read_file=data_path)
-        self.monster_packs = DatFile('MonsterPacks.dat', read_file=data_path)
-        self.monster_varieties = DatFile('MonsterVarieties.dat', read_file=data_path)
+        #self.mods = DatFile('Mods.dat', read_file=data_path).reader
+        #self.stats = DatFile('Stats.dat', read_file=data_path).reader
 
-        self.warbands_graph = DatFile('WarbandsGraph.dat', read_file=data_path)
-        self.warbands_map_graph = DatFile('WarbandsMapGraph.dat', read_file=data_path)
-        self.warbands_pack_monsters = DatFile('WarbandsPackMonsters.dat', read_file=data_path)
-        self.warbands_pack_numbers = DatFile('WarbandsPackNumbers.dat', read_file=data_path)
+        opt = {
+            'use_dat_value': False,
+        }
 
-        self.world_areas = DatFile('WorldAreas.dat', read_file=data_path)
+        self.monster_packs = DatFile('MonsterPacks.dat', read_file=data_path, options=opt).reader
+        self.monster_varieties = DatFile('MonsterVarieties.dat', read_file=data_path, options=opt).reader
+
+        self.warbands_graph = DatFile('WarbandsGraph.dat', read_file=data_path, options=opt).reader
+        self.warbands_map_graph = DatFile('WarbandsMapGraph.dat', read_file=data_path, options=opt).reader
+        self.warbands_pack_monsters = DatFile('WarbandsPackMonsters.dat', read_file=data_path, options=opt).reader
+        self.warbands_pack_numbers = DatFile('WarbandsPackNumbers.dat', read_file=data_path, options=opt).reader
+
+        self.world_areas = DatFile('WorldAreas.dat', read_file=data_path, options=opt).reader
 
     def warbands(self):
         for warband in self.warbands_pack_monsters.table_data:

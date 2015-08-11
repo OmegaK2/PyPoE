@@ -27,7 +27,6 @@ FIX the jewel generator
 
 # Python
 import os
-from glob import glob
 
 # Self
 from PyPoE.poe.file.dat import DatFile
@@ -36,6 +35,8 @@ from PyPoE.poe.file.translations import DescriptionFile
 # =============================================================================
 # Globals
 # =============================================================================
+
+__all__ = ['ModParser']
 
 # =============================================================================
 # Classes
@@ -70,8 +71,12 @@ class ModParser(object):
         data_path = os.path.join(path, 'Data')
         self.desc_path = os.path.join(path, 'Metadata')
 
-        self.mods = DatFile('Mods.dat', read_file=data_path)
-        self.stats = DatFile('Stats.dat', read_file=data_path)
+        opt = {
+            'use_dat_value': False,
+        }
+
+        self.mods = DatFile('Mods.dat', read_file=data_path, options=opt).reader
+        self.stats = DatFile('Stats.dat', read_file=data_path, options=opt).reader
 
         self.descriptions = DescriptionFile(self.desc_path + '/stat_descriptions.txt')
         #self.stat_descriptions = DescriptionFile(glob(desc_path + '/*_descriptions.txt'))
