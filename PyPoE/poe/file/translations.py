@@ -40,25 +40,33 @@ from collections import Iterable
 
 __all__ = ['DescriptionFile']
 
-regex_translation_string = re.compile('''^
-[\s]*
-(?P<minmax>(?:[0-9\-\|#]+[ \t]+)+)
-"(?P<description>.*)"
-(?P<quantifier>(?:[ \t]+[\w]+[ \t]+[0-9]+)*)
-[ \t]*
-$'''.replace('\n', ''), re.UNICODE | re.MULTILINE)
+regex_translation_string = re.compile(
+    r'^'
+    r'[\s]*'
+    r'(?P<minmax>(?:[0-9\-\|#]+[ \t]+)+)'
+    r'"(?P<description>.*)"'
+    r'(?P<quantifier>(?:[ \t]+[\w]+[ \t]+[0-9]+)*)'
+    r'[ \t]*'
+    r'$',
+    re.UNICODE | re.MULTILINE
+)
 
 regex_ids = re.compile('([0-9])(?(1)(.*))', re.UNICODE)
 regex_id_strings = re.compile('([\S]+)', re.UNICODE)
 regex_strings = re.compile('(?:"(.+)")|([\S]+)+', re.UNICODE)
 regex_int = re.compile('[0-9]+', re.UNICODE)
 regex_isnumber = re.compile('^[0-9\-]+$', re.UNICODE)
-regex_lang = re.compile('^[\s]*lang "(?P<language>[\w ]+)"[\s]*$', re.UNICODE | re.MULTILINE)
-regex_tokens = re.compile(r"""(?:^"(?P<header>.*)"$)
-|(?:^include "(?P<include>.*)"$)
-|(?:^no_description (?P<no_description>[\w+%]*)$)
-|(?P<description>^description)
-""", re.UNICODE | re.MULTILINE)
+regex_lang = re.compile(
+    r'^[\s]*lang "(?P<language>[\w ]+)"[\s]*$',
+    re.UNICODE | re.MULTILINE
+)
+regex_tokens = re.compile(
+    r'(?:^"(?P<header>.*)"$)'
+    r'|(?:^include "(?P<include>.*)"$)'
+    r'|(?:^no_description (?P<no_description>[\w+%]*)$)'
+    r'|(?P<description>^description)',
+    re.UNICODE | re.MULTILINE
+)
 
 # =============================================================================
 # Classes
@@ -370,8 +378,6 @@ class TranslationQuantifier(object):
         return values
 
 class DescriptionFile(object):
-
-
     def __init__(self, file_path=None):
         self._translations = []
         self._translations_hash = {}
@@ -522,6 +528,7 @@ class DescriptionFile(object):
             result = tl.get_string(values, indexes)
             if result:
                 trans_lines += result
+
         return trans_lines
 
 
@@ -578,8 +585,8 @@ if __name__ == '__main__':
     #profiler.add_function(TranslationRange.in_range)
     #profiler.add_function(TranslationLanguage.get_string)
 
-    profiler.run("s = DescriptionFile('C:/Temp/stat_descriptions.txt')")
-    profiler.run("for i in range(0, 100): t = s.get_translation(tags=['life_regeneration_rate_+%'], values=(-2, ))")
+    profiler.run("s = DescriptionFile('C:/Temp/MetaData/stat_descriptions.txt')")
+    profiler.run("for i in range(0, 100): t = s.get_translation(tags=['additional_chance_to_take_critical_strike_%'], values=((3, 5)))")
 
     profiler.print_stats()
 
