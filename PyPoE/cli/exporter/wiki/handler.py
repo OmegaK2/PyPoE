@@ -56,20 +56,20 @@ class ExporterHandler(BaseHandler):
             out_dir = pargs.outdir if pargs.outdir is not None else config.get_option('out_dir')
             temp_dir = config.get_option('temp_dir')
             data_dir = os.path.join(temp_dir, 'Data')
-            desc_dir = os.path.join(temp_dir, 'Data')
+            desc_dir = os.path.join(temp_dir, 'Metadata')
 
             for item in (out_dir, data_dir, desc_dir):
                 if not os.path.exists(item):
                     print(Fore.LIGHTREX_EX + 'Path "%s" does not exist' % item + Fore.RESET)
                     return -1
 
-            if handler:
-                return handler(pargs)
-            else:
-                print('Reading .dat files...')
-                parser = cls(data_path=data_dir, desc_path=desc_dir)
+            print('Reading .dat files...')
+            parser = cls(data_path=data_dir, desc_path=desc_dir)
 
-                print('Parsing...')
+            print('Parsing...')
+            if handler:
+                return handler(parser, pargs, out_dir=out_dir)
+            else:
                 out = func(parser, pargs, *args, **kwargs)
 
                 out_path = os.path.join(out_dir, out_file)
@@ -82,11 +82,11 @@ class ExporterHandler(BaseHandler):
                 return 0
         return wrapper
 
-    def add_default_parsers(self, parser, cls=None, func=None, outfile=None, handler=None):
+    def add_default_parsers(self, parser, cls, func=None, outfile=None, handler=None):
         if handler is None:
-            for item in (cls, func, outfile):
+            for item in (func, outfile):
                 if item is None:
-                    raise ValueError('Must set either handler or (cls, func, outfile)')
+                    raise ValueError('Must set either handler or (func, outfile)')
 
         parser.set_defaults(func=self.get_wrap(cls, func, outfile, handler))
         parser.add_argument(

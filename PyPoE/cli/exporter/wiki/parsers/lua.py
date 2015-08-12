@@ -37,7 +37,7 @@ from PyPoE.cli.exporter.wiki.handler import ExporterHandler
 # Globals
 # =============================================================================
 
-__all__= ['QuestRewardReader']
+__all__= ['QuestRewardReader', 'LuaHandler']
 
 class_map = {
     -1: "All",
@@ -139,7 +139,7 @@ class QuestRewardReader(object):
 
         self.quest_vendor_rewards = DatFile('QuestVendorRewards.dat', read_file=data_path, options=opt).reader
 
-    def _write_lua(self, outfile, outdata, data_type):
+    def _write_lua(self, outdata, data_type):
         # Pre-sort
         outdata.sort(key=lambda x: x['class_id'])
         outdata.sort(key=lambda x: x['reward'])
@@ -168,7 +168,7 @@ class QuestRewardReader(object):
 
         return out
 
-    def read_quest_rewards(self, outfile):
+    def read_quest_rewards(self, args):
         outdata = []
         for row in self.quest_rewards.table_data:
             # Find the corressponding keys
@@ -252,9 +252,9 @@ class QuestRewardReader(object):
 
             # Add to formatting list
             outdata.append(data)
-        return self._write_lua(outfile, outdata, 'quest')
+        return self._write_lua(outdata, 'quest')
 
-    def read_vendor_rewards(self, outfile):
+    def read_vendor_rewards(self, args):
         outdata = []
         for row in self.quest_vendor_rewards.table_data:
             # Find the corresponding keys
@@ -320,4 +320,4 @@ class QuestRewardReader(object):
                         data['npc'] = npc['Name']
 
                         outdata.append(data)
-        return self._write_lua(outfile, outdata, 'vendor')
+        return self._write_lua(outdata, 'vendor')

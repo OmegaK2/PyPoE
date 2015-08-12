@@ -1,6 +1,6 @@
 """
-Path     PyPoE/cli/exporter/wiki/warbands.py
-Name     Wiki mods exporter
+Path     PyPoE/cli/exporter/wiki/parser/warbands.py
+Name     Wiki warbands exporter
 Version  1.00.000
 Revision $Id$
 Author   [#OMEGA]- K2
@@ -33,17 +33,52 @@ from graphviz import Digraph
 
 # Self
 from PyPoE.poe.file.dat import DatFile
+from PyPoE.cli.exporter.wiki.handler import ExporterHandler
 
 # =============================================================================
 # Classes
 # =============================================================================
 
-class WarbandsParser(object):
-    def __init__(self, path):
-        self.out_path = path
-        data_path = os.path.join(path, 'Data')
-        desc_path = os.path.join(path, 'Metadata')
+class WarbandsHandler(ExporterHandler):
+    def __init__(self, sub_parser):
+        self.parser = sub_parser.add_parser('warbands', help='Warbands Exporter')
+        self.parser.set_defaults(func=lambda args: self.parser.print_help())
+        lua_sub = self.parser.add_subparsers()
 
+        parser = lua_sub.add_parser(
+            'warbands',
+            help='Extract warbands info.'
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=WarbandsParser,
+            func=WarbandsParser.warbands,
+            outfile='warbands.txt',
+        )
+
+        parser = lua_sub.add_parser(
+            'graph',
+            help='Extract the warbands movement graph.',
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=WarbandsParser,
+            handler=WarbandsParser.graph,
+        )
+        parser.add_argument(
+            'type',
+            choices=('map', 'normal'),
+            help='The type of the graph file to extract.',
+        )
+        parser.add_argument(
+            '-f', '--format',
+            choices=('svg', 'pdf', 'png'),
+            default='svg',
+            help='File format to use when extracting.',
+        )
+
+class WarbandsParser(object):
+    def __init__(self, data_path, desc_path):
         #self.mods = DatFile('Mods.dat', read_file=data_path).reader
         #self.stats = DatFile('Stats.dat', read_file=data_path).reader
 
@@ -61,49 +96,49 @@ class WarbandsParser(object):
 
         self.world_areas = DatFile('WorldAreas.dat', read_file=data_path, options=opt).reader
 
-    def warbands(self):
+    def warbands(self, parsed_args):
+        out = []
         for warband in self.warbands_pack_monsters.table_data:
-            print(warband['Name'])
-            print('')
+            out.append(warband['Name'])
+            out.append('\n\n')
 
             '''for key in warband['Data0']:
                 mob = self.monster_varieties.table_data[key]
-                print(mob['Name'])'''
+                out.append(mob['Name'])'''
 
 
             for i in range(0, 4):
                 ix = 4 - i
-                print('Tier %s: %s' % (ix, warband['Tier%sName' % ix ]))
+                out.append('Tier %s: %s\n' % (ix, warband['Tier%sName' % ix ]))
                 for key in warband['Data%s' % i]:
                     mob = self.monster_varieties.table_data[key]
-                    print(mob['Name'], mob.rowid)
-                    #print(mob)
+                    out.append("%s %s\n" % (mob['Name'], mob.rowid))
+                    #out.append(mob)
                     #break
-                print('')
+                out.append('\n')
 
-            print('-' * 80)
+            out.append('-' * 80 + '\n')
+        return out
 
-    def graph(self, type='normal'):
-        if type == 'map':
+    def graph(self, parsed_args, **kwargs):
+        if parsed_args.type == 'map':
             dat_file = self.warbands_map_graph
             out_file = 'warbands_map_graph.cv'
-        elif type == 'normal':
+        elif parsed_args.type == 'normal':
             dat_file = self.warbands_graph
             out_file = 'warbands_graph.cv'
-        else:
-            raise ValueError(type)
-        dot = Digraph(comment='Warbands Graph', engine='dot')
+
+        print ('Creating Graph...')
+        dot = Digraph(comment='Warbands Graph', engine='dot', format=parsed_args.format)
         for row in dat_file:
             world_area = self.world_areas.table_data[row['WorldAreasKey']]
             dot.node(str(row.rowid), world_area['Name'])
             for node in row['Connections']:
                 dot.edge(str(row.rowid), str(node))
-        dot.render(os.path.join(self.out_path, out_file), view=True)
 
+        out_path = os.path.join(kwargs['out_dir'], out_file)
+        print('Writing graph to "%s"...' % out_path)
+        dot.render(out_path, view=False)
 
-if __name__ == '__main__':
-    path = 'C:/Temp'
-    m = WarbandsParser(path)
-    #m.warbands()
-    m.graph('map')
-    #print(m.warbands_pack_numbers.export_to_html())
+        print ('Done.')
+        return 0

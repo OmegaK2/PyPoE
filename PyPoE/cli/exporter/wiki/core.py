@@ -59,19 +59,8 @@ class WikiHandler(BaseHandler):
         wiki_sub = self.parser.add_subparsers()
 
         LuaHandler(wiki_sub)
-
-        '''lua = wiki_sub.add_parser('lua')
-        lua.set_defaults(func=self.lua)
-        lua.add_argument(
-            '-d', '--outdir',
-            help='Destination directory. If empty, uses current directory.'
-        )
-        lua.add_argument(
-            '-t', '--type',
-            action='append',
-            choices=self.LUA_OPTIONS,
-            help='Which file to export.'
-        )'''
+        ModsHandler(wiki_sub)
+        WarbandsHandler(wiki_sub)
 
     def _ver_dist_changed(self, key, value, old_value):
         if value == old_value:

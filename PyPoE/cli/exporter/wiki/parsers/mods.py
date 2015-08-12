@@ -1,5 +1,5 @@
 """
-Path     PyPoE/cli/exporter/wiki/mods.py
+Path     PyPoE/cli/exporter/wiki/parser/mods.py
 Name     Wiki mods exporter
 Version  1.00.000
 Revision $Id$
@@ -18,29 +18,71 @@ See PyPoE/LICENSE
 
 TODO
 
-FIX the jewel generator
+FIX the jewel generator (corrupted)
 """
 
 # =============================================================================
 # Imports
 # =============================================================================
 
-# Python
-import os
-
 # Self
 from PyPoE.poe.file.dat import DatFile
 from PyPoE.poe.file.translations import DescriptionFile
+from PyPoE.cli.exporter.wiki.handler import ExporterHandler
 
 # =============================================================================
 # Globals
 # =============================================================================
 
-__all__ = ['ModParser']
+__all__ = ['ModParser', 'ModsHandler']
 
 # =============================================================================
 # Classes
 # =============================================================================
+
+class ModsHandler(ExporterHandler):
+    def __init__(self, sub_parser):
+        self.parser = sub_parser.add_parser('mods', help='Mods Exporter')
+        self.parser.set_defaults(func=lambda args: self.parser.print_help())
+        lua_sub = self.parser.add_subparsers()
+
+        parser = lua_sub.add_parser(
+            'map',
+            help='Extract map mods.'
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=ModParser,
+            func=ModParser.map,
+            outfile='map_mods.txt',
+        )
+
+        parser = lua_sub.add_parser(
+            'tempest',
+            help='Extract tempest stuff.',
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=ModParser,
+            func=ModParser.tempest,
+            outfile='tempest_mods.txt',
+        )
+
+        parser = lua_sub.add_parser(
+            'jewel',
+            help='Extract jewel mods.',
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=ModParser,
+            func=ModParser.jewel,
+            outfile='jewel_mods.txt',
+        )
+        parser.add_argument(
+            'type',
+            choices=('suffix', 'prefix', 'corrupted'),
+            help='The type of jewel mod to extract.',
+        )
 
 class ModParser(object):
     dropdata = {
@@ -65,11 +107,10 @@ class ModParser(object):
             #149: 'Melee?',
         }
     #affix_wiki = '|-\n| %(Name)s\n| %(Description)s\n| %(Group)s \n| %(0)s || %(29)s || %(30)s || %(31)s || %(5)s || %(9)s || %(10)s || %(11)s || %(12)s || %(13)s || %(14)s || %(15)s  || %(143)s || %(144)s || %(145)s || %(146)s || %(147)s || %(148)s'
-    affix_wiki = '|-\n| %(Name)s\n| %(Description)s\n| %(Group)s \n| %(0)s \n| %(29)s \n| %(30)s \n| %(31)s \n| %(GroupWeight)s'
+    affix_wiki = '|-\n| %(Name)s\n| %(Description)s\n| %(Group)s \n| %(0)s \n| %(29)s \n| %(30)s \n| %(31)s \n| %(GroupWeight)s\n'
 
-    def __init__(self, path):
-        data_path = os.path.join(path, 'Data')
-        self.desc_path = os.path.join(path, 'Metadata')
+    def __init__(self, data_path, desc_path):
+        self.desc_path = desc_path
 
         opt = {
             'use_dat_value': False,
@@ -104,7 +145,7 @@ class ModParser(object):
 
         return effects
 
-    def map(self):
+    def map(self, parsed_args):
         #self.descriptions.merge(DescriptionFile(self.desc_path + '/map_stat_descriptions.txt'))
 
         mods = []
@@ -115,22 +156,25 @@ class ModParser(object):
                 continue
             mods.append(mod)
 
+        # Output processing
+        out = []
+
         for mod in mods:
             try:
                 effects = self._get_stats(mod)
-                print(mod['Name'], effects)
+                out.append("%s %s\n" % (mod['Name'], effects))
             except:
                 pass
 
+        return out
 
-    def tempest(self):
+    def tempest(self, parsed_args):
         # Filter by tempest mods
 
         mods = []
         for mod in self.mods.table_data:
             if mod['CorrectGroup'] == 'MapEclipse':
                 mods.append(mod)
-
 
         data = []
         for mod in mods:
@@ -163,24 +207,26 @@ class ModParser(object):
 
         data.sort(key=lambda info: info['name'])
 
+        out = []
         for info in data:
-            print('|-')
-            print('| %s' % info['name'])
-            print('| %s' % info['effect'])
-            print('| ')
+            out.append('|-\n')
+            out.append('| %s\n' % info['name'])
+            out.append('| %s\n' % info['effect'])
+            out.append('| \n')
+        return out
 
-    def jewel(self, type='prefix'):
+    def jewel(self, parsed_args):
         data = []
         tset = set()
         for mod in self.mods.table_data:
             # not a jewel
             if mod['Domain'] != 11:
                 continue
-            if type == 'prefix' and mod['GenerationType'] != 1:
+            if parsed_args.type == 'prefix' and mod['GenerationType'] != 1:
                 continue
-            elif type == 'suffix' and mod['GenerationType'] != 2:
+            elif parsed_args.type == 'suffix' and mod['GenerationType'] != 2:
                 continue
-            elif type == 'corrupted' and mod['GenerationType'] != 5:
+            elif parsed_args.type == 'corrupted' and mod['GenerationType'] != 5:
                 continue
 
             listformat = {
@@ -228,12 +274,7 @@ class ModParser(object):
         # Sort my name
         data.sort(key=lambda lf: lf['Name'])
 
-        #print(tset)
+        out = []
         for lf in data:
-            print(self.affix_wiki % lf)
-
-if __name__ == '__main__':
-    path = 'C:/Temp'
-    m = ModParser(path)
-    m.jewel('corrupted')
-    #m.map()
+            out.append(self.affix_wiki % lf)
+        return out
