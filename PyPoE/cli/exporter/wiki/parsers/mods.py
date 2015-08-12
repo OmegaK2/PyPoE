@@ -129,21 +129,19 @@ class ModParser(object):
             if key != -1:
                 stats.append(self.stats.table_data[key])
 
-        effects = []
+        ids = []
+        values = []
         for i in range(0, len(stats)):
             stat = stats[i]
             j = i + 1
-            values = [mod['Stat%sMin' % j], mod['Stat%sMax' % j]]
+            values.append([mod['Stat%sMin' % j], mod['Stat%sMax' % j]])
+            ids.append(stat['Id'])
 
-            t = self.descriptions.get_translation(stat['Id'], (values, ))
-            if t:
-                effects.append('%s' % t[0])
-            else:
-                if len(values) == 1:
-                    values = values[0]
-                effects.append('%s %s' % (stat['Id'], values))
+        effects = self.descriptions.get_translation(ids, values)
+        if not effects:
+            print(ids, values)
 
-        return effects
+        return self.descriptions.get_translation(ids, values)
 
     def map(self, parsed_args):
         #self.descriptions.merge(DescriptionFile(self.desc_path + '/map_stat_descriptions.txt'))
