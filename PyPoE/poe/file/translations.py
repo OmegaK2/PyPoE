@@ -499,7 +499,7 @@ class DescriptionFile(object):
         self._translations += other._translations
         self._translations_hash.update(other._translation_hash)
 
-    def get_translation(self, tags, values, lang='English'):
+    def get_translation(self, tags, values, lang='English', return_indexes=False):
         # A single translation might have multiple references
         # I.e. the case for always_freeze
 
@@ -520,8 +520,7 @@ class DescriptionFile(object):
                 trans_found_indexes.append([index, ])
 
         trans_lines = []
-        for i in range(0, len(trans_found)):
-            tr = trans_found[i]
+        for i, tr in enumerate(trans_found):
             indexes = trans_found_indexes[i]
 
             tl = tr.get_language(lang)
@@ -529,6 +528,8 @@ class DescriptionFile(object):
             if result:
                 trans_lines += result
 
+        if return_indexes:
+            return trans_lines, trans_found_indexes
         return trans_lines
 
 
