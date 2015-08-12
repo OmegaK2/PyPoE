@@ -25,6 +25,7 @@ TODO
 # Imports
 # =============================================================================
 
+from .gems import GemsHandler
 from .lua import LuaHandler
 from .mods import ModsHandler
 from .warbands import WarbandsHandler

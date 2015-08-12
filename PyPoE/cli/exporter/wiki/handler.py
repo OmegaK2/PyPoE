@@ -72,6 +72,9 @@ class ExporterHandler(BaseHandler):
             else:
                 out = func(parser, pargs, *args, **kwargs)
 
+                if pargs.print:
+                    print(''.join(out))
+
                 out_path = os.path.join(out_dir, out_file)
                 print('Writing data to "%s"...' % out_path)
                 with open(out_path, 'w') as f:
@@ -92,4 +95,9 @@ class ExporterHandler(BaseHandler):
         parser.add_argument(
             '-d', '--outdir',
             help='Destination directory. If empty, uses current directory.'
+        )
+        parser.add_argument(
+            '-p', '--print',
+            help='Print the contents in addition to writing',
+            action='store_true',
         )

@@ -58,6 +58,7 @@ class WikiHandler(BaseHandler):
         self.parser.set_defaults(func=lambda args: self.parser.print_help())
         wiki_sub = self.parser.add_subparsers()
 
+        GemsHandler(wiki_sub)
         LuaHandler(wiki_sub)
         ModsHandler(wiki_sub)
         WarbandsHandler(wiki_sub)

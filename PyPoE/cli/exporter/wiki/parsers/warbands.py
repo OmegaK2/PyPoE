@@ -138,7 +138,7 @@ class WarbandsParser(object):
 
         out_path = os.path.join(kwargs['out_dir'], out_file)
         print('Writing graph to "%s"...' % out_path)
-        dot.render(out_path, view=False)
+        dot.render(out_path, view=parsed_args.print)
 
         print ('Done.')
         return 0
