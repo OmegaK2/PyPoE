@@ -31,6 +31,7 @@ import warnings
 
 # Self
 from PyPoE.poe.file.dat import DatFile
+from PyPoE.cli.exporter.wiki.handler import ExporterHandler
 
 # =============================================================================
 # Globals
@@ -87,8 +88,36 @@ item_format_order = [
 # Classes
 # =============================================================================
 
+class LuaHandler(ExporterHandler):
+    def __init__(self, sub_parser):
+        self.parser = sub_parser.add_parser('lua', help='Lua Exporter')
+        self.parser.set_defaults(func=lambda args: self.parser.print_help())
+        lua_sub = self.parser.add_subparsers()
+
+        parser = lua_sub.add_parser(
+            'quest_rewards',
+            help='Extract quest rewards into lua.'
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=QuestRewardReader,
+            func=QuestRewardReader.read_quest_rewards,
+            outfile='quest_rewards.lua',
+        )
+
+        parser = lua_sub.add_parser(
+            'vendor_rewards',
+            help='Extract quest vendor rewards into lua.',
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=QuestRewardReader,
+            func=QuestRewardReader.read_vendor_rewards,
+            outfile='vendor_rewards.lua',
+        )
+
 class QuestRewardReader(object):
-    def __init__(self, data_path):
+    def __init__(self, data_path, desc_path):
         opt = {
             'use_dat_value': False,
         }
@@ -137,8 +166,7 @@ class QuestRewardReader(object):
         out.append('\n')
         out.append('return rewards')
 
-        with open(outfile, 'w', encoding='utf-8') as f:
-            f.writelines(out)
+        return out
 
     def read_quest_rewards(self, outfile):
         outdata = []
@@ -224,7 +252,7 @@ class QuestRewardReader(object):
 
             # Add to formatting list
             outdata.append(data)
-        self._write_lua(outfile, outdata, 'quest')
+        return self._write_lua(outfile, outdata, 'quest')
 
     def read_vendor_rewards(self, outfile):
         outdata = []
@@ -292,4 +320,4 @@ class QuestRewardReader(object):
                         data['npc'] = npc['Name']
 
                         outdata.append(data)
-        self._write_lua(outfile, outdata, 'vendor')
+        return self._write_lua(outfile, outdata, 'vendor')

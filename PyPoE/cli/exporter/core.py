@@ -33,7 +33,7 @@ from . import config
 from PyPoE.poe.path import PoEPath
 from PyPoE.cli.core import run
 from PyPoE.cli.handler import ConfigHandler, SetupHandler
-from PyPoE.cli.exporter.wiki import WikiHandler
+from PyPoE.cli.exporter.wiki.core import WikiHandler
 
 # =============================================================================
 # class

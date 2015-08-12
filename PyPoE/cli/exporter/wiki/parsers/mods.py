@@ -235,5 +235,5 @@ class ModParser(object):
 if __name__ == '__main__':
     path = 'C:/Temp'
     m = ModParser(path)
-    m.jewel('suffix')
+    m.jewel('corrupted')
     #m.map()
