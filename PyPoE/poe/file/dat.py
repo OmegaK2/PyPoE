@@ -50,6 +50,7 @@ import struct
 import os
 import multiprocessing
 from io import BytesIO
+from collections import OrderedDict
 
 # 3rd Party Library
 import configobj
@@ -57,12 +58,20 @@ import validate
 
 # Library imports
 from PyPoE import DAT_SPECIFICATION, DAT_SPECIFICATION_CONFIGSPEC
+from PyPoE.poe.file.ggpk import GGPKFile
 
 # =============================================================================
 # Globals
 # =============================================================================
 
 _default_spec = None
+
+
+__all__ = [
+    'SpecificationError',
+    'DatFile', 'RelationalReader',
+    'load_spec', 'reload_default_spec',
+]
 
 # =============================================================================
 # Classes
@@ -301,22 +310,16 @@ class RecordList(list):
         self.parent = parent
         self.rowid = rowid
 
-    def _get_column_index(self, item):
-        for i in range(0, len(self.parent.table_columns)):
-             if self.parent.table_columns[i].name == item:
-                return i
-        raise IndexError("%s not in list" % item)
-
     def __getitem__(self, item):
         if isinstance(item, str):
-            value = list.__getitem__(self, self._get_column_index(item))
+            value = list.__getitem__(self, self.parent.table_columns[item]['index'])
             if isinstance(value, DatValue):
                 value = value.get_value()
             return value
         return list.__getitem__(self, item)
 
     def __repr__(self):
-        stuff = ["{%s: %s}" %  (self.parent.table_columns[i].name, self[i]) for i in range(0, len(self))]
+        stuff = ["{%s: %s}" % (k, self[i]) for i, k in enumerate(self.parent.table_columns)]
         return '[%s]' % ', '.join(stuff)
     '''def find_all(self, key, value):
         row_index = self._get_column_index(key)
@@ -327,7 +330,7 @@ class RecordList(list):
         return values'''
 
     def keys(self):
-        return [s.name for s in self.parent.table_columns]
+        return self.parent.table_columns.keys()
 
 
 class DatReader(object):
@@ -346,7 +349,6 @@ class DatReader(object):
     _data_magic_number = b'\xBB\xbb\xBB\xbb\xBB\xbb\xBB\xbb'
 
     def __init__(self, file_name, *args, use_dat_value=True, specification=None):
-        self.table_columns = []
         self.data_parsed = []
         self.data_offset = 0
         self.file_length = 0
@@ -369,14 +371,14 @@ class DatReader(object):
         self.specification = specification
 
         # Prepare the casts
-        self.table_columns = []
+        self.table_columns = OrderedDict()
         self.cast_size = 0
         self.cast_spec = []
         self.cast_row = []
         if specification:
-            for key in specification['fields']:
+            for i, key in enumerate(specification['fields']):
                 k = specification['fields'][key]
-                self.table_columns.append(k)
+                self.table_columns[key] = {'index': i, 'section': k}
                 casts = []
                 remainder = k['type']
                 while remainder:
@@ -399,6 +401,13 @@ class DatReader(object):
 
     def __getitem__(self, item):
         return self.table_data[item]
+
+    def row_iter(self):
+        return iter(self.table_data)
+
+    def column_iter(self):
+        for ci, column in enumerate(self.table_columns):
+            yield [item[ci] for item in self]
 
     def _get_cast_type(self, caststr):
         size = None
@@ -548,7 +557,6 @@ class DatReader(object):
         # Prepare data section
         self.data_parsed = list()
 
-
         for i in range(0, self.table_rows):
             self.table_data.append(self._process_row(i))
 
@@ -641,6 +649,87 @@ class DatFile(object):
 
         return self.reader
 
+
+class RelationalReader(object):
+    """
+    Read dat files in a relational matter.
+    """
+    def __init__(self, path_or_ggpk=None, files=None, options=None):
+        """
+
+        :param path_or_ggpk:
+        :param files:
+        :return:
+        """
+        if isinstance(path_or_ggpk, GGPKFile):
+            if not self._ggpk.is_parsed:
+                raise ValueError('The GGPK File must be parsed.')
+            self._ggpk = path_or_ggpk
+            self._path = None
+        elif isinstance(path_or_ggpk, str):
+            self._ggpk = None
+            self._path = path_or_ggpk
+        else:
+            raise TypeError('path_or_ggpk must be a valid directory or GGPKFile')
+
+        self.options = {} if options is None else options
+
+        self.files = {}
+        for file_name in files:
+            self.read_file(file_name)
+
+    def _dv_set_value(self, value, other):
+        if value.is_pointer:
+            self._dv_set_value(value.child, other)
+        elif value.is_list:
+            [self._dv_set_value(dv) for dv in self.children]
+        else:
+            value.value = other[value.value]
+
+        return value
+
+    def _set_value(self, value, other):
+        if isinstance(value, list):
+            return [self._set_value(item) for item in value]
+        else:
+            return other[value]
+
+    def read_file(self, name):
+        if name in self.files:
+            return self.files[name]
+
+        if self._ggpk:
+            df = DatFile(
+                name,
+                read_raw=self._ggpk.directory['Data'][name].node.extract(),
+                options=self.options
+            )
+        elif self._path:
+            df = DatFile(name, read_file=self._path, options=self.options)
+
+        self.files[name] = df
+
+        vf = self._dv_set_value if df.reader.use_dat_value else self._set_value
+
+        for key in df.reader.specification['fields']:
+            other = df.reader.specification['fields'][key]['key']
+            if not other:
+                continue
+            df_other = self.read_file(other)
+
+            index = df.reader.table_columns[key]['index']
+
+            for i, row in enumerate(df.reader.table_data):
+                df.reader.table_data[i][index] = vf(row[index], df_other.reader)
+
+        return df
+
+
+
+# =============================================================================
+# Functions
+# =============================================================================
+
 def load_spec(path=None):
     if path is None:
         path = DAT_SPECIFICATION
@@ -663,16 +752,22 @@ if __name__ == '__main__':
     from line_profiler import LineProfiler
     profiler = LineProfiler()
     #profiler.add_function(DatValue.__init__)
-    profiler.add_function(DatReader._cast_from_spec)
-    profiler.add_function(DatReader._process_row)
+    #profiler.add_function(DatReader._cast_from_spec)
+    #profiler.add_function(DatReader._process_row)
     #profiler.add_function(DatReader.read_from_file)
     #profiler.add_function(DatReader.read_from_raw)
+    #profiler.add_function(RecordList.__getitem__)
 
-
-    profiler.run("d = DatFile('GrantedEffects.dat', read_file='C:/Temp/Data')")
+    #profiler.run("d = DatFile('GrantedEffects.dat', read_file='C:/Temp/Data')")
+    #profiler.run("for i in range(0, 10000): d.reader[0]['Data1']")
     #profiler.print_stats()
 
-    print(d.reader[0])
+    #print(d.reader[0])
+
+    #for a in d.reader.column_iter(): print(a)
+
+    r = RelationalReader(path_or_ggpk='C:/Temp/Data', files=['BaseItemTypes.dat'], options={'use_dat_value': True})
+    print(r.files['BaseItemTypes.dat'].reader[0]['ItemVisualIdentityKey'])
 
     #print(d.table_data)
     import cProfile

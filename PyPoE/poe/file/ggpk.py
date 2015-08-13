@@ -326,8 +326,6 @@ class DirectoryNode(object):
             node = node.parent
             n -= 1
 
-
-
         return nodes if make_list else node
 
     def walk(self, function):
@@ -390,7 +388,20 @@ class GGPKFile(object):
         if item == 'ROOT':
             return self.directory
         return self.directory[item]
-    
+
+    #
+    # Properties
+    #
+
+    def _is_parsed(self):
+        return self.directory is None
+
+    is_parsed = property(fget=_is_parsed)
+
+    #
+    # Private
+    #
+
     def _read_record(self, records, ggpkfile, offset):
         length = struct.unpack('<i', ggpkfile.read(4))[0]
         tag = ggpkfile.read(4).decode('ascii')

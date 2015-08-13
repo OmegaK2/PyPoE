@@ -52,6 +52,11 @@ class DatModelShared(QAbstractTableModel):
         self._master = master
 
 class DatTableModel(DatModelShared):
+    def __init__(self, *args, **kwargs):
+        DatModelShared.__init__(self, *args, **kwargs)
+
+        self._columns = [item['section'] for item in self._dat_file.reader.table_columns.values()]
+
     def _sort_value(self, dat_value):
         if self._master.option_dereference_pointer.isChecked():
             # DatValue instances now support comprehensions
@@ -87,7 +92,7 @@ class DatTableModel(DatModelShared):
         if orientation == Qt.Horizontal:
             # Is a specification entry
             if section > 0:
-                s = self._dat_file.reader.table_columns[section-1]
+                s = self._columns[section-1]
                 return s['display'].replace('\\n','\n') if s['display'] else s.name
             return self.tr('RowID')
         return None
