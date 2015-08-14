@@ -103,6 +103,8 @@ class GemsParser(object):
         )
 
         self.descriptions = DescriptionFile(self.desc_path + '/stat_descriptions.txt')
+        self.descriptions.merge(DescriptionFile(self.desc_path + '/gem_stat_descriptions.txt'))
+        self.descriptions.merge(DescriptionFile(self.desc_path + '/skill_stat_descriptions.txt'))
         #self.stat_descriptions = DescriptionFile(glob(desc_path + '/*_descriptions.txt'))
 
     def _get_gem(self, name):
@@ -153,6 +155,41 @@ class GemsParser(object):
 
         attributes = {'Str': 0, 'Dex': 0, 'Int': 0}
 
+        stat_ids = []
+        for stat in gepl[0]['StatsKeys']:
+            stat_ids.append(stat['Id'])
+
+        # Find fixed stats
+        fixed = []
+        for i in range(1, len(stat_ids)+1):
+            is_static = True
+            val = gepl[0]['Stat%sValue' % i]
+            for row in gepl[1:]:
+                if val != row['Stat%sValue' % i]:
+                    is_static = False
+                    break
+
+            if is_static:
+                fixed.append(stat_ids[i-1])
+
+        for item in fixed:
+            stat_ids.remove(item)
+
+        trans_result = self.descriptions.get_translation(stat_ids, (42, )*len(stat_ids), full_result=True)
+
+        has_damage = False
+        has_multiplier = False
+        damage = gepl[0]['DamageMultiplier']
+        multiplier = gepl[0]['ManaMultiplier']
+        for row in gepl[1:]:
+            if damage != row['DamageMultiplier']:
+                has_damage = True
+            if multiplier != row['ManaMultiplier']:
+                has_multiplier = True
+
+        #
+        # Out put processing
+        #
         out = []
         out.append('{{GemLevelTable\n')
         for attr in tuple(attributes.keys()):
@@ -167,14 +204,21 @@ class GemsParser(object):
             offset += 1
             out.append('| c%s = Mana<br>Cost\n' % offset)
 
-        stat_ids = []
-        for stat in gepl[0]['StatsKeys']:
-            stat_ids.append(stat['Id'])
+        if has_multiplier:
+            offset += 1
+            out.append('| c%s = Mana<br>Multiplier\n' % offset)
 
-        desc, translation_indexes = self.descriptions.get_translation(stat_ids, (42, )*len(stat_ids), return_indexes=True)
-        for index, item in enumerate(desc):
+        if has_damage:
+            offset += 1
+            out.append('| c%s = Damage<br>Multiplier\n' % offset)
+
+        for index, item in enumerate(trans_result.lines):
             line = '| c%s=%s\n' % (index+offset+1, item)
             out.append(line.replace('42', 'x'))
+        offset += len(trans_result.lines)
+        for index, item in enumerate(trans_result.missing):
+            line = '| c%s=%s\n' % (index+offset+1, item)
+            out.append(line)
 
         out.append('}}\n')
 
@@ -191,19 +235,27 @@ class GemsParser(object):
             out.append('| %s\n' % row['LevelRequirement'])
 
             for attr in attributes:
-
-                out.append('| %i\n' % gem_stat_requirement(
-                    level=row['LevelRequirement'],
-                    gtype=gtype,
-                    multi=attributes[attr],
-                ))
-                #out.append('| ?\n')
+                # Gems with base level > 21 are not possible
+                if row['Level'] > 21:
+                    out.append('| \n')
+                else:
+                    out.append('| %i\n' % gem_stat_requirement(
+                        level=row['LevelRequirement'],
+                        gtype=gtype,
+                        multi=attributes[attr],
+                    ))
 
             if row['ManaCost']:
                 out.append('| %s\n' % row['ManaCost'])
 
+            if has_multiplier:
+                out.append('| %i%%\n' % (row['ManaMultiplier']))
+
+            if has_damage:
+                out.append('| %.2f%%\n' % (row['DamageMultiplier']/100))
+
             stat_offset = 1
-            for indexes in translation_indexes:
+            for indexes in trans_result.indexes:
                 icount = len(indexes)
                 values = []
                 for j in range(stat_offset, stat_offset+icount):
@@ -211,6 +263,8 @@ class GemsParser(object):
 
                 out.append('| %s\n' % '-'.join(values))
                 stat_offset += icount
+            for index in range(stat_offset, len(stat_ids)+1):
+                print(str(row['Stat%sValue' % index]))
 
             try:
                 # Format in a readable manner
