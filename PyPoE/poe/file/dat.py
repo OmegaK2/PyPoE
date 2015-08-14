@@ -678,21 +678,29 @@ class RelationalReader(object):
         for file_name in files:
             self.read_file(file_name)
 
+    def __getitem__(self, item):
+        """
+        Shortcut.
+
+        self[item] <==> self.files[item].reader
+        """
+        return self.files[item].reader
+
     def _dv_set_value(self, value, other):
         if value.is_pointer:
             self._dv_set_value(value.child, other)
         elif value.is_list:
-            [self._dv_set_value(dv) for dv in self.children]
+            [self._dv_set_value(dv, other) for dv in self.children]
         else:
-            value.value = other[value.value]
+            value.value = None if value.value == -1 else other[value.value]
 
         return value
 
     def _set_value(self, value, other):
         if isinstance(value, list):
-            return [self._set_value(item) for item in value]
+            return [self._set_value(item, other) for item in value]
         else:
-            return other[value]
+            return None if value == -1 else other[value]
 
     def read_file(self, name):
         if name in self.files:
