@@ -497,7 +497,7 @@ class DescriptionFile(object):
         if not isinstance(other, DescriptionFile):
             TypeError('Wrong type: %s' % type(other))
         self._translations += other._translations
-        self._translations_hash.update(other._translation_hash)
+        self._translations_hash.update(other._translations_hash)
 
     def get_translation(self, tags, values, lang='English', return_indexes=False):
         # A single translation might have multiple references
