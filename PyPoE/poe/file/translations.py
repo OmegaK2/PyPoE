@@ -377,6 +377,16 @@ class TranslationQuantifier(object):
 
         return values
 
+
+class TranslationResult(object):
+    __slots__ = ['found', 'lines', 'indexes', 'missing']
+
+    def __init__(self, found, lines, indexes, missing):
+        self.found = found
+        self.lines = lines
+        self.indexes = indexes
+        self.missing = missing
+
 class DescriptionFile(object):
     def __init__(self, file_path=None):
         self._translations = []
@@ -470,7 +480,6 @@ class DescriptionFile(object):
 
                     offset = offset_next_lang
 
-
                 for translation_id in translation.ids:
                     if translation_id in self._translations_hash:
                         other = self._translations_hash[translation_id]
@@ -499,7 +508,7 @@ class DescriptionFile(object):
         self._translations += other._translations
         self._translations_hash.update(other._translations_hash)
 
-    def get_translation(self, tags, values, lang='English', return_indexes=False):
+    def get_translation(self, tags, values, lang='English', full_result=True):
         # A single translation might have multiple references
         # I.e. the case for always_freeze
 
@@ -507,9 +516,11 @@ class DescriptionFile(object):
             tags = [tags, ]
 
         trans_found = []
+        trans_missing = []
         trans_found_indexes = []
         for tag in tags:
             if tag not in self._translations_hash:
+                trans_missing.append(tag)
                 continue
             tr = self._translations_hash[tag]
             index = tr.ids.index(tag)
@@ -528,8 +539,8 @@ class DescriptionFile(object):
             if result:
                 trans_lines += result
 
-        if return_indexes:
-            return trans_lines, trans_found_indexes
+        if full_result:
+            return TranslationResult(trans_found, trans_lines, trans_found_indexes, trans_missing)
         return trans_lines
 
 
