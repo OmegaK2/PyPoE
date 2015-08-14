@@ -32,8 +32,9 @@ import sys
 from colorama import Fore
 
 # Self
-from PyPoE.poe.file.dat import DatFile
+from PyPoE.poe.file.dat import DatFile, RelationalReader
 from PyPoE.poe.file.translations import DescriptionFile
+from PyPoE.poe.sim.formula import gem_stat_requirement, GemTypes
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler
 
 # =============================================================================
@@ -95,33 +96,18 @@ class GemsParser(object):
             'use_dat_value': False,
         }
 
-        self.base_item_types = DatFile('BaseItemTypes.dat', read_file=data_path, options=self.opt).reader
-        self.skill_gems = DatFile('SkillGems.dat', read_file=data_path, options=self.opt).reader
-        #self.mods = DatFile('Mods.dat', read_file=data_path, options=self.opt).reader
-        self.stats = DatFile('Stats.dat', read_file=data_path, options=self.opt).reader
-
-
+        self.reader = RelationalReader(
+            data_path,
+            files=['BaseItemTypes.dat', 'SkillGems.dat', 'Stats.dat'],
+            options=self.opt,
+        )
 
         self.descriptions = DescriptionFile(self.desc_path + '/stat_descriptions.txt')
         #self.stat_descriptions = DescriptionFile(glob(desc_path + '/*_descriptions.txt'))
 
-    def calc_exp(self, level, multi=1):
-        # 0f: 100%: int(multi*(1.5*level+6))
-        # 3f 60%: round(multi*(1.6*level+5)
-        return multi*(1.6*level+6)
-
-    def _support(self, level):
-        # perfect!
-        return int(1.5*level+6)
-
-    def _active(self, level):
-        # roughly... true?
-        return 2.1*level+7.8
-
     def _get_gem(self, name):
-
         base_item_type = None
-        for row in self.base_item_types:
+        for row in self.reader['BaseItemTypes.dat']:
             if row['Name'] == name:
                 base_item_type = row
                 break
@@ -131,8 +117,8 @@ class GemsParser(object):
             sys.exit(-1)
 
         skill_gem = None
-        for row in self.skill_gems:
-            if row['BaseItemTypesKey'] == base_item_type.rowid:
+        for row in self.reader['SkillGems.dat']:
+            if row['BaseItemTypesKey'] == base_item_type:
                 skill_gem = row
                 break
 
@@ -146,26 +132,23 @@ class GemsParser(object):
         base_item_type, skill_gem = self._get_gem(parsed_args.gem)
 
         print('Loading additional files...')
-        granted_effects = DatFile('GrantedEffects.dat', read_file=self.data_path, options=self.opt).reader
-        granted_effects_per_level = DatFile('GrantedEffectsPerLevel.dat', read_file=self.data_path, options=self.opt).reader
-        item_experience_per_level = DatFile('ItemExperiencePerLevel.dat', read_file=self.data_path, options=self.opt).reader
+        self.reader.read_file('GrantedEffects.dat')
+        self.reader.read_file('GrantedEffectsPerLevel.dat')
+        self.reader.read_file('ItemExperiencePerLevel.dat')
 
         print('Processing information...')
 
         # TODO: Maybe catch empty stuff here?
         exp = []
-        for row in item_experience_per_level:
-            if row['BaseItemTypesKey'] == base_item_type.rowid:
+        for row in self.reader['ItemExperiencePerLevel.dat']:
+            if row['BaseItemTypesKey'] == base_item_type:
                 exp.append(row)
 
-        ge = None
-        for row in granted_effects:
-            if row.rowid == skill_gem['GrantedEffectsKey']:
-                ge = row
+        ge = skill_gem['GrantedEffectsKey']
 
         gepl = []
-        for row in granted_effects_per_level:
-            if row['GrantedEffectsKey'] == ge.rowid:
+        for row in self.reader['GrantedEffectsPerLevel.dat']:
+            if row['GrantedEffectsKey'] == ge:
                 gepl.append(row)
 
         attributes = {'Str': 0, 'Dex': 0, 'Int': 0}
@@ -175,7 +158,7 @@ class GemsParser(object):
         for attr in tuple(attributes.keys()):
             if skill_gem[attr]:
                 out.append('| %s=yes\n' % attr.lower())
-                attributes[attr] = skill_gem[attr] / 100
+                attributes[attr] = skill_gem[attr]
             else:
                 del attributes[attr]
 
@@ -186,7 +169,7 @@ class GemsParser(object):
 
         stat_ids = []
         for stat in gepl[0]['StatsKeys']:
-            stat_ids.append(self.stats[stat]['Id'])
+            stat_ids.append(stat['Id'])
 
         desc, translation_indexes = self.descriptions.get_translation(stat_ids, (42, )*len(stat_ids), return_indexes=True)
         for index, item in enumerate(desc):
@@ -194,6 +177,11 @@ class GemsParser(object):
             out.append(line.replace('42', 'x'))
 
         out.append('}}\n')
+
+        if base_item_type['ItemClass'] == 19:
+            gtype = GemTypes.active
+        elif base_item_type['ItemClass'] == 20:
+            gtype = GemTypes.support
 
         # Is sorted already, but just in case..
         gepl.sort(key=lambda row: row['Level'])
@@ -203,9 +191,13 @@ class GemsParser(object):
             out.append('| %s\n' % row['LevelRequirement'])
 
             for attr in attributes:
-                #TODO: Fix
-                #out.append('| %i\n' % (attributes[attr]))
-                out.append('| ?\n')
+
+                out.append('| %i\n' % gem_stat_requirement(
+                    level=row['LevelRequirement'],
+                    gtype=gtype,
+                    multi=attributes[attr],
+                ))
+                #out.append('| ?\n')
 
             if row['ManaCost']:
                 out.append('| %s\n' % row['ManaCost'])
