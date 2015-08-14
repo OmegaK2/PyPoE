@@ -744,6 +744,14 @@ def load_spec(path=None):
     spec = configobj.ConfigObj(infile=path, configspec=DAT_SPECIFICATION_CONFIGSPEC)
     spec.validate(validate.Validator())
 
+    for file_name in spec:
+        for f in spec[file_name]['fields']:
+            other = spec[file_name]['fields'][f]['key']
+            if not other:
+                continue
+            if other not in spec:
+                raise SpecificationError('%s->%s->%s not in specification' % (file_name, f, other))
+
     return spec
 
 def reload_default_spec():
