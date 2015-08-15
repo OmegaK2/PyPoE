@@ -509,7 +509,7 @@ class DescriptionFile(object):
         self._translations += other._translations
         self._translations_hash.update(other._translations_hash)
 
-    def get_translation(self, tags, values, lang='English', full_result=True):
+    def get_translation(self, tags, values, lang='English', full_result=False):
         # A single translation might have multiple references
         # I.e. the case for always_freeze
 
