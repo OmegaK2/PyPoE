@@ -19,9 +19,6 @@ See PyPoE/LICENSE
 # Imports
 # =============================================================================
 
-# 3rd Party
-from colorama import init
-
 # self
 from PyPoE.cli.exporter.core import main
 
@@ -30,5 +27,4 @@ from PyPoE.cli.exporter.core import main
 # =============================================================================
 
 if __name__ == '__main__':
-    init()
     main()

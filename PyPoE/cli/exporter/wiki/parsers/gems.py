@@ -28,13 +28,11 @@ TODO
 # Python
 import sys
 
-# 3rd Party
-from colorama import Fore
-
 # Self
-from PyPoE.poe.file.dat import DatFile, RelationalReader
+from PyPoE.poe.file.dat import RelationalReader
 from PyPoE.poe.file.translations import DescriptionFile
 from PyPoE.poe.sim.formula import gem_stat_requirement, GemTypes
+from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler
 
 # =============================================================================
@@ -115,7 +113,7 @@ class GemsParser(object):
                 break
 
         if base_item_type is None:
-            print(Fore.LIGHTRED_EX + 'The specified item was not found.' + Fore.RESET)
+            console('The specified item was not found.', msg=Msg.error)
             sys.exit(-1)
 
         skill_gem = None
@@ -125,7 +123,7 @@ class GemsParser(object):
                 break
 
         if skill_gem is None:
-            print(Fore.LIGHTRED_EX + 'The specified skill gem was not found. Is the item a skill?' + Fore.RESET)
+            console('The specified skill gem was not found. Is the item a skill?', msg=Msg.error)
             sys.exit(-1)
 
         return base_item_type, skill_gem
@@ -133,12 +131,12 @@ class GemsParser(object):
     def level_progression(self, parsed_args):
         base_item_type, skill_gem = self._get_gem(parsed_args.gem)
 
-        print('Loading additional files...')
+        console('Loading additional files...')
         self.reader.read_file('GrantedEffects.dat')
         self.reader.read_file('GrantedEffectsPerLevel.dat')
         self.reader.read_file('ItemExperiencePerLevel.dat')
 
-        print('Processing information...')
+        console('Processing information...')
 
         # TODO: Maybe catch empty stuff here?
         exp = []
@@ -264,7 +262,7 @@ class GemsParser(object):
                 out.append('| %s\n' % '-'.join(values))
                 stat_offset += icount
             for index in range(stat_offset, len(stat_ids)+1):
-                print(str(row['Stat%sValue' % index]))
+                console(str(row['Stat%sValue' % index]))
 
             try:
                 # Format in a readable manner

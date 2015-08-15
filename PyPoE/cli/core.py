@@ -27,53 +27,37 @@ Virtual Terminal?
 # Python
 import sys
 import traceback
-import warnings
+from enum import Enum
 
 # 3rd Party
-from colorama import Fore, Style
+from colorama import Style, Fore
 
 # =============================================================================
 # Globals
 # =============================================================================
 
-__all__ = ['run']
-
-err_fmt = Style.BRIGHT + Fore.RED + '%s' + Style.RESET_ALL
-warn_fmt = Style.BRIGHT + Fore.YELLOW + '%s' + Style.RESET_ALL
+__all__ = ['Msg', 'run', 'console']
 
 # =============================================================================
 # Classes
 # =============================================================================
 
-class OutputHook(object):
-    def __init__(self):
-        self._orig_format_warning = warnings.formatwarning
-        warnings.formatwarning = self.format_warning
-
-    def format_warning(self, message, category, filename, lineno, line=None):
-        kwargs = {
-            'message': message,
-            'category': category.__name__,
-            'filename': filename,
-            'lineno': lineno,
-            'line': line,
-        }
-        f = "%(filename)s:%(lineno)s:\n%(category)s: %(message)s\n" % kwargs
-        return warn_fmt % f
-
+class Msg(Enum):
+    default = Style.RESET_ALL
+    error = Style.BRIGHT + Fore.RED
+    warning = Style.BRIGHT + Fore.YELLOW
 
 # =============================================================================
 # Functions
 # =============================================================================
 
 def run(parser, config):
-    OutputHook()
     args = parser.parse_args()
     if hasattr(args, 'func'):
         try:
             code = args.func(args)
         except Exception as e:
-            print(err_fmt % traceback.format_exc())
+            console(traceback.format_exc(), msg=Msg.error)
             code = -1
     else:
         parser.print_help()
@@ -81,3 +65,12 @@ def run(parser, config):
 
     config.write()
     sys.exit(code)
+
+
+def console(message, msg=Msg.default, rtr=False):
+    f = msg.value + message + Msg.default.value
+    if rtr:
+        return f
+    else:
+        print(f)
+

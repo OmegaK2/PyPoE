@@ -33,6 +33,7 @@ from graphviz import Digraph
 
 # Self
 from PyPoE.poe.file.dat import DatFile
+from PyPoE.cli.core import console
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler
 
 # =============================================================================
@@ -137,7 +138,7 @@ class WarbandsParser(object):
                 dot.edge(str(row.rowid), str(node))
 
         out_path = os.path.join(kwargs['out_dir'], out_file)
-        print('Writing graph to "%s"...' % out_path)
+        console('Writing graph to "%s"...' % out_path)
         dot.render(out_path, view=parsed_args.print)
 
         print ('Done.')

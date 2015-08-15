@@ -28,7 +28,9 @@ FIX the jewel generator (corrupted)
 # Self
 from PyPoE.poe.file.dat import DatFile
 from PyPoE.poe.file.translations import DescriptionFile
+from PyPoE.cli.core import console
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler
+
 
 # =============================================================================
 # Globals
@@ -139,7 +141,7 @@ class ModParser(object):
 
         effects = self.descriptions.get_translation(ids, values)
         if not effects:
-            print(ids, values)
+            console(ids, values)
 
         return self.descriptions.get_translation(ids, values)
 

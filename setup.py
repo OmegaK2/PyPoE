@@ -82,6 +82,7 @@ setup(
     # $ pip install -e .[dev,test]
     extras_require={
         'dev': ['sphinx', 'pytest'],
+        'cli': ['pywikibot'],
         'ui': ['PyOpenGL'],
         'opt': ['mmh3'],
     },

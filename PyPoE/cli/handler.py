@@ -28,8 +28,10 @@ TODO
 import traceback
 
 # 3rd Party
-from colorama import Fore
 from validate import ValidateError
+
+# self
+from PyPoE.cli.core import console, Msg
 
 # =============================================================================
 # Globals
@@ -52,11 +54,11 @@ class BaseHandler(object):
         return 0
 
     def _show_error(self, e):
-        print(e)
+        console(e)
         return -1
 
     def print_sep(self, char='-'):
-        print(char*70)
+        console(char*70)
 
 class ConfigHandler(BaseHandler):
     def __init__(self, sub_parser, config):
@@ -103,7 +105,7 @@ class ConfigHandler(BaseHandler):
             help='Value to set',
         )
     def print_debug(self, args):
-        print(self.config)
+        console(self.config)
         return 0
 
     def print_all(self, args):
@@ -111,19 +113,19 @@ class ConfigHandler(BaseHandler):
 
         print ('Current stored config variables:')
         for key in list(spec):
-            print("%s: %s" % (key, self.config.option[key]))
+            console("%s: %s" % (key, self.config.option[key]))
 
         real = set(self.config.option.keys())
         diff = list(real.difference(set(spec))).sort()
         if diff:
-            print('Extra variables:')
+            console('Extra variables:')
             for key in diff:
-                print("%s: %s" % (key, self.config.option[key]))
+                console("%s: %s" % (key, self.config.option[key]))
 
         return 0
 
     def get(self, args):
-        print('Config setting "%s" is currently set to:\n%s' % (args.variable, self.config.option[args.variable]))
+        console('Config setting "%s" is currently set to:\n%s' % (args.variable, self.config.option[args.variable]))
         return 0
 
     def set(self, args):
@@ -133,10 +135,10 @@ class ConfigHandler(BaseHandler):
             return self._show_error(e)
         self.config.write()
 
-        print('Config setting "%s" has been set to:\n%s' % (args.variable, args.value))
+        console('Config setting "%s" has been set to:\n%s' % (args.variable, args.value))
 
         if self.config.needs_setup(args.variable) and not self.config.is_setup(args.variable):
-            print('\nVariable needs setup. Please run:\nsetup perform')
+            console('\nVariable needs setup. Please run:\nsetup perform')
 
         return 0
 
@@ -156,21 +158,21 @@ class SetupHandler(BaseHandler):
         setup_perform.set_defaults(func=self.setup)
 
     def setup(self, args):
-        print('Performing setup. This may take a while - please wait...')
+        console('Performing setup. This may take a while - please wait...')
         self.print_sep()
         for key in self.config['Setup']:
             section = self.config['Setup'][key]
             if section['performed']:
                 continue
-            print('Performing setup for: %s' % key)
+            console('Performing setup for: %s' % key)
             try:
                 for func in section.functions:
                     func(args)
             except Exception as e:
-                print('Unexpected error occured during setup:\n')
-                print(Fore.LIGHTRED_EX + traceback.format_exc() + Fore.RESET)
+                console('Unexpected error occured during setup:\n')
+                console(traceback.format_exc(), msg=Msg.error)
                 continue
             self.config['Setup'][key]['performed'] = True
             self.print_sep()
         self.config.write()
-        print('Done.')
+        console('Done.')

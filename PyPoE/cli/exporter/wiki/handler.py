@@ -27,10 +27,14 @@ TODO
 # Python
 import os
 
-# 3rd-Party
-from colorama import Fore
+# 3rd Party
+try:
+    import pywikibot
+except:
+    pass
 
 # self
+from PyPoE.cli.core import console, Msg
 from PyPoE.cli.handler import BaseHandler
 from PyPoE.cli.exporter import config
 from PyPoE.cli.exporter.wiki.util import check_hash
@@ -50,7 +54,7 @@ class ExporterHandler(BaseHandler):
         def wrapper(pargs, *args, **kwargs):
             # Check Hash
             if not check_hash():
-                print(Fore.LIGHTRED_EX + 'Game file hash mismatch. Please rerun setup.' + Fore.RESET)
+                console('Game file hash mismatch. Please rerun setup.', msg=Msg.error)
                 return -1
             # Check outdir, if specified:
             out_dir = pargs.outdir if pargs.outdir is not None else config.get_option('out_dir')
@@ -60,27 +64,31 @@ class ExporterHandler(BaseHandler):
 
             for item in (out_dir, data_dir, desc_dir):
                 if not os.path.exists(item):
-                    print(Fore.LIGHTREX_EX + 'Path "%s" does not exist' % item + Fore.RESET)
+                    console('Path "%s" does not exist' % item, msg=Msg.error)
                     return -1
 
-            print('Reading .dat files...')
+            console('Reading .dat files...')
             parser = cls(data_path=data_dir, desc_path=desc_dir)
 
-            print('Parsing...')
+            console('Parsing...')
             if handler:
                 return handler(parser, pargs, out_dir=out_dir)
             else:
                 out = func(parser, pargs, *args, **kwargs)
 
                 if pargs.print:
-                    print(''.join(out))
+                    console(''.join(out))
 
-                out_path = os.path.join(out_dir, out_file)
-                print('Writing data to "%s"...' % out_path)
-                with open(out_path, 'w') as f:
-                    f.writelines(out)
+                if pargs.write:
+                    out_path = os.path.join(out_dir, out_file)
+                    console('Writing data to "%s"...' % out_path)
+                    with open(out_path, 'w') as f:
+                        f.writelines(out)
 
-                print('Done.')
+                if pargs.wiki:
+                    pass
+
+                console('Done.')
 
                 return 0
         return wrapper
@@ -98,6 +106,16 @@ class ExporterHandler(BaseHandler):
         )
         parser.add_argument(
             '-p', '--print',
-            help='Print the contents in addition to writing',
+            help='Print the contents of the file',
+            action='store_true',
+        )
+        parser.add_argument(
+            '--write',
+            help='Write to file',
+            action='store_true',
+        )
+        parser.add_argument(
+            '--wiki',
+            help='Write to the gamepedia page (requires pywikibot)',
             action='store_true',
         )

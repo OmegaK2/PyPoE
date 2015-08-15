@@ -26,10 +26,10 @@ TODO
 
 # self
 from PyPoE.poe.file.ggpk import GGPKFile
+from PyPoE.cli.core import console
 from PyPoE.cli.handler import BaseHandler
 from PyPoE.cli.exporter import config
 from PyPoE.cli.exporter.wiki.util import get_content_ggpk_hash, get_content_ggpk_path
-
 from PyPoE.cli.exporter.wiki.parsers import *
 
 # =============================================================================
@@ -77,26 +77,26 @@ class WikiHandler(BaseHandler):
 
         content_ggpk = get_content_ggpk_path()
 
-        print('Reading "%s"...' % content_ggpk)
+        console('Reading "%s"...' % content_ggpk)
         ggpk = GGPKFile(content_ggpk)
         ggpk.read()
 
-        print('Building directory...')
+        console('Building directory...')
         ggpk.directory_build()
 
-        print('Extracting data files to "%s"...' % temp_dir)
+        console('Extracting data files to "%s"...' % temp_dir)
         ggpk['Data'].extract_to(temp_dir)
 
         meta_dir = os.path.join(temp_dir, 'Metadata')
-        print('Extracting description files to "%s"...' % meta_dir)
+        console('Extracting description files to "%s"...' % meta_dir)
         nodes = ggpk['Metadata'].search('.*descriptions.*\.txt$', search_directories=False)
         if not os.path.exists(meta_dir):
             os.mkdir(meta_dir)
         for node in nodes:
             node.extract_to(meta_dir)
 
-        print('Hashing...')
+        console('Hashing...')
 
         config.set_setup_variable('temp_dir', 'hash', get_content_ggpk_hash())
 
-        print('Done.')
+        console('Done.')
