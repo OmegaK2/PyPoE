@@ -29,7 +29,7 @@ FIX the jewel generator (corrupted)
 from PyPoE.poe.file.dat import DatFile
 from PyPoE.poe.file.translations import DescriptionFile
 from PyPoE.cli.core import console
-from PyPoE.cli.exporter.wiki.handler import ExporterHandler
+from PyPoE.cli.exporter.wiki.handler import *
 
 
 # =============================================================================
@@ -56,7 +56,6 @@ class ModsHandler(ExporterHandler):
             parser=parser,
             cls=ModParser,
             func=ModParser.map,
-            outfile='map_mods.txt',
         )
 
         parser = lua_sub.add_parser(
@@ -67,7 +66,6 @@ class ModsHandler(ExporterHandler):
             parser=parser,
             cls=ModParser,
             func=ModParser.tempest,
-            outfile='tempest_mods.txt',
         )
 
         parser = lua_sub.add_parser(
@@ -78,7 +76,6 @@ class ModsHandler(ExporterHandler):
             parser=parser,
             cls=ModParser,
             func=ModParser.jewel,
-            outfile='jewel_mods.txt',
         )
         parser.add_argument(
             'type',
@@ -166,7 +163,10 @@ class ModParser(object):
             except:
                 pass
 
-        return out
+        r = ExporterResult()
+        r.add_result(lines=out, out_file='map_mods.txt')
+
+        return r
 
     def tempest(self, parsed_args):
         # Filter by tempest mods
@@ -213,7 +213,11 @@ class ModParser(object):
             out.append('| %s\n' % info['name'])
             out.append('| %s\n' % info['effect'])
             out.append('| \n')
-        return out
+
+        r = ExporterResult()
+        r.add_result(lines=out, out_file='tempest_mods.txt')
+
+        return r
 
     def jewel(self, parsed_args):
         data = []
@@ -277,4 +281,8 @@ class ModParser(object):
         out = []
         for lf in data:
             out.append(self.affix_wiki % lf)
-        return out
+
+        r = ExporterResult()
+        r.add_result(lines=out, out_file='jewel_%s_mods.txt' % parsed_args.type)
+
+        return r

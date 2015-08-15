@@ -31,7 +31,7 @@ import warnings
 
 # Self
 from PyPoE.poe.file.dat import DatFile
-from PyPoE.cli.exporter.wiki.handler import ExporterHandler
+from PyPoE.cli.exporter.wiki.handler import *
 
 # =============================================================================
 # Globals
@@ -102,7 +102,6 @@ class LuaHandler(ExporterHandler):
             parser=parser,
             cls=QuestRewardReader,
             func=QuestRewardReader.read_quest_rewards,
-            outfile='quest_rewards.lua',
         )
 
         parser = lua_sub.add_parser(
@@ -113,7 +112,6 @@ class LuaHandler(ExporterHandler):
             parser=parser,
             cls=QuestRewardReader,
             func=QuestRewardReader.read_vendor_rewards,
-            outfile='vendor_rewards.lua',
         )
 
 class QuestRewardReader(object):
@@ -166,7 +164,10 @@ class QuestRewardReader(object):
         out.append('\n')
         out.append('return rewards')
 
-        return out
+        r = ExporterResult()
+        r.add_result(lines=out, out_file='%s_rewards.txt' % data_type)
+
+        return r
 
     def read_quest_rewards(self, args):
         outdata = []

@@ -30,8 +30,8 @@ import os
 # 3rd Party
 try:
     import pywikibot
-except:
-    pass
+except Exception as e:
+    pywikibot = None
 
 # self
 from PyPoE.cli.core import console, Msg
@@ -43,14 +43,14 @@ from PyPoE.cli.exporter.wiki.util import check_hash
 # Globals
 # =============================================================================
 
-__all__ = ['ExporterHandler', ]
+__all__ = ['ExporterHandler', 'ExporterResult']
 
 # =============================================================================
 # Classes
 # =============================================================================
 
 class ExporterHandler(BaseHandler):
-    def get_wrap(self, cls, func, out_file, handler=None):
+    def get_wrap(self, cls, func, handler, wiki_handler):
         def wrapper(pargs, *args, **kwargs):
             # Check Hash
             if not check_hash():
@@ -74,32 +74,42 @@ class ExporterHandler(BaseHandler):
             if handler:
                 return handler(parser, pargs, out_dir=out_dir)
             else:
-                out = func(parser, pargs, *args, **kwargs)
+                result = func(parser, pargs, *args, **kwargs)
 
-                if pargs.print:
-                    console(''.join(out))
+                for item in result:
+                    if pargs.print:
+                        console(''.join(item['lines']))
 
-                if pargs.write:
-                    out_path = os.path.join(out_dir, out_file)
-                    console('Writing data to "%s"...' % out_path)
-                    with open(out_path, 'w') as f:
-                        f.writelines(out)
+                    if pargs.write:
+                        out_path = os.path.join(out_dir, item['out_file'])
+                        console('Writing data to "%s"...' % out_path)
+                        with open(out_path, 'w') as f:
+                            f.writelines(item['lines'])
 
-                if pargs.wiki:
-                    pass
+                    if pargs.wiki:
+                        if pywikibot is None:
+                            try:
+                                # Will raise the exception appropriately
+                                __import__('pywikibot')
+                            except ImportError:
+                                console('Run pip install -e cli', msg=Msg.error)
+                            except Exception:
+                                raise
+
+                        console(result['wiki_page'])
 
                 console('Done.')
 
                 return 0
         return wrapper
 
-    def add_default_parsers(self, parser, cls, func=None, outfile=None, handler=None):
+    def add_default_parsers(self, parser, cls, func=None, handler=None, wiki_handler=None):
         if handler is None:
-            for item in (func, outfile):
+            for item in (func,):
                 if item is None:
-                    raise ValueError('Must set either handler or (func, outfile)')
+                    raise ValueError('Must set either handler or func')
 
-        parser.set_defaults(func=self.get_wrap(cls, func, outfile, handler))
+        parser.set_defaults(func=self.get_wrap(cls, func, handler, wiki_handler))
         parser.add_argument(
             '-d', '--outdir',
             help='Destination directory. If empty, uses current directory.'
@@ -119,3 +129,12 @@ class ExporterHandler(BaseHandler):
             help='Write to the gamepedia page (requires pywikibot)',
             action='store_true',
         )
+
+
+class ExporterResult(list):
+    def add_result(self, lines=None, out_file=None, wiki_page=None):
+        self.append({
+            'lines': lines,
+            'out_file': out_file,
+            'wiki_page': wiki_page,
+        })

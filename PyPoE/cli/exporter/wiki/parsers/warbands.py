@@ -34,7 +34,7 @@ from graphviz import Digraph
 # Self
 from PyPoE.poe.file.dat import DatFile
 from PyPoE.cli.core import console
-from PyPoE.cli.exporter.wiki.handler import ExporterHandler
+from PyPoE.cli.exporter.wiki.handler import *
 
 # =============================================================================
 # Classes
@@ -54,7 +54,6 @@ class WarbandsHandler(ExporterHandler):
             parser=parser,
             cls=WarbandsParser,
             func=WarbandsParser.warbands,
-            outfile='warbands.txt',
         )
 
         parser = lua_sub.add_parser(
@@ -119,7 +118,11 @@ class WarbandsParser(object):
                 out.append('\n')
 
             out.append('-' * 80 + '\n')
-        return out
+
+        r = ExporterResult()
+        r.add_result(lines=out, out_file='warbands.txt')
+
+        return r
 
     def graph(self, parsed_args, **kwargs):
         if parsed_args.type == 'map':

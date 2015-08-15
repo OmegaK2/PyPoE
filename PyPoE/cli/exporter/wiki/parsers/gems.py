@@ -33,7 +33,7 @@ from PyPoE.poe.file.dat import RelationalReader
 from PyPoE.poe.file.translations import DescriptionFile
 from PyPoE.poe.sim.formula import gem_stat_requirement, GemTypes
 from PyPoE.cli.core import console, Msg
-from PyPoE.cli.exporter.wiki.handler import ExporterHandler
+from PyPoE.cli.exporter.wiki.handler import *
 
 # =============================================================================
 # Classes
@@ -53,7 +53,6 @@ class GemsHandler(ExporterHandler):
             parser=parser,
             cls=GemsParser,
             func=GemsParser.level_progression,
-            outfile='level_progression.txt',
         )
         self.add_gem_arg(parser)
 
@@ -273,4 +272,7 @@ class GemsParser(object):
         out.append('|}\n')
         #out.append(str(ge))
 
-        return out
+        r = ExporterResult()
+        r.add_result(lines=out, out_file='level_progression.txt')
+
+        return r
