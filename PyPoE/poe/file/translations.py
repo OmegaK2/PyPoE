@@ -312,6 +312,7 @@ class TranslationQuantifier(object):
         'per_minute_to_per_second': lambda v: v*60,
         'milliseconds_to_seconds': lambda v: v/1000,
         'negate': lambda v: v*-1,
+        'divide_by_one_hundred_and_negate': lambda v: -v/100,
         # TODO: check accuracy of those values
         'old_leech_percent': lambda v: v/5,
         'old_leech_permyriad': lambda v: v/50,
