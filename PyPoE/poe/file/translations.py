@@ -32,6 +32,7 @@ optimize __hash__ - very slow atm; or remove, but it is needed for the diffs
 # Python
 import re
 import warnings
+from string import ascii_letters
 from collections import Iterable
 
 # =============================================================================
@@ -79,6 +80,12 @@ class DuplicateIdentifierWarning(UserWarning):
     pass
 
 class Translation(object):
+    """
+    Representation of a single translation.
+
+    A translation has at least one id and at least the English language (along
+    with the respective strings).
+    """
 
     __slots__ = ['languages', 'ids']
 
@@ -122,6 +129,10 @@ class Translation(object):
         return etr
 
 class TranslationLanguage(object):
+    """
+    Representation of a language in the translation file. Each language has
+    one or multiple strings.
+    """
 
     __slots__ = ['parent', 'language', 'strings']
 
@@ -156,7 +167,7 @@ class TranslationLanguage(object):
         if self.strings != other.strings:
             _diff_list(self.strings, other.strings)
 
-    def get_string(self, values, indexes):
+    def get_string(self, values, indexes, use_placeholder):
         valid_strings = []
 
         # Support for ranges
@@ -191,12 +202,16 @@ class TranslationLanguage(object):
         temp.sort(key=lambda x: -x[0])
         ts = temp[0][1]
 
-        valid_strings.append(ts.format_string(short_values, is_range))
+        valid_strings.append(ts.format_string(short_values, is_range, use_placeholder))
 
         return valid_strings
 
 
 class TranslationString(object):
+    """
+    Representation of a single translation string. Each string comes with
+    it's own quantifiers and acceptable range.
+    """
 
     __slots__ = ['parent', 'quantifier', 'range', 'string']
 
@@ -241,16 +256,24 @@ class TranslationString(object):
         if self.string != other.string:
             print('String mismatch: %s vs %s' % (self.string, other.string))
 
-    def format_string(self, values, is_range):
-        values = self.quantifier.handle(values, is_range)
+    def format_string(self, values, is_range, use_placeholder):
         s = self.string.replace('%%', '%')
-        for i in range(0, len(values)):
-            if is_range[i]:
-                rpl = '(%s to %s)' % tuple(values[i])
-            else:
-                rpl = str(values[i])
-            s = s.replace('%%%s%%' % (i+1), rpl)
-            s = s.replace('%%%s$+d' % (i+1), rpl)
+        if use_placeholder:
+            for i in range(0, len(values)):
+                # It will go to uppercase letters if above 3, but should be
+                # no problem otherwise
+                s = s.replace('%%%s%%' % (i+1), ascii_letters[23+i])
+                s = s.replace('%%%s$+d' % (i+1), ascii_letters[23+i])
+        else:
+            values = self.quantifier.handle(values, is_range)
+            s = self.string.replace('%%', '%')
+            for i, val in enumerate(values):
+                if is_range[i]:
+                    rpl = '(%s to %s)' % tuple(val)
+                else:
+                    rpl = str(val)
+                s = s.replace('%%%s%%' % (i+1), rpl)
+                s = s.replace('%%%s$+d' % (i+1), rpl)
         return s
 
     def match_range(self, values, indexes):
@@ -260,6 +283,15 @@ class TranslationString(object):
         return rating
 
 class TranslationRange(object):
+    """
+    Object to represent the acceptable range of a translation.
+
+    Many translation strings only apply to a given minimum or maximum number.
+    In some cases there are also special strings for specific conditions.
+
+    For example, 100 for freeze turns into "Always Freeze" whereas less is
+    "chance to freeze".
+    """
 
     __slots__ = ['parent', 'min', 'max']
 
@@ -306,6 +338,14 @@ class TranslationRange(object):
 
 
 class TranslationQuantifier(object):
+    """
+    Class to represent and handle translation quantifiers.
+
+    In the GGG files often there are qualifiers specified to adjust the output
+    of the values; for example, a value might be negated (i.e so that it would
+    show "5% reduced Damage" instead of "-5% reduced Damage").
+    """
+
     handlers = {
         'deciseconds_to_seconds': lambda v: v*10,
         'divide_by_one_hundred': lambda v: v/100,
@@ -355,9 +395,17 @@ class TranslationQuantifier(object):
         _diff_dict(self.registered_handlers, other.registered_handlers)
 
 
-
-
     def register(self, handler, index):
+        """
+        Registers that the specified handler should be used for the given
+        index of the value.
+
+        :param handler: id of the handler
+        :type handler: str
+        :param index: index of the handler value
+        :type index: int
+        """
+
         if handler in self.registered_handlers:
             self.registered_handlers[handler].append(index)
         elif handler in self.handlers:
@@ -366,6 +414,16 @@ class TranslationQuantifier(object):
             warnings.warn('Warning, uncaptured! %s' % handler, UnknownIdentifierWarning)
 
     def handle(self, values, is_range):
+        """
+        Handle the given values based on the registered quantifiers.
+
+        :param values: list of values
+        :type values: list
+        :param is_range:
+        :type is_range: bool
+        :return: handled list of values
+        :rtype: list
+        """
         values = list(values)
         for handler_name in self.registered_handlers:
             f = self.handlers[handler_name]
@@ -390,6 +448,14 @@ class TranslationResult(object):
 
 class DescriptionFile(object):
     def __init__(self, file_path=None):
+        """
+        Creates a new DescriptionFile instance from the given translation
+        file(s).
+
+        :param file_path: The file to read. Can also accept an iterable of
+         files to read which will all be merged into one file.
+        :type: Iterable or str
+        """
         self._translations = []
         self._translations_hash = {}
 
@@ -504,12 +570,55 @@ class DescriptionFile(object):
             match = match_next
 
     def merge(self, other):
+        """
+        Merges the current translation file with another translation file.
+
+        :param other: other :class:`TranslationFile` object to merge with
+        :type: :class:`TranslationFile`
+        :return: None
+        """
+
         if not isinstance(other, DescriptionFile):
             TypeError('Wrong type: %s' % type(other))
         self._translations += other._translations
         self._translations_hash.update(other._translations_hash)
 
-    def get_translation(self, tags, values, lang='English', full_result=False):
+    def get_translation(self, tags, values, lang='English', full_result=False, use_placeholder=False):
+        """
+        Attempts to retrieve a translation from the loaded translation file for
+        the specified language with the given tags and values.
+
+        Generally the list of values should be the size of the number of tags.
+
+        If instead of the real value a placeholder (i.e. x, y, z) is desired
+        use_placeholder should be set to True. However, the according values
+        still need to be specified; this is done so that the appropriate
+        translation can be selected - i.e. the translation changes depending
+        on the values.
+
+
+        :param tags: A list of identifiers for the tags
+        :type tags: list
+        :param values: A list of integer values to use for the translations. It
+        is also possible to use a list of size 2 for each elemented, which then
+        will be treated as range of acceptable value and formatted accordingly
+        (i.e. (x to y) instead of just x).
+        :type values: list
+        :param lang: Language to use. If it doesn't exist, English will be used
+        as fallback.
+        :type lang: str
+        :param full_result: If true, a :class:`TranslationResult` object will
+         be returned
+        :type full_result: bool
+        :param use_placeholder: If true, Instead of values in the translations
+        a placeholder (i.e. x, y, z) will be used. Values are still required
+        however to find the "correct" wording of the translation.
+        :type use_placeholder: bool
+        :return: Returns a list of found translation strings. The list may be
+        empty if none are found. If full_result is specified, a
+        :class:`TranslationResult` object is returned instead
+        :rtype: list or TranslationResult
+        """
         # A single translation might have multiple references
         # I.e. the case for always_freeze
 
@@ -536,7 +645,7 @@ class DescriptionFile(object):
             indexes = trans_found_indexes[i]
 
             tl = tr.get_language(lang)
-            result = tl.get_string(values, indexes)
+            result = tl.get_string(values, indexes, use_placeholder)
             if result:
                 trans_lines += result
 
