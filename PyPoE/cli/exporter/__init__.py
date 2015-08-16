@@ -52,7 +52,7 @@ config = ConfigHelper(infile=CONFIG_PATH)
 # pywikibot hooks into the output and we really don't want that
 _orig_show_warning = warnings.showwarning
 try:
-    import pywikibot
+    from . import pywikibot_setup
 except:
     pass
 

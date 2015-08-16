@@ -26,6 +26,7 @@ TODO
 # =============================================================================
 
 # Python
+import re
 import sys
 
 # Self
@@ -40,6 +41,16 @@ from PyPoE.cli.exporter.wiki.handler import *
 # =============================================================================
 
 class GemsHandler(ExporterHandler):
+
+    regex_search = re.compile(
+        '==gem level progression==',
+        re.UNICODE | re.IGNORECASE | re.MULTILINE)
+
+    regex_replace = re.compile(
+        '==gem level progression=='
+        '.*?(?===[\w ]*==)',
+        re.UNICODE | re.IGNORECASE | re.MULTILINE | re.DOTALL)
+
     def __init__(self, sub_parser):
         self.parser = sub_parser.add_parser('gems', help='Gems Exporter')
         self.parser.set_defaults(func=lambda args: self.parser.print_help())
@@ -53,6 +64,7 @@ class GemsHandler(ExporterHandler):
             parser=parser,
             cls=GemsParser,
             func=GemsParser.level_progression,
+            wiki_handler=self.wiki_handler,
         )
         self.add_gem_arg(parser)
 
@@ -78,11 +90,39 @@ class GemsHandler(ExporterHandler):
             help='File format to use when extracting.',
         )'''
 
+    def _find_page(self, pws, page_name, site):
+        page = pws.pywikibot.Page(site, page_name)
+
+        if self.regex_search.search(page.text):
+            return page
+        else:
+            console('Failed to find the progression on wiki page "%s"' % page_name, msg=Msg.warning)
+            return None
+
     def add_gem_arg(self, parser):
         parser.add_argument(
             'gem',
-            help='Name of the skill gem',
+            help='Name of the skill gem; can be specified multiple times',
+            nargs='+',
         )
+
+    def wiki_handler(self, pws, result):
+        site = pws.get_site()
+        for row in result:
+            page_name = row['wiki_page']
+            console('Editing gem "%s"...' % page_name)
+            page = self._find_page(pws, page_name, site)
+            if page is None:
+                page = self._find_page(pws, '%s (support gem)' % page_name, site)
+
+            if page is None:
+                console('Can\'t find working wikipage. Skipping.', Msg.error)
+                continue
+
+            row['lines'].insert(0, '==Gem level progression==\n\n')
+
+            page.text = self.regex_replace.sub(''.join(row['lines']), page.text)
+            page.save(pws.get_edit_message('Gem level progression'))
 
 class GemsParser(object):
     def __init__(self, data_path, desc_path):
@@ -112,8 +152,8 @@ class GemsParser(object):
                 break
 
         if base_item_type is None:
-            console('The specified item was not found.', msg=Msg.error)
-            sys.exit(-1)
+            console('The item "%s" was not found.' % name, msg=Msg.error)
+            return
 
         skill_gem = None
         for row in self.reader['SkillGems.dat']:
@@ -122,13 +162,21 @@ class GemsParser(object):
                 break
 
         if skill_gem is None:
-            console('The specified skill gem was not found. Is the item a skill?', msg=Msg.error)
-            sys.exit(-1)
+            console('The skill gem "%s" was not found. Is the item a skill?' % gem, msg=Msg.error)
+            return
 
         return base_item_type, skill_gem
 
     def level_progression(self, parsed_args):
-        base_item_type, skill_gem = self._get_gem(parsed_args.gem)
+        gems = {}
+        for gem in parsed_args.gem:
+            g = self._get_gem(gem)
+            if g is not None:
+                gems[gem] = g
+
+        if not gems:
+            console('No gems found. Exiting...')
+            sys.exit(-1)
 
         console('Loading additional files...')
         self.reader.read_file('GrantedEffects.dat')
@@ -137,142 +185,161 @@ class GemsParser(object):
 
         console('Processing information...')
 
-        # TODO: Maybe catch empty stuff here?
-        exp = []
-        for row in self.reader['ItemExperiencePerLevel.dat']:
-            if row['BaseItemTypesKey'] == base_item_type:
-                exp.append(row)
+        r = ExporterResult()
 
-        ge = skill_gem['GrantedEffectsKey']
+        for gem in gems:
+            # Unpack the references
+            base_item_type, skill_gem = gems[gem]
 
-        gepl = []
-        for row in self.reader['GrantedEffectsPerLevel.dat']:
-            if row['GrantedEffectsKey'] == ge:
-                gepl.append(row)
+            # TODO: Maybe catch empty stuff here?
+            exp = []
+            for row in self.reader['ItemExperiencePerLevel.dat']:
+                if row['BaseItemTypesKey'] == base_item_type:
+                    exp.append(row)
 
-        attributes = {'Str': 0, 'Dex': 0, 'Int': 0}
+            ge = skill_gem['GrantedEffectsKey']
 
-        stat_ids = []
-        for stat in gepl[0]['StatsKeys']:
-            stat_ids.append(stat['Id'])
+            gepl = []
+            for row in self.reader['GrantedEffectsPerLevel.dat']:
+                if row['GrantedEffectsKey'] == ge:
+                    gepl.append(row)
 
-        # Find fixed stats
-        fixed = []
-        for i in range(1, len(stat_ids)+1):
-            is_static = True
-            val = gepl[0]['Stat%sValue' % i]
-            for row in gepl[1:]:
-                if val != row['Stat%sValue' % i]:
-                    is_static = False
+            is_aura = False
+            for tag in skill_gem['GemTagsKeys']:
+                if tag['Id'] == 'aura':
+                    is_aura = True
                     break
 
-            if is_static:
-                fixed.append(stat_ids[i-1])
+            attributes = {'Str': 0, 'Dex': 0, 'Int': 0}
 
-        for item in fixed:
-            stat_ids.remove(item)
+            stat_ids = []
+            for stat in gepl[0]['StatsKeys']:
+                stat_ids.append(stat['Id'])
 
-        trans_result = self.descriptions.get_translation(stat_ids, (42, )*len(stat_ids), full_result=True)
+            # Find fixed stats
+            fixed = []
+            for i in range(1, len(stat_ids)+1):
+                is_static = True
+                val = gepl[0]['Stat%sValue' % i]
+                for row in gepl[1:]:
+                    if val != row['Stat%sValue' % i]:
+                        is_static = False
+                        break
 
-        has_damage = False
-        has_multiplier = False
-        damage = gepl[0]['DamageMultiplier']
-        multiplier = gepl[0]['ManaMultiplier']
-        for row in gepl[1:]:
-            if damage != row['DamageMultiplier']:
-                has_damage = True
-            if multiplier != row['ManaMultiplier']:
-                has_multiplier = True
+                if is_static:
+                    fixed.append(stat_ids[i-1])
 
-        #
-        # Out put processing
-        #
-        out = []
-        out.append('{{GemLevelTable\n')
-        for attr in tuple(attributes.keys()):
-            if skill_gem[attr]:
-                out.append('| %s=yes\n' % attr.lower())
-                attributes[attr] = skill_gem[attr]
-            else:
-                del attributes[attr]
+            for item in fixed:
+                stat_ids.remove(item)
 
-        offset = 0
-        if gepl[0]['ManaCost']:
-            offset += 1
-            out.append('| c%s = Mana<br>Cost\n' % offset)
+            trans_result = self.descriptions.get_translation(stat_ids, (0, )*len(stat_ids), full_result=True)
 
-        if has_multiplier:
-            offset += 1
-            out.append('| c%s = Mana<br>Multiplier\n' % offset)
 
-        if has_damage:
-            offset += 1
-            out.append('| c%s = Damage<br>Multiplier\n' % offset)
 
-        for index, item in enumerate(trans_result.lines):
-            line = '| c%s=%s\n' % (index+offset+1, item)
-            out.append(line.replace('42', 'x'))
-        offset += len(trans_result.lines)
-        for index, item in enumerate(trans_result.missing):
-            line = '| c%s=%s\n' % (index+offset+1, item)
-            out.append(line)
+            has_damage = False
+            has_multiplier = False
+            has_mana_cost = False
+            damage = gepl[0]['DamageMultiplier']
+            multiplier = gepl[0]['ManaMultiplier']
+            mana_cost = gepl[0]['ManaCost']
+            for row in gepl[1:]:
+                if damage != row['DamageMultiplier']:
+                    has_damage = True
+                if multiplier != row['ManaMultiplier']:
+                    has_multiplier = True
+                if mana_cost != row['ManaCost']:
+                    has_mana_cost = True
 
-        out.append('}}\n')
-
-        if base_item_type['ItemClass'] == 19:
-            gtype = GemTypes.active
-        elif base_item_type['ItemClass'] == 20:
-            gtype = GemTypes.support
-
-        # Is sorted already, but just in case..
-        gepl.sort(key=lambda row: row['Level'])
-        for i, row in enumerate(gepl):
-            out.append('|- \n')
-            out.append('! %s\n' % row['Level'])
-            out.append('| %s\n' % row['LevelRequirement'])
-
-            for attr in attributes:
-                # Gems with base level > 21 are not possible
-                if row['Level'] > 21:
-                    out.append('| \n')
+            #
+            # Out put processing
+            #
+            out = []
+            out.append('{{GemLevelTable\n')
+            for attr in tuple(attributes.keys()):
+                if skill_gem[attr]:
+                    out.append('| %s=yes\n' % attr.lower())
+                    attributes[attr] = skill_gem[attr]
                 else:
-                    out.append('| %i\n' % gem_stat_requirement(
-                        level=row['LevelRequirement'],
-                        gtype=gtype,
-                        multi=attributes[attr],
-                    ))
+                    del attributes[attr]
 
-            if row['ManaCost']:
-                out.append('| %s\n' % row['ManaCost'])
+            offset = 0
+            if has_mana_cost:
+                offset += 1
+                if is_aura:
+                    out.append('| c%s = Mana<br>Reserved\n' % offset)
+                else:
+                    out.append('| c%s = Mana<br>Cost\n' % offset)
 
             if has_multiplier:
-                out.append('| %i%%\n' % (row['ManaMultiplier']))
+                offset += 1
+                out.append('| c%s = Mana<br>Multiplier\n' % offset)
 
             if has_damage:
-                out.append('| %.2f%%\n' % (row['DamageMultiplier']/100))
+                offset += 1
+                out.append('| c%s = Damage<br>Multiplier\n' % offset)
 
-            stat_offset = 1
-            for indexes in trans_result.indexes:
-                icount = len(indexes)
-                values = []
-                for j in range(stat_offset, stat_offset+icount):
-                    values.append(str(row['Stat%sValue' % j]))
+            for index, item in enumerate(trans_result.lines):
+                line = '| c%s=%s\n' % (index+offset+1, item)
+                out.append(line.replace('0', 'x'))
+            offset += len(trans_result.lines)
+            for index, item in enumerate(trans_result.missing):
+                line = '| c%s=%s\n' % (index+offset+1, item)
+                out.append(line)
 
-                out.append('| %s\n' % '-'.join(values))
-                stat_offset += icount
-            for index in range(stat_offset, len(stat_ids)+1):
-                console(str(row['Stat%sValue' % index]))
+            out.append('}}\n')
 
-            try:
-                # Format in a readable manner
-                out.append('| {0:,d}\n'.format(exp[i]['Experience']))
-            except IndexError:
-                out.append('| {{n/a}}\n')
+            if base_item_type['ItemClass'] == 19:
+                gtype = GemTypes.active
+            elif base_item_type['ItemClass'] == 20:
+                gtype = GemTypes.support
 
-        out.append('|}\n')
-        #out.append(str(ge))
+            # Is sorted already, but just in case..
+            gepl.sort(key=lambda row: row['Level'])
+            for i, row in enumerate(gepl):
+                out.append('|- \n')
+                out.append('! %s\n' % row['Level'])
+                out.append('| %s\n' % row['LevelRequirement'])
 
-        r = ExporterResult()
-        r.add_result(lines=out, out_file='level_progression.txt')
+                for attr in attributes:
+                    # Gems with base level > 21 are not possible
+                    if row['Level'] > 21:
+                        out.append('| \n')
+                    else:
+                        out.append('| %i\n' % gem_stat_requirement(
+                            level=row['LevelRequirement'],
+                            gtype=gtype,
+                            multi=attributes[attr],
+                        ))
+
+                if has_mana_cost:
+                    out.append('| %s\n' % row['ManaCost'])
+
+                if has_multiplier:
+                    out.append('| %i%%\n' % (row['ManaMultiplier']))
+
+                if has_damage:
+                    out.append('| %.2f%%\n' % (row['DamageMultiplier']/100))
+
+                stat_offset = 1
+                for indexes in trans_result.indexes:
+                    icount = len(indexes)
+                    values = []
+                    for j in range(stat_offset, stat_offset+icount):
+                        values.append(str(row['Stat%sValue' % j]))
+
+                    out.append('| %s\n' % '-'.join(values))
+                    stat_offset += icount
+                for index in range(stat_offset, len(stat_ids)+1):
+                    console(str(row['Stat%sValue' % index]))
+
+                try:
+                    # Format in a readable manner
+                    out.append('| {0:,d}\n'.format(exp[i]['Experience']))
+                except IndexError:
+                    out.append('| {{n/a}}\n')
+
+            out.append('|}\n')
+            #out.append(str(ge))
+            r.add_result(lines=out, out_file='level_progression.txt', wiki_page=base_item_type['Name'])
 
         return r

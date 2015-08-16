@@ -1,13 +1,13 @@
 """
 Path     PyPoE/cli/exporter/core.py
-Name     GGPK User Interface Classes
+Name     Exporter Core
 Version  1.00.000
 Revision $Id$
 Author   [#OMEGA]- K2
 
 INFO
 
-Creates a qt User Interface to browse GGPK files.
+Exporter main function(s).
 
 
 AGREEMENT
@@ -26,7 +26,6 @@ TODO
 
 # Python
 import argparse
-import sys
 
 # self
 from . import config

@@ -29,9 +29,9 @@ import os
 
 # 3rd Party
 try:
-    import pywikibot
+    from PyPoE.cli.exporter import pywikibot_setup as pws
 except Exception as e:
-    pywikibot = None
+    pws = None
 
 # self
 from PyPoE.cli.core import console, Msg
@@ -87,16 +87,24 @@ class ExporterHandler(BaseHandler):
                             f.writelines(item['lines'])
 
                     if pargs.wiki:
-                        if pywikibot is None:
+                        if pws is None:
                             try:
                                 # Will raise the exception appropriately
-                                __import__('pywikibot')
+                                __import__('PyPoE.cli.exporter.pywikibot_setup')
                             except ImportError:
                                 console('Run pip install -e cli', msg=Msg.error)
                             except Exception:
                                 raise
 
-                        console(result['wiki_page'])
+                        if wiki_handler is None:
+                            console('No wiki-handler defined for this function', msg=Msg.error)
+                            return 0
+
+                        console('Running wikibot...')
+                        console('-'*80)
+                        wiki_handler(pws, result)
+                        console('-'*80)
+                        console('Completed wikibot execution.')
 
                 console('Done.')
 

@@ -34,6 +34,7 @@ import os
 __all__ = [
     'APP_DIR', 'DATA_DIR', 'DAT_SPECIFICATION', 'DAT_SPECIFICATION_CONFIGSPEC',
 ]
+__version__ = '1.0.0a0'
 
 # =============================================================================
 # Functions
