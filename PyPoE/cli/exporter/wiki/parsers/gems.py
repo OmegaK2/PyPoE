@@ -361,7 +361,7 @@ class GemsParser(object):
                     out.append('| %s\n' % '-'.join(item))
 
                 for trans_id in trans_result.missing:
-                    out.append('% s\n' % fmt_values[stat_ids.index(trans_id)])
+                    out.append('| %s\n' % fmt_values[stat_ids.index(trans_id)])
 
                 try:
                     # Format in a readable manner
@@ -371,6 +371,10 @@ class GemsParser(object):
 
             out.append('|}\n')
             #out.append(str(ge))
-            r.add_result(lines=out, out_file='level_progression.txt', wiki_page=base_item_type['Name'])
+            r.add_result(
+                lines=out,
+                out_file='level_progression_%s.txt' % gem,
+                wiki_page=base_item_type['Name'],
+            )
 
         return r
