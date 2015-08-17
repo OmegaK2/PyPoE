@@ -73,11 +73,14 @@ regex_tokens = re.compile(
 # Classes
 # =============================================================================
 
+
 class UnknownIdentifierWarning(UserWarning):
     pass
 
+
 class DuplicateIdentifierWarning(UserWarning):
     pass
+
 
 class Translation(object):
     """
@@ -127,6 +130,7 @@ class Translation(object):
                 etr = tr
 
         return etr
+
 
 class TranslationLanguage(object):
     """
@@ -211,6 +215,9 @@ class TranslationString(object):
 
     __slots__ = ['parent', 'quantifier', 'range', 'string']
 
+    # replacement tags used in translations
+    tags = '%%%s%%', '%%%s$+d'
+
     def __init__(self, parent):
         parent.strings.append(self)
         self.parent = parent
@@ -239,6 +246,13 @@ class TranslationString(object):
     def __repr__(self):
         return 'TranslationString(string=%s, range=%s, quantifier=%s)' % (self.string, self.range, self.quantifier)
 
+    def _tag_iter(self, i):
+        i += 1
+        for tag in self.tags:
+            tag = tag % i
+            yield tag
+
+
     def diff(self, other):
         if not isinstance(other, TranslationString):
             raise TypeError()
@@ -253,17 +267,26 @@ class TranslationString(object):
             print('String mismatch: %s vs %s' % (self.string, other.string))
 
     def format_string(self, values, is_range, use_placeholder, only_values):
-        values = self.quantifier.handle(values, is_range)
-        if only_values:
-            return values
-
         s = self.string.replace('%%', '%')
+        values = self.quantifier.handle(values, is_range)
+
+        if only_values:
+            rtr = []
+            # Some translations don't use all values, so only return the ones
+            # actually used
+            for i, value in enumerate(values):
+                for tag in self._tag_iter(i):
+                    if tag in s:
+                        rtr.append(value)
+
+            return rtr
+
         if use_placeholder:
             for i in range(0, len(values)):
                 # It will go to uppercase letters if above 3, but should be
                 # no problem otherwise
-                s = s.replace('%%%s%%' % (i+1), ascii_letters[23+i])
-                s = s.replace('%%%s$+d' % (i+1), ascii_letters[23+i])
+                for tag in self._tag_iter(i):
+                    s = s.replace(tag, ascii_letters[23+i])
             return s
 
         for i, val in enumerate(values):
@@ -271,8 +294,8 @@ class TranslationString(object):
                 rpl = '(%s to %s)' % tuple(val)
             else:
                 rpl = str(val)
-            s = s.replace('%%%s%%' % (i+1), rpl)
-            s = s.replace('%%%s$+d' % (i+1), rpl)
+            for tag in self._tag_iter(i):
+                s.replace(tag, rpl)
         return s
 
     def match_range(self, values, indexes):
@@ -280,6 +303,7 @@ class TranslationString(object):
         for i in indexes:
             rating += self.range[i].in_range(values[i])
         return rating
+
 
 class TranslationRange(object):
     """
@@ -436,13 +460,16 @@ class TranslationQuantifier(object):
 
 
 class TranslationResult(object):
-    __slots__ = ['found', 'lines', 'indexes', 'missing', 'values']
+    __slots__ = ['found', 'lines', 'indexes', 'missing', 'values', 'invalid']
 
-    def __init__(self, found, lines, indexes, missing, values):
+    def __init__(self, found, lines, indexes, missing, values, invalid):
         self.found = found
         self.lines = lines
         self.indexes = indexes
         self.missing = missing
+        self.values = values
+        self.invalid = invalid
+
 
 class DescriptionFile(object):
     def __init__(self, file_path=None):
@@ -546,16 +573,7 @@ class DescriptionFile(object):
                     offset = offset_next_lang
 
                 for translation_id in translation.ids:
-                    if translation_id in self._translations_hash:
-                        other = self._translations_hash[translation_id]
-                        # Identical, ignore
-                        if other == translation:
-                            continue
-                        '''print('Diff for id: %s' % translation_id)
-                        translation.diff(other)
-                        print('')'''
-                        warnings.warn('Duplicate id "%s", overriding.' % translation_id, DuplicateIdentifierWarning)
-                    self._translations_hash[translation_id] = translation
+                    self._add_translation(translation_id, translation)
                 self._translations.append(translation)
             elif match.group('no_description'):
                 pass
@@ -566,6 +584,21 @@ class DescriptionFile(object):
 
             # Done, search next
             match = match_next
+
+    def _add_translation(self, translation_id, translation):
+        if translation_id in self._translations_hash:
+            other = self._translations_hash[translation_id]
+            # Identical, ignore
+            if other == translation:
+                return
+            '''print('Diff for id: %s' % translation_id)
+            translation.diff(other)
+            print('')'''
+            warnings.warn('Duplicate id "%s"' % translation_id, DuplicateIdentifierWarning)
+            self._translations_hash[translation_id].append(translation)
+        else:
+            self._translations_hash[translation_id] = [translation, ]
+
 
     def merge(self, other):
         """
@@ -579,7 +612,11 @@ class DescriptionFile(object):
         if not isinstance(other, DescriptionFile):
             TypeError('Wrong type: %s' % type(other))
         self._translations += other._translations
-        self._translations_hash.update(other._translations_hash)
+        for trans_id in other._translations_hash:
+            for trans in other._translations_hash[trans_id]:
+                self._add_translation(trans_id, trans)
+
+        #self._translations_hash.update(other._translations_hash)
 
     def get_translation(self, tags, values, lang='English', full_result=False, use_placeholder=False, only_values=False):
         """
@@ -634,17 +671,35 @@ class DescriptionFile(object):
             if tag not in self._translations_hash:
                 trans_missing.append(tag)
                 continue
-            tr = self._translations_hash[tag]
-            index = tr.ids.index(tag)
-            if tr in trans_found:
-                tf_index = trans_found.index(tr)
-                trans_found_indexes[tf_index].append(index)
-                trans_found_values[tf_index].append(values[i])
-            else:
-                trans_found.append(tr)
-                trans_found_indexes.append([index, ])
-                trans_found_values.append([values[i], ])
 
+            #tr = self._translations_hash[tag][-1]
+            for tr in self._translations_hash[tag]:
+                index = tr.ids.index(tag)
+                if tr in trans_found:
+                    tf_index = trans_found.index(tr)
+                    trans_found_indexes[tf_index].append(index)
+                    trans_found_values[tf_index][index] = values[i]
+                else:
+                    trans_found.append(tr)
+                    trans_found_indexes.append([index, ])
+                    # Used to identify invalid translations later
+                    v = [0xFFFFFFFF for i in range(0, len(tr.ids))]
+                    v[index] = values[i]
+                    trans_found_values.append(v)
+
+        # Remove invalid translations
+        invalid = []
+        for i, values in enumerate(trans_found_values):
+            for value in values:
+                if value == 0xFFFFFFFF:
+                    invalid.append(trans_found[i])
+                    break
+
+        for tr in invalid:
+            index = trans_found.index(tr)
+            del trans_found[index]
+            del trans_found_indexes[index]
+            del trans_found_values[index]
 
         trans_lines = []
         for i, tr in enumerate(trans_found):
@@ -655,7 +710,7 @@ class DescriptionFile(object):
                 trans_lines.append(result)
 
         if full_result:
-            return TranslationResult(trans_found, trans_lines, trans_found_indexes, trans_missing, trans_found_values)
+            return TranslationResult(trans_found, trans_lines, trans_found_indexes, trans_missing, trans_found_values, invalid)
         return trans_lines
 
 
@@ -678,6 +733,7 @@ def _diff_list(self, other, diff=True):
     if diff:
         for i in range(0, len_self):
             self[i].diff(other[i])
+
 
 def _diff_dict(self, other):
     key_self = set(tuple(self.keys()))
