@@ -213,11 +213,14 @@ class GemsParser(object):
             attributes = {'Str': 0, 'Dex': 0, 'Int': 0}
 
             stat_ids = []
-            for stat in gepl[0]['StatsKeys']:
+            stat_indexes = []
+            for index, stat in enumerate(gepl[0]['StatsKeys']):
                 stat_ids.append(stat['Id'])
+                stat_indexes.append(index+1)
 
             # Find fixed stats
             fixed = []
+            fixed_indexes = []
             for i in range(1, len(stat_ids)+1):
                 is_static = True
                 val = gepl[0]['Stat%sValue' % i]
@@ -228,13 +231,16 @@ class GemsParser(object):
 
                 if is_static:
                     fixed.append(stat_ids[i-1])
+                    fixed_indexes.append(i)
 
             for item in fixed:
-                stat_ids.remove(item)
+                i = stat_ids.index(item)
+                del stat_ids[i]
+                del stat_indexes[i]
 
-            trans_result = self.descriptions.get_translation(stat_ids, (0, )*len(stat_ids), full_result=True)
+            values = [gepl[0]['Stat%sValue' % i] for i in stat_indexes]
 
-
+            trans_result = self.descriptions.get_translation(stat_ids, values, full_result=True, use_placeholder=True)
 
             has_damage = False
             has_multiplier = False
@@ -320,16 +326,20 @@ class GemsParser(object):
                 if has_damage:
                     out.append('| %.2f%%\n' % (row['DamageMultiplier']/100))
 
-                stat_offset = 1
-                for indexes in trans_result.indexes:
-                    icount = len(indexes)
-                    values = []
-                    for j in range(stat_offset, stat_offset+icount):
-                        values.append(str(row['Stat%sValue' % j]))
+                fmt_values = [row['Stat%sValue' % i] for i in stat_indexes]
+                values = self.descriptions.get_translation(stat_ids, fmt_values, only_values=True)
 
-                    out.append('| %s\n' % '-'.join(values))
-                    stat_offset += icount
-                for index in range(stat_offset, len(stat_ids)+1):
+                for j, value in enumerate(values):
+                    for k, v in enumerate(value):
+                        if isinstance(v, float):
+                            values[j][k] = '{0:.2f}'.format(v)
+                        else:
+                            values[j][k] = '{0:n}'.format(v)
+
+                for item in values:
+                    out.append('| %s\n' % '-'.join(item))
+
+                for index in fixed_indexes:
                     console(str(row['Stat%sValue' % index]))
 
                 try:
