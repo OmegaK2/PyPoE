@@ -141,7 +141,7 @@ class GemsParser(object):
 
         self.descriptions = DescriptionFile(self.desc_path + '/stat_descriptions.txt')
         self.descriptions.merge(DescriptionFile(self.desc_path + '/gem_stat_descriptions.txt'))
-        self.descriptions.merge(DescriptionFile(self.desc_path + '/skill_stat_descriptions.txt'))
+        #self.descriptions.merge(DescriptionFile(self.desc_path + '/skill_stat_descriptions.txt'))
         #self.stat_descriptions = DescriptionFile(glob(desc_path + '/*_descriptions.txt'))
 
     def _get_gem(self, name):
@@ -233,15 +233,36 @@ class GemsParser(object):
                     fixed.append(stat_ids[i-1])
                     fixed_indexes.append(i)
 
+            # First translation probe
+            values = [gepl[0]['Stat%sValue' % i] for i in stat_indexes]
+            trans_result = self.descriptions.get_translation(stat_ids, values, full_result=True, use_placeholder=True)
+
+            # Make a copy
+            # Remove fixed stats that are not required for translation
+            for tr in trans_result.found:
+                all_fixed = True
+                required_ids = []
+                for trans_id in tr.ids:
+                    if trans_id in fixed:
+                        required_ids.append(trans_id)
+                    else:
+                        all_fixed = False
+
+                if not all_fixed:
+                    for required_id in required_ids:
+                        fixed.remove(required_id)
+
             for item in fixed:
                 i = stat_ids.index(item)
                 del stat_ids[i]
                 del stat_indexes[i]
 
+            # Get the real translation string...
             values = [gepl[0]['Stat%sValue' % i] for i in stat_indexes]
-
             trans_result = self.descriptions.get_translation(stat_ids, values, full_result=True, use_placeholder=True)
 
+            # Find out which columns actually change so we don't add unnecessary
+            # data
             has_damage = False
             has_multiplier = False
             has_mana_cost = False
@@ -340,7 +361,7 @@ class GemsParser(object):
                     out.append('| %s\n' % '-'.join(item))
 
                 for trans_id in trans_result.missing:
-                    out.append('% s\n' % ''.join(fmt_values[stat_ids.index(trans_id)]))
+                    out.append('% s\n' % fmt_values[stat_ids.index(trans_id)])
 
                 try:
                     # Format in a readable manner
