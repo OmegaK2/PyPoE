@@ -572,9 +572,10 @@ class DescriptionFile(object):
 
                     offset = offset_next_lang
 
-                for translation_id in translation.ids:
-                    self._add_translation(translation_id, translation)
                 self._translations.append(translation)
+                for translation_id in translation.ids:
+                    self._add_translation_hashed(translation_id, translation)
+
             elif match.group('no_description'):
                 pass
             elif match.group('include'):
@@ -585,20 +586,32 @@ class DescriptionFile(object):
             # Done, search next
             match = match_next
 
-    def _add_translation(self, translation_id, translation):
+    def _add_translation_hashed(self, translation_id, translation):
         if translation_id in self._translations_hash:
-            other = self._translations_hash[translation_id]
-            # Identical, ignore
-            if other == translation:
-                return
-            '''print('Diff for id: %s' % translation_id)
-            translation.diff(other)
-            print('')'''
-            warnings.warn('Duplicate id "%s"' % translation_id, DuplicateIdentifierWarning)
-            self._translations_hash[translation_id].append(translation)
+            for old_translation in self._translations_hash[translation_id]:
+                # Identical, ignore
+                if translation == old_translation:
+                    return
+
+                # Identical ids, but more recent - update
+                if translation.ids == old_translation.ids:
+                    self._translations_hash[translation_id] = [translation, ]
+                    # Attempt to remove the old one if it exists
+                    try:
+                        self._translations.remove(old_translation)
+                    except ValueError as e:
+                        pass
+
+                    return
+
+                '''print('Diff for id: %s' % translation_id)
+                translation.diff(other)
+                print('')'''
+
+                warnings.warn('Duplicate id "%s"' % translation_id, DuplicateIdentifierWarning)
+                self._translations_hash[translation_id].append(translation)
         else:
             self._translations_hash[translation_id] = [translation, ]
-
 
     def merge(self, other):
         """
@@ -614,7 +627,7 @@ class DescriptionFile(object):
         self._translations += other._translations
         for trans_id in other._translations_hash:
             for trans in other._translations_hash[trans_id]:
-                self._add_translation(trans_id, trans)
+                self._add_translation_hashed(trans_id, trans)
 
         #self._translations_hash.update(other._translations_hash)
 
