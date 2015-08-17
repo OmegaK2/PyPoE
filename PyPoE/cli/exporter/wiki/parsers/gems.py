@@ -339,8 +339,8 @@ class GemsParser(object):
                 for item in values:
                     out.append('| %s\n' % '-'.join(item))
 
-                for index in fixed_indexes:
-                    console(str(row['Stat%sValue' % index]))
+                for trans_id in trans_result.missing:
+                    out.append('% s\n' % ''.join(fmt_values[stat_ids.index(trans_id)]))
 
                 try:
                     # Format in a readable manner

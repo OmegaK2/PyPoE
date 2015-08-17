@@ -89,4 +89,4 @@ def get_site():
     return pywikibot.Site(code='en', fam=PoEFamily(), user=input('Enter username:\n'))
 
 def get_edit_message(msg=''):
-    return 'PyPoE.WikiExportBot/%s: %s' % (__version__, msg)
+    return 'PyPoE/ExporterBot/%s: %s' % (__version__, msg)
