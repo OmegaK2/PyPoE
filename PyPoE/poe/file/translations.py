@@ -167,9 +167,7 @@ class TranslationLanguage(object):
         if self.strings != other.strings:
             _diff_list(self.strings, other.strings)
 
-    def get_string(self, values, indexes, use_placeholder):
-        valid_strings = []
-
+    def get_string(self, values, indexes, use_placeholder, only_values):
         # Support for ranges
         is_range = []
         test_values = []
@@ -202,9 +200,7 @@ class TranslationLanguage(object):
         temp.sort(key=lambda x: -x[0])
         ts = temp[0][1]
 
-        valid_strings.append(ts.format_string(short_values, is_range, use_placeholder))
-
-        return valid_strings
+        return ts.format_string(short_values, is_range, use_placeholder, only_values)
 
 
 class TranslationString(object):
@@ -256,7 +252,11 @@ class TranslationString(object):
         if self.string != other.string:
             print('String mismatch: %s vs %s' % (self.string, other.string))
 
-    def format_string(self, values, is_range, use_placeholder):
+    def format_string(self, values, is_range, use_placeholder, only_values):
+        values = self.quantifier.handle(values, is_range)
+        if only_values:
+            return values
+
         s = self.string.replace('%%', '%')
         if use_placeholder:
             for i in range(0, len(values)):
@@ -264,16 +264,15 @@ class TranslationString(object):
                 # no problem otherwise
                 s = s.replace('%%%s%%' % (i+1), ascii_letters[23+i])
                 s = s.replace('%%%s$+d' % (i+1), ascii_letters[23+i])
-        else:
-            values = self.quantifier.handle(values, is_range)
-            s = self.string.replace('%%', '%')
-            for i, val in enumerate(values):
-                if is_range[i]:
-                    rpl = '(%s to %s)' % tuple(val)
-                else:
-                    rpl = str(val)
-                s = s.replace('%%%s%%' % (i+1), rpl)
-                s = s.replace('%%%s$+d' % (i+1), rpl)
+            return s
+
+        for i, val in enumerate(values):
+            if is_range[i]:
+                rpl = '(%s to %s)' % tuple(val)
+            else:
+                rpl = str(val)
+            s = s.replace('%%%s%%' % (i+1), rpl)
+            s = s.replace('%%%s$+d' % (i+1), rpl)
         return s
 
     def match_range(self, values, indexes):
@@ -349,11 +348,10 @@ class TranslationQuantifier(object):
     handlers = {
         'deciseconds_to_seconds': lambda v: v*10,
         'divide_by_one_hundred': lambda v: v/100,
-        'per_minute_to_per_second': lambda v: v*60,
+        'per_minute_to_per_second': lambda v: v/60,
         'milliseconds_to_seconds': lambda v: v/1000,
         'negate': lambda v: v*-1,
         'divide_by_one_hundred_and_negate': lambda v: -v/100,
-        # TODO: check accuracy of those values
         'old_leech_percent': lambda v: v/5,
         'old_leech_permyriad': lambda v: v/50,
         # TODO dp = precision?
@@ -438,9 +436,9 @@ class TranslationQuantifier(object):
 
 
 class TranslationResult(object):
-    __slots__ = ['found', 'lines', 'indexes', 'missing']
+    __slots__ = ['found', 'lines', 'indexes', 'missing', 'values']
 
-    def __init__(self, found, lines, indexes, missing):
+    def __init__(self, found, lines, indexes, missing, values):
         self.found = found
         self.lines = lines
         self.indexes = indexes
@@ -583,7 +581,7 @@ class DescriptionFile(object):
         self._translations += other._translations
         self._translations_hash.update(other._translations_hash)
 
-    def get_translation(self, tags, values, lang='English', full_result=False, use_placeholder=False):
+    def get_translation(self, tags, values, lang='English', full_result=False, use_placeholder=False, only_values=False):
         """
         Attempts to retrieve a translation from the loaded translation file for
         the specified language with the given tags and values.
@@ -614,6 +612,9 @@ class DescriptionFile(object):
         a placeholder (i.e. x, y, z) will be used. Values are still required
         however to find the "correct" wording of the translation.
         :type use_placeholder: bool
+        :param only_values: If true, only the handled values instead of the
+        string are returned
+        :type only_values: bool
         :return: Returns a list of found translation strings. The list may be
         empty if none are found. If full_result is specified, a
         :class:`TranslationResult` object is returned instead
@@ -628,29 +629,33 @@ class DescriptionFile(object):
         trans_found = []
         trans_missing = []
         trans_found_indexes = []
-        for tag in tags:
+        trans_found_values = []
+        for i, tag in enumerate(tags):
             if tag not in self._translations_hash:
                 trans_missing.append(tag)
                 continue
             tr = self._translations_hash[tag]
             index = tr.ids.index(tag)
             if tr in trans_found:
-                trans_found_indexes[trans_found.index(tr)].append(index)
+                tf_index = trans_found.index(tr)
+                trans_found_indexes[tf_index].append(index)
+                trans_found_values[tf_index].append(values[i])
             else:
                 trans_found.append(tr)
                 trans_found_indexes.append([index, ])
+                trans_found_values.append([values[i], ])
+
 
         trans_lines = []
         for i, tr in enumerate(trans_found):
-            indexes = trans_found_indexes[i]
 
             tl = tr.get_language(lang)
-            result = tl.get_string(values, indexes, use_placeholder)
+            result = tl.get_string(trans_found_values[i], trans_found_indexes[i], use_placeholder, only_values)
             if result:
-                trans_lines += result
+                trans_lines.append(result)
 
         if full_result:
-            return TranslationResult(trans_found, trans_lines, trans_found_indexes, trans_missing)
+            return TranslationResult(trans_found, trans_lines, trans_found_indexes, trans_missing, trans_found_values)
         return trans_lines
 
 
@@ -708,7 +713,7 @@ if __name__ == '__main__':
     #profiler.add_function(TranslationLanguage.get_string)
 
     profiler.run("s = DescriptionFile('C:/Temp/MetaData/stat_descriptions.txt')")
-    profiler.run("for i in range(0, 100): t = s.get_translation(tags=['additional_chance_to_take_critical_strike_%'], values=((3, 5)))")
+    profiler.run("for i in range(0, 100): t = s.get_translation(tags=['additional_chance_to_take_critical_strike_%', 'additional_chance_to_take_critical_strike_%'], values=((3, 5), 6))")
 
     profiler.print_stats()
 
