@@ -216,19 +216,18 @@ class GemsParser(object):
                     gepl.append(row)
 
             is_aura = False
-            tf = self.translation_cache.get_file('Metadata/active_skill_gem_stat_descriptions.txt')
+            tf = self.translation_cache.get_file('Metadata/skill_stat_descriptions.txt')
             for tag in skill_gem['GemTagsKeys']:
                 if tag['Id'] == 'aura':
                     is_aura = True
                     tf = self.translation_cache.get_file('Metadata/aura_skill_stat_descriptions.txt')
                 elif tag['Id'] == 'minion':
                     #TODO one of?
+                    #tf = self.translation_cache.get_file('Metadata/minion_skill_stat_descriptions.txt')
                     tf = self.translation_cache.get_file('Metadata/minion_attack_skill_stat_descriptions.txt')
-                    tf = self.translation_cache.get_file('Metadata/minion_skill_stat_descriptions.txt')
-                    tf = self.translation_cache.get_file('Metadata/minion_attack_skill_stat_descriptions.txt')
+                    tf = self.translation_cache.get_file('Metadata/minion_spell_skill_stat_descriptions.txt')
                 elif tag['Id'] == 'curse':
                     tf = self.translation_cache.get_file('Metadata/curse_skill_stat_descriptions.txt')
-
 
             attributes = {'Str': 0, 'Dex': 0, 'Int': 0}
 
