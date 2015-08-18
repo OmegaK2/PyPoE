@@ -31,6 +31,7 @@ optimize __hash__ - very slow atm; or remove, but it is needed for the diffs
 
 # Python
 import re
+import os
 import warnings
 from string import ascii_letters
 from collections import Iterable
@@ -63,7 +64,7 @@ regex_lang = re.compile(
 )
 regex_tokens = re.compile(
     r'(?:^"(?P<header>.*)"$)'
-    r'|(?:^include "(?P<include>.*)"$)'
+    r'|(?:^include "(?P<include>.*)")'
     r'|(?:^no_description (?P<no_description>[\w+%]*)$)'
     r'|(?P<description>^description)',
     re.UNICODE | re.MULTILINE
@@ -472,7 +473,9 @@ class TranslationResult(object):
 
 
 class DescriptionFile(object):
-    def __init__(self, file_path=None):
+    __slots__ = ['_translations', '_translations_hash', '_base_dir', '_parent']
+
+    def __init__(self, file_path=None, base_dir=None, parent=None):
         """
         Creates a new DescriptionFile instance from the given translation
         file(s).
@@ -483,6 +486,12 @@ class DescriptionFile(object):
         """
         self._translations = []
         self._translations_hash = {}
+        self._base_dir = base_dir
+
+        if not isinstance(parent, TranslationFileCache):
+            raise TypeError('Parent must be a TranslationFileCache.')
+
+        self._parent = parent
 
         # Note str must be first since strings are iterable as well
         if isinstance(file_path, str):
@@ -498,7 +507,7 @@ class DescriptionFile(object):
 
         # starts with bom?
         offset = 0
-        match =regex_tokens.search(data, offset)
+        match = regex_tokens.search(data, offset)
         while match is not None:
             offset = match.end()
             match_next = regex_tokens.search(data, offset)
@@ -579,7 +588,13 @@ class DescriptionFile(object):
             elif match.group('no_description'):
                 pass
             elif match.group('include'):
-                pass
+                if self._parent:
+                    self.merge(self._parent.get_file(match.group('include')))
+                elif self._base_dir:
+                    real_path = os.path.join(match.group('include'), self._base_dir)
+                    self.merge(DescriptionFile(real_path, base_dir=self._base_dir))
+                else:
+                    warnings.warn('Translation file includes other file, but no base_dir or parent specified. Skipping.')
             elif match.group('header'):
                 pass
 
@@ -612,6 +627,21 @@ class DescriptionFile(object):
                 self._translations_hash[translation_id].append(translation)
         else:
             self._translations_hash[translation_id] = [translation, ]
+
+    def copy(self):
+        """
+        Creates a copy of this TranslationFile.
+
+        Note that the same objects will still be referenced.
+
+        :return: copy of self
+        :rtype: :class:`TranslationFile`
+        """
+        t = DescriptionFile()
+        for name in self.__slots__:
+            setattr(t, name, getattr(self, name))
+
+        return t
 
     def merge(self, other):
         """
@@ -726,6 +756,23 @@ class DescriptionFile(object):
             return TranslationResult(trans_found, trans_lines, trans_found_indexes, trans_missing, trans_found_values, invalid)
         return trans_lines
 
+
+class TranslationFileCache(object):
+    def __init__(self, base_dir):
+        self._base_dir = base_dir
+        self._desc_dir = os.path.join(base_dir, 'Metadata')
+
+        self._files = {}
+
+    def get_file(self, name):
+        if name not in self._files:
+            self._files[name] = DescriptionFile(
+                file_path=os.path.join(self._base_dir, name),
+                base_dir=self._base_dir,
+                parent=self,
+            )
+
+        return self._files[name]
 
 # =============================================================================
 # Functions
