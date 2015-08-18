@@ -380,8 +380,8 @@ class TranslationQuantifier(object):
         'old_leech_percent': lambda v: v/5,
         'old_leech_permyriad': lambda v: v/50,
         # TODO dp = precision?
-        'per_minute_to_per_second_0dp': lambda v: v*60,
-        'per_minute_to_per_second_2dp': lambda v: round(v*60, 2),
+        'per_minute_to_per_second_0dp': lambda v: v/60,
+        'per_minute_to_per_second_2dp': lambda v: round(v/60, 2),
         'milliseconds_to_seconds_0dp': lambda v: round(v/1000, 0),
         'milliseconds_to_seconds_2dp': lambda v: round(v/1000, 2),
         # Only once TODO
