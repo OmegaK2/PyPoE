@@ -115,10 +115,11 @@ class LuaHandler(ExporterHandler):
         )
 
 class QuestRewardReader(object):
-    def __init__(self, data_path, desc_path):
+    def __init__(self, **kwargs):
         opt = {
             'use_dat_value': False,
         }
+        data_path = kwargs['data_path']
 
         self.base_item_types = DatFile('BaseItemTypes.dat', read_file=data_path, options=opt).reader
 

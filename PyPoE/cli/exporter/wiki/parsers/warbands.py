@@ -78,13 +78,14 @@ class WarbandsHandler(ExporterHandler):
         )
 
 class WarbandsParser(object):
-    def __init__(self, data_path, desc_path):
+    def __init__(self, **kwargs):
         #self.mods = DatFile('Mods.dat', read_file=data_path).reader
         #self.stats = DatFile('Stats.dat', read_file=data_path).reader
 
         opt = {
             'use_dat_value': False,
         }
+        data_path = kwargs['data_path']
 
         self.monster_packs = DatFile('MonsterPacks.dat', read_file=data_path, options=opt).reader
         self.monster_varieties = DatFile('MonsterVarieties.dat', read_file=data_path, options=opt).reader

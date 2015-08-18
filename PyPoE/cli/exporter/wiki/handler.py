@@ -68,7 +68,7 @@ class ExporterHandler(BaseHandler):
                     return -1
 
             console('Reading .dat files...')
-            parser = cls(data_path=data_dir, desc_path=desc_dir)
+            parser = cls(base_path=temp_dir, data_path=data_dir, desc_path=desc_dir)
 
             console('Parsing...')
             if handler:

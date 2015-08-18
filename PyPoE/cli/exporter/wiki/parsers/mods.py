@@ -108,15 +108,15 @@ class ModParser(object):
     #affix_wiki = '|-\n| %(Name)s\n| %(Description)s\n| %(Group)s \n| %(0)s || %(29)s || %(30)s || %(31)s || %(5)s || %(9)s || %(10)s || %(11)s || %(12)s || %(13)s || %(14)s || %(15)s  || %(143)s || %(144)s || %(145)s || %(146)s || %(147)s || %(148)s'
     affix_wiki = '|-\n| %(Name)s\n| %(Description)s\n| %(Group)s \n| %(0)s \n| %(29)s \n| %(30)s \n| %(31)s \n| %(GroupWeight)s\n'
 
-    def __init__(self, data_path, desc_path):
-        self.desc_path = desc_path
+    def __init__(self, **kwargs):
+        self.desc_path = kwargs['desc_path']
 
         opt = {
             'use_dat_value': False,
         }
 
-        self.mods = DatFile('Mods.dat', read_file=data_path, options=opt).reader
-        self.stats = DatFile('Stats.dat', read_file=data_path, options=opt).reader
+        self.mods = DatFile('Mods.dat', read_file=kwargs['data_path'], options=opt).reader
+        self.stats = DatFile('Stats.dat', read_file=kwargs['data_path'], options=opt).reader
 
         self.descriptions = DescriptionFile(self.desc_path + '/stat_descriptions.txt')
         #self.stat_descriptions = DescriptionFile(glob(desc_path + '/*_descriptions.txt'))

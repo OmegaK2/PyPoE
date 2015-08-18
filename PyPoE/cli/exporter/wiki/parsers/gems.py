@@ -31,7 +31,7 @@ import sys
 
 # Self
 from PyPoE.poe.file.dat import RelationalReader
-from PyPoE.poe.file.translations import DescriptionFile
+from PyPoE.poe.file.translations import TranslationFileCache
 from PyPoE.poe.sim.formula import gem_stat_requirement, GemTypes
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter.wiki.handler import *
@@ -124,24 +124,35 @@ class GemsHandler(ExporterHandler):
             page.text = self.regex_replace.sub(''.join(row['lines']), page.text)
             page.save(pws.get_edit_message('Gem level progression'))
 
+
 class GemsParser(object):
-    def __init__(self, data_path, desc_path):
-        self.desc_path = desc_path
-        self.data_path = data_path
+    def __init__(self, **kwargs):
+        self.desc_path = kwargs['desc_path']
+        self.data_path = kwargs['data_path']
 
         self.opt = {
             'use_dat_value': False,
         }
 
         self.reader = RelationalReader(
-            data_path,
+            self.data_path,
             files=['BaseItemTypes.dat', 'SkillGems.dat', 'Stats.dat'],
             options=self.opt,
         )
 
-        self.descriptions = DescriptionFile(self.desc_path + '/stat_descriptions.txt')
+        self.translation_cache = TranslationFileCache(kwargs['base_path'])
+        # Touch files we'll need
+        self.translation_cache.get_file('Metadata/stat_descriptions.txt')
+        self.translation_cache.get_file('Metadata/gem_stat_descriptions.txt')
+        self.translation_cache.get_file('Metadata/skill_stat_descriptions.txt')
+        self.translation_cache.get_file('Metadata/active_skill_gem_stat_descriptions.txt')
+
+        '''self.descriptions = DescriptionFile(self.desc_path + '/stat_descriptions.txt')
         self.descriptions.merge(DescriptionFile(self.desc_path + '/gem_stat_descriptions.txt'))
-        #self.descriptions.merge(DescriptionFile(self.desc_path + '/skill_stat_descriptions.txt'))
+        self.descriptions.merge(DescriptionFile(self.desc_path + '/skill_stat_descriptions.txt'))
+        self.descriptions.merge(DescriptionFile(self.desc_path + '/aura_skill_stat_descriptions.txt'))
+        self.descriptions.merge(DescriptionFile(self.desc_path + '/active_skill_gem_stat_descriptions.txt'))
+        self.descriptions.merge(DescriptionFile(self.desc_path + '/minion_skill_gem_stat_descriptions.txt'))'''
         #self.stat_descriptions = DescriptionFile(glob(desc_path + '/*_descriptions.txt'))
 
     def _get_gem(self, name):
@@ -205,10 +216,19 @@ class GemsParser(object):
                     gepl.append(row)
 
             is_aura = False
+            tf = self.translation_cache.get_file('Metadata/active_skill_gem_stat_descriptions.txt')
             for tag in skill_gem['GemTagsKeys']:
                 if tag['Id'] == 'aura':
                     is_aura = True
-                    break
+                    tf = self.translation_cache.get_file('Metadata/aura_skill_stat_descriptions.txt')
+                elif tag['Id'] == 'minion':
+                    #TODO one of?
+                    tf = self.translation_cache.get_file('Metadata/minion_attack_skill_stat_descriptions.txt')
+                    tf = self.translation_cache.get_file('Metadata/minion_skill_stat_descriptions.txt')
+                    tf = self.translation_cache.get_file('Metadata/minion_attack_skill_stat_descriptions.txt')
+                elif tag['Id'] == 'curse':
+                    tf = self.translation_cache.get_file('Metadata/curse_skill_stat_descriptions.txt')
+
 
             attributes = {'Str': 0, 'Dex': 0, 'Int': 0}
 
@@ -235,7 +255,7 @@ class GemsParser(object):
 
             # First translation probe
             values = [gepl[0]['Stat%sValue' % i] for i in stat_indexes]
-            trans_result = self.descriptions.get_translation(stat_ids, values, full_result=True, use_placeholder=True)
+            trans_result = tf.get_translation(stat_ids, values, full_result=True, use_placeholder=True)
 
             # Make a copy
             # Remove fixed stats that are not required for translation
@@ -259,7 +279,7 @@ class GemsParser(object):
 
             # Get the real translation string...
             values = [gepl[0]['Stat%sValue' % i] for i in stat_indexes]
-            trans_result = self.descriptions.get_translation(stat_ids, values, full_result=True, use_placeholder=True)
+            trans_result = tf.get_translation(stat_ids, values, full_result=True, use_placeholder=True)
 
             # Find out which columns actually change so we don't add unnecessary
             # data
@@ -293,17 +313,17 @@ class GemsParser(object):
             if has_mana_cost:
                 offset += 1
                 if is_aura:
-                    out.append('| c%s = Mana<br>Reserved\n' % offset)
+                    out.append('| c%s=Mana<br>Reserved\n' % offset)
                 else:
-                    out.append('| c%s = Mana<br>Cost\n' % offset)
+                    out.append('| c%s=Mana<br>Cost\n' % offset)
 
             if has_multiplier:
                 offset += 1
-                out.append('| c%s = Mana<br>Multiplier\n' % offset)
+                out.append('| c%s=Mana<br>Multiplier\n' % offset)
 
             if has_damage:
                 offset += 1
-                out.append('| c%s = Damage<br>Multiplier\n' % offset)
+                out.append('| c%s=Damage<br>Multiplier\n' % offset)
 
             for index, item in enumerate(trans_result.lines):
                 line = '| c%s=%s\n' % (index+offset+1, item)
@@ -348,7 +368,7 @@ class GemsParser(object):
                     out.append('| %.2f%%\n' % (row['DamageMultiplier']/100))
 
                 fmt_values = [row['Stat%sValue' % i] for i in stat_indexes]
-                values = self.descriptions.get_translation(stat_ids, fmt_values, only_values=True)
+                values = tf.get_translation(stat_ids, fmt_values, only_values=True)
 
                 for j, value in enumerate(values):
                     for k, v in enumerate(value):
