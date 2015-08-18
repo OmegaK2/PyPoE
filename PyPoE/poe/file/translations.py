@@ -488,7 +488,7 @@ class DescriptionFile(object):
         self._translations_hash = {}
         self._base_dir = base_dir
 
-        if not isinstance(parent, TranslationFileCache):
+        if parent is not None and not isinstance(parent, TranslationFileCache):
             raise TypeError('Parent must be a TranslationFileCache.')
 
         self._parent = parent
