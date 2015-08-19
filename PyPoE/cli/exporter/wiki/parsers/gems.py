@@ -28,6 +28,7 @@ TODO
 # Python
 import re
 import sys
+import warnings
 
 # Self
 from PyPoE.poe.file.dat import RelationalReader
@@ -35,6 +36,214 @@ from PyPoE.poe.file.translations import TranslationFileCache
 from PyPoE.poe.sim.formula import gem_stat_requirement, GemTypes
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter.wiki.handler import *
+
+# =============================================================================
+# Data
+# =============================================================================
+
+# Abbreviations
+abbreviations = {
+    'x% increased Critical Strike Multiplier': '',
+    'Base duration is x seconds': '',
+    'You and nearby allies deal x-y additional Lightning Damage with Attacks': '',
+    'x% increased Area of Effect radius': '',
+    'You and nearby allies deal x% more Lightning Damage with Spells': '',
+    'Minions have x% increased Attack Speed': '',
+    'Minions have x% increased Movement Speed': '',
+    'x% increased Minion Maximum Life': '',
+    'Cursed enemies lose x% Elemental Resistances': '',
+    'x% increased Character Size': '',
+    'Golems grant x% additional Physical Damage Reduction': '',
+    'Deals x-y Cold Damage': '',
+    'x% increased Rarity of Items Dropped by Slain Enemies': '',
+    'x Life gained for each enemy hit by Supported Attack': '',
+    'x% more Spell Damage': '',
+    'Totems and Minions summoned by this Skill have x% Fire Resistance': '',
+    'Totems and Minions summoned by this Skill have x% Cold Resistance': '',
+    'Totems and Minions summoned by this Skill have x% Lightning Resistance': '',
+    'x% reduced Curse Duration': '',
+    'Golems Grant x% increased Critical Strike Chance': '',
+    'Golems Grant x% increased Accuracy': '',
+    'x% increased Minion Damage': '',
+    'x% more Damage against Chilled Enemies': '',
+    'Minions deal x% less Damage': '',
+    'x% increased Cast Speed': '',
+    'Can use Items requiring up to level x': '',
+    'Deals x% of Base Damage': '',
+    'Minions\' Attacks deal x-y additional Physical Damage': '',
+    'x% chance to cause Monsters to Flee when hit': '',
+    'You and nearby allies gain x additional Evasion Rating': '',
+    'Summons x Skeleton Warriors': '',
+    'Summons x Skeleton Archers': '',
+    'Summons x Skeleton Mage': '',
+    'Can summon up to x Skeletons at a time': '',
+    'Deals x-y Lightning Damage': '',
+    'x% increased Duration ': '',
+    'x% increased Buff Duration Per Endurance Charge': '',
+    'You and nearby allies gain x additional Energy Shield': '',
+    'Deals x-y Fire Damage': '',
+    'x% chance to Ignite enemies': '',
+    'x% increased Damage': '',
+    'Cursed enemies take x% increased Physical damage': '',
+    'x% increased Blinding duration': '',
+    'Deals x Fire Damage per second': '',
+    'x% Chance to Block': '',
+    'x% Chance to Block Spells': '',
+    'Minions recover x Life when they Block': '',
+    'Explosion deals x-y Base Fire damage per Fuse Charge': '',
+    'x% more Melee Attack Speed': '',
+    'Ignites for x% of Overkill Damage': '',
+    'x% more Area Damage': '',
+    'x% reduced Enemy Stun Threshold': 'Stun<br>Threshold',
+    'x% more Weapon Elemental Damage': '',
+    'x% increased Projectile Speed': '',
+    'x% increased Projectile Damage': '',
+    'x% chance to Cast this Spell when you take a total of y Damage': '',
+    'x% less Damage': '',
+    'This Gem can only Support Skill Gems requiring Level x or lower': '',
+    'Chains x Times': '',
+    'Deals x Base Chaos Damage per second': '',
+    'Creates Corpses up to Level x': '',
+    'x additional Arrows': '',
+    'Cursed enemies have x% reduced Accuracy Rating': '',
+    'Cursed enemies deal x% less Damage': '',
+    'You and nearby allies gain x% increased Attack Speed': '',
+    'You and nearby allies gain x% increased Cast Speed': '',
+    'You and nearby allies gain x% increased Movement Speed': '',
+    'x% increased Attack Speed': '',
+    'x% more Mine Damage': '',
+    'Shields break after x total Damage is prevented': '',
+    'x additional Armour': '',
+    'Adds x-y Lightning Damage to Spells': '',
+    'Adds x-y Lightning Damage to Attacks': '',
+    'x% increased maximum Life': '',
+    'Minions deal x% increased Physical Damage with Melee Attacks': '',
+    'x% more Cast Speed': '',
+    'x% increased Damage per one hundred nearby Enemies': '',
+    'x Mana Regenerated per second': '',
+    'Gain x% of your Physical Damage as Extra Fire Damage': '',
+    'x% less Projectile Damage': '',
+    'Cursed enemies lose x% Lightning Resistance': '',
+    'Cursed enemies have x% chance to be Shocked by Lightning Damage': '',
+    'You and nearby allies gain x% additional Fire Resistance': '',
+    'You and nearby allies gain x% additional maximum Fire Resistance': '',
+    'You and nearby allies regenerate x Mana per second': '',
+    'x% increased Burning Damage': '',
+    'Freezes enemies as though dealing x% more Damage': '',
+    'x% less Skill Effect Duration': '',
+    'x% less Damage to main target': '',
+    'x% less Damage to other targets': '',
+    'x% more Melee Physical Damage when on Full Life': '',
+    'Golems Grant x% increased Damage': '',
+    'Cursed enemies have x% reduced Stun Recovery': '',
+    'Cursed enemies have an additional x% chance to be Stunned': '',
+    'Cursed enemies have a x% chance to grant an Endurance Charge when slain': '',
+    'Gain Onslaught for x seconds on Killing a Shocked Enemy': '',
+    'x% chance to Shock enemies': '',
+    'Gain x% of Physical Damage as Extra Chaos Damage': '',
+    'x% increased Mana Leeched per second': '',
+    'x to Level of Supported Active Skill Gems': '',
+    'Gain x% of Physical Damage as Extra Lightning Damage': '',
+    'x% chance to gain a Power Charge on Critical Strike': '',
+    'x Life regenerated per second': '',
+    'You and nearby allies gain x% to all Elemental Resistances': '',
+    'x% more Melee Physical Damage': '',
+    'Penetrates x% Cold Resistance': '',
+    'x% more Trap Damage': '',
+    'Adds x-y Cold Damage to Spells': '',
+    'Adds x-y Cold Damage to Attacks': '',
+    'Enemy Block Chance reduced by x% against this Skill': '',
+    'Enemy Dodge Chance reduced by x% against this Skill': '',
+    'Cursed enemies have x% less Evasion': '',
+    'Cursed enemies grant x Life when Hit by Attacks': '',
+    'Cursed enemies grant x Mana when Hit by Attacks': '',
+    'Cursed enemies have a x% chance to grant a Frenzy Charge when slain': '',
+    'Minions have x% less Life': '',
+    'Minions have x% less Energy Shield': '',
+    'x% reduced Mana Cost': '',
+    'Can deal x-y base Fire damage': '',
+    'Can deal x-y base Cold damage': '',
+    'Can deal x-y base Lightning damage': '',
+    'x% increased Critical Strike Chance': '',
+    'x% increased Life Leeched per second': '',
+    'x% more Damage per Repeat': '',
+    'x% Chance to Dodge Attacks': '',
+    'x% Chance to Dodge Spell Damage': '',
+    'x% increased Spell Damage': '',
+    'x Endurance Charges granted per one hundred nearby enemies': '',
+    'x% increased Movement Speed': '',
+    'x% increased totem life': '',
+    'x% increased effect of Aura': '',
+    'Minions deal x% more Damage': '',
+    'x% increased Minion Movement Speed': '',
+    'Minions have x% increased Cast Speed': '',
+    'Cursed enemies grant x% more Physical Melee Damage on Melee hit': '',
+    'Cursed enemies grant x% increased Attack Speed on Melee hit': '',
+    'Deals x-y Physical Damage': '',
+    'Supported Triggered Spells have x% increased Spell Damage': '',
+    'x% to Quality of Supported Active Skill Gems': '',
+    'x% more Melee Physical Damage against Bleeding Enemies': '',
+    'x% increased Chill Duration on enemies': '',
+    'x% more Damage at Maximum Charge Distance': '',
+    'x% more Damage while Dead': '',
+    'x% increased Melee Physical Damage': '',
+    'Penetrates x% Fire Resistance': '',
+    'x% chance to Cast this Spell when Stunned': '',
+    'x additional Accuracy Rating': '',
+    'x% reduced Movement Speed per Nearby Enemy': '',
+    'x% reduced Movement Speed': '',
+    'x% chance to Knock Enemies Back on hit': '',
+    'x% less Physical Damage taken when Hit': '',
+    'x% less Fire Damage taken when Hit': '',
+    'You and nearby allies deal x-y additional Fire Damage with Attacks': '',
+    'You and nearby allies deal x-y additional Fire Damage with Spells': '',
+    'Deals x-y base Lightning Damage per Power Charge': '',
+    'Deals x-y base Fire Damage per Endurance Charge': '',
+    'Deals x-y base Cold Damage per Frenzy Charge': '',
+    'Penetrates x% Lightning Resistance': '',
+    'Cursed enemies take x% increased Damage from Projectiles': '',
+    'Cursed enemies lose x% Cold Resistance': '',
+    'Cursed enemies have x% chance to be Frozen by Cold Damage': '',
+    'You and nearby allies gain x% additional Lightning Resistance': '',
+    'You and nearby allies gain x% additional maximum Lightning Resistance': '',
+    'You and nearby allies gain x% additional Cold Resistance': '',
+    'You and nearby allies gain x% additional maximum Cold Resistance': '',
+    'Cursed enemies lose x% Fire Resistance': '',
+    'Cursed enemies have x% chance to be Ignited by Fire Damage': '',
+    'x% more Physical Projectile Attack Damage': '',
+    'You and nearby allies regenerate x% Life per second': '',
+    'x% more Trap and Mine Damage': '',
+    'x% less Projectile Speed': '',
+    'x% more Projectile Damage': '',
+    'Cursed enemies are x% slower': '',
+    'Cursed enemies take x% more extra damage from Critical Strikes': '',
+    'Cursed enemies have an additional x% chance to receive a Critical Strike': '',
+    'Cursed enemies grant x Life when Killed': '',
+    'Cursed enemies grant x Mana when Killed': '',
+    'Cursed enemies have a x% chance to grant a Power Charge when slain': '',
+    'x% chance of Projectiles Piercing': '',
+    'Leeches x Life to you for each corpse consumed': '',
+    'Leeches x Mana to you for each corpse consumed': '',
+    'Wall will be x units long': '',
+    'Adds an additional Projectile': '',
+    'x% increased Quantity of Items Dropped by Slain Enemies': '',
+    'Gain x% of Cold Damage as Extra Fire Damage': '',
+    'x% chance to Cast linked Spells when you Crit an Enemy': '',
+    'You and nearby allies gain x% more Armour': '',
+    'x% chance to gain a Frenzy Charge on Killing a Frozen Enemy': '',
+    'You and nearby allies gain x% of your Physical Damage as Extra Cold Damage': '',
+    'Supported skills deal x% less Damage': '',
+    'Deals x-y Chaos Damage': '',
+}
+
+# =============================================================================
+# Warnings & Exceptions
+# =============================================================================
+
+
+class MissingAbbreviation(UserWarning):
+    pass
+
 
 # =============================================================================
 # Classes
@@ -203,10 +412,15 @@ class GemsParser(object):
             base_item_type, skill_gem = gems[gem]
 
             # TODO: Maybe catch empty stuff here?
-            exp = []
+            exp = 0
+            exp_level = []
+            exp_total = []
             for row in self.reader['ItemExperiencePerLevel.dat']:
                 if row['BaseItemTypesKey'] == base_item_type:
-                    exp.append(row)
+                    exp_new = row['Experience']
+                    exp_level.append(exp_new - exp)
+                    exp_total.append(exp_new)
+                    exp = exp_new
 
             ge = skill_gem['GrantedEffectsKey']
 
@@ -325,8 +539,16 @@ class GemsParser(object):
                 out.append('| c%s=Damage<br>Multiplier\n' % offset)
 
             for index, item in enumerate(trans_result.lines):
+                if item in abbreviations:
+                    abbr = abbreviations[item]
+                    if abbr:
+                        item = '{{Abbr|%s|%s}}' % (abbr, item)
+                    else:
+                        warnings.warn(item, MissingAbbreviation)
+                else:
+                    warnings.warn(item, MissingAbbreviation)
                 line = '| c%s=%s\n' % (index+offset+1, item)
-                out.append(line.replace('0', 'x'))
+                out.append(line)
             offset += len(trans_result.lines)
             for index, item in enumerate(trans_result.missing):
                 line = '| c%s=%s\n' % (index+offset+1, item)
@@ -382,11 +604,12 @@ class GemsParser(object):
                 for trans_id in trans_result.missing:
                     out.append('| %s\n' % fmt_values[stat_ids.index(trans_id)])
 
-                try:
-                    # Format in a readable manner
-                    out.append('| {0:,d}\n'.format(exp[i]['Experience']))
-                except IndexError:
-                    out.append('| {{n/a}}\n')
+                for exp in (exp_level, exp_total):
+                    try:
+                        # Format in a readable manner
+                        out.append('| {0:,d}\n'.format(exp[i]))
+                    except IndexError:
+                        out.append('| {{n/a}}\n')
 
             out.append('|}\n')
             #out.append(str(ge))
