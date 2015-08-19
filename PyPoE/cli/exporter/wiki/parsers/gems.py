@@ -592,8 +592,8 @@ class GemsParser(object):
                     fixed_indexes.append(i)
 
             # First translation probe
-            values = [gepl[0]['Stat%sValue' % i] for i in stat_indexes]
-            trans_result = tf.get_translation(stat_ids, values, full_result=True, use_placeholder=True)
+            values_result = [gepl[0]['Stat%sValue' % i] for i in stat_indexes]
+            trans_result = tf.get_translation(stat_ids, values_result, full_result=True, use_placeholder=True)
 
             # Make a copy
             # Remove fixed stats that are not required for translation
@@ -616,8 +616,8 @@ class GemsParser(object):
                 del stat_indexes[i]
 
             # Get the real translation string...
-            values = [gepl[0]['Stat%sValue' % i] for i in stat_indexes]
-            trans_result = tf.get_translation(stat_ids, values, full_result=True, use_placeholder=True)
+            values_result = [gepl[0]['Stat%sValue' % i] for i in stat_indexes]
+            trans_result = tf.get_translation(stat_ids, values_result, full_result=True, use_placeholder=True)
 
             # Find out which columns actually change so we don't add unnecessary
             # data
@@ -728,15 +728,27 @@ class GemsParser(object):
                     out.append('| %.2f%%\n' % (row['DamageMultiplier']/100))
 
                 fmt_values = [row['Stat%sValue' % i] for i in stat_indexes]
-                values = tf.get_translation(stat_ids, fmt_values, full_result=True, only_values=True)
-                for j, value in enumerate(values.values):
-                    for k, v in enumerate(value):
-                        if isinstance(v, float):
-                            values.values[j][k] = '{0:.2f}'.format(v)
-                        else:
-                            values.values[j][k] = '{0:n}'.format(v)
+                values_result = tf.get_translation(stat_ids, fmt_values, full_result=True, only_values=True)
+                for j in range(0, len(values_result.values)):
+                    try:
+                        values_result.lines[j]
+                    except IndexError:
+                        values_result.lines.append([])
 
-                for item in values.values:
+                    for k in range(0, len(values_result.values[j])):
+                        value_real = values_result.values[j][k]
+                        try:
+                            value_fmt = values_result.lines[j][k]
+                        except IndexError:
+                            values_result.lines[j].append(0)
+                            value_fmt = value_real
+
+                        if isinstance(value_fmt, float):
+                            values_result.lines[j][k] = '{0:.2f}'.format(value_fmt)
+                        else:
+                            values_result.lines[j][k] = '{0:n}'.format(value_fmt)
+
+                for item in values_result.lines:
                     out.append('| %s\n' % '&ndash;'.join(item))
 
                 for trans_id in trans_result.missing:
@@ -752,7 +764,6 @@ class GemsParser(object):
                             out.append('| {0:.2f}\n'.format(aspd))
                         out.append('| {0:,d}\n'.format(life))
 
-
                 for exp in (exp_level, exp_total):
                     try:
                         # Format in a readable manner
@@ -761,7 +772,6 @@ class GemsParser(object):
                         out.append('| {{n/a}}\n')
 
             out.append('|}\n')
-            #out.append(str(ge))
             r.add_result(
                 lines=out,
                 out_file='level_progression_%s.txt' % gem,
