@@ -335,6 +335,36 @@ class GemsHandler(ExporterHandler):
 
 
 class GemsParser(object):
+
+    _summon_map = {
+        # Minions
+        'Raise Zombie': ['RaisedZombie', ],
+        'Blink Arrow': ['Clone', ],
+        'Mirror Arrow': ['Double', ],
+        'Summon Chaos Golem': ['ChaosGolemSummoned', ],
+        'Summon Flame Golem': ['FlameGolemSummoned', ],
+        'Summon Ice Golem': ['IceGolemSummoned', ],
+        'Summon Raging Spirit': ['SummonedSkull', ],
+        'Summon Skeletons': ['RaisedSkeleton', ],
+        'Vaal Summon Skeletons': [
+            'RaisedSkeletonMeleeVaal',
+            'RaisedSkeletonRangedVaal',
+            'RaisedSkeletonSpellcasterVaal',
+            'RaisedSkeletonGeneralVaal',
+            'RaisedSkeletonGeneralRangedVaal',
+        ],
+        # Totems
+        'Decoy Totem': ['TauntTotem', ],
+        'Devouring Totem': ['Totem', ],
+        'Flame Totem': ['Totem', ],
+        'Rejuvenation Totem': ['Totem', ],
+        'Searing Bond': ['Totem', ],
+        'Shockwave Totem': ['Totem', ],
+        # Other
+        'Animate Guardian': ['AnimatedArmour', ],
+        'Animate Weapon': ['AnimatedWeapon', ],
+    }
+
     def __init__(self, **kwargs):
         self.desc_path = kwargs['desc_path']
         self.data_path = kwargs['data_path']
@@ -345,7 +375,11 @@ class GemsParser(object):
 
         self.reader = RelationalReader(
             self.data_path,
-            files=['BaseItemTypes.dat', 'SkillGems.dat', 'Stats.dat'],
+            files=[
+                'BaseItemTypes.dat',
+                'SkillGems.dat',
+                'Stats.dat'
+            ],
             options=self.opt,
         )
 
@@ -363,6 +397,61 @@ class GemsParser(object):
         self.descriptions.merge(DescriptionFile(self.desc_path + '/active_skill_gem_stat_descriptions.txt'))
         self.descriptions.merge(DescriptionFile(self.desc_path + '/minion_skill_gem_stat_descriptions.txt'))'''
         #self.stat_descriptions = DescriptionFile(glob(desc_path + '/*_descriptions.txt'))
+
+    def _get_monster_data(self, gem_name):
+        if gem_name not in self._summon_map:
+            console('No mapping defined for "%s" - fix me' % gem_name, msg=Msg.error)
+            return
+
+        mtypes = []
+        worker = list(self._summon_map[gem_name])
+        for row in self.reader['MonsterTypes.dat']:
+            found = False
+            for types_name_index in worker:
+                if types_name_index == row['Index0']:
+                    found = True
+                    break
+
+            if found:
+                worker.remove(types_name_index)
+                mtypes.append(row)
+
+                # Found everything, stop early
+                if not worker:
+                    break
+
+        if not mtypes:
+            console('Failed to find the index for "%s" in MonsterTypes.dat' % gem_name, msg=Msg.error)
+            return
+
+        result = []
+        for row in self.reader['MonsterVarieties.dat']:
+            found = False
+            for mt in mtypes:
+                # There is more then one variety, but we only need one
+                if row['MonsterTypesKey'] == mt:
+                    found = True
+                    break
+
+            if found:
+                mtypes.remove(mt)
+                result.append(row)
+
+                # Found everything, stop early
+                if not mtypes:
+                    break
+
+        return result
+
+    def _get_monster_stats(self, mv, minion_level):
+        default = self.reader['DefaultMonsterStats.dat'][minion_level-1]
+
+        life = default['Life'] * mv['LifeMultiplier'] // 100
+        damage_min =  default['Damage'] * mv['DamageMultiplier'] // 100
+        damage_max = damage_min * 7 // 3
+        aspd = 1500 / mv['AttackSpeed']
+
+        return (damage_min, damage_max), aspd, life
 
     def _get_gem(self, name):
         base_item_type = None
@@ -402,6 +491,8 @@ class GemsParser(object):
         self.reader.read_file('GrantedEffects.dat')
         self.reader.read_file('GrantedEffectsPerLevel.dat')
         self.reader.read_file('ItemExperiencePerLevel.dat')
+        self.reader.read_file('MonsterTypes.dat')
+        self.reader.read_file('MonsterVarieties.dat')
 
         console('Processing information...')
 
@@ -422,6 +513,10 @@ class GemsParser(object):
                     exp_total.append(exp_new)
                     exp = exp_new
 
+            if not exp_level:
+                console('No experience progression found for "%s". Skipping.' % gem, msg=Msg.error)
+                continue
+
             ge = skill_gem['GrantedEffectsKey']
 
             gepl = []
@@ -429,19 +524,28 @@ class GemsParser(object):
                 if row['GrantedEffectsKey'] == ge:
                     gepl.append(row)
 
+            if not gepl:
+                console('No level progression found for "%s". Skipping.' % gem, msg=Msg.error)
+                continue
+
             is_aura = False
+            is_minion = False
+            is_totem = False
             tf = self.translation_cache.get_file('Metadata/skill_stat_descriptions.txt')
             for tag in skill_gem['GemTagsKeys']:
                 if tag['Id'] == 'aura':
                     is_aura = True
                     tf = self.translation_cache.get_file('Metadata/aura_skill_stat_descriptions.txt')
                 elif tag['Id'] == 'minion':
+                    is_minion = True
                     #TODO one of?
                     #tf = self.translation_cache.get_file('Metadata/minion_skill_stat_descriptions.txt')
                     tf = self.translation_cache.get_file('Metadata/minion_attack_skill_stat_descriptions.txt')
                     tf = self.translation_cache.get_file('Metadata/minion_spell_skill_stat_descriptions.txt')
                 elif tag['Id'] == 'curse':
                     tf = self.translation_cache.get_file('Metadata/curse_skill_stat_descriptions.txt')
+                elif tag['Id'] == 'totem':
+                    is_totem = True
 
             attributes = {'Str': 0, 'Dex': 0, 'Int': 0}
 
@@ -450,6 +554,26 @@ class GemsParser(object):
             for index, stat in enumerate(gepl[0]['StatsKeys']):
                 stat_ids.append(stat['Id'])
                 stat_indexes.append(index+1)
+
+
+            has_monster_stats = False
+            monster_stat_index = 0
+            # Handle special stats. Can only have one
+            for stat in ('display_minion_monster_level', 'base_active_skill_totem_level'):
+                if stat in stat_ids:
+                    index = stat_ids.index(stat)
+                    monster_stat_index = stat_indexes[index]
+                    has_monster_stats = True
+                    del stat_ids[index]
+                    del stat_indexes[index]
+                    break
+
+            if has_monster_stats:
+                monster_varieties = self._get_monster_data(gem)
+                # No result->skip
+                # message will be handled by _get_monster_data
+                if monster_varieties is None:
+                    continue
 
             # Find fixed stats
             fixed = []
@@ -550,9 +674,23 @@ class GemsParser(object):
                 line = '| c%s=%s\n' % (index+offset+1, item)
                 out.append(line)
             offset += len(trans_result.lines)
+
             for index, item in enumerate(trans_result.missing):
                 line = '| c%s=%s\n' % (index+offset+1, item)
                 out.append(line)
+            offset += len(trans_result.missing)
+
+            if has_monster_stats:
+                offset += 1
+                out.append('| c%s=Minion Level\n' % offset)
+                for mv in monster_varieties:
+                    # Only hp for totems
+                    if is_minion:
+                        out.append('| c%s=%s<br>Base Damage\n' % (offset+1, mv['Name']))
+                        out.append('| c%s=%s<br>Base Attack Speed\n' % (offset+2, mv['Name']))
+                        offset += 2
+                    offset += 1
+                    out.append('| c%s=%s<br>Base Life\n' % (offset, mv['Name']))
 
             out.append('}}\n')
 
@@ -599,10 +737,21 @@ class GemsParser(object):
                             values[j][k] = '{0:n}'.format(v)
 
                 for item in values:
-                    out.append('| %s\n' % '-'.join(item))
+                    out.append('| %s\n' % '&ndash;'.join(item))
 
                 for trans_id in trans_result.missing:
                     out.append('| %s\n' % fmt_values[stat_ids.index(trans_id)])
+
+                if has_monster_stats:
+                    minion_level = row['Stat%sValue' % monster_stat_index]
+                    out.append('| %s\n' % minion_level)
+                    for mv in monster_varieties:
+                        dmg, aspd, life = self._get_monster_stats(mv, minion_level)
+                        if is_minion:
+                            out.append('| {0:d}&ndash;{1:d}\n'.format(*dmg))
+                            out.append('| {0:.2f}\n'.format(aspd))
+                        out.append('| {0:,d}\n'.format(life))
+
 
                 for exp in (exp_level, exp_total):
                     try:
