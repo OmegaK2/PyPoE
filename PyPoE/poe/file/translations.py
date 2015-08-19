@@ -122,7 +122,7 @@ class Translation(object):
         if self.languages != other.languages:
             _diff_list(self.languages, other.languages)
 
-    def get_language(self, language):
+    def get_language(self, language='English'):
         etr = None
         for tr in self.languages:
             if tr.language == language:
@@ -172,7 +172,7 @@ class TranslationLanguage(object):
         if self.strings != other.strings:
             _diff_list(self.strings, other.strings)
 
-    def get_string(self, values, indexes, use_placeholder, only_values):
+    def get_string(self, values, indexes, use_placeholder=False, only_values=False):
         # Support for ranges
         is_range = []
         test_values = []
@@ -267,7 +267,7 @@ class TranslationString(object):
         if self.string != other.string:
             print('String mismatch: %s vs %s' % (self.string, other.string))
 
-    def format_string(self, values, is_range, use_placeholder, only_values):
+    def format_string(self, values, is_range, use_placeholder=False, only_values=False):
         s = self.string.replace('%%', '%')
         values = self.quantifier.handle(values, is_range)
 
