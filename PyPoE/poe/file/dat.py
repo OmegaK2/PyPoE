@@ -329,6 +329,14 @@ class RecordList(list):
                 values.append(value)
         return values'''
 
+    def iter(self):
+        """
+        Iterates over the RecordList and returns key, value and index
+        """
+        for index, key in enumerate(self.parent.table_columns):
+            yield key, self[key], index
+
+
     def keys(self):
         return self.parent.table_columns.keys()
 
@@ -682,9 +690,9 @@ class RelationalReader(object):
         """
         Shortcut.
 
-        self[item] <==> self.files[item].reader
+        self[item] <==> read_file(item).reader
         """
-        return self.files[item].reader
+        return self.read_file(item).reader
 
     def _dv_set_value(self, value, other):
         if value.is_pointer:
