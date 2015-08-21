@@ -200,7 +200,7 @@ abbreviations = {
     'x% increased Projectile Speed': 'increased<br>Projectile<br>Speed',
     'x% increased Quantity of Items Dropped by Slain Enemies': 'increased<br>Quantity',
     'x% increased Rarity of Items Dropped by Slain Enemies': 'increased<br>Rarity',
-    'x% increased Spell Damage': 'increased<br>Spell<b>Damage',
+    'x% increased Spell Damage': 'increased<br>Spell<br>Damage',
     'x% increased effect of Aura': 'increased<br>Aura<br>Effect',
     'x% increased maximum Life': 'increased<br>maximum<br>Life',
     'x% increased totem life': 'increased<br>Totem Life',
@@ -365,6 +365,14 @@ class GemsParser(object):
         'Animate Guardian': ['AnimatedArmour', ],
         'Animate Weapon': ['AnimatedWeapon', ],
     }
+
+    _regex_summon = re.compile('(summon|summoned|raise|raised) ', re.IGNORECASE)
+    _regex_format = re.compile(
+        '(?P<index>x|y|z)'
+        '(?:[\W]*)'
+        '(?P<tag>%|second)',
+        re.IGNORECASE
+    )
 
     def __init__(self, **kwargs):
         self.desc_path = kwargs['desc_path']
@@ -592,7 +600,7 @@ class GemsParser(object):
                     fixed_indexes.append(i)
 
             # First translation probe
-            values_result = [gepl[0]['Stat%sValue' % i] for i in stat_indexes]
+            values_result = [gepl[1]['Stat%sValue' % i] for i in stat_indexes]
             trans_result = tf.get_translation(stat_ids, values_result, full_result=True, use_placeholder=True)
 
             # Make a copy
@@ -616,8 +624,17 @@ class GemsParser(object):
                 del stat_indexes[i]
 
             # Get the real translation string...
-            values_result = [gepl[0]['Stat%sValue' % i] for i in stat_indexes]
+            values_result = [gepl[1]['Stat%sValue' % i] for i in stat_indexes]
             trans_result = tf.get_translation(stat_ids, values_result, full_result=True, use_placeholder=True)
+
+            # Find percentages & seconds and their indexes
+            formatting_indexes = []
+            for i, line in enumerate(trans_result.lines):
+                formatting_indexes.append([{'%': False, 'second': False}]*3)
+
+                for match in self._regex_format.finditer(line):
+                    index = 'xyz'.index(match.group('index'))
+                    formatting_indexes[i][index][match.group('tag')] = True
 
             # Find out which columns actually change so we don't add unnecessary
             # data
@@ -661,7 +678,7 @@ class GemsParser(object):
 
             if has_damage:
                 offset += 1
-                out.append('| c%s=Damage<br>Multiplier\n' % offset)
+                out.append('| c%s=Base<br>Damage\n' % offset)
 
             for index, item in enumerate(trans_result.lines):
                 if item in abbreviations:
@@ -683,15 +700,23 @@ class GemsParser(object):
 
             if has_monster_stats:
                 offset += 1
-                out.append('| c%s=Minion Level\n' % offset)
+                out.append('| c%s=' % offset)
+                if is_minion:
+                    out.append('Minion')
+                elif is_totem:
+                    out.append('Totem')
+                out.append('<br>Level\n')
                 for mv in monster_varieties:
+                    # Shorten the name
+                    name = self._regex_summon.sub('', mv['Name'])
+                    name = name.replace(' ', '<br>')
                     # Only hp for totems
                     if is_minion:
-                        out.append('| c%s=%s<br>Base Damage\n' % (offset+1, mv['Name']))
-                        out.append('| c%s=%s<br>Base Attack Speed\n' % (offset+2, mv['Name']))
+                        out.append('| c%s=%s<br>Base Damage\n' % (offset+1, name))
+                        out.append('| c%s=%s<br>Base Attack Speed\n' % (offset+2, name))
                         offset += 2
                     offset += 1
-                    out.append('| c%s=%s<br>Base Life\n' % (offset, mv['Name']))
+                    out.append('| c%s=%s<br>Base Life\n' % (offset, name))
 
             out.append('}}\n')
 
@@ -722,10 +747,10 @@ class GemsParser(object):
                     out.append('| %s\n' % row['ManaCost'])
 
                 if has_multiplier:
-                    out.append('| %i%%\n' % (row['ManaMultiplier']))
+                    out.append('| {0:n}%\n'.format(row['ManaMultiplier']))
 
                 if has_damage:
-                    out.append('| %.2f%%\n' % (row['DamageMultiplier']/100))
+                    out.append('| {0:n}%\n'.format(row['DamageMultiplier']/100+100))
 
                 fmt_values = [row['Stat%sValue' % i] for i in stat_indexes]
                 values_result = tf.get_translation(stat_ids, fmt_values, full_result=True, only_values=True)
@@ -744,9 +769,18 @@ class GemsParser(object):
                             value_fmt = value_real
 
                         if isinstance(value_fmt, float):
-                            values_result.lines[j][k] = '{0:.2f}'.format(value_fmt)
+                            #if value_fmt.is_integer():
+                            #    value_fmt = '{0:n}'.format(value_fmt)
+                            value_fmt = '{0:.2f}'.format(value_fmt)
                         else:
-                            values_result.lines[j][k] = '{0:n}'.format(value_fmt)
+                            value_fmt = '{0:n}'.format(value_fmt)
+
+                        if formatting_indexes[j][k]['%']:
+                            value_fmt += '%'
+                        elif formatting_indexes[j][k]['second']:
+                            value_fmt += 's'
+
+                        values_result.lines[j][k] = value_fmt
 
                 for item in values_result.lines:
                     out.append('| %s\n' % '&ndash;'.join(item))
