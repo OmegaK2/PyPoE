@@ -24,6 +24,9 @@ TODO
 # Imports
 # =============================================================================
 
+# Python
+import os
+
 # self
 from PyPoE.poe.file.ggpk import GGPKFile
 from PyPoE.cli.core import console
