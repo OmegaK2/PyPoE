@@ -296,7 +296,7 @@ class TranslationString(object):
             else:
                 rpl = str(val)
             for tag in self._tag_iter(i):
-                s.replace(tag, rpl)
+                s = s.replace(tag, rpl)
         return s
 
     def match_range(self, values, indexes):
