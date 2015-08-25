@@ -246,7 +246,6 @@ abbreviations = {
 # Warnings & Exceptions
 # =============================================================================
 
-
 class MissingAbbreviation(UserWarning):
     pass
 
@@ -412,15 +411,21 @@ class GemsParser(object):
         self.translation_cache.get_file('Metadata/skill_stat_descriptions.txt')
         self.translation_cache.get_file('Metadata/active_skill_gem_stat_descriptions.txt')
 
-        '''self.descriptions = DescriptionFile(self.desc_path + '/stat_descriptions.txt')
-        self.descriptions.merge(DescriptionFile(self.desc_path + '/gem_stat_descriptions.txt'))
-        self.descriptions.merge(DescriptionFile(self.desc_path + '/skill_stat_descriptions.txt'))
-        self.descriptions.merge(DescriptionFile(self.desc_path + '/aura_skill_stat_descriptions.txt'))
-        self.descriptions.merge(DescriptionFile(self.desc_path + '/active_skill_gem_stat_descriptions.txt'))
-        self.descriptions.merge(DescriptionFile(self.desc_path + '/minion_skill_gem_stat_descriptions.txt'))'''
-        #self.stat_descriptions = DescriptionFile(glob(desc_path + '/*_descriptions.txt'))
-
     def _get_monster_data(self, gem_name):
+        """
+        Returns the first monster varieties info for the given gem name.
+
+        Currently this is band-aid solution that depends on manually defining
+        the monster type the gem summons.
+
+        TODO / Known Issues:
+        - Find out where in the game files the monster varieties is defined.
+
+        :param gem_name: Name of the gem to find the monster for
+        :type gem_name: str
+        :return: List of MonsterVarieties.dat rows
+        """
+
         if gem_name not in self._summon_map:
             console('No mapping defined for "%s" - fix me' % gem_name, msg=Msg.error)
             return
@@ -466,6 +471,13 @@ class GemsParser(object):
         return result
 
     def _get_monster_stats(self, mv, minion_level):
+        """
+        Returns base damage, aspd and life for the given minion and level.
+
+        :param mv: MonsterVarieties.dat row
+        :param minion_level: Level of the minion
+        :return: (damage_min, damage_max), aspd, life
+        """
         default = self.reader['DefaultMonsterStats.dat'][minion_level-1]
 
         life = default['Life'] * mv['LifeMultiplier'] // 100
@@ -476,6 +488,12 @@ class GemsParser(object):
         return (damage_min, damage_max), aspd, life
 
     def _get_gem(self, name):
+        """
+        Attempts to find the skill gem and the corresponding base item.
+
+        :param name: Name of the gem
+        :return: BaseItemTypes.dat row, SkillGems.dat row
+        """
         base_item_type = None
         for row in self.reader['BaseItemTypes.dat']:
             if row['Name'] == name:
@@ -499,6 +517,19 @@ class GemsParser(object):
         return base_item_type, skill_gem
 
     def level_progression(self, parsed_args):
+        """
+        Creates progression table for the wiki based on the data found in the
+        game files.
+
+        TODO / Known Issues:
+        - it takes the heading from an early level, causing potential issues:
+        -- the lv2 text may be wrong for other levels (i.e. reduced can turn
+           into increased for some gems)
+
+
+        :param parsed_args:
+        :return:
+        """
         gems = {}
         for gem in parsed_args.gem:
             g = self._get_gem(gem)
@@ -814,7 +845,7 @@ class GemsParser(object):
                     for mv in monster_varieties:
                         dmg, aspd, life = self._get_monster_stats(mv, minion_level)
                         if is_minion:
-                            out.append('| {0:d}&ndash;{1:d}\n'.format(*dmg))
+                            out.append('| {0:,d}&ndash;{1:,d}\n'.format(*dmg))
                             out.append('| {0:.2f}\n'.format(aspd))
                         out.append('| {0:,d}\n'.format(life))
 
