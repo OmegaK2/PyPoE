@@ -26,8 +26,8 @@ FIX the jewel generator (corrupted)
 # =============================================================================
 
 # Self
-from PyPoE.poe.file.dat import DatFile
-from PyPoE.poe.file.translations import DescriptionFile
+from PyPoE.poe.file.dat import RelationalReader
+from PyPoE.poe.file.translations import TranslationFileCache
 from PyPoE.cli.core import console
 from PyPoE.cli.exporter.wiki.handler import *
 
@@ -106,7 +106,14 @@ class ModParser(object):
             #149: 'Melee?',
         }
     #affix_wiki = '|-\n| %(Name)s\n| %(Description)s\n| %(Group)s \n| %(0)s || %(29)s || %(30)s || %(31)s || %(5)s || %(9)s || %(10)s || %(11)s || %(12)s || %(13)s || %(14)s || %(15)s  || %(143)s || %(144)s || %(145)s || %(146)s || %(147)s || %(148)s'
-    affix_wiki = '|-\n| %(Name)s\n| %(Description)s\n| %(Group)s \n| %(0)s \n| %(29)s \n| %(30)s \n| %(31)s \n| %(GroupWeight)s\n'
+    affix_wiki = '|-\n| %(Name)s\n| %(Description)s\n| %(Group)s \n| %(default)s \n| %(str)s \n| %(int)s \n| %(dex)s \n| %(GroupWeight)s\n'
+
+    base_jewel_map = {
+        'not_str': ['int', 'dex'],
+        'not_int': ['dex', 'str'],
+        'not_dex': ['int', 'str'],
+    }
+
 
     def __init__(self, **kwargs):
         self.desc_path = kwargs['desc_path']
@@ -115,38 +122,56 @@ class ModParser(object):
             'use_dat_value': False,
         }
 
-        self.mods = DatFile('Mods.dat', read_file=kwargs['data_path'], options=opt).reader
-        self.stats = DatFile('Stats.dat', read_file=kwargs['data_path'], options=opt).reader
+        self.r = RelationalReader(kwargs['data_path'], files=[
+            'Mods.dat',
+            'Stats.dat',
+        ], options=opt)
 
-        self.descriptions = DescriptionFile(self.desc_path + '/stat_descriptions.txt')
+        self.translation_cache = TranslationFileCache(kwargs['base_path'])
+        # Touch files we'll need
+        self.translation_cache['map_stat_descriptions.txt']
+
+        #self.descriptions = DescriptionFile(self.desc_path + '/map_descriptions.txt')
         #self.stat_descriptions = DescriptionFile(glob(desc_path + '/*_descriptions.txt'))
 
     def _get_stats(self, mod):
         stats = []
         for i in range(1, 5):
-            key = mod['StatsKey%s' % i]
-            if key != -1:
-                stats.append(self.stats.table_data[key])
+            stat = mod['StatsKey%s' % i]
+            if stat:
+                stats.append(stat)
 
         ids = []
         values = []
-        for i in range(0, len(stats)):
-            stat = stats[i]
+        for i, stat in enumerate(stats):
             j = i + 1
             values.append([mod['Stat%sMin' % j], mod['Stat%sMax' % j]])
             ids.append(stat['Id'])
 
-        effects = self.descriptions.get_translation(ids, values)
-        if not effects:
-            console(ids, values)
+        tf = self.translation_cache['stat_descriptions.txt']
 
-        return self.descriptions.get_translation(ids, values)
+        effects = tf.get_translation(ids, values)
+        if not effects:
+            console("%s %s" % (ids, values))
+
+        return tf.get_translation(ids, values)
+
+    def _append_effect(self, result, mylist, heading):
+        mylist.append(heading)
+
+        for line in result.lines:
+            mylist.append('* %s' % line)
+        for i, stat_id in enumerate(result.missing_ids):
+            value = result.missing_values[i]
+            if hasattr(value, '__iter__'):
+                value = '(%s to %s)' % tuple(value)
+            mylist.append('* %s %s' % (stat_id, value))
 
     def map(self, parsed_args):
-        #self.descriptions.merge(DescriptionFile(self.desc_path + '/map_stat_descriptions.txt'))
+        tf = self.translation_cache['map_stat_descriptions.txt']
 
         mods = []
-        for mod in self.mods.table_data:
+        for mod in self.r['Mods.dat']:
             if mod['Domain'] != 5:
                 continue
             if mod['GenerationType'] not in (1, 2):
@@ -169,39 +194,61 @@ class ModParser(object):
         return r
 
     def tempest(self, parsed_args):
-        # Filter by tempest mods
-
-        mods = []
-        for mod in self.mods.table_data:
-            if mod['CorrectGroup'] == 'MapEclipse':
-                mods.append(mod)
-
+        tf = self.translation_cache['map_stat_descriptions.txt']
         data = []
-        for mod in mods:
-            if 'of' not in mod['Name']:
+        for mod in self.r['Mods.dat']:
+            # Is it a tempest mod?
+            if mod['CorrectGroup'] != 'MapEclipse':
                 continue
+
+            # Doesn't have a name - probably not implemented
+            if not mod['Name']:
+                continue
+
             stats = []
             for i in range(1, 5):
-                key = mod['StatsKey%s' % i]
-                if key != -1:
-                    stats.append(self.stats.table_data[key])
+                stat = mod['StatsKey%s' % i]
+                if stat:
+                    stats.append(stat)
 
             info = {}
             info['name'] = mod['Name']
-            effects = ['The area gets the following modifiers:']
-            for i in range(0, len(stats)):
-                stat = stats[i]
+            effects = []
+
+            stat_ids = [st['Id'] for st in stats]
+            stat_values = []
+
+            for i, stat in enumerate(stats):
                 j = i + 1
                 values = [mod['Stat%sMin' % j], mod['Stat%sMax' % j]]
                 if values[0] == values[1]:
-                    values.pop(1)
-                t= self.descriptions.get_translation([stat['Id'], ], values)
-                if t:
-                    effects.append('* %s' % t[0])
-                else:
-                    if len(values) == 1:
-                        values = values[0]
-                    effects.append('* %s %s' % (stat['Id'], values))
+                    values = values[0]
+                stat_values.append(values)
+
+            try:
+                index = stat_ids.index('map_summon_exploding_buff_storms')
+            except ValueError:
+                pass
+            else:
+                # Value is incremented by 1 for some reason
+                tempest = self.r['ExplodingStormBuffs.dat'][stat_values[index]-1]
+
+                stat_ids.pop(index)
+                stat_values.pop(index)
+
+                if tempest['BuffDefinitionsKey']:
+                    tempest_stats = tempest['BuffDefinitionsKey']['StatKeys']
+                    tempest_values = tempest['StatValues']
+                    tempest_stat_ids = [st['Id'] for st in tempest_stats]
+                    t = tf.get_translation(tempest_stat_ids, tempest_values, full_result=True)
+                    self._append_effect(t, effects, 'The tempest buff provides the following effects:')
+                #if tempest['MonsterVarietiesKey']:
+                #    print(tempest['MonsterVarietiesKey'])
+                #    break
+
+            t = tf.get_translation(stat_ids, stat_values, full_result=True)
+            self._append_effect(t, effects, 'The area gets the following modifiers:')
+
             info['effect'] = '\n'.join(effects)
             data.append(info)
 
@@ -221,8 +268,7 @@ class ModParser(object):
 
     def jewel(self, parsed_args):
         data = []
-        tset = set()
-        for mod in self.mods.table_data:
+        for mod in self.r['Mods.dat']:
             # not a jewel
             if mod['Domain'] != 11:
                 continue
@@ -236,39 +282,33 @@ class ModParser(object):
             listformat = {
                 'Name': mod['Name'],
                 'Description': '\n'.join(self._get_stats(mod)),
-                'Group': mod['Data0'],
+                'Group': [t['Id'] for t in mod['TagsKeys']],
                 'GroupWeight': [],
             }
-            # Jewels: Strange...
-            lg = len(mod['SpawnWeight_TagsKeys'])
 
-            #
-            for v in mod['SpawnWeight_TagsKeys']:
-                tset.add(v)
-            if lg == 1:
-                listformat['0'] = mod['SpawnWeight_Values'][0]
-            else:
-                # Last two entries are reversed for no apparent reason other then to confuse us
-                listformat[str(mod['SpawnWeight_TagsKeys'][-1])] = str(mod['SpawnWeight_Values'][-2])
-                listformat[str(mod['SpawnWeight_TagsKeys'][-2])] = str(mod['SpawnWeight_Values'][-1])
-                # These seem to be in order..
-                for i in range(0, lg-2):
-                    group_id = mod['SpawnWeight_TagsKeys'][i]
-                    weight = mod['SpawnWeight_Values'][i]
-                    if group_id in (0, 29, 30, 31):
-                        listformat[str(group_id)] = weight
-                    else:
-                        listformat['GroupWeight'].append((group_id,  weight))
-            disabled = True
-            for item in self.dropdata:
-                item = str(item)
-                if item not in listformat:
-                    listformat[item] = ''
-                elif int(listformat[item]) != 0:
-                    disabled = False
-
-            if disabled:
+            # Check whether the mod can spawn at all
+            v = 0
+            for value in mod['SpawnWeight_Values']:
+                if value > 0:
+                    v = 1
+                    break
+            if v == 0:
                 continue
+
+            # Default is always last mod, so this should work
+            for i, tag in enumerate(mod['SpawnWeight_TagsKeys']):
+                weight = mod['SpawnWeight_Values'][i]
+                tid = tag['Id']
+                if tid == 'default':
+                    listformat[tid] = weight
+                    for k in ('int', 'dex', 'str'):
+                        if k not in listformat:
+                            listformat[k] = weight
+                elif tid in ('not_int', 'not_dex', 'not_str'):
+                    for k in self.base_jewel_map[tid]:
+                        listformat[k] = weight
+                else:
+                    listformat['GroupWeight'].append((tid,  weight))
 
             listformat['GroupWeight'].sort(key=lambda x: x[0])
             for i in range(0, len(listformat['GroupWeight'])):
@@ -278,9 +318,14 @@ class ModParser(object):
         # Sort my name
         data.sort(key=lambda lf: lf['Name'])
 
+        if parsed_args.type == 'corrupted':
+            fmt = '|- \n%(Description)s\n'
+        else:
+            fmt = self.affix_wiki
+
         out = []
         for lf in data:
-            out.append(self.affix_wiki % lf)
+            out.append(fmt % lf)
 
         r = ExporterResult()
         r.add_result(lines=out, out_file='jewel_%s_mods.txt' % parsed_args.type)
