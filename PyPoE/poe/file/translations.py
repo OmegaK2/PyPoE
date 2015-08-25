@@ -109,6 +109,9 @@ class Translation(object):
 
         return True
 
+    def __repr__(self):
+        return 'Translation<%s>(ids=%s)' % (id(self), self.ids)
+
     def __hash__(self):
         return hash((tuple(self.languages), tuple(self.ids)))
 
@@ -253,6 +256,11 @@ class TranslationString(object):
             tag = tag % i
             yield tag
 
+    def _replace(self, i, s, rpl):
+        new = s
+        for tag in self._tag_iter(i):
+            new = new.replace(tag, rpl)
+        return new, s == new
 
     def diff(self, other):
         if not isinstance(other, TranslationString):
@@ -270,6 +278,7 @@ class TranslationString(object):
     def format_string(self, values, is_range, use_placeholder=False, only_values=False):
         s = self.string.replace('%%', '%')
         values = self.quantifier.handle(values, is_range)
+        unused = []
 
         if only_values:
             rtr = []
@@ -279,25 +288,29 @@ class TranslationString(object):
                 for tag in self._tag_iter(i):
                     if tag in s:
                         rtr.append(value)
+                    else:
+                        unused.append(value)
 
-            return rtr
+            return rtr, unused
 
         if use_placeholder:
-            for i in range(0, len(values)):
+            for i, val in enumerate(values):
                 # It will go to uppercase letters if above 3, but should be
                 # no problem otherwise
-                for tag in self._tag_iter(i):
-                    s = s.replace(tag, ascii_letters[23+i])
-            return s
+                s, r = self._replace(i, s, ascii_letters[23+i])
+                if r:
+                    unused.append(val)
+            return s, unused
 
         for i, val in enumerate(values):
             if is_range[i]:
                 rpl = '(%s to %s)' % tuple(val)
             else:
                 rpl = str(val)
-            for tag in self._tag_iter(i):
-                s = s.replace(tag, rpl)
-        return s
+            s, r = self._replace(i, s, rpl)
+            if r:
+                unused.append(val)
+        return s, unused
 
     def match_range(self, values, indexes):
         rating = 0
@@ -461,15 +474,26 @@ class TranslationQuantifier(object):
 
 
 class TranslationResult(object):
-    __slots__ = ['found', 'lines', 'indexes', 'missing', 'values', 'invalid']
+    __slots__ = [
+        'found',
+        'lines',
+        'indexes',
+        'missing_ids',
+        'missing_values',
+        'values',
+        'invalid',
+        'values_unused',
+    ]
 
-    def __init__(self, found, lines, indexes, missing, values, invalid):
+    def __init__(self, found, lines, indexes, missing, missing_values, values, invalid, unused):
         self.found = found
         self.lines = lines
         self.indexes = indexes
-        self.missing = missing
+        self.missing_ids = missing
+        self.missing_values = missing_values
         self.values = values
         self.invalid = invalid
+        self.values_unused = unused
 
 
 class DescriptionFile(object):
@@ -708,11 +732,13 @@ class DescriptionFile(object):
 
         trans_found = []
         trans_missing = []
+        trans_missing_values = []
         trans_found_indexes = []
         trans_found_values = []
         for i, tag in enumerate(tags):
             if tag not in self._translations_hash:
                 trans_missing.append(tag)
+                trans_missing_values.append(values[i])
                 continue
 
             #tr = self._translations_hash[tag][-1]
@@ -745,15 +771,21 @@ class DescriptionFile(object):
             del trans_found_values[index]
 
         trans_lines = []
+        unused = []
         for i, tr in enumerate(trans_found):
 
             tl = tr.get_language(lang)
             result = tl.get_string(trans_found_values[i], trans_found_indexes[i], use_placeholder, only_values)
             if result:
-                trans_lines.append(result)
+                trans_lines.append(result[0])
+                if full_result:
+                    unused.append(result[1])
 
         if full_result:
-            return TranslationResult(trans_found, trans_lines, trans_found_indexes, trans_missing, trans_found_values, invalid)
+            return TranslationResult(
+                trans_found, trans_lines, trans_found_indexes, trans_missing,
+                trans_missing_values, trans_found_values, invalid, unused
+            )
         return trans_lines
 
 
@@ -763,6 +795,11 @@ class TranslationFileCache(object):
         self._desc_dir = os.path.join(base_dir, 'Metadata')
 
         self._files = {}
+
+    def __getitem__(self, item):
+        if not item.startswith('Metadata/'):
+            item = 'Metadata/' + item
+        return self.get_file(item)
 
     def get_file(self, name):
         if name not in self._files:

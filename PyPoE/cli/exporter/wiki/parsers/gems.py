@@ -693,10 +693,10 @@ class GemsParser(object):
                 out.append(line)
             offset += len(trans_result.lines)
 
-            for index, item in enumerate(trans_result.missing):
+            for index, item in enumerate(trans_result.missing_ids):
                 line = '| c%s=%s\n' % (index+offset+1, item)
                 out.append(line)
-            offset += len(trans_result.missing)
+            offset += len(trans_result.missing_ids)
 
             if has_monster_stats:
                 offset += 1
@@ -785,7 +785,7 @@ class GemsParser(object):
                 for item in values_result.lines:
                     out.append('| %s\n' % '&ndash;'.join(item))
 
-                for trans_id in trans_result.missing:
+                for trans_id in trans_result.missing_ids:
                     out.append('| %s\n' % fmt_values[stat_ids.index(trans_id)])
 
                 if has_monster_stats:
