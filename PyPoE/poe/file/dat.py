@@ -366,6 +366,7 @@ class DatReader(object):
         self.table_length = 0
         self.table_record_length = 0
         self.table_rows = 0
+        self.file_name = file_name
 
         #
         self.use_dat_value = use_dat_value
@@ -374,6 +375,8 @@ class DatReader(object):
         if specification is None:
             if file_name in _default_spec:
                 specification = _default_spec[file_name]
+            else:
+                raise SpecificationError('No specification for "%s"' % file_name)
         else:
             specification = specification[file_name]
         self.specification = specification
@@ -542,7 +545,11 @@ class DatReader(object):
         self.data_offset = self._file_raw.find(self._data_magic_number)
 
         if self.data_offset == -1:
-            raise ValueError("Did not find data magic number")
+            raise ValueError(
+                'Did not find data magic number in "%(file)s"' % {
+                    'file:': self.file_name,
+                }
+            )
 
         self.table_rows = struct.unpack('<I', self._file_raw[0:4])[0]
         self.table_length = self.data_offset - self._table_offset
@@ -558,7 +565,13 @@ class DatReader(object):
             self.cast_size = self.table_record_length
 
         if self.cast_size != self.table_record_length:
-            raise SpecificationError('Row size %s vs actual size %s' % (self.cast_size, self.table_record_length))
+            raise SpecificationError(
+                '"%(name)s": Specification row size %(spec_size)s vs real size %(cast_size)s' % {
+                    'name': self.file_name,
+                    'spec_size': self.cast_size,
+                    'cast_size': self.table_record_length
+                }
+            )
 
         self.table_data = []
 
