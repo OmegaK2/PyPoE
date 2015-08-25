@@ -44,10 +44,10 @@ from PyPoE.cli.exporter.wiki.handler import *
 # Abbreviations
 abbreviations = {
     'Adds an additional Projectile': 'Extra<br>Projectiles',
-    'Adds x-y Cold Damage to Attacks': 'Cold<br>Damage',
-    'Adds x-y Cold Damage to Spells': 'Cold<br>Damage',
-    'Adds x-y Lightning Damage to Attacks': 'Lightning<br>Damage',
-    'Adds x-y Lightning Damage to Spells': 'Lightning<br>Damage',
+    'Adds x-y Cold Damage to Attacks': 'Attack<br>Cold<br>Damage',
+    'Adds x-y Cold Damage to Spells': 'Spell<br>Cold<br>Damage',
+    'Adds x-y Lightning Damage to Attacks': 'Attack<br>Lightning<br>Damage',
+    'Adds x-y Lightning Damage to Spells': 'Spell<br>Lightning<br>Damage',
     'Base duration is x seconds': 'Base<br>Duration',
     'Can deal x-y base Cold damage': 'Cold<br>Damage',
     'Can deal x-y base Fire damage': 'Fire<br>Damage',
@@ -123,6 +123,7 @@ abbreviations = {
     'Penetrates x% Fire Resistance': '% Fire<br>Penetration',
     'Penetrates x% Lightning Resistance': '% Lightning<br>Penetration',
     'Shields break after x total Damage is prevented': 'Damage<br>absorbed',
+    'Spell has x% less Cast Speed': 'less<br>Cast<br>Speed',
     'Summons x Skeleton Archers': '# Skeleton<br>Archers',
     'Summons x Skeleton Mage': '# Skeleton<br>Mages',
     'Summons x Skeleton Warriors': '# Skeleton<br>Warriors',
@@ -190,7 +191,9 @@ abbreviations = {
     'x% increased Damage per one hundred nearby Enemies': 'increased<br>Damage<br>per enemy',
     'x% increased Duration ': 'increased<br>Duration',
     'x% increased Life Leeched per second': 'increased<br>Life<br>leeched',
+    'x% increased Life Leech rate': 'increased<br>Life<br>Leech<br>Rate',
     'x% increased Mana Leeched per second': 'increased<br>Mana<br>leeched',
+    'x% increased Mana Leech rate': 'increased<br>Mana<br>Leech<br>Rate',
     'x% increased Melee Physical Damage': 'increased<br>Melee<br>Physical<br>Damage',
     'x% increased Minion Damage': 'increased<br>Minion<br>Damage',
     'x% increased Minion Maximum Life': 'increased<br>Minion<br>Life',
@@ -204,6 +207,7 @@ abbreviations = {
     'x% increased effect of Aura': 'increased<br>Aura<br>Effect',
     'x% increased maximum Life': 'increased<br>maximum<br>Life',
     'x% increased totem life': 'increased<br>Totem Life',
+    'x% less Attack Speed': 'less<br>Attack<br>Speed',
     'x% less Damage': 'less<br>Damage',
     'x% less Damage to main target': 'less<br>Damage<br>(main)',
     'x% less Damage to other targets': 'less<br>Damage<br>(other)',
@@ -230,6 +234,7 @@ abbreviations = {
     'x% more Trap and Mine Damage': 'more<br>Trap & Mine<br>Damage',
     'x% more Weapon Elemental Damage': 'more<br>Weapon<br>Elemental<br>Damage',
     'x% reduced Curse Duration': 'reduced<br>Curse<br>Duration',
+    'x% reduced Duration ': 'reduced<br>Duration',
     'x% reduced Enemy Stun Threshold': 'reduced<br>Stun<br>Threshold',
     'x% reduced Mana Cost': 'reduced<br>Mana<br>Cost',
     'x% reduced Movement Speed': 'reduced<br>Movement<br>Speed',
@@ -331,8 +336,13 @@ class GemsHandler(ExporterHandler):
 
             row['lines'].insert(0, '==Gem level progression==\n\n')
 
-            page.text = self.regex_replace.sub(''.join(row['lines']), page.text)
-            page.save(pws.get_edit_message('Gem level progression'))
+            new_text = self.regex_replace.sub(''.join(row['lines']), page.text)
+
+            self._wiki_save_page(
+                page=page,
+                text=new_text,
+                message='Gem level progression',
+            )
 
 
 class GemsParser(object):
@@ -361,6 +371,9 @@ class GemsParser(object):
         'Rejuvenation Totem': ['Totem', ],
         'Searing Bond': ['Totem', ],
         'Shockwave Totem': ['Totem', ],
+        # Support Totems
+        'Spell Totem': ['Totem', ],
+        'Ranged Attack Totem': ['Totem', ],
         # Other
         'Animate Guardian': ['AnimatedArmour', ],
         'Animate Weapon': ['AnimatedWeapon', ],
@@ -568,7 +581,7 @@ class GemsParser(object):
             has_monster_stats = False
             monster_stat_index = 0
             # Handle special stats. Can only have one
-            for stat in ('display_minion_monster_level', 'base_active_skill_totem_level'):
+            for stat in ('display_minion_monster_level', 'base_active_skill_totem_level', 'totem_support_gem_level'):
                 if stat in stat_ids:
                     index = stat_ids.index(stat)
                     monster_stat_index = stat_indexes[index]
@@ -576,6 +589,11 @@ class GemsParser(object):
                     del stat_ids[index]
                     del stat_indexes[index]
                     break
+
+            # Special case: SRS
+            if gem == 'Summon Raging Spirit':
+                has_monster_stats = True
+                monster_stat_index = -1
 
             if has_monster_stats:
                 monster_varieties = self._get_monster_data(gem)
@@ -711,11 +729,11 @@ class GemsParser(object):
                     name = name.replace(' ', '<br>')
                     # Only hp for totems
                     if is_minion:
-                        out.append('| c%s=%s<br>Base Damage\n' % (offset+1, name))
-                        out.append('| c%s=%s<br>Base Attack Speed\n' % (offset+2, name))
+                        out.append('| c%s=%s<br>Base<br>Damage\n' % (offset+1, name))
+                        out.append('| c%s=%s<br>Base<br>Attack Speed\n' % (offset+2, name))
                         offset += 2
                     offset += 1
-                    out.append('| c%s=%s<br>Base Life\n' % (offset, name))
+                    out.append('| c%s=%s<br>Base<br>Life\n' % (offset, name))
 
             out.append('}}\n')
 
@@ -788,7 +806,10 @@ class GemsParser(object):
                     out.append('| %s\n' % fmt_values[stat_ids.index(trans_id)])
 
                 if has_monster_stats:
-                    minion_level = row['Stat%sValue' % monster_stat_index]
+                    if monster_stat_index != -1:
+                        minion_level = row['Stat%sValue' % monster_stat_index]
+                    else:
+                        minion_level = row['Level']
                     out.append('| %s\n' % minion_level)
                     for mv in monster_varieties:
                         dmg, aspd, life = self._get_monster_stats(mv, minion_level)

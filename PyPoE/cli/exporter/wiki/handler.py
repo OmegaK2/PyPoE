@@ -138,6 +138,14 @@ class ExporterHandler(BaseHandler):
             action='store_true',
         )
 
+    def _wiki_save_page(self, page, text, message):
+        if text == page.text:
+            console('No update required. Skipping.')
+            return
+
+        page.text = text
+        page.save(pws.get_edit_message(message))
+
 
 class ExporterResult(list):
     def add_result(self, lines=None, out_file=None, wiki_page=None):
