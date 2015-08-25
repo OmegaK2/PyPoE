@@ -105,8 +105,6 @@ class ModParser(object):
             148: '(Claw/Dagger/Wand/1h)',
             #149: 'Melee?',
         }
-    #affix_wiki = '|-\n| %(Name)s\n| %(Description)s\n| %(Group)s \n| %(0)s || %(29)s || %(30)s || %(31)s || %(5)s || %(9)s || %(10)s || %(11)s || %(12)s || %(13)s || %(14)s || %(15)s  || %(143)s || %(144)s || %(145)s || %(146)s || %(147)s || %(148)s'
-    affix_wiki = '|-\n| %(Name)s\n| %(Description)s\n| %(Group)s \n| %(default)s \n| %(str)s \n| %(int)s \n| %(dex)s \n| %(GroupWeight)s\n'
 
     base_jewel_map = {
         'not_str': ['int', 'dex'],
@@ -282,7 +280,7 @@ class ModParser(object):
             listformat = {
                 'Name': mod['Name'],
                 'Description': '\n'.join(self._get_stats(mod)),
-                'Group': [t['Id'] for t in mod['TagsKeys']],
+                'Group': '<br>'.join([t['Id'] for t in mod['TagsKeys']]),
                 'GroupWeight': [],
             }
 
@@ -319,9 +317,22 @@ class ModParser(object):
         data.sort(key=lambda lf: lf['Name'])
 
         if parsed_args.type == 'corrupted':
-            fmt = '|- \n%(Description)s\n'
+            fmt = (
+                '|- \n'
+                '| %(Description)s\n'
+            )
         else:
-            fmt = self.affix_wiki
+            fmt = (
+                '|-\n'
+                '| %(Name)s\n'
+                '| %(Description)s\n'
+                '| %(Group)s \n'
+                # '| %(default)s \n'
+                '| %(str)s \n'
+                '| %(int)s \n'
+                '| %(dex)s \n'
+                '| %(GroupWeight)s\n'
+            )
 
         out = []
         for lf in data:

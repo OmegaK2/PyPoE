@@ -193,7 +193,7 @@ abbreviations = {
     'x% increased Mana Leeched per second': 'increased<br>Mana<br>leeched',
     'x% increased Melee Physical Damage': 'increased<br>Melee<br>Physical<br>Damage',
     'x% increased Minion Damage': 'increased<br>Minion<br>Damage',
-    'x% increased Minion Maximum Life': 'increased<br>Minion<br>Maximum<br>Life',
+    'x% increased Minion Maximum Life': 'increased<br>Minion<br>Life',
     'x% increased Minion Movement Speed': 'increased<br>Minion<br>Movement<br>Speed',
     'x% increased Movement Speed': 'increased<br>Movement<br>Speed',
     'x% increased Projectile Damage': 'increased<br>Projectile<br>Damage',
@@ -556,7 +556,7 @@ class GemsParser(object):
                 elif tag['Id'] == 'totem':
                     is_totem = True
 
-            attributes = {'Str': 0, 'Dex': 0, 'Int': 0}
+            attributes = ['Str', 'Dex', 'Int']
 
             stat_ids = []
             stat_indexes = []
@@ -657,12 +657,11 @@ class GemsParser(object):
             #
             out = []
             out.append('{{GemLevelTable\n')
-            for attr in tuple(attributes.keys()):
+            for attr in tuple(attributes):
                 if skill_gem[attr]:
                     out.append('| %s=yes\n' % attr.lower())
-                    attributes[attr] = skill_gem[attr]
                 else:
-                    del attributes[attr]
+                    attributes.remove(attr)
 
             offset = 0
             if has_mana_cost:
@@ -740,7 +739,7 @@ class GemsParser(object):
                         out.append('| %i\n' % gem_stat_requirement(
                             level=row['LevelRequirement'],
                             gtype=gtype,
-                            multi=attributes[attr],
+                            multi=skill_gem[attr],
                         ))
 
                 if has_mana_cost:
