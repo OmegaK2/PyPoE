@@ -7,8 +7,8 @@ Author   [#OMEGA]- K2
 
 INFO
 
-Import all Handlers from the sub pages into our name space so they can be
-imported by doing from ..parsers import *.
+Automatically all ExporterHandlers in the package files and import them into
+WIKI_HANDLERS.
 
 
 AGREEMENT
@@ -18,14 +18,72 @@ See PyPoE/LICENSE
 
 TODO
 
-- Auto discovery and possible iter on them or so
+...
 """
+
 
 # =============================================================================
 # Imports
 # =============================================================================
 
-from .gems import GemsHandler
-from .lua import LuaHandler
-from .mods import ModsHandler
-from .warbands import WarbandsHandler
+
+# Python
+import os
+from importlib import import_module
+
+# self
+from PyPoE.cli.exporter.wiki.handler import ExporterHandler
+
+
+# =============================================================================
+# Globals
+# =============================================================================
+
+
+WIKI_HANDLERS = []
+
+__all__ = ['WIKI_HANDLERS']
+
+
+# =============================================================================
+# Funcs
+# =============================================================================
+
+
+def _load():
+    cur_dir = os.path.split(os.path.realpath(__file__))[0]
+    for file_name in os.listdir(cur_dir):
+        if file_name.startswith('_'):
+            continue
+        file_name = file_name.replace('.py', '')
+        imp = import_module('.' + file_name, __package__)
+        for obj_name in dir(imp):
+            if obj_name.startswith('_'):
+                continue
+
+            if not obj_name.endswith('Handler'):
+                continue
+
+            obj = getattr(imp, obj_name)
+
+            # Not a class
+            if not isinstance(obj, type):
+                continue
+
+            # Only export handlers
+            if not issubclass(obj, ExporterHandler):
+                continue
+
+            # Only subclasses of which
+            if obj is ExporterHandler:
+                continue
+
+            WIKI_HANDLERS.append(obj)
+
+
+# =============================================================================
+# Init
+# =============================================================================
+
+
+_load()
