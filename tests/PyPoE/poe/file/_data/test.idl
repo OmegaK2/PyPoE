@@ -1,0 +1,13 @@
+// Invalid
+Art/2DArt/Test2 "Art/Textures/Test.dds" 1 0 2 1
+"Art/2DArt/Test2 "Art/Textures/Test.dds" 1 0 2 1
+"Art/2DArt/Test2" Art/Textures/Test.dds 1 0 2 1
+"Art/2DArt/Test1" "Art/Textures/Test.dds" "test" 0 1 1
+"Art/2DArt/Test1" "Art/Textures/Test.dds" 0.9 5.1 1 1
+"Art/2DArt/Test1" "Art/Textures/Test.dds" -123 -5 -123 -8
+// Valid
+"Art/2DArt/Test1" "Art/Textures/Test.dds" 0 0 1 1
+"Art/2DArt/Test2" "Art/Textures/Test.dds" 1 0 2 1
+"Art/2DArt/Test3" "Art/Textures/Test.dds" 0 1 2 2
+// Invalid
+garbage data
