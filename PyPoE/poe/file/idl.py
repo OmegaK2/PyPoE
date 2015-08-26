@@ -27,6 +27,9 @@ TODO
 # Python
 import re
 
+# self
+from PyPoE.shared.containers import TypedList, TypedContainerMeta
+
 # =============================================================================
 # Globals
 # =============================================================================
@@ -82,7 +85,9 @@ class IDLRecord(object):
         return not self.__eq__(other)
 
 
-class IDLFile(list):
+class IDLFile(TypedList, metaclass=TypedContainerMeta):
+
+    ACCEPTED_TYPES = IDLRecord
 
     _regex_parse = re.compile(
         r'^'
@@ -98,26 +103,6 @@ class IDLFile(list):
 
     def __init__(self):
         list.__init__(self)
-
-    def __add__(self, other):
-        if not isinstance(other, IDLFile):
-            raise TypeError('IDLFile can only be added to another IDLFile.')
-        list.__add__(self, other)
-
-    def __setitem__(self, key, value):
-        if not isinstance(p_object, IDLRecord):
-            raise TypeError('IDLFile only accepts IDLRecords.')
-        list.__setattr__(self, key, value)
-
-    def append(self, p_object):
-        if not isinstance(p_object, IDLRecord):
-            raise TypeError('IDLFile only accepts IDLRecords.')
-        list.append(self, p_object)
-
-    def insert(self, index, p_object):
-        if not isinstance(p_object, IDLRecord):
-            raise TypeError('IDLFile only accepts IDLRecords.')
-        list.insert(self, p_object)
 
     def read(self, path):
         # Reset
