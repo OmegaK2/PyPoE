@@ -584,6 +584,7 @@ class GemsParser(object):
             is_aura = False
             is_minion = False
             is_totem = False
+            is_bow = False
             tf = self.translation_cache.get_file('Metadata/skill_stat_descriptions.txt')
             for tag in skill_gem['GemTagsKeys']:
                 if tag['Id'] == 'aura':
@@ -599,6 +600,8 @@ class GemsParser(object):
                     tf = self.translation_cache.get_file('Metadata/curse_skill_stat_descriptions.txt')
                 elif tag['Id'] == 'totem':
                     is_totem = True
+                elif tag['Id'] == 'bow':
+                    is_bow = True
 
             attributes = ['Str', 'Dex', 'Int']
 
@@ -758,8 +761,8 @@ class GemsParser(object):
                     # Shorten the name
                     name = self._regex_summon.sub('', mv['Name'])
                     name = name.replace(' ', '<br>')
-                    # Only hp for totems
-                    if is_minion:
+                    # Only hp for totems and clone/mirror arrow
+                    if is_minion and not is_bow:
                         out.append('| c%s=%s<br>Base<br>Damage\n' % (offset+1, name))
                         out.append('| c%s=%s<br>Base<br>Attack Speed\n' % (offset+2, name))
                         offset += 2
@@ -844,7 +847,7 @@ class GemsParser(object):
                     out.append('| %s\n' % minion_level)
                     for mv in monster_varieties:
                         dmg, aspd, life = self._get_monster_stats(mv, minion_level)
-                        if is_minion:
+                        if is_minion and not is_bow:
                             out.append('| {0:,d}&ndash;{1:,d}\n'.format(*dmg))
                             out.append('| {0:.2f}\n'.format(aspd))
                         out.append('| {0:,d}\n'.format(life))
