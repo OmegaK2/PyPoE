@@ -15,11 +15,6 @@ http://pathofexile.gamepedia.com
 AGREEMENT
 
 See PyPoE/LICENSE
-
-
-TODO
-
-CLI interface/args
 """
 
 # =============================================================================
@@ -30,25 +25,15 @@ CLI interface/args
 import warnings
 
 # Self
-from PyPoE.poe.file.dat import DatFile
+from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter.wiki.handler import *
+from PyPoE.cli.exporter.wiki.parser import BaseParser
 
 # =============================================================================
 # Globals
 # =============================================================================
 
 __all__= ['QuestRewardReader', 'LuaHandler']
-
-class_map = {
-    -1: "All",
-    0: "Marauder",
-    1: "Witch",
-    2: "Scion",
-    3: "Ranger",
-    4: "Duelist",
-    5: "Shadow",
-    6: "Templar",
-}
 
 rarities = {
     1: 'Normal',
@@ -72,11 +57,12 @@ item_map = {
     457: "Conqueror's Efficiency", # crimson
     458: "Conqueror's Potency", # cobalt
     459: "Conqueror's Longevity", #viridian
-    # Two Stone Rings
-    # TODO actually no idea which one is actually which
-    641: "Two-Stone_Ring_(ruby_and_sapphire)",
-    642: "Two-Stone Ring (sapphire and topaz)",
-    643: "Two-Stone Ring (ruby and topaz)",
+}
+
+two_stone_map = {
+    'Ring12': "Two-Stone Ring (ruby and topaz)",
+    'Ring13': "Two-Stone Ring (sapphire and topaz)",
+    'Ring14': "Two-Stone Ring (ruby and sapphire)",
 }
 
 item_format_order = [
@@ -114,29 +100,19 @@ class LuaHandler(ExporterHandler):
             func=QuestRewardReader.read_vendor_rewards,
         )
 
-class QuestRewardReader(object):
-    def __init__(self, **kwargs):
-        opt = {
-            'use_dat_value': False,
-        }
-        data_path = kwargs['data_path']
 
-        self.base_item_types = DatFile('BaseItemTypes.dat', read_file=data_path, options=opt).reader
-
-        self.difficulties = DatFile('Difficulties.dat', read_file=data_path, options=opt).reader
-
-        #base_item_classes = DatFile('ItemClassesDisplay.dat')
-        #base_item_classes.read_from_file(path)
-
-        self.npcs = DatFile('NPCs.dat', read_file=data_path, options=opt).reader
-
-        self.quests = DatFile('Quest.dat', read_file=data_path, options=opt).reader
-
-        self.quest_states = DatFile('QuestStates.dat', read_file=data_path, options=opt).reader
-
-        self.quest_rewards = DatFile('QuestRewards.dat', read_file=data_path, options=opt).reader
-
-        self.quest_vendor_rewards = DatFile('QuestVendorRewards.dat', read_file=data_path, options=opt).reader
+class QuestRewardReader(BaseParser):
+    # Load the files we need
+    _files = [
+        'BaseItemTypes.dat',
+        'Characters.dat',
+        'Difficulties.dat',
+        'NPCs.dat',
+        'Quest.dat',
+        'QuestStates.dat',
+        'QuestRewards.dat',
+        'QuestVendorRewards.dat',
+    ]
 
     def _write_lua(self, outdata, data_type):
         # Pre-sort
@@ -172,17 +148,12 @@ class QuestRewardReader(object):
 
     def read_quest_rewards(self, args):
         outdata = []
-        for row in self.quest_rewards.table_data:
-            # Find the corressponding keys
-            itemid = row['BaseItemTypesKey']
-            for item in self.base_item_types.table_data:
-                if item.rowid == itemid:
-                    break
-
-            questid = row['QuestKey']
-            for quest in self.quests.table_data:
-                if quest.rowid == questid:
-                    break
+        for row in self.rr['QuestRewards.dat']:
+            # Find the corresponding keys
+            item = row['BaseItemTypesKey']
+            quest = row['QuestKey']
+            character = row['CharactersKey']
+            difficulty = row['Difficulty']
 
             # Format the data
             data = {}
@@ -210,16 +181,20 @@ class QuestRewardReader(object):
             if itemcls != 'item':
                 data['type'] = itemcls
 
-            data['class'] = class_map[row['CharactersKey']]
-            # TODO: Unused atm, only for sorting
-            data['class_id'] = row['CharactersKey']
+            # TODO: Unused class_id atm, only for sorting
+            if character is None:
+                data['class'] = 'All'
+                data['class_id'] = -1
+            else:
+                data['class'] = character['Name']
+                data['class_id'] = character.rowid
 
             r = row['Rarity']
             rarity = rarities[r] if r in rarities else '???'
 
             # Start counting at 1 for some reason...
-            difficulty_id = row['Difficulty']
-            data['difficulty'] = difficulty_id
+
+            data['difficulty'] = difficulty
             #data['difficulty'] = difficulties.table_data[difficulty_id-1]['Id']
 
             sockets = row['SocketGems']
@@ -246,9 +221,9 @@ class QuestRewardReader(object):
             data['reward'] = name
 
             if name == 'Two-Stone Ring':
-                itemid = item['ItemVisualIdentityKey']
-                if itemid in item_map:
-                    data['page_link'] = item_map[itemid]
+                itemid = item['ItemVisualIdentityKey']['Index0']
+                if itemid in two_stone_map:
+                    data['page_link'] = two_stone_map[itemid]
                 else:
                     warnings.warn('Fix ItemID for two-stones')
 
@@ -258,51 +233,43 @@ class QuestRewardReader(object):
 
     def read_vendor_rewards(self, args):
         outdata = []
-        for row in self.quest_vendor_rewards.table_data:
+        eternal_nightmare_quest = None
+        for row in self.rr['Quest.dat']:
+            if row['UniqueId'] == 'a4q1':
+                eternal_nightmare_quest = row
+                break
+
+        if eternal_nightmare_quest is None:
+            console('Could not find the Eternal Nightmare quest. Stopping',
+                    msg=Msg.error)
+
+
+        for row in self.rr['QuestVendorRewards.dat']:
             # Find the corresponding keys
-            quest_keys = []
+            quests = []
             quest_state_key = row['QuestState']
 
-            for quest_state_row in self.quest_states.table_data:
+            for quest_state_row in self.rr['QuestStates.dat']:
                 if quest_state_key not in quest_state_row['QuestStates']:
                     continue
 
-                quest_keys.append(quest_state_row['QuestKey'])
+                quests.append(quest_state_row['QuestKey'])
 
-            quests = []
             # Fix for eternal night mare...
-            if not quest_keys and quest_state_key == 698:
-                quest_keys.append(38)
-
-
-            for quest in self.quests.table_data:
-                for quest_key in quest_keys:
-                    if quest.rowid == quest_key:
-                        quests.append(quest)
-                        break
+            if not quests and quest_state_key == 698:
+                quests.append(eternal_nightmare_quest)
 
             if not quests:
                 warnings.warn('Row %s: Quest vendor rewardwith no quests...?' % row.rowid)
                 continue
 
-            items = []
-            item_keys = row['BaseItemTypesKeys']
-            for item in self.base_item_types.table_data:
-                for key in item_keys:
-                    if key == item.rowid:
-                        items.append(item)
-                        item_keys.remove(key)
-                        break
+            items = row['BaseItemTypesKeys']
 
             if not items:
                 warnings.warn('Row %s: No corressponding items found for given item ids' % row.rowid)
                 continue
 
             classes = row['CharactersKeys']
-
-            for npc in self.npcs.table_data:
-                if npc.rowid == row['NPCKey']:
-                    break
 
             # Format the data:
 
@@ -312,14 +279,14 @@ class QuestRewardReader(object):
                         data = {}
 
                         data['quest'] = quest['Title']
-                        data['quest_id']  = quest['UniqueId']
+                        data['quest_id'] = quest['UniqueId']
                         data['act'] = quest['Act']
                         data['reward'] = item['Name']
                         # Pretty sure they are all skills...
                         data['type'] = 'skill'
-                        data['class'] = class_map[cls]
-                        data['class_id'] = cls
-                        data['npc'] = npc['Name']
+                        data['class'] = cls['Name']
+                        data['class_id'] = cls.rowid
+                        data['npc'] = row['NPCKey']['Name']
 
                         outdata.append(data)
         return self._write_lua(outdata, 'vendor')

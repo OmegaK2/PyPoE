@@ -31,11 +31,10 @@ import sys
 import warnings
 
 # Self
-from PyPoE.poe.file.dat import RelationalReader
-from PyPoE.poe.file.translations import TranslationFileCache
 from PyPoE.poe.sim.formula import gem_stat_requirement, GemTypes
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter.wiki.handler import *
+from PyPoE.cli.exporter.wiki.parser import BaseParser
 
 # =============================================================================
 # Data
@@ -344,7 +343,7 @@ class GemsHandler(ExporterHandler):
             )
 
 
-class GemsParser(object):
+class GemsParser(BaseParser):
 
     _summon_map = {
         # Minions
@@ -385,31 +384,21 @@ class GemsParser(object):
         '(?P<tag>%|second)',
         re.IGNORECASE
     )
-
-    def __init__(self, **kwargs):
-        self.desc_path = kwargs['desc_path']
-        self.data_path = kwargs['data_path']
-
-        self.opt = {
-            'use_dat_value': False,
-        }
-
-        self.reader = RelationalReader(
-            self.data_path,
-            files=[
-                'BaseItemTypes.dat',
-                'SkillGems.dat',
-                'Stats.dat'
-            ],
-            options=self.opt,
-        )
-
-        self.translation_cache = TranslationFileCache(kwargs['base_path'])
-        # Touch files we'll need
-        self.translation_cache.get_file('Metadata/stat_descriptions.txt')
-        self.translation_cache.get_file('Metadata/gem_stat_descriptions.txt')
-        self.translation_cache.get_file('Metadata/skill_stat_descriptions.txt')
-        self.translation_cache.get_file('Metadata/active_skill_gem_stat_descriptions.txt')
+    
+    # Core files we need to load
+    _files = [
+        'BaseItemTypes.dat',
+        'SkillGems.dat',
+        'Stats.dat',
+    ]
+    
+    # Core translations we need
+    _translations = [
+        'stat_descriptions.txt',
+        'gem_stat_descriptions.txt',
+        'skill_stat_descriptions.txt',
+        'active_skill_gem_stat_descriptions.txt',
+    ]
 
     def _get_monster_data(self, gem_name):
         """
@@ -432,7 +421,7 @@ class GemsParser(object):
 
         mtypes = []
         worker = list(self._summon_map[gem_name])
-        for row in self.reader['MonsterTypes.dat']:
+        for row in self.rr['MonsterTypes.dat']:
             found = False
             for types_name_index in worker:
                 if types_name_index == row['Index0']:
@@ -452,7 +441,7 @@ class GemsParser(object):
             return
 
         result = []
-        for row in self.reader['MonsterVarieties.dat']:
+        for row in self.rr['MonsterVarieties.dat']:
             found = False
             for mt in mtypes:
                 # There is more then one variety, but we only need one
@@ -478,7 +467,7 @@ class GemsParser(object):
         :param minion_level: Level of the minion
         :return: (damage_min, damage_max), aspd, life
         """
-        default = self.reader['DefaultMonsterStats.dat'][minion_level-1]
+        default = self.rr['DefaultMonsterStats.dat'][minion_level-1]
 
         life = default['Life'] * mv['LifeMultiplier'] // 100
         damage_min =  default['Damage'] * mv['DamageMultiplier'] // 100
@@ -495,7 +484,7 @@ class GemsParser(object):
         :return: BaseItemTypes.dat row, SkillGems.dat row
         """
         base_item_type = None
-        for row in self.reader['BaseItemTypes.dat']:
+        for row in self.rr['BaseItemTypes.dat']:
             if row['Name'] == name:
                 base_item_type = row
                 break
@@ -505,7 +494,7 @@ class GemsParser(object):
             return
 
         skill_gem = None
-        for row in self.reader['SkillGems.dat']:
+        for row in self.rr['SkillGems.dat']:
             if row['BaseItemTypesKey'] == base_item_type:
                 skill_gem = row
                 break
@@ -541,11 +530,11 @@ class GemsParser(object):
             sys.exit(-1)
 
         console('Loading additional files...')
-        self.reader.read_file('GrantedEffects.dat')
-        self.reader.read_file('GrantedEffectsPerLevel.dat')
-        self.reader.read_file('ItemExperiencePerLevel.dat')
-        self.reader.read_file('MonsterTypes.dat')
-        self.reader.read_file('MonsterVarieties.dat')
+        self.rr.read_file('GrantedEffects.dat')
+        self.rr.read_file('GrantedEffectsPerLevel.dat')
+        self.rr.read_file('ItemExperiencePerLevel.dat')
+        self.rr.read_file('MonsterTypes.dat')
+        self.rr.read_file('MonsterVarieties.dat')
 
         console('Processing information...')
 
@@ -559,7 +548,7 @@ class GemsParser(object):
             exp = 0
             exp_level = []
             exp_total = []
-            for row in self.reader['ItemExperiencePerLevel.dat']:
+            for row in self.rr['ItemExperiencePerLevel.dat']:
                 if row['BaseItemTypesKey'] == base_item_type:
                     exp_new = row['Experience']
                     exp_level.append(exp_new - exp)
@@ -573,7 +562,7 @@ class GemsParser(object):
             ge = skill_gem['GrantedEffectsKey']
 
             gepl = []
-            for row in self.reader['GrantedEffectsPerLevel.dat']:
+            for row in self.rr['GrantedEffectsPerLevel.dat']:
                 if row['GrantedEffectsKey'] == ge:
                     gepl.append(row)
 
@@ -585,19 +574,19 @@ class GemsParser(object):
             is_minion = False
             is_totem = False
             is_bow = False
-            tf = self.translation_cache.get_file('Metadata/skill_stat_descriptions.txt')
+            tf = self.tc['skill_stat_descriptions.txt']
             for tag in skill_gem['GemTagsKeys']:
                 if tag['Id'] == 'aura':
                     is_aura = True
-                    tf = self.translation_cache.get_file('Metadata/aura_skill_stat_descriptions.txt')
+                    tf = self.tc['aura_skill_stat_descriptions.txt']
                 elif tag['Id'] == 'minion':
                     is_minion = True
                     #TODO one of?
-                    #tf = self.translation_cache.get_file('Metadata/minion_skill_stat_descriptions.txt')
-                    tf = self.translation_cache.get_file('Metadata/minion_attack_skill_stat_descriptions.txt')
-                    tf = self.translation_cache.get_file('Metadata/minion_spell_skill_stat_descriptions.txt')
+                    #tf = self.tc['minion_skill_stat_descriptions.txt']
+                    tf = self.tc['minion_attack_skill_stat_descriptions.txt']
+                    tf = self.tc['minion_spell_skill_stat_descriptions.txt']
                 elif tag['Id'] == 'curse':
-                    tf = self.translation_cache.get_file('Metadata/curse_skill_stat_descriptions.txt')
+                    tf = self.tc['curse_skill_stat_descriptions.txt']
                 elif tag['Id'] == 'totem':
                     is_totem = True
                 elif tag['Id'] == 'bow':

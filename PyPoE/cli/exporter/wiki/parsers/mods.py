@@ -26,10 +26,9 @@ FIX the jewel generator (corrupted)
 # =============================================================================
 
 # Self
-from PyPoE.poe.file.dat import RelationalReader
-from PyPoE.poe.file.translations import TranslationFileCache
-from PyPoE.cli.core import console
+from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter.wiki.handler import *
+from PyPoE.cli.exporter.wiki.parser import BaseParser
 
 
 # =============================================================================
@@ -83,7 +82,8 @@ class ModsHandler(ExporterHandler):
             help='The type of jewel mod to extract.',
         )
 
-class ModParser(object):
+
+class ModParser(BaseParser):
     dropdata = {
             0: 'Any other item',
             5: 'Bow',
@@ -111,48 +111,17 @@ class ModParser(object):
         'not_int': ['dex', 'str'],
         'not_dex': ['int', 'str'],
     }
-
-
-    def __init__(self, **kwargs):
-        self.desc_path = kwargs['desc_path']
-
-        opt = {
-            'use_dat_value': False,
-        }
-
-        self.r = RelationalReader(kwargs['data_path'], files=[
-            'Mods.dat',
-            'Stats.dat',
-        ], options=opt)
-
-        self.translation_cache = TranslationFileCache(kwargs['base_path'])
-        # Touch files we'll need
-        self.translation_cache['map_stat_descriptions.txt']
-
-        #self.descriptions = DescriptionFile(self.desc_path + '/map_descriptions.txt')
-        #self.stat_descriptions = DescriptionFile(glob(desc_path + '/*_descriptions.txt'))
-
-    def _get_stats(self, mod):
-        stats = []
-        for i in range(1, 5):
-            stat = mod['StatsKey%s' % i]
-            if stat:
-                stats.append(stat)
-
-        ids = []
-        values = []
-        for i, stat in enumerate(stats):
-            j = i + 1
-            values.append([mod['Stat%sMin' % j], mod['Stat%sMax' % j]])
-            ids.append(stat['Id'])
-
-        tf = self.translation_cache['stat_descriptions.txt']
-
-        effects = tf.get_translation(ids, values)
-        if not effects:
-            console("%s %s" % (ids, values))
-
-        return tf.get_translation(ids, values)
+    
+    # Load files in advance
+    _files = [
+        'Mods.dat',
+        'Stats.dat',
+    ]
+    
+    # Load translations in advance
+    _translations = [
+        'map_stat_descriptions.txt',
+    ]
 
     def _append_effect(self, result, mylist, heading):
         mylist.append(heading)
@@ -166,10 +135,10 @@ class ModParser(object):
             mylist.append('* %s %s' % (stat_id, value))
 
     def map(self, parsed_args):
-        tf = self.translation_cache['map_stat_descriptions.txt']
+        tf = self.tc['map_stat_descriptions.txt']
 
         mods = []
-        for mod in self.r['Mods.dat']:
+        for mod in self.rr['Mods.dat']:
             if mod['Domain'] != 5:
                 continue
             if mod['GenerationType'] not in (1, 2):
@@ -192,9 +161,9 @@ class ModParser(object):
         return r
 
     def tempest(self, parsed_args):
-        tf = self.translation_cache['map_stat_descriptions.txt']
+        tf = self.tc['map_stat_descriptions.txt']
         data = []
-        for mod in self.r['Mods.dat']:
+        for mod in self.rr['Mods.dat']:
             # Is it a tempest mod?
             if mod['CorrectGroup'] != 'MapEclipse':
                 continue
@@ -229,7 +198,7 @@ class ModParser(object):
                 pass
             else:
                 # Value is incremented by 1 for some reason
-                tempest = self.r['ExplodingStormBuffs.dat'][stat_values[index]-1]
+                tempest = self.rr['ExplodingStormBuffs.dat'][stat_values[index]-1]
 
                 stat_ids.pop(index)
                 stat_values.pop(index)
@@ -266,7 +235,7 @@ class ModParser(object):
 
     def jewel(self, parsed_args):
         data = []
-        for mod in self.r['Mods.dat']:
+        for mod in self.rr['Mods.dat']:
             # not a jewel
             if mod['Domain'] != 11:
                 continue

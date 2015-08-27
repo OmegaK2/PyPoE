@@ -138,6 +138,13 @@ class ExporterHandler(BaseHandler):
             action='store_true',
         )
 
+    def _wiki_default_handler(self, pws2, result):
+        site = pws.get_site()
+        for row in result:
+            page_name = row['wiki_page']
+            page = pws.pywikibot.Page(site, page_name)
+            self._wiki_save_page(page, row['lines'], self.__name__)
+
     def _wiki_save_page(self, page, text, message):
         if text == page.text:
             console('No update required. Skipping.')

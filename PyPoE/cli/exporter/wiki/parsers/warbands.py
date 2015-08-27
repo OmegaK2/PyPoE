@@ -32,9 +32,9 @@ import os
 from graphviz import Digraph
 
 # Self
-from PyPoE.poe.file.dat import DatFile
 from PyPoE.cli.core import console
 from PyPoE.cli.exporter.wiki.handler import *
+from PyPoE.cli.exporter.wiki.parser import BaseParser
 
 # =============================================================================
 # Classes
@@ -77,29 +77,26 @@ class WarbandsHandler(ExporterHandler):
             help='File format to use when extracting.',
         )
 
-class WarbandsParser(object):
-    def __init__(self, **kwargs):
-        #self.mods = DatFile('Mods.dat', read_file=data_path).reader
-        #self.stats = DatFile('Stats.dat', read_file=data_path).reader
+class WarbandsParser(BaseParser):
 
-        opt = {
-            'use_dat_value': False,
-        }
-        data_path = kwargs['data_path']
+    # Load files in advance
+    _files = [
+        'MonsterPacks.dat',
+        'MonsterVarieties.dat',
+        'WarbandsGraph.dat',
+        'WarbandsMapGraph.dat',
+        'WarbandsPackNumbers.dat',
+        'WarbandsPackMonsters.dat',
+        'WorldAreas.dat',
+    ]
 
-        self.monster_packs = DatFile('MonsterPacks.dat', read_file=data_path, options=opt).reader
-        self.monster_varieties = DatFile('MonsterVarieties.dat', read_file=data_path, options=opt).reader
-
-        self.warbands_graph = DatFile('WarbandsGraph.dat', read_file=data_path, options=opt).reader
-        self.warbands_map_graph = DatFile('WarbandsMapGraph.dat', read_file=data_path, options=opt).reader
-        self.warbands_pack_monsters = DatFile('WarbandsPackMonsters.dat', read_file=data_path, options=opt).reader
-        self.warbands_pack_numbers = DatFile('WarbandsPackNumbers.dat', read_file=data_path, options=opt).reader
-
-        self.world_areas = DatFile('WorldAreas.dat', read_file=data_path, options=opt).reader
+    # Load translations in advance
+    _translations = [
+    ]
 
     def warbands(self, parsed_args):
         out = []
-        for warband in self.warbands_pack_monsters.table_data:
+        for warband in self.rr['WarbandsPackMonsters.dat']:
             out.append(warband['Name'])
             out.append('\n\n')
 
@@ -108,12 +105,10 @@ class WarbandsParser(object):
                 out.append(mob['Name'])'''
 
 
-            for i in range(0, 4):
-                ix = 4 - i
-                out.append('Tier %s: %s\n' % (ix, warband['Tier%sName' % ix ]))
-                for key in warband['Data%s' % i]:
-                    mob = self.monster_varieties.table_data[key]
-                    out.append("%s %s\n" % (mob['Name'], mob.rowid))
+            for i in range(1, 5):
+                out.append('Tier %s: %s\n' % (i, warband['Tier%sName' % i]))
+                for mv in warband['Tier%s_MonsterVarietiesKeys' % i]:
+                    out.append("%s %s\n" % (mv['Name'], mv.rowid))
                     #out.append(mob)
                     #break
                 out.append('\n')
@@ -127,16 +122,16 @@ class WarbandsParser(object):
 
     def graph(self, parsed_args, **kwargs):
         if parsed_args.type == 'map':
-            dat_file = self.warbands_map_graph
+            dat_file = self.rr['WarbandsMapGraph.dat']
             out_file = 'warbands_map_graph.cv'
         elif parsed_args.type == 'normal':
-            dat_file = self.warbands_graph
+            dat_file = self.rr['WarbandsGraph.dat']
             out_file = 'warbands_graph.cv'
 
-        print ('Creating Graph...')
+        print('Creating Graph...')
         dot = Digraph(comment='Warbands Graph', engine='dot', format=parsed_args.format)
         for row in dat_file:
-            world_area = self.world_areas.table_data[row['WorldAreasKey']]
+            world_area = row['WorldAreasKey']
             dot.node(str(row.rowid), world_area['Name'])
             for node in row['Connections']:
                 dot.edge(str(row.rowid), str(node))
