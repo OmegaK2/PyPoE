@@ -1,13 +1,13 @@
 """
 Path     PyPoE/cli/exporter/wiki/handler.py
-Name     Wiki Export Handler
-Version  1.00.000
+Name     Wiki Export Base Parser
+Version  1.0.0a0
 Revision $Id$
 Author   [#OMEGA]- K2
 
 INFO
 
-Base classes and related functions for Wiki Export Handlers.
+Base classes and related functions for Wiki Export Parsers.
 
 
 AGREEMENT
