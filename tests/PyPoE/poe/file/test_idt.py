@@ -1,0 +1,102 @@
+"""
+Path     PyPoE/tests/poe/file/test_idt.py
+Name     Tests for PyPoE.poe.file.idt
+Version  1.0.0a0
+Revision $Id$
+Author   Omega_K2
+
+INFO
+
+Tests for PyPoE/tests/poe/file/test_idt.py
+
+
+AGREEMENT
+
+See PyPoE/LICENSE
+
+
+TODO
+
+...
+"""
+
+# =============================================================================
+# Imports
+# =============================================================================
+
+# Python
+import os
+
+# 3rd-party
+import pytest
+
+# self
+from PyPoE.poe.file import idt
+
+# =============================================================================
+# Setup
+# =============================================================================
+
+cur_dir = os.path.split(os.path.realpath(__file__))[0]
+idl_path = os.path.join(cur_dir, '_data', 'test.idt')
+
+# =============================================================================
+# Fixtures
+# =============================================================================
+
+data = {
+    'version': 1,
+    'image': 'Art/2DItems/Test.dds',
+    'records': [
+        {
+            'name': 'Blade',
+            'records': [
+                {'x': 1, 'y': 1},
+                {'x': 2, 'y': 2},
+            ],
+        },
+        {
+            'name': 'Handle',
+            'records': [
+                {'x': 1, 'y': 1},
+                {'x': 2, 'y': 2},
+                {'x': 3, 'y': 3},
+                {'x': 4, 'y': 4},
+            ],
+        },
+    ],
+}
+
+@pytest.fixture
+def idt_file():
+    return idt.IDTFile(data)
+
+
+# =============================================================================
+# Tests
+# =============================================================================
+
+class TestIDLFile:
+
+    def eq(self, idt_file):
+        assert idt_file.version == data['version']
+        assert idt_file.image == data['image']
+        for i, tex in enumerate(data['records']):
+            assert idt_file.records[i].name == tex['name']
+            for j, coord in enumerate(tex['records']):
+                assert idt_file.records[i].records[j].x == coord['x']
+                assert idt_file.records[i].records[j].y == coord['y']
+
+    def test_init(self, idt_file):
+        self.eq(idt_file)
+
+    def test_read(self, idt_file):
+        idt_file.read(idl_path)
+
+        self.eq(idt_file)
+
+    def test_write(self, idt_file):
+        pass TODO
+
+
+

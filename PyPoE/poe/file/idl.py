@@ -28,7 +28,7 @@ TODO
 import re
 
 # self
-from PyPoE.shared.containers import TypedList, TypedContainerMeta
+from PyPoE.shared.containers import Record, TypedList, TypedContainerMeta
 
 # =============================================================================
 # Globals
@@ -40,7 +40,7 @@ __all__ = ['IDLRecord', 'IDLFile']
 # Classes
 # =============================================================================
 
-class IDLRecord(object):
+class IDLRecord(Record):
     __slots__ = ['destination', 'source', 'x1', 'y1', 'x2', 'y2']
 
     def __init__(self, destination, source, x1, y1, x2, y2):
@@ -60,29 +60,6 @@ class IDLRecord(object):
             self.x2,
             self.y2,
         )
-
-    def __repr__(self):
-        return 'IDLRecord(%s, %s, %i, %i, %i, %i)' % (
-            repr(self.destination),
-            repr(self.source),
-            self.x1,
-            self.y1,
-            self.x2,
-            self.y2,
-        )
-
-    def __eq__(self, other):
-        if not isinstance(other, IDLRecord):
-            return object.__eq__(self, other)
-
-        eq = True
-        for attr in self.__slots__:
-            eq = eq and getattr(self, attr) == getattr(other, attr)
-
-        return eq
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
 
 
 class IDLFile(TypedList, metaclass=TypedContainerMeta):

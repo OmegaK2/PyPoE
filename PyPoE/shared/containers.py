@@ -31,11 +31,42 @@ from collections.abc import Iterable
 # Globals
 # =============================================================================
 
-__all__ = ['TypedContainerMeta', 'TypedContainerMixin', 'TypedList']
+__all__ = ['Record', 'TypedContainerMeta', 'TypedContainerMixin', 'TypedList']
 
 # =============================================================================
 # Classes
 # =============================================================================
+
+class Record(object):
+    def __str__(self):
+        return repr(self)
+
+    def __repr__(self):
+        out = []
+        for attr in self.__slots__:
+            out.append('%s=%s' % (attr, repr(getattr(self, attr))))
+
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(out))
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return object.__eq__(self, other)
+
+        for attr in self.__slots__:
+            if not getattr(self, attr) == getattr(other, attr):
+                return False
+
+        return True
+
+    def __ne__(self, other):
+        if not isinstance(other, self.__class__):
+            return object.__eq__(self, other)
+
+        for attr in self.__slots__:
+            if not getattr(self, attr) != getattr(other, attr):
+                return False
+
+        return True
 
 
 class TypedContainerMeta(type):
