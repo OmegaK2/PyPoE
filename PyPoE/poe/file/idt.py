@@ -25,6 +25,7 @@ TODO
 # =============================================================================
 
 # Python
+import codecs
 import re
 
 # self
@@ -46,8 +47,8 @@ class CoordinateRecord(Record):
     __slots__ = ['x', 'y']
 
     def __init__(self, x, y):
-        self.x = x
-        self.y = y
+        self.x = int(x)
+        self.y = int(y)
 
 
 class CoordinateList(TypedList, metaclass=TypedContainerMeta):
@@ -93,7 +94,7 @@ class IDTFile(AbstractFile):
         r'(?P<name>[a-zA-Z]+)[ ]+'
         r'(?P<count>[0-9]+)[ ]+'
         r'(?P<coordinates>(?:[0-9]+[ ]*)*)'
-        r'$',
+        r'[\r\n]*$',
         re.UNICODE | re.MULTILINE | re.DOTALL
     )
 
@@ -144,30 +145,37 @@ class IDTFile(AbstractFile):
     # Private
 
     def _write(self, buffer):
-        buffer.write('version %s\n' % self.version)
-        buffer.write('image "%s"\n' % self.image)
-        buffer.write('%s\n' % len(self._records))
+        out = []
+
+        out.append('version %s\n' % self.version)
+        out.append('image "%s"\n' % self.image)
+        out.append('%s\n' % len(self._records))
         for tex_record in self._records:
-            buffer.write('%s %s' % (tex_record.name, len(tex_record.records)))
+            out.append('%s %s' % (tex_record.name, len(tex_record.records)))
             for coord_record in tex_record.records:
-                buffer.write(' %s %s' % (coord_record.x, coord_record.y))
-            buffer.write('\n')
+                out.append(' %s %s' % (coord_record.x, coord_record.y))
+            out.append('\n')
+
+        ''.join(out).encode('utf-16_le')
+
+        buffer.write(codecs.BOM_UTF16_LE + ''.join(out).encode('utf-16_le'))
 
     def _read(self, buffer, *args, **kwargs):
-        data = buffer.read().decode('utf_16_le')
+        # Should detect little endian byte order accordingly and remove the BOM
+        data = buffer.read().decode('utf-16')
         match = self._regex_parse.match(data)
 
         if not match:
             raise ParserError('Failed to find the base information. File may not be a .idt file or malformed.')
 
         textures = TextureList()
-        for tex_match in self._regex_texture.findall(match.group('textures')):
+        for tex_match in self._regex_texture.finditer(match.group('textures')):
             coordinates = CoordinateList()
-            for coord_match in self._regex_coordinates.findall(match.group('coordinates')):
+            for coord_match in self._regex_coordinates.finditer(tex_match.group('coordinates')):
                 coordinates.append(CoordinateRecord(**coord_match.groupdict()))
 
-            if len(coordinates) != int(match.group('count')):
-                raise ParserError('Amount of found coordinates (%s) does not match the amount of specified coordinates (%s)' % (len(coordinates), match.group('count')))
+            if len(coordinates) != int(tex_match.group('count')):
+                raise ParserError('Amount of found coordinates (%s) does not match the amount of specified coordinates (%s)' % (len(coordinates), tex_match.group('count')))
 
             textures.append(TextureRecord(tex_match.group('name'), coordinates))
 

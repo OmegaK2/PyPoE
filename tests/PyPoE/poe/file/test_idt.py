@@ -29,6 +29,7 @@ import os
 
 # 3rd-party
 import pytest
+from tempfile import TemporaryDirectory
 
 # self
 from PyPoE.poe.file import idt
@@ -91,12 +92,20 @@ class TestIDLFile:
         self.eq(idt_file)
 
     def test_read(self, idt_file):
-        idt_file.read(idl_path)
+        idt_file2 = idt.IDTFile()
+        idt_file2.read(idl_path)
 
         self.eq(idt_file)
 
     def test_write(self, idt_file):
-        pass TODO
+        idt_file2 = idt.IDTFile()
+
+        with TemporaryDirectory() as d:
+            tmp_path = os.path.join(d, 'test_write.idt')
+            idt_file.write(tmp_path)
+            idt_file2.read(tmp_path)
+
+            self.eq(idt_file2)
 
 
 
