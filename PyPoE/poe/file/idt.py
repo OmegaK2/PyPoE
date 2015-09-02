@@ -9,6 +9,7 @@ INFO
 
 File Format handler for Grinding Gear Games' .idt format.
 
+.idt files are generally used to link the inventory texture to an object.
 
 AGREEMENT
 
@@ -36,17 +37,23 @@ from PyPoE.poe.file._shared import AbstractFile, ParserError
 # Globals
 # =============================================================================
 
-__all__ = ['IDTFile']
+__all__ = ['IDTFile', 'TextureRecord', 'CoordinateRecord']
 
 # =============================================================================
 # Classes
 # =============================================================================
 
 class CoordinateRecord(Record):
-
+    """
+    Object that represents a single coordinate with the relevant attributes
+    """
     __slots__ = ['x', 'y']
 
     def __init__(self, x, y):
+        """
+        :param int x: x-coordinate
+        :param int y: y-coordinate
+        """
         self.x = int(x)
         self.y = int(y)
 
@@ -56,10 +63,22 @@ class CoordinateList(TypedList, metaclass=TypedContainerMeta):
 
 
 class TextureRecord(Record):
+    """
+    Object that represents a single texture with the relevant attributes
+    """
 
     __slots__ = ['name', 'records']
 
     def __init__(self, name, records=None):
+        """
+        :param str name: name (internal path) of the texture
+        :param records: :class:`CoordinateList` of :class:`CoordinateRecords`
+        for this texture. If None, an empty coordinate list will be created.
+        :type records: None or CoordinateList
+
+        :raises TypeError: If records is of invalid type
+        :raises TypeError: If the containing types of records are invalid
+        """
         self.name = name
         if records is None:
             self.records = CoordinateList()
@@ -77,6 +96,9 @@ class TextureList(TypedList, metaclass=TypedContainerMeta):
 
 
 class IDTFile(AbstractFile):
+    """
+    Encapsulated in-memory representation of .idt files.
+    """
     # complete match
     _regex_parse = re.compile(
         r'^'
@@ -107,6 +129,22 @@ class IDTFile(AbstractFile):
     )
 
     def __init__(self, data=None):
+        """
+        Creates a new IDTFile instance.
+
+        Optionally data can be specified to initialize the object in memory
+        with the given data. The same can be achieved by simply setting the
+        relevant attributes.
+        Note that :method:`IDTFile.read` will override any initial data.
+
+
+        :param data: Take a dict containing the data to create this object
+        and it's attributes with. The dict should match the structure of
+        the classes attributes and the respective sub attributes.
+        :type data: None or dict
+
+        :raises: TypeError if dict contains data of invalid types
+        """
         if data is None:
             self.version = 0
             self.image = None
@@ -130,6 +168,10 @@ class IDTFile(AbstractFile):
     # Properties
 
     def _get_records(self):
+        """
+        :return: List of stored :class:`TextureRecord`s
+        :rtype: :class:`TextureList`
+        """
         return self._records
 
     def _set_records(self, value):

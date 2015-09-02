@@ -9,6 +9,8 @@ INFO
 
 File Format handler for Grinding Gear Games' .idl format.
 
+.idl files are used to link multiple virtual texture out of single image file.
+
 
 AGREEMENT
 
@@ -25,9 +27,11 @@ TODO
 # =============================================================================
 
 # Python
+import codecs
 import re
 
 # self
+from PyPoE.poe.file._shared import AbstractFile
 from PyPoE.shared.containers import Record, TypedList, TypedContainerMeta
 
 # =============================================================================
@@ -44,6 +48,19 @@ class IDLRecord(Record):
     __slots__ = ['destination', 'source', 'x1', 'y1', 'x2', 'y2']
 
     def __init__(self, destination, source, x1, y1, x2, y2):
+        """
+        Creates a new IDLRecord instance.
+
+        The coordinates (x1, y1) and (x2, y2) can be understood as the upper
+        left and lower right corner of a bounding rectangle respectively.
+
+        :param str destination: destination file (virtual path)
+        :param str source: source image file (internal path)
+        :param int x1: Upper left x coordinate
+        :param int y1: Upper left y coordinate
+        :param int x2: Lower right x coordinate
+        :param int y2: Lower right y coordinate
+        """
         self.destination = destination
         self.source = source
         self.x1 = int(x1)
@@ -62,7 +79,14 @@ class IDLRecord(Record):
         )
 
 
-class IDLFile(TypedList, metaclass=TypedContainerMeta):
+class IDLFile(AbstractFile, TypedList, metaclass=TypedContainerMeta):
+    """
+    Encapsulated in-memory representation of .idl files.
+
+    Since .idl files basically act as list of :class:`IDLRecord`s IDLFile also
+    acts as a list, i.e. it supports the regular list interface.
+    However, added items may only be a :class:`IDLRecord`
+    """
 
     ACCEPTED_TYPES = IDLRecord
 
@@ -79,23 +103,22 @@ class IDLFile(TypedList, metaclass=TypedContainerMeta):
     )
 
     def __init__(self):
-        list.__init__(self)
+        AbstractFile.__init__(self)
+        TypedList.__init__(self)
 
-    def read(self, path):
+    def _read(self, buffer, *args, **kwargs):
         # Reset
-        list.__init__(self)
+        TypedList.__init__(self)
 
-        with open(path, 'r') as f:
-            data = f.read()
+        data = buffer.read().decode('utf-16')
 
         for match in self._regex_parse.finditer(data):
             self.append(IDLRecord(**match.groupdict()))
 
-    def write(self, path):
+    def _write(self, buffer, *args, **kwargs):
         lines = []
         for record in self:
             lines.append(str(record))
             lines.append('\n')
 
-        with open(path, 'w') as f:
-            f.writelines(lines)
+        buffer.write(codecs.BOM_UTF16_LE + ''.join(lines).encode('utf-16_le'))
