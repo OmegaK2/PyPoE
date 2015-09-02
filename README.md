@@ -2,20 +2,31 @@ PyPoE
 ========
 Collection of Python Tools for [Path of Exile](https://www.pathofexile.com/).
 
+Overview
+--------
 Parts:
 * Library toolkit for programmers (PyPoE/poe)
 * UI based on QT for browsing the game files
 * CLI interface for extracting/exporting data (for the wiki, more TBD)
 
-Overview
+Resources
+-------
+IRC Channel: [freenode.net/#PyPoE](http://webchat.freenode.net/?channels=#PyPoE)
+
+Imporant Notes
 --------
-Alpha:
-* Code structure may change at any time
+Alpha Stage:
+* Code structure and in particular the API may change at any time
 * incomplete in many areas (check files and TODOs)
 * and tests still have to be written for a lot of things.
+* many functions and classes are not yet fully documentated
+
+Dev branch:
+* broken code may be committed occasionally to the dev branch
 
 Quick Setup Guide
 --------
+These instructions are for the current development version of PyPoE.
 
 * Install Python 3.4
 * make sure Python 3.4 and python scripts folder is in your %PATH% on windows
@@ -29,6 +40,7 @@ Usage
 --------
 * UI: ```python scripts/pypoe_ui.py```
 * CLI: ```python scripts/pypoe_exporter.py``` (follow the instructions)
+* API: check the individual files in PyPoE/poe/ (documenation will be generated a later point, i.e. when nearing the first release)
 
 Credits
 --------
