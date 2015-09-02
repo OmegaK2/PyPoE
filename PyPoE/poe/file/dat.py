@@ -58,6 +58,7 @@ import validate
 
 # Library imports
 from PyPoE import DAT_SPECIFICATION, DAT_SPECIFICATION_CONFIGSPEC
+from PyPoE.shared.decorators import deprecated
 from PyPoE.poe.file.ggpk import GGPKFile
 
 # =============================================================================
@@ -583,6 +584,7 @@ class DatReader(object):
 
         return self.table_data
 
+    @deprecated
     def export_to_html(self, export_table=True, export_data=False):
         outstr = []
         if export_table:
@@ -611,7 +613,12 @@ class DatReader(object):
                 outstr.append('</th>')
                 for dv in row:
                     outstr.append('<td>')
-                    outstr.append(str(dv.get_value()))
+                    if self.use_dat_value:
+                        outstr.append(str(dv.get_value()))
+                    elif isinstance(dv, RecordList):
+                        outstr.append(str(dv.rowid))
+                    else:
+                        outstr.append(str(dv))
                     outstr.append('</td>')
                 outstr.append('</tr>')
             outstr.append('</tbody>')
