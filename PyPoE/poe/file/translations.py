@@ -30,17 +30,21 @@ optimize __hash__ - very slow atm; or remove, but it is needed for the diffs
 # =============================================================================
 
 # Python
+import io
 import re
 import os
 import warnings
 from string import ascii_letters
 from collections import Iterable
 
+# self
+from PyPoE.poe.file._shared import AbstractFileReadOnly, ParserError
+
 # =============================================================================
 # Globals
 # =============================================================================
 
-__all__ = ['DescriptionFile']
+__all__ = ['TranslationFile']
 
 regex_translation_string = re.compile(
     r'^'
@@ -48,7 +52,7 @@ regex_translation_string = re.compile(
     r'(?P<minmax>(?:[0-9\-\|#]+[ \t]+)+)'
     r'"(?P<description>.*)"'
     r'(?P<quantifier>(?:[ \t]+[\w]+[ \t]+[0-9]+)*)'
-    r'[ \t]*'
+    r'[ \t]*[\r\n]*'
     r'$',
     re.UNICODE | re.MULTILINE
 )
@@ -455,8 +459,9 @@ class TranslationQuantifier(object):
 
         :param values: list of values
         :type values: list
-        :param is_range:
-        :type is_range: bool
+        :param is_range: specifies whether the value at the index is a range or
+        not. Must be the same length as values.
+        :type is_range: Iterable of bools
         :return: handled list of values
         :rtype: list
         """
@@ -496,38 +501,60 @@ class TranslationResult(object):
         self.values_unused = unused
 
 
-class DescriptionFile(object):
+class TranslationFile(AbstractFileReadOnly):
     __slots__ = ['_translations', '_translations_hash', '_base_dir', '_parent']
 
     def __init__(self, file_path=None, base_dir=None, parent=None):
         """
-        Creates a new DescriptionFile instance from the given translation
+        Creates a new TranslationFile instance from the given translation
         file(s).
 
+        file_path can be specified to initialize the file(s) right away. It
+        takes the same arguments as :method:`TranslationFile.read`.
+
+        Some translation files have an "include" tag which includes the
+        translation strings of another translation file automatically. By
+        default that behaviour is ignored and a warning is raised.
+        To enable the automatic include, specify either of the base_dir or
+        parent variables.
+
+
         :param file_path: The file to read. Can also accept an iterable of
-         files to read which will all be merged into one file.
-        :type: Iterable or str
+        files to read which will all be merged into one file. Also see
+        :method:`TranslationFile.read`
+        :type: Iterable or str or None
+        :param base_dir: Base directory from where other translation files that
+        contain the "include" tag will be included
+        :type base_dir: str or None
+        :param parent: parent TranslationFileCache that will be used for
+        inclusion
+        :type parent: TranslationFileCache or None
+
+        :raises TypeError: if parent is not a :class:`TranslationFileCache`
+        :raises ValueError: if both parent and base_dir are specified
         """
         self._translations = []
         self._translations_hash = {}
         self._base_dir = base_dir
 
-        if parent is not None and not isinstance(parent, TranslationFileCache):
-            raise TypeError('Parent must be a TranslationFileCache.')
+        if parent is not None:
+            if not isinstance(parent, TranslationFileCache):
+                raise TypeError('Parent must be a TranslationFileCache.')
+            if base_dir is not None:
+                raise ValueError('Set either parent or base_dir, but not both.')
 
         self._parent = parent
 
         # Note str must be first since strings are iterable as well
-        if isinstance(file_path, str):
-            self._read(file_path)
+        if isinstance(file_path, (str, bytes, io.BytesIO)):
+            self.read(file_path)
         elif isinstance(file_path, Iterable):
             for path in file_path:
-                self.merge(DescriptionFile(path))
+                self.merge(TranslationFile(path))
 
-    def _read(self, file_path):
+    def _read(self, buffer, *args, **kwargs):
         self._translations = []
-        with open(file_path, encoding='utf-16_le') as descfile:
-            data = descfile.read()
+        data = buffer.read().decode('utf-16')
 
         # starts with bom?
         offset = 0
@@ -571,8 +598,7 @@ class DescriptionFile(object):
                     for i in range(0, int(tcount.group())):
                         ts_match = regex_translation_string.search(data, offset, offset_next_lang)
                         if not ts_match:
-                            print(data[offset:offset_max])
-                            raise Exception()
+                            raise ParserError('Malformed translation string: %s' % data[offset:offset_next_lang])
 
                         offset = ts_match.end()
 
@@ -615,8 +641,8 @@ class DescriptionFile(object):
                 if self._parent:
                     self.merge(self._parent.get_file(match.group('include')))
                 elif self._base_dir:
-                    real_path = os.path.join(match.group('include'), self._base_dir)
-                    self.merge(DescriptionFile(real_path, base_dir=self._base_dir))
+                    real_path = os.path.join(self._base_dir, match.group('include'))
+                    self.merge(TranslationFile(real_path, base_dir=self._base_dir))
                 else:
                     warnings.warn('Translation file includes other file, but no base_dir or parent specified. Skipping.')
             elif match.group('header'):
@@ -624,6 +650,16 @@ class DescriptionFile(object):
 
             # Done, search next
             match = match_next
+
+    def __eq__(self, other):
+        if not isinstance(other, TranslationFile):
+            return False
+
+        for attr in ('_translations', '_translations_hash'):
+            if getattr(self, attr) != getattr(other, attr):
+                return False
+
+        return True
 
     def _add_translation_hashed(self, translation_id, translation):
         if translation_id in self._translations_hash:
@@ -654,14 +690,14 @@ class DescriptionFile(object):
 
     def copy(self):
         """
-        Creates a copy of this TranslationFile.
+        Creates a shallow copy of this TranslationFile.
 
         Note that the same objects will still be referenced.
 
         :return: copy of self
         :rtype: :class:`TranslationFile`
         """
-        t = DescriptionFile()
+        t = TranslationFile()
         for name in self.__slots__:
             setattr(t, name, getattr(self, name))
 
@@ -676,7 +712,7 @@ class DescriptionFile(object):
         :return: None
         """
 
-        if not isinstance(other, DescriptionFile):
+        if not isinstance(other, TranslationFile):
             TypeError('Wrong type: %s' % type(other))
         self._translations += other._translations
         for trans_id in other._translations_hash:
@@ -719,6 +755,7 @@ class DescriptionFile(object):
         :param only_values: If true, only the handled values instead of the
         string are returned
         :type only_values: bool
+
         :return: Returns a list of found translation strings. The list may be
         empty if none are found. If full_result is specified, a
         :class:`TranslationResult` object is returned instead
@@ -790,6 +827,23 @@ class DescriptionFile(object):
 
 
 class TranslationFileCache(object):
+    """
+    Creates a memory cache of :class:`TranslationFile` objects.
+
+    It will store any loaded file in the cache and return it as needed.
+    The advantage is that there is only one object that will handle all
+    translation files and only load them if they're not in the cache already.
+
+    In particular this is useful as many translation files include other
+    files which will only be read once and then passed to the other file
+    accordingly - separately loading those files would read any included
+    file multiple times, as such there is a fairly significant performance
+    improvement over using single files.
+
+
+    There is a caveat though, for this to work files need to referenced with
+    their internal location (i.e. by the root folder).
+    """
     def __init__(self, base_dir):
         self._base_dir = base_dir
         self._desc_dir = os.path.join(base_dir, 'Metadata')
@@ -797,15 +851,43 @@ class TranslationFileCache(object):
         self._files = {}
 
     def __getitem__(self, item):
+        """
+        Shortcut for :method:`TranslationFileCache.get_file` that will also
+        added Metadata automatically.
+
+        That means the following is equivalent:
+        obj['stat_descriptions.txt']
+        obj.get_file('Metadata/stat_descriptions.txt')
+
+        :param str item: file name/path relative to the Metadata/ directory
+
+        :return: the specified TranslationFile
+        :rtype: TranslationFile
+        """
         if not item.startswith('Metadata/'):
             item = 'Metadata/' + item
         return self.get_file(item)
 
     def get_file(self, name):
+        """
+        Returns the specified file from the cache (and loads it if not in the
+        cache already).
+
+        Note that the file name must be relative to the root path of exile
+        folder (or a virtual) folder or it won't work properly.
+        That means 'Metadata/stat_descriptions.txt' needs to be referenced
+        as such.
+        For a shortcut consider using obj[name] instead.
+
+
+        :param str name: file name/path relative to the root path of exile dir
+
+        :return: the specified TranslationFile
+        :rtype: TranslationFile
+        """
         if name not in self._files:
-            self._files[name] = DescriptionFile(
+            self._files[name] = TranslationFile(
                 file_path=os.path.join(self._base_dir, name),
-                base_dir=self._base_dir,
                 parent=self,
             )
 
@@ -858,14 +940,14 @@ if __name__ == '__main__':
 
     profiler = LineProfiler()
 
-    #profiler.add_function(DescriptionFile.get_translation)
-    #profiler.add_function(DescriptionFile._read)
+    #profiler.add_function(TranslationFile.get_translation)
+    #profiler.add_function(TranslationFile._read)
     #profiler.add_function(Translation.get_language)
     #profiler.add_function(TranslationQuantifier.handle)
     #profiler.add_function(TranslationRange.in_range)
     #profiler.add_function(TranslationLanguage.get_string)
 
-    profiler.run("s = DescriptionFile('C:/Temp/MetaData/stat_descriptions.txt')")
+    profiler.run("s = TranslationFile('C:/Temp/MetaData/stat_descriptions.txt')")
     profiler.run("for i in range(0, 100): t = s.get_translation(tags=['additional_chance_to_take_critical_strike_%', 'additional_chance_to_take_critical_strike_%'], values=((3, 5), 6))")
 
     profiler.print_stats()

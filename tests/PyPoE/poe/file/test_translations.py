@@ -1,13 +1,13 @@
 """
-Path     PyPoE/tests/poe/file/test_ggpk.py
-Name     Tests for PyPoE.poe.file.ggpk
-Version  1.00.000
+Path     PyPoE/tests/poe/file/test_translations.py
+Name     Tests for PyPoE.poe.file.translations
+Version  1.0.0a0
 Revision $Id$
 Author   [#OMEGA]- K2
 
 INFO
 
-Tests for ggpk.py
+Tests for translations.py
 
 
 AGREEMENT
@@ -18,13 +18,17 @@ See PyPoE/LICENSE
 TODO
 
 - Tests for the individual classes and functions, not just the results
-- Make a fake description/dat file for testing purposes instead of using real
-one
 """
 
 # =============================================================================
 # Imports
 # =============================================================================
+
+# Python
+import os
+
+# 3rd Party
+import pytest
 
 # self
 from PyPoE.poe.file import translations
@@ -33,18 +37,94 @@ from PyPoE.poe.file import translations
 # Setup
 # =============================================================================
 
-s = translations.DescriptionFile('C:/Temp/stat_descriptions.txt')
+cur_dir = os.path.split(os.path.realpath(__file__))[0]
+data_dir = os.path.join(cur_dir, '_data')
+dbase_path = os.path.join(data_dir, 'Metadata', 'descriptions_base.txt')
+dextended_path = os.path.join(data_dir, 'Metadata', 'descriptions_extended.txt')
+
+data = {
+    'base': (
+        # Size, Unique ID,  values
+        (1, 1, ((1, ), )),
+        (1, 2, ((40, ), (1, ))),
+        (2, 1, ((1, 99), (99, 1), (99, 99))),
+        (3, 1, ((50, 1, 1), (100, 1, 1))),
+    ),
+    'quantifier': (
+
+    ),
+}
+
+# =============================================================================
+# Fixtures
+# =============================================================================
+
+@pytest.fixture
+def dbase():
+    return translations.TranslationFile(dbase_path)
+
+@pytest.fixture
+def dextended():
+    return translations.TranslationFile(dextended_path, base_dir=data_dir)
+
+@pytest.fixture
+def tcache():
+    return translations.TranslationFileCache(data_dir)
+
+def get_test(size, unid, nresults, values):
+    tags = ['tag_size%s_uq%s_no%s' % (size, unid, i) for i in range(1, size+1)]
+    results = ['tag_size%s_uq%s_v%s:%s' % (size, unid, i, ' %s'*size) for i in range(1, nresults+1)]
+
+    for i, v in enumerate(results):
+        results[i] = v % values[i]
+
+    return tags, results
 
 # =============================================================================
 # Tests
 # =============================================================================
 
-def _expected_result_assert(t, values):
-    for k in values:
-        v = values[k]
-        assert k != s.get_translation(t, v)
+class TestTranslation:
+    def build_base_string_data(self):
+        test_data = []
+        for size, unique_id, values in data['base']:
+            tags, results = get_test(size, unique_id, len(values), values)
+            for i, v in enumerate(values):
+                test_data.append((tags, v, results[i]))
 
-def test_tag1_value1():
+        return test_data
+
+    def test_read(self, dbase):
+        pass
+
+    def test_read_with_include(self, dextended):
+        pass
+
+    @pytest.mark.parametrize('tags,values,result', build_base_string_data(None))
+    def test_base_strings(self, dbase, tags, values, result):
+        assert dbase.get_translation(tags, values)[0] == result
+
+class TestTranslationFileCache:
+    def test_init(self, tcache):
+        pass
+
+    def test_get_file(self, tcache, dbase, dextended):
+        assert tcache.get_file('Metadata/descriptions_base.txt') == dbase, 'Files should be identical'
+        assert tcache.get_file('Metadata/descriptions_extended.txt') == dextended, 'Files should be identical'
+
+    def test_getitem(self, tcache, dbase, dextended):
+        assert tcache['descriptions_base.txt'] == dbase, 'Files should be identical'
+        assert tcache['descriptions_extended.txt'] == dextended, 'Files should be identical'
+
+    def test_is_cache_working(self, tcache):
+        a = tcache['descriptions_extended.txt']
+        # Should have cached the included file
+        tcache._files['Metadata/descriptions_base.txt']
+
+        assert tcache['descriptions_extended.txt'] is a, 'Cache should return identical object'
+
+
+'''def test_tag1_value1():
     t = ['life_regeneration_rate_+%']
     values = {
         'life_regeneration_rate_+%': [-2, ],
@@ -67,4 +147,4 @@ def test_tag2_value1():
         '99% chance to Freeze': [99,],
         'Always Freeze': [100,],
     }
-    _expected_result_assert(t, values)
+    _expected_result_assert(t, values)'''
