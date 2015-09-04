@@ -490,11 +490,11 @@ class GGPKFile(object):
             ggpkfile.seek(0, os.SEEK_SET)
             
             while(offset < size):
-                self._read_record(records, ggpkfile, offset)
-                '''records.append({
-                    'Offset': offset, 
-                    'Record': self._read_record(ggpkfile),
-                })'''
+                self._read_record(
+                    records=records,
+                    ggpkfile=ggpkfile,
+                    offset=offset,
+                )
                 offset = ggpkfile.tell()
             self.records = records
 

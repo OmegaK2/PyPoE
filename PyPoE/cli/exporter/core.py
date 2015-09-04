@@ -69,3 +69,6 @@ def main():
 
     # Execute
     run(main_parser, config)
+
+if __name__ == '__main__':
+    main()

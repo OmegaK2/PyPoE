@@ -45,6 +45,9 @@ from PyPoE.ui.ggpk_viewer.menu import *
 # =============================================================================
 
 class MainWindow(QMainWindow):
+
+    sig_log_message = Signal(str)
+
     def __init__(self, app):
         self.app = app
         super(MainWindow, self).__init__()
@@ -145,6 +148,9 @@ class MainWindow(QMainWindow):
         self.statusBar()
         self.setWindowTitle(self.tr('GGPK View'))
 
+        #
+        self.sig_log_message.connect(self._write_log)
+
     def _write_log(self, msg, notification=None):
         timef = time.strftime("%H:%M:%S - ")
         if notification is None:
@@ -232,3 +238,6 @@ def main():
     app.installTranslator(translator)
     frame = MainWindow(app)
     frame.run()
+
+if __name__ == '__main__':
+    main()

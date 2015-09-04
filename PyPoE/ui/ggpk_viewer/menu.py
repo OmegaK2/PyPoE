@@ -25,8 +25,11 @@ TODO
 # =============================================================================
 
 # Python
+import os
+from functools import wraps
 
 # 3rd Party
+from PySide.QtCore import *
 from PySide.QtGui import *
 
 # self
@@ -44,10 +47,110 @@ __all__ = ['FileMenu', 'MiscMenu', 'ViewMenu']
 # Classes
 # =============================================================================
 
+class GGPKThread(QThread):
+
+    sig_update_progress = Signal(str, int)
+
+    def __init__(self, file_path, *args, **kwargs):
+        QThread.__init__(self, *args, **kwargs)
+        self._file_path = file_path
+        self.m = None
+        self._size = 0
+
+        self.sig_update_progress.connect(self._progress_updater)
+
+        self.progress_bar = GGPKProgress('')
+
+    def _progress_ggpk(self, func):
+        """
+        Hook for GGPKFile._read_record
+        """
+        fm = self.parent()
+
+        @wraps(func)
+        def temp(*args, **kwargs):
+            if not self._size:
+                self._size = kwargs['ggpkfile'].seek(0, os.SEEK_END)
+                kwargs['ggpkfile'].seek(0, os.SEEK_SET)
+            else:
+                #kwargs['offset'])
+
+                self.progress_bar.sig_progress.emit(
+                    int(kwargs['offset'] / self._size * 100)
+                )
+
+            return func(*args, **kwargs)
+
+        return temp
+
+    def _ggpk_sort(self, args):
+        node = args['node']
+        sorter = lambda obj: (isinstance(obj.record, ggpk.FileRecord), obj.name)
+        node.children = sorted(node.children, key=sorter)
+
+    def _progress_updater(self, title, max, *args, **kwargs):
+        p = self.parent().parent()
+
+        p._write_log(title)
+        #self.progress_bar = GGPKProgress(title, max, *args, **kwargs)
+        self.progress_bar.setLabelText(title)
+        self.progress_bar.setWindowTitle(title)
+        self.progress_bar.setMaximum(max)
+        self.progress_bar.setValue(0)
+
+    def run(self):
+        fm = self.parent()
+        p = fm.parent()
+
+        p.sig_log_message.emit(self.tr('Open GGPK file "%(file)s".') % {'file': self._file_path})
+
+        self.sig_update_progress.emit(self.tr('Reading GGPK records...'), 100)
+        ggpk_file = ggpk.GGPKFile(self._file_path)
+        # Hook the function for progress bar
+        ggpk_file._read_record = self._progress_ggpk(ggpk_file._read_record)
+        ggpk_file.read()
+        # Finished
+        self.progress_bar.sig_progress.emit(100)
+
+        ds = 0
+        for item in ggpk_file.records.values():
+            if isinstance(item, ggpk.DirectoryRecord):
+                ds += 1
+
+        p.sig_log_message.emit(self.tr('Building GGPK directory...'))
+        ggpk_file.directory_build()
+
+        p.sig_log_message.emit(self.tr('Sorting GGPK directory...'))
+        ggpk_file.directory.walk(self._ggpk_sort)
+
+        self.m = GGPKModel(ggpk_file.directory)
+
+        p.sig_log_message.emit(self.tr('Viewing GGPK contents...'))
+        fm.sig_update_ggpk.emit()
+
+class GGPKProgress(QProgressDialog):
+    sig_progress = Signal(int)
+
+    def __init__(self, title, maximum=100, *args, **kwargs):
+        QProgressDialog.__init__(self, *args, **kwargs)
+
+        self.setWindowTitle(title)
+        self.setLabelText(title)
+        self.setMinimum(0)
+        self.setMaximum(maximum)
+        self.setCancelButton(None)
+        self.setMinimumWidth(250)
+        #self.setMinimumSize(300, 50)
+        self.show()
+
+        self.sig_progress.connect(self.setValue)
+
+
 class FileMenu(QMenu):
     """
     Create file menu and handle related actions
     """
+    sig_update_ggpk = Signal()
     def __init__(self, *args, **kwargs):
         QMenu.__init__(self, *args, **kwargs)
 
@@ -63,14 +166,14 @@ class FileMenu(QMenu):
         self.setTitle(self.tr('File'))
         self.parent().menuBar().addMenu(self)
 
-    def _ggpk_sort(self, args):
-        node = args['node']
-        sorter = lambda obj: (isinstance(obj.record, ggpk.FileRecord), obj.name)
-        node.children = sorted(node.children, key=sorter)
+        self.sig_update_ggpk.connect(self._update_ggpk_model)
 
     def _open_ggpk(self):
         # Use the first found path
-        dir = self.poe_install_paths[0].path if self.poe_install_paths else '.'
+        if self.poe_install_paths:
+            dir = os.path.join(self.poe_install_paths[0].path, 'content.ggpk')
+        else:
+            dir = '.'
 
         file = QFileDialog.getOpenFileName(self, self.tr("Open GGPK"), dir, self.tr("GGPK Files (*.ggpk)"))
         # User Aborted
@@ -84,23 +187,20 @@ class FileMenu(QMenu):
         # TODO for some reason 2 objects are still kept in memory
         p._reset_file_view(reset_hash=True)
         p.ggpk_view.model().deleteLater()
+        p.ggpk_view.setModel(GGPKModel())
 
-        p._write_log(self.tr('Open GGPK file "%(file)s".') % {'file': file_path})
-        p._write_log(self.tr('Reading GGPK records...'))
-        ggpk_file = ggpk.GGPKFile(file_path)
-        ggpk_file.read()
+        self.t = GGPKThread(file_path, parent=self)
+        self.t.start()
 
-        p._write_log(self.tr('Building GGPK directory...'))
-        ggpk_file.directory_build()
-        ggpk_file.directory.walk(self._ggpk_sort)
-
-        m = GGPKModel(ggpk_file.directory)
-
-        p._write_log(self.tr('Viewing GGPK contents...'))
-        p.ggpk_view.setModel(m)
+    def _update_ggpk_model(self):
+        p = self.parent()
+        p.ggpk_view.setModel(self.t.m)
         p.ggpk_view.show()
 
-        p._write_log(self.tr('Done.'))
+        p.sig_log_message.emit(self.tr('Done.'))
+
+
+
 
 class ViewMenu(QMenu):
     """

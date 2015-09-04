@@ -56,6 +56,9 @@ class PoEPathList(list):
         if path is None:
             return
 
+        # Will fix wrong slashes in registry
+        path = os.path.realpath(path)
+
         if self._only_existing and not os.path.exists(path):
             return
 
