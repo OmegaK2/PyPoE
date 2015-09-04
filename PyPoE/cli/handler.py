@@ -1,7 +1,7 @@
 """
 Path     PyPoE/cli/handler.py
 Name     Generic Console Handlers
-Version  1.00.000
+Version  1.0.0a0
 Revision $Id$
 Author   [#OMEGA]- K2
 
@@ -31,6 +31,7 @@ import traceback
 from validate import ValidateError
 
 # self
+from PyPoE.cli.config import ConfigError
 from PyPoE.cli.core import console, Msg
 
 # =============================================================================
@@ -38,7 +39,7 @@ from PyPoE.cli.core import console, Msg
 # =============================================================================
 
 __all__ = [
-    'BaseHandler', 'ConfigHandler',
+    'BaseHandler', 'ConfigHandler', 'SetupHandler',
 ]
 
 # =============================================================================
@@ -65,7 +66,7 @@ class ConfigHandler(BaseHandler):
         # Config
         self.config = config
         if not self.config.validate(config.validator):
-            raise ValueError('Config validation failed')
+            raise ConfigError('Config validation failed.')
 
         # Parsing stuff
         self.parser = sub_parser.add_parser('config', help='Edit config options')
@@ -104,23 +105,34 @@ class ConfigHandler(BaseHandler):
             action='store',
             help='Value to set',
         )
+
     def print_debug(self, args):
-        console(self.config)
+        console(str(self.config))
         return 0
 
     def print_all(self, args):
-        spec = self.config.optionspec.keys()
+        spec = set(self.config.optionspec.keys())
+        real = set(self.config.option.keys())
 
-        print ('Current stored config variables:')
-        for key in list(spec):
+
+        missing = spec.difference(real)
+        extra = real.difference(spec)
+        configured = spec.difference(missing)
+
+
+        console('Current stored config variables:')
+        for key in sorted(list(configured)):
             console("%s: %s" % (key, self.config.option[key]))
 
-        real = set(self.config.option.keys())
-        diff = list(real.difference(set(spec))).sort()
-        if diff:
-            console('Extra variables:')
-            for key in diff:
-                console("%s: %s" % (key, self.config.option[key]))
+        if missing:
+            console('\nMissing config variables (require config set):', msg=Msg.error)
+            for key in sorted(list(missing)):
+                console("%s" % (key, ), Msg.error)
+
+        if extra:
+            console('\nExtra variables (unused):', msg=Msg.warning)
+            for key in sorted(list(extra)):
+                console("%s: %s" % (key, self.config.option[key]), msg=Msg.warning)
 
         return 0
 

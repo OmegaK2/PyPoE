@@ -1,13 +1,13 @@
 """
 Path     PyPoE/cli/config.py
-Name     GGPK User Interface Classes
-Version  1.00.000
+Name     CLI config
+Version  1.0.0a0
 Revision $Id$
 Author   [#OMEGA]- K2
 
 INFO
 
-Creates a qt User Interface to browse GGPK files.
+CLI config
 
 
 AGREEMENT
@@ -24,6 +24,8 @@ TODO
 # Imports
 # =============================================================================
 
+# Python
+import sys
 from collections import Iterable
 
 # 3rd party
@@ -31,17 +33,21 @@ from configobj import ConfigObj
 from validate import Validator
 
 # self
+from PyPoE.cli.core import console, Msg
 from PyPoE.shared.config.validator import functions
 
 # =============================================================================
 # Globals
 # =============================================================================
 
-__all__ = ['CONFIG_PATH', 'config', 'config_spec', 'validator']
+__all__ = ['ConfigError', 'SetupError', 'ConfigHelper']
 
 # =============================================================================
 # Classes
 # =============================================================================
+
+class ConfigError(ValueError):
+    pass
 
 class SetupError(ValueError):
     pass
@@ -89,8 +95,14 @@ class ConfigHelper(ConfigObj):
     def get_option(self, key, safe=True):
         if safe and key in self.setup:
             if not self.setup[key]['performed']:
-                raise ValueError('Setup not performed.')
-        return self.option[key]
+                raise SetupError('Setup not performed.')
+        try:
+            return self.option[key]
+        except KeyError:
+            console('Config variable "%s" is not configured. Consider running:\n', msg=Msg.error)
+            console('config set "%s" "<value>"' % key, msg=Msg.error)
+            console('\nExiting...', msg=Msg.error)
+            sys.exit(-1)
 
     def set_option(self, key, value):
         if key in self.setup:
