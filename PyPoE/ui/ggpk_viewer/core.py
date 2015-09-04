@@ -26,6 +26,7 @@ TODO
 
 # Default Imports
 import time
+import sys
 from traceback import format_exc
 
 # Library Imports
@@ -219,3 +220,15 @@ class MainWindow(QMainWindow):
     def run(self):
         self.show()
         self.app.exec_()
+
+# =============================================================================
+# Functions
+# =============================================================================
+
+def main():
+    translator = QTranslator()
+    translator.load('i18n/en_US')
+    app = QApplication(sys.argv)
+    app.installTranslator(translator)
+    frame = MainWindow(app)
+    frame.run()
