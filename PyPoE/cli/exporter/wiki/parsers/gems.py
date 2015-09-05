@@ -832,7 +832,7 @@ class GemsParser(BaseParser):
                     if monster_stat_index != -1:
                         minion_level = row['Stat%sValue' % monster_stat_index]
                     else:
-                        minion_level = row['Level']
+                        minion_level = row['LevelRequirement']
                     out.append('| %s\n' % minion_level)
                     for mv in monster_varieties:
                         dmg, aspd, life = self._get_monster_stats(mv, minion_level)
