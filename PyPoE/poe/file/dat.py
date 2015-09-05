@@ -59,6 +59,7 @@ import validate
 # Library imports
 from PyPoE import DAT_SPECIFICATION, DAT_SPECIFICATION_CONFIGSPEC
 from PyPoE.shared.decorators import deprecated
+from PyPoE.poe.file._shared import AbstractFileReadOnly
 from PyPoE.poe.file.ggpk import GGPKFile
 
 # =============================================================================
@@ -639,7 +640,7 @@ class DatReader(object):
         return ''.join(outstr)
 
 
-class DatFile(object):
+class DatFile(AbstractFileReadOnly):
     """
     """
     
@@ -651,9 +652,9 @@ class DatFile(object):
             raise ValueError('Only one of read_file and read_raw should be set.')
 
         if read_file:
-            self.read_from_file(read_file, **options)
+            self.read(os.path.join(read_file, file_name), **options)
         elif read_raw:
-            self.read_from_raw(read_raw, **options)
+            self.read(read_raw, **options)
 
     def print_data(self):
         for row in d.table_data:
@@ -661,21 +662,23 @@ class DatFile(object):
             for k in row.keys():
                 v = row[k]
                 print('|- %s: %s' % (k, v))
-    
+
+    def _read(self, buffer, *args, **kwargs):
+        self.reader = DatReader(self._file_name, **kwargs)
+        self.reader.read(buffer.read())
+
+        return self.reader
+
+    @deprecated(message='Use of %(func)s is deprecated, use read instead.')
     def read_from_file(self, path, **options):
-        file_path = os.path.join(path, self._file_name)
-        with open(file_path, mode='br') as datfile:
-            raw = datfile.read()
-        return self.read_from_raw(raw, **options)
-    
+        return self.read(os.path.join(path, self._file_name), **options)
+
+    @deprecated(message='Use of %(func)s is deprecated, use read instead.')
     def read_from_raw(self, raw, **options):
         """
         Specification as _ordered_ dictionary key:value format
         """
-        self.reader = DatReader(self._file_name, **options)
-        self.reader.read(raw)
-
-        return self.reader
+        return self.read(raw, **options)
 
 
 class RelationalReader(object):

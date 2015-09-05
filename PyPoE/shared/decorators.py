@@ -52,7 +52,7 @@ class DeprecationDecorator():
             warnings.warn(
                 self.message % {
                     'func': function.__name__,
-                }, DeprecationWarning
+                }, DeprecationWarning, stacklevel=2,
             )
 
             return function(*args, **kwargs)

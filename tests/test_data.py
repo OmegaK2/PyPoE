@@ -84,7 +84,7 @@ def test_definitions(node):
     }
     # Will raise errors accordingly if it fails
     df = dat.DatFile(node.name, options=opt)
-    df.read_from_raw(node.record.extract())
+    df.read(node.record.extract())
 
 
 

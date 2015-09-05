@@ -82,12 +82,12 @@ class AbstractFileReadOnly(object):
         :raises TypeError: if file_path_or_raw has an invalid type
         """
         if isinstance(file_path_or_raw, BytesIO):
-            return self._read(file_path_or_raw)
+            return self._read(file_path_or_raw, *args, **kwargs)
         elif isinstance(file_path_or_raw, bytes):
-            return self._read(BytesIO(file_path_or_raw))
+            return self._read(BytesIO(file_path_or_raw), *args, **kwargs)
         elif isinstance(file_path_or_raw, str):
             with open(file_path_or_raw, 'rb') as f:
-                return self._read(f)
+                return self._read(f, *args, **kwargs)
         else:
             raise TypeError('file_path_or_raw must be a file path or bytes object')
 
@@ -122,11 +122,11 @@ class AbstractFile(AbstractFileReadOnly):
         :raises TypeError: if file_path_or_raw has an invalid type
         """
         if isinstance(file_path_or_raw, BytesIO):
-            return self._write(file_path_or_raw)
+            return self._write(file_path_or_raw, *args, **kwargs)
         elif isinstance(file_path_or_raw, bytes):
-            return self._write(BytesIO(file_path_or_raw))
+            return self._write(BytesIO(file_path_or_raw), *args, **kwargs)
         elif isinstance(file_path_or_raw, str):
             with open(file_path_or_raw, 'wb') as f:
-                return self._write(f)
+                return self._write(f, *args, **kwargs)
         else:
             raise TypeError('file_path_or_raw must be a file path or bytes object')

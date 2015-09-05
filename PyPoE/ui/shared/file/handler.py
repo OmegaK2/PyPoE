@@ -254,7 +254,7 @@ class DatDataHandler(FileDataHandler):
     def get_widget(self, file_data, file_name='', parent=None, *args, **kwargs):
         dat_file = DatFile(file_name)
         # We want dat values here
-        dat_file.read_from_raw(file_data, use_dat_value=True)
+        dat_file.read(file_data, use_dat_value=True)
 
         frame = DatFrame(dat_file=dat_file, parent=parent)
 

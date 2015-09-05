@@ -26,6 +26,7 @@ TODO
 # Python
 import platform
 import os
+import warnings
 
 # =============================================================================
 # Globals
@@ -73,6 +74,7 @@ def _get_app_dir():
 # Init
 # =============================================================================
 
+warnings.simplefilter('default', DeprecationWarning)
 APP_DIR = _get_app_dir()
 DATA_DIR = os.path.join(os.path.dirname(__file__), '_data')
 DAT_SPECIFICATION = os.path.join(DATA_DIR, 'dat.specification.ini')

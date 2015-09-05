@@ -280,7 +280,7 @@ def test_dat_file():
     spec = test_load_spec()
 
     df = dat.DatFile('TestSpec.dat')
-    dr = df.read_from_raw(temp_file, specification=spec)
+    dr = df.read(temp_file, specification=spec)
 
     for row in dr:
         for test in test_data:
