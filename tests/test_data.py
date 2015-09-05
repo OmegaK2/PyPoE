@@ -34,6 +34,7 @@ from tempfile import TemporaryDirectory
 import pytest
 
 # self
+from PyPoE.poe.constants import DISTRIBUTOR, VERSION
 from PyPoE.poe.path import PoEPath
 from PyPoE.poe.file import dat, ggpk
 
@@ -42,7 +43,10 @@ from PyPoE.poe.file import dat, ggpk
 # =============================================================================
 
 def read_ggpk():
-    path = PoEPath(version=PoEPath.VERSION_STABLE).get_installation_paths()
+    path = PoEPath(
+        version=VERSION.STABLE,
+        distributor=DISTRIBUTOR.INTERNATIONAL,
+    ).get_installation_paths()
     if path:
         path = path[0]
     else:

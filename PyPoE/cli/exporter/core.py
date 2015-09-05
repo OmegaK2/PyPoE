@@ -29,7 +29,7 @@ import argparse
 
 # self
 from . import config
-from PyPoE.poe.path import PoEPath
+from PyPoE.poe.constants import VERSION, DISTRIBUTOR
 from PyPoE.cli.core import run
 from PyPoE.cli.handler import ConfigHandler, SetupHandler
 from PyPoE.cli.exporter.wiki.core import WikiHandler
@@ -49,16 +49,16 @@ def main():
 
     spec = 'integer(min=%(min)s, max=%(max)s, default=%(default)s)'
     kwargs = {
-        'min': min(PoEPath.VERSIONS),
-        'max': PoEPath.VERSION_ALL,
-        'default': PoEPath.VERSION_DEFAULT,
+        'min': 1,
+        'max': VERSION.ALL.value,
+        'default': VERSION.DEFAULT.value,
     }
     config.add_option('version', spec % kwargs)
 
     kwargs = {
-        'min': min(PoEPath.DISTRIBUTORS),
-        'max': PoEPath.DISTRIBUTOR_ALL,
-        'default': PoEPath.DISTRIBUTOR_DEFAULT,
+        'min': 1,
+        'max': DISTRIBUTOR.ALL.value,
+        'default': DISTRIBUTOR.DEFAULT.value,
     }
     config.add_option('distributor', spec % kwargs)
 

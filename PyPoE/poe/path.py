@@ -23,6 +23,7 @@ TODO
 # Imports
 # =============================================================================
 
+# Python
 import sys
 import os
 
@@ -31,11 +32,14 @@ try:
 except ImportError:
     winreg = None
 
+# self
+from PyPoE.poe.constants import VERSION, DISTRIBUTOR
+
 # =============================================================================
 # Globals
 # =============================================================================
 
-__all__ = ['PoePath']
+__all__ = ['PoEPath']
 
 # =============================================================================
 # Classes
@@ -68,10 +72,10 @@ class PoEPathValue(str):
     """
     :param path: Path to the base path of exile folder
     :type path: str
-    :param version: Combination of PoEPath VERSION_
-    :type version: int
-    :param distributor: Combination of PoEPath DISTRIBUTOR_ values
-    :type distributor: int
+    :param version: Combination of PoEPath VERSION
+    :type version: VERSION
+    :param distributor: Combination of PoEPath DISTRIBUTOR values
+    :type distributor: DISTRIBUTOR
     """
     def __new__(self, path, version, distributor):
         self.path = path
@@ -88,40 +92,27 @@ class PoEPath(object):
     only officially available on windows.
     """
 
-    # TODO: Garena
-
-    VERSION_STABLE = 1
-    VERSION_BETA = 2
-
-    VERSION_ALL = VERSION_STABLE | VERSION_BETA
-    VERSION_DEFAULT = VERSION_STABLE
-    
-    VERSIONS = [VERSION_STABLE, VERSION_BETA]
-    
-    DISTRIBUTOR_GGG = 1
-    DISTRIBUTOR_STEAM = 2
-
-    DISTRIBUTOR_ALL = DISTRIBUTOR_GGG | DISTRIBUTOR_STEAM
-    DISTRIBUTOR_DEFAULT = DISTRIBUTOR_ALL
-    
-    DISTRIBUTORS = [DISTRIBUTOR_GGG, DISTRIBUTOR_STEAM]
-
-    def __init__(self, version=VERSION_DEFAULT, distributor=DISTRIBUTOR_DEFAULT):
+    def __init__(self, version=VERSION.DEFAULT, distributor=DISTRIBUTOR.DEFAULT):
         """
         Change the version or distributor if you only watch to search for
         specific installations.
 
-        :param version: Combination of PoEPath VERSION_ constants
-        :type version: int
-        :param distributor: Combination of PoEPath DISTRIBUTOR_ constants
-        :type version: int
+        :param version: Combination of VERSION constants
+        :type version: VERSION
+        :param distributor: Combination of DISTRIBUTOR constants
+        :type distributor: DISTRIBUTOR
         """
         self.version = version
         self.distributor = distributor
 
-    def _get_winreg_path(self, regpath, regkey):
+    def _get_winreg_path(self, regpath, regkey, user=True):
+        if user:
+            key = winreg.HKEY_CURRENT_USER
+        else:
+            key = winreg.HKEY_LOCAL_MACHINE
+
         try:
-            obj = winreg.OpenKey(winreg.HKEY_CURRENT_USER, regpath)
+            obj = winreg.OpenKey(key, regpath)
             path = winreg.QueryValueEx(obj, regkey)[0]
             obj.Close()
         # missing key raises FileNotFoundError
@@ -146,26 +137,35 @@ class PoEPath(object):
             return paths
 
         # TODO: Possibly find a way to reduce this spaghetti like code
-        if self.distributor & PoEPath.DISTRIBUTOR_GGG:
+        if self.distributor & DISTRIBUTOR.GGG:
             for item in (
-                ('Software\GrindingGearGames\Path of Exile', PoEPath.VERSION_STABLE),
-                ('Software\GrindingGearGames\Path of Exile - The Awakening Closed Beta', PoEPath.VERSION_BETA),
+                ('Software\GrindingGearGames\Path of Exile', VERSION.STABLE),
+                ('Software\GrindingGearGames\Path of Exile - The Awakening Closed Beta', VERSION.BETA),
             ):
                 if self.version & item[1]:
                     basepath =  self._get_winreg_path(item[0], 'InstallLocation')
-                    paths.append(basepath, item[1], PoEPath.DISTRIBUTOR_GGG)
+                    paths.append(basepath, item[1], DISTRIBUTOR.GGG)
 
-
-        if self.distributor & PoEPath.DISTRIBUTOR_STEAM:
+        if self.distributor & DISTRIBUTOR.STEAM:
             basepath = self._get_winreg_path('Software\Valve\Steam', 'SteamPath')
             # Steam does have a beta, but it is installed into the same directory
             # AFAIK, there is no safe way to determine which is installed
             # unless we hook into steam
-            if basepath and self.version ^ PoEPath.VERSION_ALL:
+            if basepath and self.version ^ VERSION.ALL:
                 # Steam Common folder
                 basepath = os.path.join(basepath, 'SteamApps', 'common')
                 # Seems to be both beta, and live folder
                 basepath = os.path.join(basepath, 'Path of Exile')
-                paths.append(basepath, PoEPath.VERSION_ALL, PoEPath.DISTRIBUTOR_STEAM)
+                paths.append(basepath, VERSION.ALL, DISTRIBUTOR.STEAM)
+
+        if self.distributor & DISTRIBUTOR.GARENA:
+            if self.version & VERSION.STABLE:
+                basepath = self._get_winreg_path(
+                    'SOFTWARE\Wow6432Node\Garena\PoE',
+                    'Path',
+                    user=False
+                )
+                paths.append(basepath, VERSION.STABLE, DISTRIBUTOR.GARENA)
+
 
         return paths

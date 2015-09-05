@@ -33,6 +33,7 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 
 # self
+from PyPoE.poe.constants import DISTRIBUTOR, VERSION
 from PyPoE.poe.file import dat, ggpk
 from PyPoE.poe.path import PoEPath
 from PyPoE.ui.shared.file.model import GGPKModel
@@ -155,7 +156,7 @@ class FileMenu(QMenu):
         QMenu.__init__(self, *args, **kwargs)
 
         # Get the paths and store them for efficiency
-        self.poe_install_paths = PoEPath(PoEPath.VERSION_STABLE, PoEPath.DISTRIBUTOR_ALL).get_installation_paths()
+        self.poe_install_paths = PoEPath().get_installation_paths()
         self.poe_install_paths = sorted(self.poe_install_paths, key=lambda item: item.version)
 
         self.action_open = QAction(self, text=self.tr('Open'))
