@@ -449,7 +449,7 @@ class DatReader(object):
             ivalue = data[0] if data else struct.unpack('<' + casts[0][2], self._file_raw[offset:offset+casts[0][1]])[0]
 
             if ivalue in (-0x1010102, 0xFEFEFEFE, -0x101010101010102, 0xFEFEFEFEFEFEFEFE):
-                ivalue = -1
+                ivalue = None
 
             if self.use_dat_value:
                 value = DatValue(ivalue, offset, casts[0][1], parent, specification)
@@ -717,21 +717,37 @@ class RelationalReader(object):
         """
         return self.read_file(item).reader
 
-    def _dv_set_value(self, value, other):
-        if value.is_pointer:
-            self._dv_set_value(value.child, other)
-        elif value.is_list:
-            [self._dv_set_value(dv, other) for dv in self.children]
+    def _set_value(self, obj, other, key, offset):
+        if obj is None:
+            obj = None
+        elif offset:
+            obj = other[obj-offset]
+        elif key:
+            for row in other:
+                if row[key] == obj:
+                    obj = row
+                    break
+            if obj is not row:
+                raise SpecificationError('Did not find proper value for foreign key %s' % key)
         else:
-            value.value = None if value.value == -1 else other[value.value]
+            obj = other[obj]
+        return obj
+
+    def _dv_set_value(self, value, other, key, offset):
+        if value.is_pointer:
+            self._dv_set_value(value.child, other, key, offset)
+        elif value.is_list:
+            [self._dv_set_value(dv, other, key, offset) for dv in self.children]
+        else:
+            value.value = self._set_value(value.value, other, key, offset)
 
         return value
 
-    def _set_value(self, value, other):
+    def _simple_set_value(self, value, other, key, offset):
         if isinstance(value, list):
-            return [self._set_value(item, other) for item in value]
+            return [self._set_value(item, other, key, offset) for item in value]
         else:
-            return None if value == -1 else other[value]
+            return self._set_value(value, other, key, offset)
 
     def read_file(self, name):
         if name in self.files:
@@ -748,7 +764,7 @@ class RelationalReader(object):
 
         self.files[name] = df
 
-        vf = self._dv_set_value if df.reader.use_dat_value else self._set_value
+        vf = self._dv_set_value if df.reader.use_dat_value else self._simple_set_value
 
         for key in df.reader.specification['fields']:
             other = df.reader.specification['fields'][key]['key']
@@ -756,10 +772,18 @@ class RelationalReader(object):
                 continue
             df_other = self.read_file(other)
 
+            key_id = df.reader.specification['fields'][key]['key_id']
+            key_offset = df.reader.specification['fields'][key]['key_offset']
+
             index = df.reader.table_columns[key]['index']
 
             for i, row in enumerate(df.reader.table_data):
-                df.reader.table_data[i][index] = vf(row[index], df_other.reader)
+                df.reader.table_data[i][index] = vf(
+                    row[index],
+                    df_other.reader,
+                    key_id,
+                    key_offset,
+                )
 
         return df
 
@@ -781,7 +805,28 @@ def load_spec(path=None):
             if not other:
                 continue
             if other not in spec:
-                raise SpecificationError('%s->%s->%s not in specification' % (file_name, f, other))
+                raise SpecificationError(
+                    '%(dat_file)s->%(field)s->key: %(other)s not in '
+                    'specification' % {
+                        'dat_file': file_name,
+                        'field': f,
+                        'other': other,
+                    }
+                )
+
+            other_key = spec[file_name]['fields'][f]['key_id']
+            if not other_key:
+                continue
+            if other_key not in spec[other]['fields']:
+                raise SpecificationError(
+                    '%(dat_file)s->%(field)s->key_id: %(other)s->%(other_key)s'
+                    ' not in specification' % {
+                        'dat_file': file_name,
+                        'field': f,
+                        'other': other,
+                        'other_key': other_key,
+                    }
+                )
 
     return spec
 
@@ -801,8 +846,6 @@ if __name__ == '__main__':
     #profiler.add_function(DatValue.__init__)
     #profiler.add_function(DatReader._cast_from_spec)
     #profiler.add_function(DatReader._process_row)
-    #profiler.add_function(DatReader.read_from_file)
-    #profiler.add_function(DatReader.read_from_raw)
     #profiler.add_function(RecordList.__getitem__)
 
     #profiler.run("d = DatFile('GrantedEffects.dat', read_file='C:/Temp/Data')")
@@ -811,10 +854,17 @@ if __name__ == '__main__':
 
     #print(d.reader[0])
 
+    #profiler.add_function(RelationalReader._set_value)
+    #profiler.add_function(RelationalReader._dv_set_value)
+    #profiler.add_function(RelationalReader._simple_set_value)
+    #profiler.add_function(RelationalReader.read_file)
+    #profiler.run("r = RelationalReader('C:/Temp/Data', files=['BaseItemTypes.dat'], options={'use_dat_value': False})")
+    #profiler.print_stats()
+
     #for a in d.reader.column_iter(): print(a)
 
-    r = RelationalReader(path_or_ggpk='C:/Temp/Data', files=['BaseItemTypes.dat'], options={'use_dat_value': True})
-    print(r.files['BaseItemTypes.dat'].reader[0]['ItemVisualIdentityKey'])
+    #r = RelationalReader(path_or_ggpk='C:/Temp/Data', files=['BaseItemTypes.dat'], options={'use_dat_value': True})
+    #print(r.files['BaseItemTypes.dat'].reader[0]['ItemVisualIdentityKey'])
 
     #print(d.table_data)
     import cProfile

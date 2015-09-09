@@ -290,5 +290,5 @@ def test_dat_file():
         assert l[0] == test_list[0], 'Value mismatch - list'
         assert l[1] == test_list[1], 'Value mismatch - list'
         # 0xFEFEFEFE is a magic key, so return -1
-        assert l[2] == -1, 'Value mismatch - list, special value'
+        assert l[2] is None, 'Value mismatch - list, special value'
         assert row['ref|ref|ref|int'] == 0x1337, 'Value mismatch - nested pointers'

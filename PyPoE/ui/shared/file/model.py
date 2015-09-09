@@ -58,14 +58,17 @@ class DatTableModel(DatModelShared):
         self._columns = [item['section'] for item in self._dat_file.reader.table_columns.values()]
 
     def _sort_value(self, dat_value):
+        v = dat_value
         if self._master.option_dereference_pointer.isChecked():
             # DatValue instances now support comprehensions
-            return dat_value
-        if dat_value.is_list:
-            return dat_value.value[1]
+            v = dat_value.get_value()
+        elif dat_value.is_list:
+            v = dat_value.value[1]
         elif dat_value.is_pointer:
-            return dat_value.value
-        return dat_value
+            v = dat_value.value
+        if v is None:
+            return -1
+        return v
 
     def rowCount(self, parent=QModelIndex()):
         return len(self._dat_file.reader.table_data)
