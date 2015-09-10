@@ -1,7 +1,7 @@
 """
 Path     PyPoE/poe/file/dat.py
 Name     Dat Reader Tool
-Version  1.00.000
+Version  1.0.0a0
 Revision $Id$
 Author   [#OMEGA]- K2
 
@@ -642,6 +642,7 @@ class DatReader(object):
 
 class DatFile(AbstractFileReadOnly):
     """
+    Representation of a .dat file.
     """
     
     def __init__(self, file_name, *args, read_file=None, read_raw=None, options={}):
@@ -684,13 +685,23 @@ class DatFile(AbstractFileReadOnly):
 class RelationalReader(object):
     """
     Read dat files in a relational matter.
+
+    This acts both as a cache and as a way to easily access the instances.
     """
     def __init__(self, path_or_ggpk=None, files=None, options=None):
         """
+        Creates a new Relational Reader instance.
 
-        :param path_or_ggpk:
-        :param files:
-        :return:
+        See DatReader for details on the options available.
+
+        :param path_or_ggpk: The path where the dat files are stored or a
+        GGPKFile instance
+        :type path_or_ggpk: :class:`GGPKFile` or str
+        :param Iterable files: Iterable of files that will be loaded right away
+        :param dict: options to pass to the reader for the DatFile
+
+        :raises TypeError: if path_or_ggpk not specified or invalid type
+        :raises ValueError: if a GGPKFile was passed, but it was not parsed
         """
         if isinstance(path_or_ggpk, GGPKFile):
             if not self._ggpk.is_parsed:
@@ -750,6 +761,20 @@ class RelationalReader(object):
             return self._set_value(value, other, key, offset)
 
     def read_file(self, name):
+        """
+        Attempts to return a dat file from the cache and if it isn't available,
+        reads it in.
+
+        During the process any relations (i.e. fields that have a "key" to
+        other .dat files specified) will be read. This will result in the
+        appropriate fields being replaced by the related row.
+        Note that a related row may be "None" if no key was specified in the
+        read dat file.
+
+        :param str name: The name of the .dat to read. Extension is required.
+        :return: Returns the given DatFile instance
+        :rtype: DatFile
+        """
         if name in self.files:
             return self.files[name]
 
@@ -794,6 +819,17 @@ class RelationalReader(object):
 # =============================================================================
 
 def load_spec(path=None):
+    """
+    Loads a specification that can be used for the dat files. It will be
+    verified and errors will be raised accordingly if any errors occur.
+
+    :param str path: If specified, read the specified file as config
+    :return: returns the ConfigObj of the read file.
+    :rtype: :class:`ConfigObj`
+
+    :raises SpecificationError: if key or key_id point to invalid files or
+    keys respectively
+    """
     if path is None:
         path = DAT_SPECIFICATION
     spec = configobj.ConfigObj(infile=path, configspec=DAT_SPECIFICATION_CONFIGSPEC)
@@ -831,6 +867,9 @@ def load_spec(path=None):
     return spec
 
 def reload_default_spec():
+    """
+    Reloads the default specification.
+    """
     global _default_spec
     _default_spec = load_spec()
 
