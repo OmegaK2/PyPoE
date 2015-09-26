@@ -25,6 +25,9 @@ FIX the jewel generator (corrupted)
 # Imports
 # =============================================================================
 
+# Python
+from collections import OrderedDict
+
 # Self
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter.wiki.handler import *
@@ -46,6 +49,21 @@ class ModsHandler(ExporterHandler):
         self.parser = sub_parser.add_parser('mods', help='Mods Exporter')
         self.parser.set_defaults(func=lambda args: self.parser.print_help())
         lua_sub = self.parser.add_subparsers()
+
+        parser = lua_sub.add_parser(
+            'mods',
+            help='Extract all mods.'
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=ModParser,
+            func=ModParser.mod,
+        )
+        parser.add_argument(
+            'modid',
+            help='Ids of the mods to update; can be specified multiple times',
+            nargs='+',
+        )
 
         parser = lua_sub.add_parser(
             'map',
@@ -133,6 +151,68 @@ class ModParser(BaseParser):
             if hasattr(value, '__iter__'):
                 value = '(%s to %s)' % tuple(value)
             mylist.append('* %s %s' % (stat_id, value))
+
+    def mod(self, args):
+        mods = []
+
+        requested_mods = list(args.modid)
+
+        for mod in self.rr['Mods.dat']:
+            try:
+                i = requested_mods.index(mod['Id'])
+            except ValueError:
+                continue
+
+            requested_mods.pop(i)
+            mods.append(mod)
+
+        r = ExporterResult()
+
+        for mod in mods:
+            data = OrderedDict()
+
+            for k in (
+                ('Id', 'id'),
+                ('Name', 'name'),
+                ('CorrectGroup', 'mod_group'),
+                ('Domain', 'domain'),
+                ('GenerationType', 'generation_type'),
+                ('Level', 'required_level'),
+
+            ):
+                data[k[1]] = mod[k[0]]
+
+            data['mod_type'] = mod['ModTypeKey']['Name']
+            data['stat_text'] = '<br>'.join(self._get_stats(mod))
+
+            for i in range(1, 5):
+                k = mod['StatsKey%s' % i]
+                if k is None:
+                    continue
+                data['stat%s_id' % i] = k['Id']
+                data['stat%s_min' % i] = mod['Stat%sMin' % 1]
+                data['stat%s_max' % i] = mod['Stat%sMax' % 1]
+
+            for i, tag in enumerate(mod['SpawnWeight_TagsKeys']):
+                j = i + 1
+                data['spawn_tag%s' % j] = tag['Id']
+                data['spawn_value%s' % j] = mod['SpawnWeight_Values'][i]
+
+            if mod['TagsKeys']:
+                data['tags'] = ', '.join([t['Id'] for t in mod['TagsKeys']])
+
+            out = ['{{Mod\n']
+            for key, value in data.items():
+                out.append('|{0: <16}= {1}\n'.format(key, value))
+            out.append('}}\n')
+
+            r.add_result(
+                lines=out,
+                out_file='mod_%s.txt' % mod['Id'],
+                wiki_page=mod['Id'],
+            )
+
+        return r
 
     def map(self, parsed_args):
         tf = self.tc['map_stat_descriptions.txt']
