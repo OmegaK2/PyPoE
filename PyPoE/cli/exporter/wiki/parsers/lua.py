@@ -1,7 +1,7 @@
 """
 Path     PyPoE/cli/exporter/wiki/lua.py
 Name     Wiki lua exporter
-Version  1.00.000
+Version  1.0.0a0
 Revision $Id$
 Author   [#OMEGA]- K2
 
@@ -115,6 +115,11 @@ class QuestRewardReader(BaseParser):
     ]
 
     def _write_lua(self, outdata, data_type):
+        if data_type == 'vendor':
+            subpage = 'vendor_reward_data'
+        else:
+            subpage = 'data'
+
         # Pre-sort
         outdata.sort(key=lambda x: x['class_id'])
         outdata.sort(key=lambda x: x['reward'])
@@ -142,7 +147,11 @@ class QuestRewardReader(BaseParser):
         out.append('return rewards')
 
         r = ExporterResult()
-        r.add_result(lines=out, out_file='%s_rewards.txt' % data_type)
+        r.add_result(
+            lines=out,
+            out_file='%s_rewards.txt' % data_type,
+            wiki_page='Module:QuestReward/%s' % subpage,
+        )
 
         return r
 
@@ -169,7 +178,7 @@ class QuestRewardReader(BaseParser):
                     continue
             data['act'] = quest['Act']
 
-            itemcls_n = item['ItemClass']
+            itemcls_n = item['ItemClass']['Id']
             if itemcls_n in (19, 20): # Skills
                 itemcls = 'skill'
             elif itemcls_n == 40: # can be ignored I guess
@@ -221,7 +230,7 @@ class QuestRewardReader(BaseParser):
             data['reward'] = name
 
             if name == 'Two-Stone Ring':
-                itemid = item['ItemVisualIdentityKey']['Index0']
+                itemid = item['ItemVisualIdentityKey']['ItemNameId']
                 if itemid in two_stone_map:
                     data['page_link'] = two_stone_map[itemid]
                 else:
