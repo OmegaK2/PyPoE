@@ -640,6 +640,15 @@ class GemsParser(BaseParser):
                     fixed.append(stat_ids[i-1])
                     fixed_indexes.append(i)
 
+            # Delete some stats
+            for stat_name in ['skill_level']:
+                try:
+                    i = stat_ids.index(stat_name)
+                except ValueError:
+                    continue
+                del stat_ids[i]
+                del stat_indexes[i]
+
             # First translation probe
             values_result = [gepl[1]['Stat%sValue' % i] for i in stat_indexes]
             trans_result = tf.get_translation(stat_ids, values_result, full_result=True, use_placeholder=True)
@@ -760,9 +769,9 @@ class GemsParser(BaseParser):
 
             out.append('}}\n')
 
-            if base_item_type['ItemClass'] == 19:
+            if base_item_type['ItemClass']['Name'] == 'Active Skill Gems':
                 gtype = GemTypes.active
-            elif base_item_type['ItemClass'] == 20:
+            elif base_item_type['ItemClass']['Name'] == 'Support Skill Gems':
                 gtype = GemTypes.support
 
             # Is sorted already, but just in case..

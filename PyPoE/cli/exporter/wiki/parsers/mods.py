@@ -182,10 +182,16 @@ class ModParser(BaseParser):
             ):
                 data[k[1]] = mod[k[0]]
 
+            if mod['BuffDefinitionsKey']:
+                data['granted_buff_id'] = mod['BuffDefinitionsKey']['Id']
+                data['granted_buff_value'] = mod['BuffValue']
+            # todo ID for GEPL
+            if mod['GrantedEffectsPerLevelKey']:
+                data['granted_skill'] = mod['GrantedEffectsPerLevelKey']['GrantedEffectsKey']['Id']
             data['mod_type'] = mod['ModTypeKey']['Name']
             data['stat_text'] = '<br>'.join(self._get_stats(mod))
 
-            for i in range(1, 5):
+            for i in range(1, 6):
                 k = mod['StatsKey%s' % i]
                 if k is None:
                     continue
@@ -209,7 +215,7 @@ class ModParser(BaseParser):
             r.add_result(
                 lines=out,
                 out_file='mod_%s.txt' % mod['Id'],
-                wiki_page=mod['Id'],
+                wiki_page=mod['Id'].replace('_', '~'),
             )
 
         return r
@@ -253,7 +259,7 @@ class ModParser(BaseParser):
                 continue
 
             stats = []
-            for i in range(1, 5):
+            for i in range(1, 6):
                 stat = mod['StatsKey%s' % i]
                 if stat:
                     stats.append(stat)

@@ -1,7 +1,7 @@
 """
 Path     PyPoE/cli/exporter/wiki/handler.py
 Name     Wiki Export Handler
-Version  1.00.000
+Version  1.0.0a0
 Revision $Id$
 Author   [#OMEGA]- K2
 
@@ -56,7 +56,7 @@ class BaseParser(object):
 
     def _get_stats(self, mod, translation_file='stat_descriptions.txt'):
         stats = []
-        for i in range(1, 5):
+        for i in range(1, 6):
             stat = mod['StatsKey%s' % i]
             if stat:
                 stats.append(stat)
