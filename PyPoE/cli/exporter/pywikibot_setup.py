@@ -1,7 +1,7 @@
 """
 Path     PyPoE/cli/exporter/pywikibot_setup.py
 Name     pywikibot Setup
-Version  1.00.000
+Version  1.0.0a0
 Revision $Id$
 Author   [#OMEGA]- K2
 
@@ -56,6 +56,8 @@ finally:
 # =============================================================================
 # Globals
 # =============================================================================
+
+pywikibot.config.put_throttle = 1
 
 __all__ = ['pywikibot', 'get_site', 'get_edit_message']
 

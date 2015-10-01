@@ -1,7 +1,7 @@
 """
 Path     PyPoE/cli/exporter/wiki/parser/gems.py
 Name     Wiki gems exporter
-Version  1.00.000
+Version  1.0.0a0
 Revision $Id$
 Author   [#OMEGA]- K2
 
@@ -253,8 +253,7 @@ class MissingAbbreviation(UserWarning):
 # Classes
 # =============================================================================
 
-class GemsHandler(ExporterHandler):
-
+class GemWikiHandler(WikiHandler):
     regex_search = re.compile(
         '==gem level progression==',
         re.UNICODE | re.IGNORECASE | re.MULTILINE)
@@ -264,6 +263,37 @@ class GemsHandler(ExporterHandler):
         '.*?(?===[\w ]*==)',
         re.UNICODE | re.IGNORECASE | re.MULTILINE | re.DOTALL)
 
+    def _find_page(self, pws, page_name, site):
+        page = pws.pywikibot.Page(site, page_name)
+
+        if self.regex_search.search(page.text):
+            return page
+        else:
+            console('Failed to find the progression on wiki page "%s"' % page_name, msg=Msg.warning)
+            return None
+
+    def handle_page(self, *a, pws, site, row, cmdargs):
+        page_name = row['wiki_page']
+        console('Editing gem "%s"...' % page_name)
+        page = self._find_page(pws, page_name, site)
+        if page is None:
+            page = self._find_page(pws, '%s (support gem)' % page_name, site)
+
+        if page is None:
+            console('Can\'t find working wikipage. Skipping.', Msg.error)
+            return
+
+        row['lines'].insert(0, '==Gem level progression==\n\n')
+
+        new_text = self.regex_replace.sub(''.join(row['lines']), page.text)
+
+        self.save_page(
+            page=page,
+            text=new_text,
+            message='Gem level progression',
+        )
+
+class GemsHandler(ExporterHandler):
     def __init__(self, sub_parser):
         self.parser = sub_parser.add_parser('gems', help='Gems Exporter')
         self.parser.set_defaults(func=lambda args: self.parser.print_help())
@@ -277,71 +307,14 @@ class GemsHandler(ExporterHandler):
             parser=parser,
             cls=GemsParser,
             func=GemsParser.level_progression,
-            wiki_handler=self.wiki_handler,
+            wiki_handler=GemWikiHandler(name='Gem level progression'),
         )
-        self.add_gem_arg(parser)
 
-        '''parser = sub.add_parser(
-            'graph',
-            help='Extract the warbands movement graph.',
-        )
-        self.add_default_parsers(
-            parser=parser,
-            cls=GemsParser,
-            handler=GemsParser.graph,
-        )
-        self.add_gem_arg(parser)
-        parser.add_argument(
-            'type',
-            choices=('map', 'normal'),
-            help='The type of the graph file to extract.',
-        )
-        parser.add_argument(
-            '-f', '--format',
-            choices=('svg', 'pdf', 'png'),
-            default='svg',
-            help='File format to use when extracting.',
-        )'''
-
-    def _find_page(self, pws, page_name, site):
-        page = pws.pywikibot.Page(site, page_name)
-
-        if self.regex_search.search(page.text):
-            return page
-        else:
-            console('Failed to find the progression on wiki page "%s"' % page_name, msg=Msg.warning)
-            return None
-
-    def add_gem_arg(self, parser):
         parser.add_argument(
             'gem',
             help='Name of the skill gem; can be specified multiple times',
             nargs='+',
         )
-
-    def wiki_handler(self, pws, result):
-        site = pws.get_site()
-        for row in result:
-            page_name = row['wiki_page']
-            console('Editing gem "%s"...' % page_name)
-            page = self._find_page(pws, page_name, site)
-            if page is None:
-                page = self._find_page(pws, '%s (support gem)' % page_name, site)
-
-            if page is None:
-                console('Can\'t find working wikipage. Skipping.', Msg.error)
-                continue
-
-            row['lines'].insert(0, '==Gem level progression==\n\n')
-
-            new_text = self.regex_replace.sub(''.join(row['lines']), page.text)
-
-            self._wiki_save_page(
-                page=page,
-                text=new_text,
-                message='Gem level progression',
-            )
-
 
 class GemsParser(BaseParser):
 

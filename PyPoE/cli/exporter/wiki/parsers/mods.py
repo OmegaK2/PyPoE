@@ -1,7 +1,7 @@
 """
 Path     PyPoE/cli/exporter/wiki/parser/mods.py
 Name     Wiki mods exporter
-Version  1.00.000
+Version  1.0.0a0
 Revision $Id$
 Author   [#OMEGA]- K2
 
@@ -54,10 +54,16 @@ class ModsHandler(ExporterHandler):
             'mods',
             help='Extract all mods.'
         )
+
+        wiki_handler = WikiHandler(
+            name='Mod updater',
+        )
+
         self.add_default_parsers(
             parser=parser,
             cls=ModParser,
             func=ModParser.mod,
+            wiki_handler=wiki_handler,
         )
         parser.add_argument(
             'modid',
@@ -99,7 +105,6 @@ class ModsHandler(ExporterHandler):
             choices=('suffix', 'prefix', 'corrupted'),
             help='The type of jewel mod to extract.',
         )
-
 
 class ModParser(BaseParser):
     dropdata = {

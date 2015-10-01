@@ -26,6 +26,7 @@ TODO
 
 # Python
 import os
+from concurrent.futures import ThreadPoolExecutor
 
 # 3rd Party
 try:
@@ -43,11 +44,68 @@ from PyPoE.cli.exporter.wiki.util import check_hash
 # Globals
 # =============================================================================
 
-__all__ = ['ExporterHandler', 'ExporterResult']
+__all__ = ['ExporterHandler', 'ExporterResult', 'WikiHandler']
 
 # =============================================================================
 # Classes
 # =============================================================================
+
+class WikiHandler(object):
+    regex_search = None
+    regex_replace = None
+
+    def __init__(self, *a, name=None, rowmsg='Editing page "{page_name}"...\n'):
+        self.name = name
+        self.rowmsg = rowmsg
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '-w-mt', '--wiki-max-threads',
+            dest='wiki_threads',
+            help='Maximum number of threads to spawn when editing wiki',
+            action='store',
+            type=int,
+            default=16,
+        )
+
+    def save_page(self, page, text, message):
+        if text == page.text:
+            console('No update required. Skipping.')
+            return
+
+        page.text = text
+        page.save(pws.get_edit_message(message))
+
+    def handle_page(self, *a, pws, site, row, cmdargs):
+        page_name = row['wiki_page']
+        if self.rowmsg:
+            console(self.rowmsg.format(page_name=page_name))
+        page = pws.pywikibot.Page(site, page_name)
+
+        self.save_page(
+            page=page,
+            text=''.join(row['lines']),
+            message=self.name,
+            )
+
+    def handle(self, *a, pws, result, cmdargs):
+        site = pws.get_site()
+
+        # First row is handled separately to prompt the user for his password
+        self.handle_page(pws=pws, site=site, row=result[0], cmdargs=cmdargs)
+
+        tp = ThreadPoolExecutor(max_workers=cmdargs.wiki_threads)
+
+        for row in result[1:]:
+            tp.submit(
+                self.handle_page,
+                pws=pws,
+                site=site,
+                row=row,
+                cmdargs=cmdargs,
+            )
+
+        tp.shutdown(wait=True)
 
 class ExporterHandler(BaseHandler):
     def get_wrap(self, cls, func, handler, wiki_handler):
@@ -102,7 +160,7 @@ class ExporterHandler(BaseHandler):
 
                     console('Running wikibot...')
                     console('-'*80)
-                    wiki_handler(pws, result)
+                    wiki_handler.handle(pws=pws, result=result, cmdargs=pargs)
                     console('-'*80)
                     console('Completed wikibot execution.')
 
@@ -116,6 +174,12 @@ class ExporterHandler(BaseHandler):
             for item in (func,):
                 if item is None:
                     raise ValueError('Must set either handler or func')
+
+        if wiki_handler is not None:
+            if not isinstance(wiki_handler, WikiHandler):
+                raise TypeError('wiki_handler must be a WikiHandler instance.')
+
+            wiki_handler.add_arguments(parser)
 
         parser.set_defaults(func=self.get_wrap(cls, func, handler, wiki_handler))
         parser.add_argument(
@@ -137,22 +201,6 @@ class ExporterHandler(BaseHandler):
             help='Write to the gamepedia page (requires pywikibot)',
             action='store_true',
         )
-
-    def _wiki_default_handler(self, pws2, result):
-        site = pws.get_site()
-        for row in result:
-            page_name = row['wiki_page']
-            page = pws.pywikibot.Page(site, page_name)
-            self._wiki_save_page(page, row['lines'], self.__name__)
-
-    def _wiki_save_page(self, page, text, message):
-        if text == page.text:
-            console('No update required. Skipping.')
-            return
-
-        page.text = text
-        page.save(pws.get_edit_message(message))
-
 
 class ExporterResult(list):
     def add_result(self, lines=None, out_file=None, wiki_page=None):
