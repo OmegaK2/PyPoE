@@ -1,7 +1,7 @@
 """
 Path     PyPoE/lib/__init__.py
 Name     Library init
-Version  1.00.000
+Version  1.0.0a0
 Revision $Id$
 Author   [#OMEGA]- K2
 
@@ -33,7 +33,11 @@ import warnings
 # =============================================================================
 
 __all__ = [
-    'APP_DIR', 'DATA_DIR', 'DAT_SPECIFICATION', 'DAT_SPECIFICATION_CONFIGSPEC',
+    'APP_DIR',
+    'CUSTOM_TRANSLATION_FILE',
+    'DATA_DIR',
+    'DAT_SPECIFICATION',
+    'DAT_SPECIFICATION_CONFIGSPEC',
 ]
 __version__ = '1.0.0a0'
 
@@ -77,6 +81,7 @@ def _get_app_dir():
 warnings.simplefilter('default', DeprecationWarning)
 APP_DIR = _get_app_dir()
 DATA_DIR = os.path.join(os.path.dirname(__file__), '_data')
+CUSTOM_TRANSLATION_FILE = os.path.join(DATA_DIR, 'custom_descriptions.txt')
 DAT_SPECIFICATION = os.path.join(DATA_DIR, 'dat.specification.ini')
 DAT_SPECIFICATION_CONFIGSPEC = os.path.join(DATA_DIR,
                                             'dat.specification.configspec.ini')

@@ -1,7 +1,7 @@
 """
 Path     PyPoE/poe/file/translations.py
 Name     Utilities for accessing GGG translations
-Version  1.00.000
+Version  1.0.0a0
 Revision $Id$
 Author   [#OMEGA]- K2
 
@@ -38,13 +38,18 @@ from string import ascii_letters
 from collections import Iterable
 
 # self
+from PyPoE import CUSTOM_TRANSLATION_FILE
 from PyPoE.poe.file._shared import AbstractFileReadOnly, ParserError
 
 # =============================================================================
 # Globals
 # =============================================================================
 
-__all__ = ['TranslationFile']
+__all__ = [
+    'TranslationFile',
+    'TranslationFileCache',
+    'load_default_custom_translation_file',
+]
 
 regex_translation_string = re.compile(
     r'^'
@@ -75,8 +80,11 @@ regex_tokens = re.compile(
 )
 
 # =============================================================================
-# Classes
+# Warnings
 # =============================================================================
+
+class MissingIdentifierWarning(UserWarning):
+    pass
 
 
 class UnknownIdentifierWarning(UserWarning):
@@ -86,6 +94,9 @@ class UnknownIdentifierWarning(UserWarning):
 class DuplicateIdentifierWarning(UserWarning):
     pass
 
+# =============================================================================
+# Classes
+# =============================================================================
 
 class Translation(object):
     """
@@ -321,6 +332,12 @@ class TranslationString(object):
         for i in indexes:
             rating += self.range[i].in_range(values[i])
         return rating
+
+    def match_string(self, other, i=3):
+        # Make a copy
+        s = str(self.string)
+        for tag in self._tag_iter(i):
+            s = s.replace(tag, )
 
 
 class TranslationRange(object):
@@ -825,6 +842,14 @@ class TranslationFile(AbstractFileReadOnly):
             )
         return trans_lines
 
+    def reverse_translation(self, translation_string, lang='English'):
+        #TODO
+        raise NotImplementedError()
+        for tr in self._translations:
+            tl = tr.get_language(lang)
+            for ts in tl.strings:
+                # Make a copy
+                s = str(ts.string)
 
 class TranslationFileCache(object):
     """
@@ -844,9 +869,37 @@ class TranslationFileCache(object):
     There is a caveat though, for this to work files need to referenced with
     their internal location (i.e. by the root folder).
     """
-    def __init__(self, base_dir):
+    def __init__(self, base_dir, merge_with_custom_file=None):
+        """
+        Creates a new TranslationFileCache instance.
+
+        :param base_dir: The base directory where the files will be requested
+        from (without "Metadata/")
+        :type base_dir: str
+        :param merge_with_custom_file: If this option is specified, each file
+        will be merged with a custom translation file.
+        If set to True, it will load the default translation file located in
+        PyPoE's data directory.
+        Alternatively a TranslationFile instance can be passed which then will
+        be used.
+        :type merge_with_custom_file: None, bool, TranslationFile
+
+        :raises TypeError: if merge_with_custom_file is of invalid type
+        """
         self._base_dir = base_dir
         self._desc_dir = os.path.join(base_dir, 'Metadata')
+
+        if merge_with_custom_file is None or merge_with_custom_file is False:
+            self._custom_file = None
+        elif merge_with_custom_file is True:
+            self._custom_file = load_default_custom_translation_file()
+        elif isinstance(merge_with_custom_file, TranslationFile):
+            self._custom_file = merge_with_custom_file
+        else:
+            raise TypeError(
+                'Argument merge_with_custom_file is of wrong type. %(type)s' %
+                {'type': type(merge_with_custom_file)}
+            )
 
         self._files = {}
 
@@ -890,6 +943,8 @@ class TranslationFileCache(object):
                 file_path=os.path.join(self._base_dir, name),
                 parent=self,
             )
+            if self._custom_file:
+                self._files[name].merge(self._custom_file)
 
         return self._files[name]
 
@@ -931,9 +986,15 @@ def _diff_dict(self, other):
         for key in kdiff_other:
             print('Key "%s": Value "%s"' % (key, other[key]))
 
+
+def load_default_custom_translation_file():
+    return TranslationFile(file_path=CUSTOM_TRANSLATION_FILE)
+
 # =============================================================================
-# Misc
+# Init
 # =============================================================================
+
+
 
 if __name__ == '__main__':
     from line_profiler import LineProfiler

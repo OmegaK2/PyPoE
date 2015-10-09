@@ -24,10 +24,14 @@ TODO
 # Imports
 # =============================================================================
 
+# Python
+import warnings
+
 # self
-from PyPoE.cli.core import console, Msg
 from PyPoE.poe.file.dat import RelationalReader
-from PyPoE.poe.file.translations import TranslationFileCache
+from PyPoE.poe.file.translations import (
+    TranslationFileCache, MissingIdentifierWarning
+)
 
 # =============================================================================
 # Classes
@@ -54,7 +58,8 @@ class BaseParser(object):
         for file_name in self._translations:
             self.tc[file_name]
 
-    def _get_stats(self, mod, translation_file='stat_descriptions.txt'):
+    def _get_stats(self, mod, translation_file='stat_descriptions.txt',
+                   full_result=False):
         stats = []
         for i in range(1, 6):
             stat = mod['StatsKey%s' % i]
@@ -70,8 +75,12 @@ class BaseParser(object):
 
         tf = self.tc[translation_file]
 
-        effects = tf.get_translation(ids, values)
-        if not effects:
-            console("%s %s" % (ids, values))
+        effects = tf.get_translation(ids, values, full_result=True)
+        if effects.missing_ids:
+            warnings.warn(
+                'Missing translation for ids %s and values %s' % (
+                    effects.missing_ids, effects.missing_values),
+                MissingIdentifierWarning,
+            )
 
-        return tf.get_translation(ids, values)
+        return effects if full_result else effects.lines

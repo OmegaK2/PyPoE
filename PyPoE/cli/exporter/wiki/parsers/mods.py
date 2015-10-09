@@ -26,6 +26,7 @@ FIX the jewel generator (corrupted)
 # =============================================================================
 
 # Python
+import warnings
 from collections import OrderedDict
 
 # Self
@@ -44,12 +45,16 @@ __all__ = ['ModParser', 'ModsHandler']
 # Classes
 # =============================================================================
 
+class OutOfBoundsWarning(UserWarning):
+    pass
+
 class ModsHandler(ExporterHandler):
     def __init__(self, sub_parser):
         self.parser = sub_parser.add_parser('mods', help='Mods Exporter')
         self.parser.set_defaults(func=lambda args: self.parser.print_help())
         lua_sub = self.parser.add_subparsers()
 
+        # Mods
         parser = lua_sub.add_parser(
             'mods',
             help='Extract all mods.'
@@ -65,11 +70,35 @@ class ModsHandler(ExporterHandler):
             func=ModParser.mod,
             wiki_handler=wiki_handler,
         )
+
+        sub = parser.add_subparsers(help='Method of extracting mods')
+
+        parser = sub.add_parser('modid', help='Use the string mod identifer')
+        parser.set_defaults(mod_selection_type='modid')
         parser.add_argument(
             'modid',
             help='Ids of the mods to update; can be specified multiple times',
             nargs='+',
         )
+
+        parser = sub.add_parser('rowid', help='Use the rowid')
+        parser.set_defaults(mod_selection_type='rowid')
+        parser.add_argument(
+            'start',
+            help='Starting index',
+            nargs='?',
+            type=int,
+            default=0,
+        )
+
+        parser.add_argument(
+            'end',
+            nargs='?',
+            help='Ending index',
+            type=int,
+        )
+
+        # Map
 
         parser = lua_sub.add_parser(
             'map',
@@ -80,6 +109,8 @@ class ModsHandler(ExporterHandler):
             cls=ModParser,
             func=ModParser.map,
         )
+
+        # Tempest
 
         parser = lua_sub.add_parser(
             'tempest',
@@ -146,6 +177,11 @@ class ModParser(BaseParser):
         'map_stat_descriptions.txt',
     ]
 
+    translation_map = {
+        4: 'chest_stat_descriptions.txt',
+        5: 'map_stat_descriptions.txt',
+    }
+
     def _append_effect(self, result, mylist, heading):
         mylist.append(heading)
 
@@ -160,18 +196,56 @@ class ModParser(BaseParser):
     def mod(self, args):
         mods = []
 
-        requested_mods = list(args.modid)
+        if args.mod_selection_type == 'modid':
+            requested_mods = list(args.modid)
 
-        for mod in self.rr['Mods.dat']:
-            try:
-                i = requested_mods.index(mod['Id'])
-            except ValueError:
-                continue
+            for mod in self.rr['Mods.dat']:
+                try:
+                    i = requested_mods.index(mod['Id'])
+                except ValueError:
+                    continue
 
-            requested_mods.pop(i)
-            mods.append(mod)
+                requested_mods.pop(i)
+                mods.append(mod)
+        elif args.mod_selection_type == 'rowid':
+            mods = list(self.rr['Mods.dat'])
+            l = len(mods)
+
+            # Warnings only to make it a bit more user friendly
+            if abs(args.start) > len(mods):
+                warnings.warn(
+                    'Specified minimum index "%s" is larger then the total '
+                    'number of mods (%s).' % (args.start, l),
+                    OutOfBoundsWarning,
+                )
+
+            if args.end is not None:
+                if abs(args.end) > len(mods):
+                    warnings.warn(
+                        'Specified maximum index "%s" is larger then the total '
+                        'number of mods (%s).' % (args.end, l),
+                        OutOfBoundsWarning,
+                    )
+
+                if args.start >=0 and args.end >= 0 and args.start > args.end:
+                    warnings.warn(
+                        'Specified maximum index "%s" is smaller then the '
+                        'specified minimum index "%s"' % (args.end, args.start),
+                        OutOfBoundsWarning,
+                    )
+
+            mods = mods[args.start:args.end]
 
         r = ExporterResult()
+
+        if mods:
+            console('Found %s mods. Processing...' % len(mods))
+        else:
+            warnings.warn(
+                'No mods found for the specified parameters. Quitting.'
+            )
+            return r
+
 
         for mod in mods:
             data = OrderedDict()
@@ -194,15 +268,21 @@ class ModParser(BaseParser):
             if mod['GrantedEffectsPerLevelKey']:
                 data['granted_skill'] = mod['GrantedEffectsPerLevelKey']['GrantedEffectsKey']['Id']
             data['mod_type'] = mod['ModTypeKey']['Name']
-            data['stat_text'] = '<br>'.join(self._get_stats(mod))
+
+            try:
+                tf = self.translation_map[mod['Domain']]
+            except KeyError:
+                tf = 'stat_descriptions.txt'
+
+            data['stat_text'] = '<br>'.join(self._get_stats(mod, tf))
 
             for i in range(1, 6):
                 k = mod['StatsKey%s' % i]
                 if k is None:
                     continue
                 data['stat%s_id' % i] = k['Id']
-                data['stat%s_min' % i] = mod['Stat%sMin' % 1]
-                data['stat%s_max' % i] = mod['Stat%sMax' % 1]
+                data['stat%s_min' % i] = mod['Stat%sMin' % i]
+                data['stat%s_max' % i] = mod['Stat%sMax' % i]
 
             for i, tag in enumerate(mod['SpawnWeight_TagsKeys']):
                 j = i + 1
