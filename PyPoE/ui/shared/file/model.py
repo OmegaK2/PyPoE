@@ -1,13 +1,13 @@
 """
 Path     PyPoE/ui/shared/file/model.py
-Name     Data Model for viewing files
-Version  1.00.000
+Name     Data Models for viewing files
+Version  1.0.0a0
 Revision $Id$
-Author   [#OMEGA]- K2
+Author   [#OMEGA] - K2
 
 INFO
 
-Contains the Menus and related actions for the GGPK Viewer
+Contains shared QT Models for displaying various GGG data.
 
 
 AGREEMENT
@@ -28,13 +28,19 @@ TODO
 from PySide.QtCore import *
 
 # self
-from PyPoE.poe.file.dat import DatFile
+from PyPoE.poe.file.dat import DatFile, DatValue
+from PyPoE.ui.shared.proxy_filter_model import FilterProxyModel
 
 # =============================================================================
 # Globals
 # =============================================================================
 
-__all__ = ['DatTableModel', 'DatDataModel', 'GGPKModel']
+__all__ = [
+    'DatDataModel',
+    'DatTableModel',
+    'DatValueProxyModel',
+    'GGPKModel',
+]
 
 # =============================================================================
 # Classes
@@ -44,31 +50,17 @@ class DatModelShared(QAbstractTableModel):
     """
     TODO: master should be a DatFrame... but circular dependencies
     """
-    def __init__(self, dat_file, master, *args, **kwargs):
+    def __init__(self, dat_file, *args, **kwargs):
         QAbstractTableModel.__init__(self, *args, **kwargs)
         if not isinstance(dat_file, DatFile):
             raise TypeError('datfile must be a DatFile instance')
         self._dat_file = dat_file
-        self._master = master
 
 class DatTableModel(DatModelShared):
     def __init__(self, *args, **kwargs):
         DatModelShared.__init__(self, *args, **kwargs)
 
         self._columns = [item['section'] for item in self._dat_file.reader.table_columns.values()]
-
-    def _sort_value(self, dat_value):
-        v = dat_value
-        if self._master.option_dereference_pointer.isChecked():
-            # DatValue instances now support comprehensions
-            v = dat_value.get_value()
-        elif dat_value.is_list:
-            v = dat_value.value[1]
-        elif dat_value.is_pointer:
-            v = dat_value.value
-        if v is None:
-            return -1
-        return v
 
     def rowCount(self, parent=QModelIndex()):
         return len(self._dat_file.reader.table_data)
@@ -88,7 +80,7 @@ class DatTableModel(DatModelShared):
         else:
             return self._dat_file.reader.table_data[index.row()][c-1]
 
-    def headerData(self, section, orientation, role):
+    def headerData(self, section, orientation, role=Qt.DisplayRole):
         if role != Qt.DisplayRole:
             return None
 
@@ -100,23 +92,14 @@ class DatTableModel(DatModelShared):
             return self.tr('RowID')
         return None
 
-    def sort(self, column, order=Qt.AscendingOrder):
-        reverse = False if order != Qt.AscendingOrder else True
-        if column > 0:
-            sorter = lambda x: self._sort_value(x[column-1])
-        else:
-            sorter = lambda x: x.rowid
-        self._dat_file.reader.table_data.sort(key=sorter, reverse=reverse)
-        self.dataChanged.emit(0,0)
-
 class DatDataModel(DatModelShared):
     def __init__(self, *args, **kwargs):
         DatModelShared.__init__(self, *args, **kwargs)
         self._sections = [
-            (self._master.tr('Offset\nStart'), self._show_start_offset),
-            (self._master.tr('Offset\nEnd'), self._show_end_offset),
-            (self._master.tr('Data\nSize'), self._show_size),
-            (self._master.tr('Data'), self._show_data),
+            (self.tr('Offset\nStart'), self._show_start_offset),
+            (self.tr('Offset\nEnd'), self._show_end_offset),
+            (self.tr('Data\nSize'), self._show_size),
+            (self.tr('Data'), self._show_data),
         ]
 
         self._data = []
@@ -162,7 +145,7 @@ class DatDataModel(DatModelShared):
 
         return self._sections[index.column()][1](dv)
 
-    def headerData(self, section, orientation, role):
+    def headerData(self, section, orientation, role=Qt.DisplayRole):
         if not self.rowCount():
             return None
         if role != Qt.DisplayRole:
@@ -171,11 +154,6 @@ class DatDataModel(DatModelShared):
         if orientation == Qt.Horizontal:
             return self._sections[section][0]
         return None
-
-    def sort(self, column, order=Qt.AscendingOrder):
-        reverse = False if order != Qt.AscendingOrder else True
-        self._data.sort(key=lambda x: self._sections[column][1](x), reverse=reverse)
-        self.dataChanged.emit(0,0)
 
 class GGPKModel(QAbstractItemModel):
     def __init__(self, data=None):
@@ -226,7 +204,7 @@ class GGPKModel(QAbstractItemModel):
         #    return str(node.hash)
         return None
 
-    def headerData(self, section, orientation, role):
+    def headerData(self, section, orientation, role=Qt.DisplayRole):
         if orientation != Qt.Horizontal:
             return None
         if role != Qt.DisplayRole:
@@ -236,3 +214,38 @@ class GGPKModel(QAbstractItemModel):
             return self.headers[section]
         except IndexError:
             return None
+
+
+class DatValueProxyModel(FilterProxyModel):
+    def _get_data(self, row, column, parent):
+        data = FilterProxyModel._get_data(self, row, column, parent)
+        if isinstance(data, DatValue):
+            return data.get_value()
+        return data
+
+    def _sort_value(self, dat_value):
+        v = dat_value
+        if QObject.parent(self).option_dereference_pointer.isChecked():
+            # DatValue instances now support comprehensions
+            v = dat_value.get_value()
+        elif dat_value.is_list:
+            v = dat_value.value[1]
+        elif dat_value.is_pointer:
+            v = dat_value.value
+        if v is None:
+            return -1
+        return v
+
+    def lessThan(self, left, right):
+        ldata = self.sourceModel().data(left)
+        rdata = self.sourceModel().data(right)
+        if isinstance(ldata, DatValue):
+            ldata = self._sort_value(ldata)
+        if isinstance(rdata, DatValue):
+            rdata = self._sort_value(rdata)
+
+        try:
+            return ldata < rdata
+        except TypeError:
+            return False
+        # TODO debug

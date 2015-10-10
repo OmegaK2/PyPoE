@@ -1,13 +1,13 @@
 """
 Path     PyPoE/ui/shared/file/manager.py
-Name     Data Model for viewing files
-Version  1.00.000
+Name     Handlers for viewing GGG files
+Version  1.0.0a0
 Revision $Id$
-Author   [#OMEGA]- K2
+Author   [#OMEGA] - K2
 
 INFO
 
-Contains the Menus and related actions for the GGPK Viewer
+Contains file-type views and handler for various file types.
 
 
 AGREEMENT
@@ -41,7 +41,10 @@ except ImportError:
 
 # self
 from PyPoE.poe.file.dat import DatFile, DatValue
-from PyPoE.ui.shared.file.model import DatTableModel, DatDataModel
+from PyPoE.ui.shared.proxy_filter_model import FilterMenu
+from PyPoE.ui.shared.file.model import (
+    DatTableModel, DatDataModel, DatValueProxyModel
+)
 
 # =============================================================================
 # Globals
@@ -59,6 +62,7 @@ __all__ = [
 # Globals
 # =============================================================================
 
+
 class FileDataHandler(object):
     def _verify_data(self, file_data):
         if isinstance(file_data, bytes):
@@ -68,8 +72,10 @@ class FileDataHandler(object):
             d = file_data
         else:
             raise TypeError('file data must be bytes or io.BytesIO')
+
     def get_widget(self, file_data, file_name, *args, **kwargs):
         raise NotImplementedError
+
 
 class DatStyle(QStyledItemDelegate):
     CELL_ALIGNMENT = Qt.AlignVCenter | Qt.AlignLeft
@@ -158,6 +164,7 @@ class DatStyle(QStyledItemDelegate):
         size = fm.boundingRect(option.rect, self.CELL_ALIGNMENT, text).size()
         return size+QSize(4,0)
 
+
 class DatFrame(QFrame):
     def __init__(self, dat_file=None, parent=None, *args, **kwargs):
         self._dat_file = dat_file
@@ -195,7 +202,6 @@ class DatFrame(QFrame):
         self.data_length_value = QLabel(str(dat_file.reader.file_length-dat_file.reader.data_offset), parent=self.frame_info)
         self.frame_info_layout.addWidget(self.data_length_value, 0, 5)
 
-
         #
         # Options
         #
@@ -219,8 +225,10 @@ class DatFrame(QFrame):
         # Data Tables
         #
         self.table_main = QTableView(parent=self)
-        self.table_main_model = DatTableModel(dat_file, master=self)
-        self.table_main.setModel(self.table_main_model)
+        self.table_main_model = DatTableModel(dat_file)
+        self.table_main_proxy_model = DatValueProxyModel(parent=self)
+        self.table_main_proxy_model.setSourceModel(self.table_main_model)
+        self.table_main.setModel(self.table_main_proxy_model)
         self.table_main.setSortingEnabled(True)
         self.table_main.setItemDelegate(DatStyle(self))
         head = self.table_main.horizontalHeader()
@@ -228,14 +236,26 @@ class DatFrame(QFrame):
         #head.setResizeMode(QHeaderView.ResizeToContents)
         self.layout.addWidget(self.table_main)
 
+        self.table_main_filter_menu = FilterMenu(
+            self.table_main.horizontalHeader(),
+            proxy_model=self.table_main_proxy_model,
+        )
+
         self.table_data = QTableView(parent=self)
-        self.table_data_model = DatDataModel(dat_file, master=self)
-        self.table_data.setModel(self.table_data_model)
+        self.table_data_model = DatDataModel(dat_file)
+        self.table_data_proxy_model = DatValueProxyModel(self)
+        self.table_data_proxy_model.setSourceModel(self.table_data_model)
+        self.table_data.setModel(self.table_data_proxy_model)
         self.table_data.setSortingEnabled(True)
         self.table_data.setItemDelegate(DatStyle(self, data_style=True))
         head = self.table_data.horizontalHeader()
         head.setResizeMode(QHeaderView.Interactive)
         self.layout.addWidget(self.table_data)
+
+        self.table_data_filter_menu = FilterMenu(
+            self.table_main.horizontalHeader(),
+            proxy_model=self.table_data_proxy_model,
+        )
 
         self._refresh()
 
@@ -249,6 +269,7 @@ class DatFrame(QFrame):
         self.table_data.resizeColumnsToContents()
         self.table_data_model.dataChanged.emit(0, 0)
         self.table_main_model.dataChanged.emit(0, 0)
+
 
 class DatDataHandler(FileDataHandler):
     def get_widget(self, file_data, file_name='', parent=None, *args, **kwargs):
@@ -334,6 +355,7 @@ class DDSDataHandler(FileDataHandler):
 
         return scroll
 
+
 class ImageDataHandler(FileDataHandler):
     extensions = ['.bmp', '.gif' '.jpg', '.png', '.pbm', '.pgm', '.ppm',
                   '.tiff', '.xbm', '.xpm']
@@ -352,6 +374,7 @@ class ImageDataHandler(FileDataHandler):
         scroll.setFrameStyle(QFrame.NoFrame)
 
         return scroll
+
 
 class TextDataHandler(FileDataHandler):
     def __init__(self, encoding='utf-16_le'):
@@ -388,8 +411,9 @@ if __name__ == '__main__':
     from PyPoE.ui.shared.file.manager import FileDataManager
     fm = FileDataManager(None)
     h = fm.get_handler(f)
-    profiler.run('w = h.get_widget(data, f, parent=frame)')
-    profiler.print_stats()
+    #profiler.run('w = h.get_widget(data, f, parent=frame)')
+    #profiler.print_stats()
+    w = h.get_widget(data, f, parent=frame)
     frame.setCentralWidget(w)
 
     frame.show()
