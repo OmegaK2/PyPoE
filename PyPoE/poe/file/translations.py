@@ -22,7 +22,7 @@ See PyPoE/LICENSE
 TODO
 
 optimize __hash__ - very slow atm; or remove, but it is needed for the diffs
-
+reverse for non-number values?
 """
 
 # =============================================================================
@@ -83,15 +83,20 @@ regex_tokens = re.compile(
 # Warnings
 # =============================================================================
 
-class MissingIdentifierWarning(UserWarning):
+
+class TranslationWarning(UserWarning):
     pass
 
 
-class UnknownIdentifierWarning(UserWarning):
+class MissingIdentifierWarning(TranslationWarning):
     pass
 
 
-class DuplicateIdentifierWarning(UserWarning):
+class UnknownIdentifierWarning(TranslationWarning):
+    pass
+
+
+class DuplicateIdentifierWarning(TranslationWarning):
     pass
 
 # =============================================================================
@@ -225,14 +230,43 @@ class TranslationLanguage(object):
 
         return ts.format_string(short_values, is_range, use_placeholder, only_values)
 
+    def reverse_string(self, string):
+        """
+        Attempts to find a match for the given string and returns a list of
+        reversed values if a match is found for this language.
+
+        :param string: String to match against
+        :type string: str
+        :return: handled list of values or None if not found
+        :rtype: None or list
+        """
+        # TODO: Should only match one at a time. But may be not?
+        for ts in self.strings:
+            result = ts.reverse_string(string)
+            if result is not None:
+                return result
+
+        return None
+
 
 class TranslationString(object):
     """
     Representation of a single translation string. Each string comes with
     it's own quantifiers and acceptable range.
+
+    :ivar parent: parent language
+    :type parent: TranslationLanguage
+    :ivar quantifier: the quantifier for this translation string
+    :type quantifier: TranslationQuantifier
+    :ivar range: acceptable ranges for this translation as a list of instances
+    for each index
+    :type range: list[TranslationRange]
+    :ivar string: the actual string to use for translation
+    :type string: str
+    :ivar string_re: a compiled regular expression string for reverse matching
     """
 
-    __slots__ = ['parent', 'quantifier', 'range', 'string']
+    __slots__ = ['parent', 'quantifier', 'range', 'string', 'string_re']
 
     # replacement tags used in translations
     tags = '%%%s%%', '%%%s$+d'
@@ -243,6 +277,7 @@ class TranslationString(object):
         self.quantifier = TranslationQuantifier()
         self.range = []
         self.string = ''
+        self.string_re = ''
 
     def __eq__(self, other):
         if not isinstance(other, TranslationString):
@@ -277,6 +312,16 @@ class TranslationString(object):
             new = new.replace(tag, rpl)
         return new, s == new
 
+    def _set_string(self, string):
+        self.string = string.replace('%%', '%')
+
+        # TODO: Maybe make optional?
+        self.string_re = re.compile('^' + re.sub(
+            r'\\\%[0-9]+\\\%(|\+d)',
+            '([0-9\.]+)',
+            re.escape(self.string)
+        ) + '$')
+
     def diff(self, other):
         if not isinstance(other, TranslationString):
             raise TypeError()
@@ -291,7 +336,31 @@ class TranslationString(object):
             print('String mismatch: %s vs %s' % (self.string, other.string))
 
     def format_string(self, values, is_range, use_placeholder=False, only_values=False):
-        s = self.string.replace('%%', '%')
+        """
+        Formats the string for the given values.
+
+        Optionally use_placeholder can be specified to return a string formatted
+        with a placeholder in place of the real value. It will use lowercase
+        ASCII starting at x. For indexes > 3, it will use uppercase ASCII.
+
+        If only_values is specified, no string formatting will performed
+        and instead just parsed values will be returned.
+
+        :param values: List of values to use for the formatting
+        :type values: list[int]
+        :param is_range: List of bools representing whether the values at the
+        list index is a range or not
+        :type is_range: list[bool]
+        :param use_placeholder: Use a placeholder instead of replacing the values
+        :type use_placeholder: bool
+        :param only_values: Only return the values and not
+        :type only_values: bool
+        :return: Returns the formatted string and a list of unused values.
+        If only placeholder is specified, instead of the string a list of
+        parsed values is returned.
+        :rtype: str, list[int] or list[int], list[int]
+        """
+        s = self.string
         values = self.quantifier.handle(values, is_range)
         unused = []
 
@@ -328,16 +397,78 @@ class TranslationString(object):
         return s, unused
 
     def match_range(self, values, indexes):
+        """
+        Returns the accumulative range rating of the specified values at
+        the specified indexes
+
+        :param values: List of values
+        :type values: list[int] or list[float]
+        :param indexes: List of indexes
+        :type indexes: list[int]
+        :return: Sum of the ratings
+        :rtype: int
+        """
         rating = 0
         for i in indexes:
             rating += self.range[i].in_range(values[i])
         return rating
 
-    def match_string(self, other, i=3):
-        # Make a copy
-        s = str(self.string)
-        for tag in self._tag_iter(i):
-            s = s.replace(tag, )
+    def reverse_string(self, string):
+        """
+        Attempts to match this TranslationString against the given string.
+
+        If a match is found, it will attempt to cast and reverse all values
+        found in the string itself.
+
+        For missing values, it will try to insert the range maximum/minimum
+        values if set, otherwise None.
+
+        :param values: string to match against
+        :type values: str
+        :return: handled list of values or None if no match
+        :rtype: list[int] or None
+        """
+        match = self.string_re.match(string)
+        if match:
+            values = list(match.groups())
+
+            for i in range(0, len(self.parent.parent.ids)):
+                found = False
+                for tag in self._tag_iter(i):
+                    found = self.string.find(tag) != -1
+                    if found:
+                        break
+
+                if found:
+                    values[i] = float(values[i])
+                else:
+                    r = self.range[i]
+                    warn = None
+                    # The only definitive case
+                    if r.min == r.max and r.max is not None:
+                        values.insert(i, r.max)
+                    elif r.min is not None and r.max is not None:
+                        values.insert(i, r.max)
+                        warn = r.max
+                    elif r.min is None and r.max is not None:
+                        values.insert(i, r.max)
+                        warn = r.max
+                    elif r.min is not None and r.min is None:
+                        values.insert(i, r.min)
+                        warn = r.min
+                    else:
+                        values.insert(i, None)
+
+                    if warn:
+                        warnings.warn(
+                            'Can not safely find a value at index "%s", using '
+                            'range value "%s" instead' % (i, warn),
+                            TranslationWarning
+                        )
+
+            return self.quantifier.handle_reverse(values)
+        else:
+            return None
 
 
 class TranslationRange(object):
@@ -349,6 +480,13 @@ class TranslationRange(object):
 
     For example, 100 for freeze turns into "Always Freeze" whereas less is
     "chance to freeze".
+
+    :ivar parent: parent
+    :type parent: TranslationString
+    :ivar min: minimum range
+    :type min: int
+    :ivar max: maximum range
+    :type max: int
     """
 
     __slots__ = ['parent', 'min', 'max']
@@ -378,6 +516,20 @@ class TranslationRange(object):
         return hash((self.min, self.max))
 
     def in_range(self, value):
+        """
+        Checks whether the value is in range and returns the rating/accuracy
+        of the check performed.
+
+        0 if no match
+        1 if any range is accepted
+        2 if either minimum or maximum is specified
+        3 if both minimum and maximum is specified
+
+        :param value: Value to check
+        :type value: int
+        :return: Returns the rating of the value
+        :rtype: int
+        """
         # Any range is accepted
         if self.min is None and self.max is None:
             return 1
@@ -421,6 +573,22 @@ class TranslationQuantifier(object):
         # Only once TODO
         #'multiplicative_damage_modifier': lambda v: v,
         #'mod_value_to_item_class': lambda v: v,
+    }
+
+    reverse_handlers = {
+        'deciseconds_to_seconds': lambda v: v/10,
+        'divide_by_one_hundred': lambda v: v*100,
+        'per_minute_to_per_second': lambda v: v*60,
+        'milliseconds_to_seconds': lambda v: v*1000,
+        'negate': lambda v: v*-1,
+        'divide_by_one_hundred_and_negate': lambda v: -v*100,
+        'old_leech_percent': lambda v: v*5,
+        'old_leech_permyriad': lambda v: v*50,
+        # TODO hardly possible to accurately reverse rounding
+        'per_minute_to_per_second_0dp': lambda v: v*60,
+        'per_minute_to_per_second_2dp': lambda v: v*60,
+        'milliseconds_to_seconds_0dp': lambda v: v*1000,
+        'milliseconds_to_seconds_2dp': lambda v: v*1000,
     }
 
     __slots__ = ['registered_handlers']
@@ -475,12 +643,12 @@ class TranslationQuantifier(object):
         Handle the given values based on the registered quantifiers.
 
         :param values: list of values
-        :type values: list
+        :type values: list[int]
         :param is_range: specifies whether the value at the index is a range or
         not. Must be the same length as values.
         :type is_range: Iterable of bools
         :return: handled list of values
-        :rtype: list
+        :rtype: list[int]
         """
         values = list(values)
         for handler_name in self.registered_handlers:
@@ -491,6 +659,23 @@ class TranslationQuantifier(object):
                     values[index] = (f(values[index][0]), f(values[index][1]))
                 else:
                     values[index] = f(values[index])
+
+        return values
+
+    def handle_reverse(self, values):
+        """
+        Reverses the quantifier for the given values.
+
+        :param values: list of values
+        :type values: list[int]
+        :return: handled list of values
+        :rtype: list[int]
+        """
+        for handler_name in self.registered_handlers:
+            f = self.handlers[handler_name]
+            for index in self.registered_handlers[handler_name]:
+                index -= 1
+                values[index] = f(values[index])
 
         return values
 
@@ -516,6 +701,25 @@ class TranslationResult(object):
         self.values = values
         self.invalid = invalid
         self.values_unused = unused
+
+
+class TranslationReverseResult(object):
+    """
+    Result of TranslationFile.reverse_translation
+
+    :ivar translations: List of Translation instances
+    :type translations: list[Translation]
+    :ivar values: List of values
+    :type values: list[list[float]]
+    """
+    __slots__ = [
+        'translations',
+        'values',
+    ]
+
+    def __init__(self, translations, values):
+        self.translations = translations
+        self.values = values
 
 
 class TranslationFile(AbstractFileReadOnly):
@@ -638,7 +842,7 @@ class TranslationFile(AbstractFileReadOnly):
                             else:
                                 raise Exception(matchstr)
 
-                        ts.string = ts_match.group('description')
+                        ts._set_string(ts_match.group('description'))
 
                         quant = ts_match.group('quantifier').strip().split()
                         tmp = iter(range(0, len(quant)))
@@ -753,12 +957,12 @@ class TranslationFile(AbstractFileReadOnly):
 
 
         :param tags: A list of identifiers for the tags
-        :type tags: list
+        :type tags: list[str]
         :param values: A list of integer values to use for the translations. It
         is also possible to use a list of size 2 for each elemented, which then
         will be treated as range of acceptable value and formatted accordingly
         (i.e. (x to y) instead of just x).
-        :type values: list
+        :type values: list[int] or list[int, int]
         :param lang: Language to use. If it doesn't exist, English will be used
         as fallback.
         :type lang: str
@@ -776,7 +980,7 @@ class TranslationFile(AbstractFileReadOnly):
         :return: Returns a list of found translation strings. The list may be
         empty if none are found. If full_result is specified, a
         :class:`TranslationResult` object is returned instead
-        :rtype: list or TranslationResult
+        :rtype: list[str] or TranslationResult
         """
         # A single translation might have multiple references
         # I.e. the case for always_freeze
@@ -842,14 +1046,19 @@ class TranslationFile(AbstractFileReadOnly):
             )
         return trans_lines
 
-    def reverse_translation(self, translation_string, lang='English'):
-        #TODO
-        raise NotImplementedError()
+    def reverse_translation(self, string, lang='English'):
+        translations_found = []
+        values_found = []
+
         for tr in self._translations:
             tl = tr.get_language(lang)
-            for ts in tl.strings:
-                # Make a copy
-                s = str(ts.string)
+            values = tl.reverse_string(string)
+            if values is not None:
+                translations_found.append(tr)
+                values_found.append(values)
+
+        return TranslationReverseResult(translations_found, values_found)
+
 
 class TranslationFileCache(object):
     """

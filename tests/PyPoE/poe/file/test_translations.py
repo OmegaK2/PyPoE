@@ -85,7 +85,7 @@ def get_test(size, unid, nresults, values):
 # =============================================================================
 
 class TestTranslation:
-    def build_base_string_data(self):
+    def build_get_translation_data(self=None):
         test_data = []
         for size, unique_id, values in data['base']:
             tags, results = get_test(size, unique_id, len(values), values)
@@ -100,9 +100,29 @@ class TestTranslation:
     def test_read_with_include(self, dextended):
         pass
 
-    @pytest.mark.parametrize('tags,values,result', build_base_string_data(None))
-    def test_base_strings(self, dbase, tags, values, result):
+    @pytest.mark.parametrize('tags,values,result', build_get_translation_data())
+    def test_get_translation_simple(self, dbase, tags, values, result):
         assert dbase.get_translation(tags, values)[0] == result
+
+    @pytest.mark.parametrize('tags,values,string', build_get_translation_data())
+    def test_reverse_translation_simple(self, dbase, string, values, tags):
+        trr = dbase.reverse_translation(string)
+        # Returns a list of matching translations/values, but our test data
+        # should be unique
+        assert trr.values[0] == list(values)
+        assert trr.translations[0].ids == tags
+
+    def test_skip(self, dbase):
+        tags = ['tag_skip_size2_uq1_no1', 'tag_skip_size2_uq1_no2']
+        values = [1, 50]
+        result = 'tag_skip_size2_uq1_v1: 50'
+
+        assert dbase.get_translation(tags, values)[0] == result, 'Value skip normal failed'
+
+        trr = dbase.reverse_translation(result)
+
+        assert trr.translations[0].ids == tags, 'Value skip reverse failed: incorrect tags'
+        assert trr.values[0] == values, 'Value skip failed reverse: incorrect values'
 
 class TestTranslationFileCache:
     def test_init(self, tcache):
