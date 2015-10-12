@@ -51,7 +51,7 @@ class RegexFlagsBox(QGroupBox):
 
     re.LOCALE is not supported, as it is deprecated in python 3.5
     """
-    def __init__(self, disabled_flags=re.DEBUG, *args, **kwargs):
+    def __init__(self, default_flags=0, disabled_flags=re.DEBUG, *args, **kwargs):
         QGroupBox.__init__(self, *args, **kwargs)
 
         self.setTitle(self.tr('RegEx Options'))
@@ -145,6 +145,9 @@ class RegexFlagsBox(QGroupBox):
         for item in delete:
             self._regex_flags.remove(item)
 
+        self._default_flags = default_flags
+        self.set_defaults()
+
     def get_flags(self):
         flags = 0
         for flag_info in self._regex_flags:
@@ -152,6 +155,15 @@ class RegexFlagsBox(QGroupBox):
                 flags |= flag_info['flag']
 
         return flags
+
+    def set_defaults(self, flags=None):
+        flags = self._default_flags if flags is None else flags
+        for flag_info in self._regex_flags:
+            box = getattr(self, flag_info['variable'])
+            if flag_info['flag'] & flags:
+                box.setCheckState(Qt.CheckState.Checked)
+            else:
+                box.setCheckState(Qt.CheckState.Unchecked)
 
 
 # =============================================================================

@@ -198,7 +198,10 @@ class TypedFilter(AbstractFilter):
         )
 
     def apply(self, value):
-        return self._operation_func(self.value, self.type(value))
+        try:
+            return self._operation_func(self.value, self.type(value))
+        except ValueError:
+            return False
 
     def set_defaults(self, qwizardpage):
         qwizardpage.type_box.setCurrentIndex(
