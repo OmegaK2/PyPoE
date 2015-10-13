@@ -33,7 +33,7 @@ from collections import OrderedDict
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter.wiki.handler import *
 from PyPoE.cli.exporter.wiki.parser import BaseParser
-
+from PyPoE.shared.decorators import deprecated
 
 # =============================================================================
 # Globals
@@ -55,23 +55,17 @@ class ModsHandler(ExporterHandler):
         lua_sub = self.parser.add_subparsers()
 
         # Mods
-        parser = lua_sub.add_parser(
+        mparser = lua_sub.add_parser(
             'mods',
             help='Extract all mods.'
         )
+        mparser.set_defaults(func=lambda args: mparser.print_help())
 
         wiki_handler = WikiHandler(
             name='Mod updater',
         )
 
-        self.add_default_parsers(
-            parser=parser,
-            cls=ModParser,
-            func=ModParser.mod,
-            wiki_handler=wiki_handler,
-        )
-
-        sub = parser.add_subparsers(help='Method of extracting mods')
+        sub = mparser.add_subparsers(help='Method of extracting mods')
 
         parser = sub.add_parser('modid', help='Use the string mod identifer')
         parser.set_defaults(mod_selection_type='modid')
@@ -79,6 +73,13 @@ class ModsHandler(ExporterHandler):
             'modid',
             help='Ids of the mods to update; can be specified multiple times',
             nargs='+',
+        )
+
+        self.add_default_parsers(
+            parser=parser,
+            cls=ModParser,
+            func=ModParser.mod,
+            wiki_handler=wiki_handler,
         )
 
         parser = sub.add_parser('rowid', help='Use the rowid')
@@ -98,11 +99,18 @@ class ModsHandler(ExporterHandler):
             type=int,
         )
 
+        self.add_default_parsers(
+            parser=parser,
+            cls=ModParser,
+            func=ModParser.mod,
+            wiki_handler=wiki_handler,
+        )
+
         # Map
 
         parser = lua_sub.add_parser(
             'map',
-            help='Extract map mods.'
+            help='Extract map mods (DEPRECATED).'
         )
         self.add_default_parsers(
             parser=parser,
@@ -114,7 +122,7 @@ class ModsHandler(ExporterHandler):
 
         parser = lua_sub.add_parser(
             'tempest',
-            help='Extract tempest stuff.',
+            help='Extract tempest stuff (DEPRECATED).',
         )
         self.add_default_parsers(
             parser=parser,
@@ -124,7 +132,7 @@ class ModsHandler(ExporterHandler):
 
         parser = lua_sub.add_parser(
             'jewel',
-            help='Extract jewel mods.',
+            help='Extract jewel mods (DEPRECATED).',
         )
         self.add_default_parsers(
             parser=parser,
@@ -305,6 +313,7 @@ class ModParser(BaseParser):
 
         return r
 
+    @deprecated(message='Will be done in-wiki in the future.')
     def map(self, parsed_args):
         tf = self.tc['map_stat_descriptions.txt']
 
@@ -331,6 +340,7 @@ class ModParser(BaseParser):
 
         return r
 
+    @deprecated(message='Will be done in-wiki in the future.')
     def tempest(self, parsed_args):
         tf = self.tc['map_stat_descriptions.txt']
         data = []
@@ -404,6 +414,7 @@ class ModParser(BaseParser):
 
         return r
 
+    @deprecated(message='Will be done in-wiki in the future.')
     def jewel(self, parsed_args):
         data = []
         for mod in self.rr['Mods.dat']:
