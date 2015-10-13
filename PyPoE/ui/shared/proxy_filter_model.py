@@ -200,7 +200,7 @@ class TypedFilter(AbstractFilter):
     def apply(self, value):
         try:
             return self._operation_func(self.value, self.type(value))
-        except ValueError:
+        except (ValueError, TypeError):
             return False
 
     def set_defaults(self, qwizardpage):
