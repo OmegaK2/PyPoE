@@ -48,7 +48,9 @@ from PyPoE.poe.file._shared import AbstractFileReadOnly, ParserError
 __all__ = [
     'TranslationFile',
     'TranslationFileCache',
-    'load_default_custom_translation_file',
+    'get_custom_translation_file',
+    'set_custom_translation_file',
+    'custom_translation_file',
 ]
 
 regex_translation_string = re.compile(
@@ -78,6 +80,8 @@ regex_tokens = re.compile(
     r'|(?P<description>^description)',
     re.UNICODE | re.MULTILINE
 )
+
+_custom_translation_file = None
 
 # =============================================================================
 # Warnings
@@ -109,6 +113,12 @@ class Translation(object):
 
     A translation has at least one id and at least the English language (along
     with the respective strings).
+
+    :ivar languages: List of TranslationLanguage instances for this Translation
+    :type languages: list[TranslationLanguage]
+
+    :ivar ids: List of ids associated with this Translation
+    :type ids: list[str]
     """
 
     __slots__ = ['languages', 'ids']
@@ -146,6 +156,19 @@ class Translation(object):
             _diff_list(self.languages, other.languages)
 
     def get_language(self, language='English'):
+        """
+        Returns the TranslationLanguage record for the specified language.
+
+        As a fallback if the language is not found, the English
+        TranslationLanguage record will be returned.
+
+        :param language: The language to get.
+        :type language: str
+
+        :return: Returns the TranslationLanguage record for the specified
+        language or the English one if not found
+        :rtype: TranslationLanguage
+        """
         etr = None
         for tr in self.languages:
             if tr.language == language:
@@ -160,6 +183,15 @@ class TranslationLanguage(object):
     """
     Representation of a language in the translation file. Each language has
     one or multiple strings.
+
+    :ivar parent: The parent Translation instance
+    :type parent: Translation
+
+    :ivar language: the language of this instance
+    :type language: str
+
+    :ivar strings: List of Translation String instances
+    :type strings: list[TranslationString]
     """
 
     __slots__ = ['parent', 'language', 'strings']
@@ -196,6 +228,36 @@ class TranslationLanguage(object):
             _diff_list(self.strings, other.strings)
 
     def get_string(self, values, indexes, use_placeholder=False, only_values=False):
+        """
+        Formats the string according with the given values and indexes and
+        returns the string and any left over (unused) values.
+
+        If use_placeholder is specified, the values will be replaced with
+        a placeholder instead of the actual value, however in order to determine
+        the correct string within the range, values are still required.
+
+        If only_values is specified, the instead of the string the formatted
+        values will be returned.
+
+
+        :param values: A list of values to be used for substitution
+        :type values: list[int]
+
+        :param indexes: A list of relevant indexes corresponding to the values
+        for this string.
+        :type indexes: list[int]
+
+        :param use_placeholder: Whether to use placeholders instead of the
+        actual values.
+        :type use_placeholder: bool
+
+        :param only_values: Whether to return formatted values instead of the
+        formatted string.
+        :type only_values: bool
+
+        :return: Returns the formatted string
+        :rtype: str, list[int] or list[int], list[int]
+        """
         # Support for ranges
         is_range = []
         test_values = []
@@ -256,13 +318,17 @@ class TranslationString(object):
 
     :ivar parent: parent language
     :type parent: TranslationLanguage
+
     :ivar quantifier: the quantifier for this translation string
     :type quantifier: TranslationQuantifier
+
     :ivar range: acceptable ranges for this translation as a list of instances
     for each index
     :type range: list[TranslationRange]
+
     :ivar string: the actual string to use for translation
     :type string: str
+
     :ivar string_re: a compiled regular expression string for reverse matching
     """
 
@@ -483,8 +549,10 @@ class TranslationRange(object):
 
     :ivar parent: parent
     :type parent: TranslationString
+
     :ivar min: minimum range
     :type min: int
+
     :ivar max: maximum range
     :type max: int
     """
@@ -681,6 +749,34 @@ class TranslationQuantifier(object):
 
 
 class TranslationResult(object):
+    """
+    Translation result and utility functions.
+
+    :ivar found:
+    :type found: list[Translation]
+
+    :ivar lines:
+    :type lines: list[str]
+
+    :ivar indexes:
+    :type indexes: list[int]
+
+    :ivar missing_ids:
+    :type missing_ids: list[str]
+
+    :ivar missing_values:
+    :type missing_values: list[int]
+
+    :ivar values:
+    :type values: list[int]
+
+    :ivar invalid:
+    :type invalid: list[str]
+
+    :ivar values:
+    :type values_unused: list[int]
+
+    """
     __slots__ = [
         'found',
         'lines',
@@ -702,6 +798,15 @@ class TranslationResult(object):
         self.invalid = invalid
         self.values_unused = unused
 
+    def _get_found_ids(self):
+        ids = []
+        for tr in self.found:
+            ids += tr.ids
+
+        return ids
+
+    found_ids = property(fget=_get_found_ids)
+
 
 class TranslationReverseResult(object):
     """
@@ -709,6 +814,7 @@ class TranslationReverseResult(object):
 
     :ivar translations: List of Translation instances
     :type translations: list[Translation]
+
     :ivar values: List of values
     :type values: list[list[float]]
     """
@@ -723,6 +829,7 @@ class TranslationReverseResult(object):
 
 
 class TranslationFile(AbstractFileReadOnly):
+
     __slots__ = ['_translations', '_translations_hash', '_base_dir', '_parent']
 
     def __init__(self, file_path=None, base_dir=None, parent=None):
@@ -1101,7 +1208,7 @@ class TranslationFileCache(object):
         if merge_with_custom_file is None or merge_with_custom_file is False:
             self._custom_file = None
         elif merge_with_custom_file is True:
-            self._custom_file = load_default_custom_translation_file()
+            self._custom_file = custom_translation_file
         elif isinstance(merge_with_custom_file, TranslationFile):
             self._custom_file = merge_with_custom_file
         else:
@@ -1196,8 +1303,35 @@ def _diff_dict(self, other):
             print('Key "%s": Value "%s"' % (key, other[key]))
 
 
-def load_default_custom_translation_file():
-    return TranslationFile(file_path=CUSTOM_TRANSLATION_FILE)
+def get_custom_translation_file():
+    """
+    Returns the currently loaded custom translation file.
+
+    Loads the default file if none is loaded.
+    """
+    global _custom_translation_file
+    if _custom_translation_file is None:
+        set_custom_translation_file()
+    return _custom_translation_file
+
+
+def set_custom_translation_file(file=None):
+    """
+    Sets the custom translation file.
+
+    :param file: Path where the custom translation file is located. If None,
+    the default file will be loaded
+    :type file: str
+    """
+    global _custom_translation_file
+    _custom_translation_file = TranslationFile(
+        file_path=file or CUSTOM_TRANSLATION_FILE
+    )
+
+custom_translation_file = property(
+    fget=get_custom_translation_file,
+    fset=set_custom_translation_file,
+)
 
 # =============================================================================
 # Init
