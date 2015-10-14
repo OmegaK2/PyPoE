@@ -926,7 +926,12 @@ class TranslationFile(AbstractFileReadOnly):
                     for i in range(0, int(tcount.group())):
                         ts_match = regex_translation_string.search(data, offset, offset_next_lang)
                         if not ts_match:
-                            raise ParserError('Malformed translation string: %s' % data[offset:offset_next_lang])
+                            raise ParserError(
+                                'Malformed translation string near line %s: %s' % (
+                                    data.count('\n', 0, offset),
+                                    data[offset:offset_next_lang],
+                                )
+                            )
 
                         offset = ts_match.end()
 
