@@ -185,11 +185,6 @@ class ModParser(BaseParser):
         'map_stat_descriptions.txt',
     ]
 
-    translation_map = {
-        4: 'chest_stat_descriptions.txt',
-        5: 'map_stat_descriptions.txt',
-    }
-
     def _append_effect(self, result, mylist, heading):
         mylist.append(heading)
 
@@ -277,12 +272,7 @@ class ModParser(BaseParser):
                 data['granted_skill'] = mod['GrantedEffectsPerLevelKey']['GrantedEffectsKey']['Id']
             data['mod_type'] = mod['ModTypeKey']['Name']
 
-            try:
-                tf = self.translation_map[mod['Domain']]
-            except KeyError:
-                tf = 'stat_descriptions.txt'
-
-            data['stat_text'] = '<br>'.join(self._get_stats(mod, tf))
+            data['stat_text'] = '<br>'.join(self._get_stats(mod))
 
             for i in range(1, 6):
                 k = mod['StatsKey%s' % i]
