@@ -1213,7 +1213,7 @@ class TranslationFileCache(object):
         if merge_with_custom_file is None or merge_with_custom_file is False:
             self._custom_file = None
         elif merge_with_custom_file is True:
-            self._custom_file = custom_translation_file
+            self._custom_file = get_custom_translation_file()
         elif isinstance(merge_with_custom_file, TranslationFile):
             self._custom_file = merge_with_custom_file
         else:
