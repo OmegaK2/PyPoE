@@ -123,7 +123,7 @@ class BaseParser(object):
                     r2 = tr2.get_language().get_string(result.values[j], result.indexes[j])[0]
                     if r1 != r2:
                         out.append(self._DETAILED_FORMAT % (r1, r2))
-                    else:
+                    elif r2:
                         out.append(r2)
 
                 is_missing = True
@@ -134,7 +134,8 @@ class BaseParser(object):
                     continue
 
                 r1 = tr.get_language().get_string(default.values[i], default.indexes[i])[0]
-                out.append(self._HIDDEN_FORMAT % r1)
+                if r1:
+                    out.append(self._HIDDEN_FORMAT % r1)
 
                 for tid in tr.ids:
                     i = result.missing_ids.index(tid)
@@ -158,6 +159,7 @@ class BaseParser(object):
                 )
 
             for line in custom_result.lines:
-                out.append(self._HIDDEN_FORMAT % line)
+                if line:
+                    out.append(self._HIDDEN_FORMAT % line)
 
         return out
