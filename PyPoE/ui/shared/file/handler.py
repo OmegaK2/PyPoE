@@ -253,7 +253,7 @@ class DatFrame(QFrame):
         self.layout.addWidget(self.table_data)
 
         self.table_data_filter_menu = FilterMenu(
-            self.table_main.horizontalHeader(),
+            self.table_data.horizontalHeader(),
             proxy_model=self.table_data_proxy_model,
         )
 
