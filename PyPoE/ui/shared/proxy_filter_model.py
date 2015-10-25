@@ -199,7 +199,7 @@ class TypedFilter(AbstractFilter):
 
     def apply(self, value):
         try:
-            return self._operation_func(self.value, self.type(value))
+            return self._operation_func(self.type(value), self.value)
         except (ValueError, TypeError):
             return False
 
@@ -212,7 +212,7 @@ class TypedFilter(AbstractFilter):
             list(self.operations.keys()).index(self.operation)
         )
 
-        qwizardpage.value_edit.setText(self.value)
+        qwizardpage.value_edit.setText(str(self.value))
 
     @staticmethod
     def generate_settings(qwizardpage):

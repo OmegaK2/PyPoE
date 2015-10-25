@@ -34,6 +34,7 @@ from PyPoE.poe.file.translations import (
     MissingIdentifierWarning,
     get_custom_translation_file,
 )
+from PyPoE.poe.sim.mods import get_translation
 
 # =============================================================================
 # Classes
@@ -73,45 +74,13 @@ class BaseParser(object):
         self.custom = get_custom_translation_file()
 
     def _get_stats(self, mod, translation_file=None):
-        stats = []
-        for i in range(1, 6):
-            stat = mod['StatsKey%s' % i]
-            if stat:
-                stats.append(stat)
-
-        ids = []
-        values = []
-        for i, stat in enumerate(stats):
-            j = i + 1
-            values.append([mod['Stat%sMin' % j], mod['Stat%sMax' % j]])
-            ids.append(stat['Id'])
-
-        if translation_file is None:
-            try:
-                tf_name = self.translation_map[mod['Domain']]
-            except KeyError:
-                tf_name = 'stat_descriptions.txt'
-        else:
-            tf_name = translation_file
-
-        #result = tf.get_translation(ids, values, full_result=True)
-        #if
-
-        # Monster stats don't include the base stats, but they are more
-        # detailed usually
-        #if mod['Domain'] == 3:
-
-
-
         out = []
 
-        tf = self.tc[tf_name]
-
-        result = tf.get_translation(ids, values, full_result=True)
+        result = get_translation(mod, self.tc, translation_file)
 
         if mod['Domain'] == 3:
             default = self.tc['stat_descriptions.txt'].get_translation(
-                ids, values, full_result=True
+                result.source_ids, result.source_values, full_result=True
             )
 
             for i, tr in enumerate(default.found):

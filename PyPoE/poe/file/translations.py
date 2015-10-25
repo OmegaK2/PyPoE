@@ -776,6 +776,12 @@ class TranslationResult(object):
     :ivar values:
     :type values_unused: list[int]
 
+    :ivar source_ids:
+    :type source_ids: list[str]
+
+    :ivar source_values:
+    :type source_values: list[int] or list[int, int]
+
     """
     __slots__ = [
         'found',
@@ -786,9 +792,12 @@ class TranslationResult(object):
         'values',
         'invalid',
         'values_unused',
+        'source_ids',
+        'source_values',
     ]
 
-    def __init__(self, found, lines, indexes, missing, missing_values, values, invalid, unused):
+    def __init__(self, found, lines, indexes, missing, missing_values, values,
+                 invalid, unused, source_ids, source_values):
         self.found = found
         self.lines = lines
         self.indexes = indexes
@@ -797,6 +806,8 @@ class TranslationResult(object):
         self.values = values
         self.invalid = invalid
         self.values_unused = unused
+        self.source_ids = source_ids
+        self.source_values = source_values
 
     def _get_found_ids(self):
         ids = []
@@ -1153,8 +1164,16 @@ class TranslationFile(AbstractFileReadOnly):
 
         if full_result:
             return TranslationResult(
-                trans_found, trans_lines, trans_found_indexes, trans_missing,
-                trans_missing_values, trans_found_values, invalid, unused
+                found=trans_found,
+                lines=trans_lines,
+                indexes=trans_found_indexes,
+                missing=trans_missing,
+                missing_values=trans_missing_values,
+                values=trans_found_values,
+                invalid=invalid,
+                unused=unused,
+                source_ids=tags,
+                source_values=values,
             )
         return trans_lines
 
