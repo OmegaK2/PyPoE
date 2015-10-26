@@ -49,12 +49,6 @@ class BaseParser(object):
     _files = []
     _translations = []
 
-    translation_map = {
-        3: 'monster_stat_descriptions.txt',
-        4: 'chest_stat_descriptions.txt',
-        5: 'map_stat_descriptions.txt',
-    }
-
     def __init__(self, base_path, data_path, desc_path):
         self.base_path = base_path
         self.data_path = data_path
