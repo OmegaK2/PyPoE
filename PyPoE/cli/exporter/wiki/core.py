@@ -1,7 +1,7 @@
 """
 Path     PyPoE/cli/exporter/wiki/core.py
 Name     Core Wiki Exporter
-Version  1.00.000
+Version  1.0.0a0
 Revision $Id$
 Author   [#OMEGA]- K2
 
@@ -79,8 +79,8 @@ class WikiHandler(BaseHandler):
         content_ggpk = get_content_ggpk_path()
 
         console('Reading "%s"...' % content_ggpk)
-        ggpk = GGPKFile(content_ggpk)
-        ggpk.read()
+        ggpk = GGPKFile()
+        ggpk.read(content_ggpk)
 
         console('Building directory...')
         ggpk.directory_build()

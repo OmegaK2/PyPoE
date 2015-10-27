@@ -25,6 +25,7 @@ The abstract classes should probably actually be using python abc api.
 # Imports
 # =============================================================================
 
+# Python
 from io import BytesIO
 
 # =============================================================================
@@ -43,6 +44,9 @@ __all__ = [
 # =============================================================================
 
 class ParserError(Exception):
+    pass
+
+class ParserWarning(UserWarning):
     pass
 
 # =============================================================================

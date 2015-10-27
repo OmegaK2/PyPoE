@@ -54,8 +54,8 @@ def read_ggpk():
         warnings.warn('PoE not found, skipping test.')
         return
 
-    contents = ggpk.GGPKFile(os.path.join(path, 'content.ggpk'))
-    contents.read()
+    contents = ggpk.GGPKFile()
+    contents.read(os.path.join(path, 'content.ggpk'))
     root = contents.directory_build()
 
     file_set = set()

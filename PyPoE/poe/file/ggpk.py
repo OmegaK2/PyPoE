@@ -1,7 +1,7 @@
 """
 Path     PyPoE/poe/file/ggpk.py
 Name     GGPK Toolkit
-Version  1.00.000
+Version  1.0.0a0
 Revision $Id$
 Author   [#OMEGA]- K2
 
@@ -24,14 +24,19 @@ write untested
 # Imports
 # =============================================================================
 
+# Python
 import io
 import struct
 import os
 import re
 
+#
+from PyPoE.poe.file._shared import AbstractFileReadOnly, ParserError
+
 # =============================================================================
 # Classes
 # =============================================================================
+
 
 class BaseRecord(object):
     tag = None
@@ -42,11 +47,14 @@ class BaseRecord(object):
         self._container = container
         self.length = length
         self.offset = offset
+
     def read(self, ggpkfile):
         pass
+
     def write(self, ggpkfile):
         ggpkfile.write(struct.pack('<i', self.length))
         ggpkfile.write(self.tag)
+
 
 class MixinRecord(object):
     def __init__(self, *args, **kwargs):
@@ -66,7 +74,8 @@ class MixinRecord(object):
         self._name_length = len(name) + 1
         
     name = property(fget=_get_name, fset=_set_name)
-        
+
+
 class GGPKRecord(BaseRecord):
     """
     Always contains two entries. First is the root directory, 2nd is a FreeRecord.
@@ -92,12 +101,24 @@ class GGPKRecord(BaseRecord):
         for i in range(0, len(offsets)):
             ggpkfile.write(struct.unpack('<q', offsets[i]))
 
+
 class DirectoryRecordEntry(object):
     def __init__(self, hash, offset):
         self.hash = hash
         self.offset = offset
-            
+
+
 class DirectoryRecord(MixinRecord, BaseRecord):
+    """
+
+    :ivar length:
+    :type legnth:
+
+    :ivar offset:
+    :type offset:
+
+    """
+
     tag = 'PDIR'
 
     __slots__ = BaseRecord.__slots__.copy() + ['_name', '_name_length', 'entries_length', 'hash', 'entries']
@@ -206,7 +227,8 @@ class FileRecord(MixinRecord, BaseRecord):
         ggpkfile.write(struct.pack('<h', 0))
         
         #TODO: Write File Contents here?
-    
+
+
 class FreeRecord(BaseRecord):
     """
     next_free: 
@@ -223,13 +245,21 @@ class FreeRecord(BaseRecord):
         # Write length & tag
         super(FreeRecord, self).write(ggpkfile)
         ggpkfile.write(struct.pack('<q', self.next_free))
-    
-recordsc = (GGPKRecord, DirectoryRecord, FileRecord, FreeRecord)
 
 
 class DirectoryNode(object):
     """
-    Node's record type is always DirectoryRecord
+    :ivar children:
+    :type children: list[DirectoryNode]
+
+    :ivar parent:
+    :type parent: DirectoryNode
+
+    :ivar record:
+    :type record: DirectoryRecord or FileRecord
+
+    :ivar hash:
+    :type hash: str
     """
 
     __slots__ = ['children', 'parent', 'record', 'hash']
@@ -377,17 +407,40 @@ class DirectoryNode(object):
             self.record.extract_to(target_directory)
         
 
-class GGPKFile(object):
-    def __init__(self, ggpkfile):
-        self.file_path = ggpkfile
+class GGPKFile(AbstractFileReadOnly):
+    """
+
+    :ivar directory:
+    :type directory: dict[DirectoryNode]
+
+    :ivar file_path:
+    :type file_path: str
+    """
+
+    def __init__(self, *args, **kwargs):
+        AbstractFileReadOnly.__init__(self, *args, **kwargs)
         self.directory = None
+        self.records = {}
 
     def __getitem__(self, item):
         if self.directory is None:
             raise ValueError('Directory not build')
         if item == 'ROOT':
             return self.directory
-        return self.directory[item]
+
+        path = []
+        while item:
+            item, result = os.path.split(item)
+            path.insert(0, result)
+
+        obj = self.directory
+        while True:
+            try:
+                item = path.pop(0)
+            except IndexError:
+                return obj
+
+            obj = obj[item]
 
     #
     # Properties
@@ -434,13 +487,17 @@ class GGPKFile(object):
         
         :param parent: parent DirectoryNode. If None generate the root directory
         :type parent: DirectorNode or None
-        
-        :raises TypeError: if offsets pointing to records types which are not
-        FileRecord or DirectoryRecord
 
         :return: Returns
         :rtype: DirectoryNode
+
+        :raises ParserError: if performed without calling .read() first
+        :raises ParserError: if offsets pointing to records types which are not
+        FileRecord or DirectoryRecord
         """
+        if not self.records:
+            raise ParserError('No records - perform .read() first')
+
         # Build Root directory
         if parent is None:
             ggpkrecord = self.records[0]
@@ -449,7 +506,7 @@ class GGPKFile(object):
                 if isinstance(record, DirectoryRecord):
                     break
             if not isinstance(record, DirectoryRecord):
-                raise TypeError('GGPKRecord does not contain a DirectoryRecord,\
+                raise ParserError('GGPKRecord does not contain a DirectoryRecord,\
                     got %s' % type(record))
 
             root = DirectoryNode(record, None, None)
@@ -477,26 +534,25 @@ class GGPKFile(object):
 
         return root
         
-    def read(self):
+    def _read(self, buffer, *args, **kwargs):
         """
         Reads the records from the file into object.records.
         """
-        with open(self.file_path, 'br') as ggpkfile:
-            records = {}
-            offset = 0
-            size = ggpkfile.seek(0, os.SEEK_END)
-            
-            # Reset Pointer
-            ggpkfile.seek(0, os.SEEK_SET)
-            
-            while(offset < size):
-                self._read_record(
-                    records=records,
-                    ggpkfile=ggpkfile,
-                    offset=offset,
-                )
-                offset = ggpkfile.tell()
-            self.records = records
+        records = {}
+        offset = 0
+        size = buffer.seek(0, os.SEEK_END)
+
+        # Reset Pointer
+        buffer.seek(0, os.SEEK_SET)
+
+        while offset < size:
+            self._read_record(
+                records=records,
+                ggpkfile=buffer,
+                offset=offset,
+            )
+            offset = buffer.tell()
+        self.records = records
 
 
 if __name__ == '__main__':
@@ -508,8 +564,10 @@ if __name__ == '__main__':
     for record in recordsc:
         profiler.add_function(record.read)'''
 
-    ggpk = GGPKFile(r'C:\Games\PoE Beta\Content.ggpk')
-    #ggpk.read()
+    ggpk = GGPKFile()
+    ggpk.read(r'C:\Games\Path of Exile\Content.ggpk')
+    ggpk.directory_build()
+    ggpk['Metadata/stat_descriptions.txt']
     #profiler.run("ggpk.read()")
 
     #profiler.add_function(GGPKFile.directory_build)

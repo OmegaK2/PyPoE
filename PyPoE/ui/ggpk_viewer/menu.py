@@ -1,7 +1,7 @@
 """
 Path     PyPoE/ui/ggpk_viewer/menu.py
 Name     Menus for GGPKViewer
-Version  1.00.000
+Version  1.0.0a0
 Revision $Id$
 Author   [#OMEGA]- K2
 
@@ -106,10 +106,10 @@ class GGPKThread(QThread):
         p.sig_log_message.emit(self.tr('Open GGPK file "%(file)s".') % {'file': self._file_path})
 
         self.sig_update_progress.emit(self.tr('Reading GGPK records...'), 100)
-        ggpk_file = ggpk.GGPKFile(self._file_path)
+        ggpk_file = ggpk.GGPKFile()
         # Hook the function for progress bar
         ggpk_file._read_record = self._progress_ggpk(ggpk_file._read_record)
-        ggpk_file.read()
+        ggpk_file.read(self._file_path)
         # Finished
         self.progress_bar.sig_progress.emit(100)
 
