@@ -1,11 +1,21 @@
 """
-Path     PyPoE/poe/file/translations.py
-Name     Utilities for accessing GGG translations
-Version  1.0.0a0
-Revision $Id$
-Author   [#OMEGA]- K2
+Utilities for accessing GGG translations
 
-INFO
+Overview
+-------------------------------------------------------------------------------
+
++----------+------------------------------------------------------------------+
+| Path     | PyPoE/poe/file/translations.py                                   |
++----------+------------------------------------------------------------------+
+| Version  | 1.0.0a0                                                          |
++----------+------------------------------------------------------------------+
+| Revision | $Id$                                                             |
++----------+------------------------------------------------------------------+
+| Author   | Omega_K2                                                         |
++----------+------------------------------------------------------------------+
+
+Description
+-------------------------------------------------------------------------------
 
 Utilities for parsing and using GGG translations.
 
@@ -13,13 +23,13 @@ The translation GGG provides are generally suffixed by _descriptions.txt and
 can be found in the MetaData/ folder.
 To read those, use the class DescriptionFile.
 
-
-AGREEMENT
+Agreement
+-------------------------------------------------------------------------------
 
 See PyPoE/LICENSE
 
-
 TODO
+-------------------------------------------------------------------------------
 
 optimize __hash__ - very slow atm; or remove, but it is needed for the diffs
 reverse for non-number values?

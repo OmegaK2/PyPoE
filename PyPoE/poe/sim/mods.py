@@ -1,31 +1,33 @@
 """
-Path     PyPoE/poe/sim/mods.py
-Name     Utilities for Mods.dat
-Version  1.0.0a0
-Revision $Id$
-Author   Omega_K2
+Utilities for Mods.dat
 
-IMPORTANT
+Overview
+-------------------------------------------------------------------------------
 
-This module is intended to be used with RelationReader.
++----------+------------------------------------------------------------------+
+| Path     | PyPoE/poe/sim/mods.py                                            |
++----------+------------------------------------------------------------------+
+| Version  | 1.0.0a0                                                          |
++----------+------------------------------------------------------------------+
+| Revision | $Id$                                                             |
++----------+------------------------------------------------------------------+
+| Author   | Omega_K2                                                         |
++----------+------------------------------------------------------------------+
 
-INFO
+Description
+-------------------------------------------------------------------------------
 
 Utilities for dealing with Mods.dat.
 
+**This module is intended to be used with RelationReader.**
 
 This module implements some generic functions to simplify dealing with Mods.dat
 and perform several common tasks.
 
-
-AGREEMENT
+Agreement
+-------------------------------------------------------------------------------
 
 See PyPoE/LICENSE
-
-
-TODO
-
-...
 """
 
 # =============================================================================

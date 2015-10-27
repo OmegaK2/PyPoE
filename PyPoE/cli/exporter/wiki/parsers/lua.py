@@ -1,18 +1,28 @@
 """
-Path     PyPoE/cli/exporter/wiki/lua.py
-Name     Wiki lua exporter
-Version  1.0.0a0
-Revision $Id$
-Author   [#OMEGA]- K2
+Wiki lua exporter
 
-INFO
+Overview
+-------------------------------------------------------------------------------
+
++----------+------------------------------------------------------------------+
+| Path     | PyPoE/cli/exporter/wiki/parsers/lua.py                           |
++----------+------------------------------------------------------------------+
+| Version  | 1.0.0a0                                                          |
++----------+------------------------------------------------------------------+
+| Revision | $Id$                                                             |
++----------+------------------------------------------------------------------+
+| Author   | Omega_K2                                                         |
++----------+------------------------------------------------------------------+
+
+Description
+-------------------------------------------------------------------------------
 
 This small script reads the data from quest rewards and exports it to a lua
 table for use on the unofficial Path of Exile wiki located at:
 http://pathofexile.gamepedia.com
 
-
-AGREEMENT
+Agreement
+-------------------------------------------------------------------------------
 
 See PyPoE/LICENSE
 """

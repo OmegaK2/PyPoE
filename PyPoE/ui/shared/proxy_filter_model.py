@@ -1,21 +1,31 @@
 """
-Path     PyPoE/ui/shared/proxy_filter_model.py
-Name     Proxy Filter Model
-Version  1.0.0a0
-Revision $Id$
-Author   Omega_K2
+Proxy Filter Model
 
-INFO
+Overview
+-------------------------------------------------------------------------------
+
++----------+------------------------------------------------------------------+
+| Path     | PyPoE/ui/shared/proxy_filter_model.py                            |
++----------+------------------------------------------------------------------+
+| Version  | 1.0.0a0                                                          |
++----------+------------------------------------------------------------------+
+| Revision | $Id$                                                             |
++----------+------------------------------------------------------------------+
+| Author   | Omega_K2                                                         |
++----------+------------------------------------------------------------------+
+
+Description
+-------------------------------------------------------------------------------
 
 Proxy model for generic table filtering and related viewing classes.
 
-
-AGREEMENT
+Agreement
+-------------------------------------------------------------------------------
 
 See PyPoE/LICENSE
 
-
 TODO
+-------------------------------------------------------------------------------
 
 - Reset filter
 - Validate that the filter is working properly for the data; possibly disallow

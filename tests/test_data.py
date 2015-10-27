@@ -1,26 +1,31 @@
 """
-Path     PyPoE/tests/test_data
-Name     Tests for _data/dat.specification.ini
-Version  1.0.0a0
-Revision $Id$
-Author   [#OMEGA]- K2
+Tests for _data/dat.specification.ini
 
-INFO
+Overview
+-------------------------------------------------------------------------------
+
++----------+------------------------------------------------------------------+
+| Path     | tests/test_data.py                                               |
++----------+------------------------------------------------------------------+
+| Version  | 1.0.0a0                                                          |
++----------+------------------------------------------------------------------+
+| Revision | $Id$                                                             |
++----------+------------------------------------------------------------------+
+| Author   | Omega_K2                                                         |
++----------+------------------------------------------------------------------+
+
+Description
+-------------------------------------------------------------------------------
 
 Tests for for the specifications found in dat.specification.ini.
 Running this test is relatively time-consuming, so it may be a good idea to
 avoid it unless a PoE update has been released to locate broken or unsupported
 .dat files.
 
-
-AGREEMENT
+Agreement
+-------------------------------------------------------------------------------
 
 See PyPoE/LICENSE
-
-
-TODO
-
-...
 """
 
 # =============================================================================

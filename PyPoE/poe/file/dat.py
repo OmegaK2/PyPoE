@@ -1,11 +1,21 @@
 """
-Path     PyPoE/poe/file/dat.py
-Name     Dat Reader Tool
-Version  1.0.0a0
-Revision $Id$
-Author   [#OMEGA]- K2
+Dat Reader Tool
 
-INFO
+Overview
+-------------------------------------------------------------------------------
+
++----------+------------------------------------------------------------------+
+| Path     | PyPoE/poe/file/dat.py                                            |
++----------+------------------------------------------------------------------+
+| Version  | 1.0.0a0                                                          |
++----------+------------------------------------------------------------------+
+| Revision | $Id$                                                             |
++----------+------------------------------------------------------------------+
+| Author   | Omega_K2                                                         |
++----------+------------------------------------------------------------------+
+
+Description
+-------------------------------------------------------------------------------
 
 Toolkit for reading & writing GGG .dat files.
 
@@ -24,21 +34,16 @@ table-data.
 A list of default specification is included with PyPoE; to reload those or load
 other specifications, load_spec may be used.
 
-
-AGREEMENT
+Agreement
+-------------------------------------------------------------------------------
 
 See PyPoE/LICENSE
 
-
 TODO
-
-
-
-KNOWN ISSUES
+-------------------------------------------------------------------------------
 
 - DatValue.get_value might hit the python recursion limit, but is not a problem
   for any of the actual dat file.
-
 """
 
 # =============================================================================

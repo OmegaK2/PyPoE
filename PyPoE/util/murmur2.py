@@ -1,20 +1,29 @@
 """
-Path     PyPoE/util/murmur2.py
-Name     MurmurHash2 Python Implementation
-Version  1.00.000
-Revision $Id$
-Author   [#OMEGA]- K2
+MurmurHash2 Python Implementation
 
-INFO
+Overview
+-------------------------------------------------------------------------------
+
++----------+------------------------------------------------------------------+
+| Path     | PyPoE/util/murmur2.py                                            |
++----------+------------------------------------------------------------------+
+| Version  | 1.0.0a0                                                          |
++----------+------------------------------------------------------------------+
+| Revision | $Id$                                                             |
++----------+------------------------------------------------------------------+
+| Author   | Omega_K2                                                         |
++----------+------------------------------------------------------------------+
+
+Description
+-------------------------------------------------------------------------------
 
 A pure python implementation of the MurmurHash2 algorithm by Austin Appleby.
 See also: https://code.google.com/p/smhasher/wiki/MurmurHash
 
+Agreement
+-------------------------------------------------------------------------------
 
-AGREEMENT
-
-MurmurHash was written by Austin Appleby, and is placed in the public domain.
-The author hereby disclaims copyright to this source code.
+See PyPoE/LICENSE
 """
 
 # =============================================================================
