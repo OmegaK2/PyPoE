@@ -106,7 +106,7 @@ class AbstractFileReadOnly(object):
 
         :raises TypeError: if file_path_or_raw has an invalid type
         """
-        return self.get_read_buffer(file_path_or_raw, self._read)
+        return self.get_read_buffer(file_path_or_raw, self._read, *args, **kwargs)
 
 
 class AbstractFile(AbstractFileReadOnly):
@@ -120,13 +120,13 @@ class AbstractFile(AbstractFileReadOnly):
     def _write(self, buffer, *args, **kwargs):
         raise NotImplementedError()
 
-    def get_write_buiffer(self, file_path_or_raw, function, *args, **kwargs):
+    def get_write_buffer(self, file_path_or_raw, function, *args, **kwargs):
         if isinstance(file_path_or_raw, BytesIO):
             return function(*args, buffer=file_path_or_raw, **kwargs)
         elif isinstance(file_path_or_raw, bytes):
             return function(*args, buffer=BytesIO(file_path_or_raw), **kwargs)
         elif isinstance(file_path_or_raw, str):
-            with open(file_path_or_raw, 'rb') as f:
+            with open(file_path_or_raw, 'wb') as f:
                 return function(*args, buffer=f, **kwargs)
         else:
             raise TypeError('file_path_or_raw must be a file path or bytes object')
@@ -149,4 +149,4 @@ class AbstractFile(AbstractFileReadOnly):
 
         :raises TypeError: if file_path_or_raw has an invalid type
         """
-        return self.get_write_buffer(file_path_or_raw, self._write)
+        return self.get_write_buffer(file_path_or_raw, self._write, *args, **kwargs)

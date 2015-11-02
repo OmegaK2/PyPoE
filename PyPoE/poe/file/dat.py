@@ -786,11 +786,15 @@ class RelationalReader(object):
         if self._ggpk:
             df = DatFile(
                 name,
-                read_raw=self._ggpk.directory['Data'][name].node.extract(),
                 options=self.options
             )
+            df.read(
+                self._ggpk.directory['Data'][name].node.extract(),
+                **self.options
+            )
         elif self._path:
-            df = DatFile(name, read_file=self._path, options=self.options)
+            df = DatFile(name, options=self.options)
+            df.read(os.path.join(self._path, name), **self.options)
 
         self.files[name] = df
 

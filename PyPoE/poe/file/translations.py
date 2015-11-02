@@ -1149,8 +1149,8 @@ class TranslationFile(AbstractFileReadOnly):
 
         # Remove invalid translations
         invalid = []
-        for i, values in enumerate(trans_found_values):
-            for value in values:
+        for i, found_values in enumerate(trans_found_values):
+            for value in found_values:
                 if value == 0xFFFFFFFF:
                     invalid.append(trans_found[i])
                     break
