@@ -1,11 +1,11 @@
 """
-Library init
+Shared UI code
 
 Overview
 -------------------------------------------------------------------------------
 
 +----------+------------------------------------------------------------------+
-| Path     | PyPoE/__init__.py                                                |
+| Path     | PyPoE/ui/shared/__init__.py                                      |
 +----------+------------------------------------------------------------------+
 | Version  | 1.0.0a0                                                          |
 +----------+------------------------------------------------------------------+
@@ -17,7 +17,7 @@ Overview
 Description
 -------------------------------------------------------------------------------
 
-Library Init
+
 
 Agreement
 -------------------------------------------------------------------------------
@@ -30,67 +30,21 @@ See PyPoE/LICENSE
 # =============================================================================
 
 # Python
-import platform
-import os
-import warnings
+
+# 3rd-party
+
+# self
 
 # =============================================================================
 # Globals
 # =============================================================================
 
-__all__ = [
-    'APP_DIR',
-    'CUSTOM_TRANSLATION_FILE',
-    'DIR',
-    'DATA_DIR',
-    'DAT_SPECIFICATION',
-    'DAT_SPECIFICATION_CONFIGSPEC',
-]
-__version__ = '1.0.0a0'
+__all__ = []
+
+# =============================================================================
+# Classes
+# =============================================================================
 
 # =============================================================================
 # Functions
 # =============================================================================
-
-def _get_app_dir():
-    osys = platform.system()
-    if osys == 'Windows':
-        vars = ['APPDATA']
-        subdir = 'PyPoE'
-    elif osys == 'Linux':
-        vars = ['HOME', 'PWD']
-        subdir = '.PyPoE'
-    else:
-        raise RuntimeError('Unsupported Operating System')
-
-    dir = None
-    for var in vars:
-        if var not in os.environ:
-            continue
-        dir = os.environ[var]
-        if not os.path.exists(dir):
-            continue
-        break
-
-    if dir is None:
-        raise RuntimeError('Home/user directory not found')
-
-    dir = os.path.join(dir, subdir)
-    if not os.path.exists(dir):
-        os.mkdir(dir)
-
-    return dir
-
-# =============================================================================
-# Init
-# =============================================================================
-
-warnings.simplefilter('default', DeprecationWarning)
-APP_DIR = _get_app_dir()
-DIR = os.path.join(os.path.dirname(__file__))
-DATA_DIR = os.path.join(DIR, '_data')
-CUSTOM_TRANSLATION_FILE = os.path.join(DATA_DIR, 'custom_descriptions.txt')
-DAT_SPECIFICATION = os.path.join(DATA_DIR, 'dat.specification.ini')
-DAT_SPECIFICATION_CONFIGSPEC = os.path.join(DATA_DIR,
-                                            'dat.specification.configspec.ini')
-

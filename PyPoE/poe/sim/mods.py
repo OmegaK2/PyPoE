@@ -109,7 +109,7 @@ class SpawnChanceCalculator(object):
         :type mod_or_id: str or RecordList
 
         :param remove: Remove the mod from the list once the chance has been
-        calcuated
+        calculated
         :type remove: bool
 
         :return: The calcuated spawn chance for the mod

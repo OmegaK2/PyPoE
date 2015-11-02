@@ -41,6 +41,7 @@ import os
 import re
 
 #
+from PyPoE.shared import InheritedDocStringsMeta
 from PyPoE.poe.file._shared import AbstractFileReadOnly, ParserError
 
 # =============================================================================
@@ -49,6 +50,17 @@ from PyPoE.poe.file._shared import AbstractFileReadOnly, ParserError
 
 
 class BaseRecord(object):
+    """
+
+    :ivar _container:
+    :type container: GGPKFile
+
+    :ivar length:
+    :type length: int
+
+    :ivar offset:
+    :type offset: int
+    """
     tag = None
 
     __slots__ = ['_container', 'length', 'offset']
@@ -180,19 +192,25 @@ class FileRecord(MixinRecord, BaseRecord):
     def __init__(self, *args, **kwargs):
         super(FileRecord, self).__init__(*args, **kwargs)
         
-    def extract(self):
+    def extract(self, buffer=None):
         """
         Extracts this file contents into a memory file object.
         
         :return: memory file buffer object
         :rtype: io.BytesIO
         """
-        with open(self._container.file_path, 'br') as ggpkfile:
-            ggpkfile.seek(self.data_start)
-            memfile = io.BytesIO()
-            memfile.write(ggpkfile.read(self.data_length))
-            # Set the pointer to the beginning
-            memfile.seek(0)
+        if buffer is None:
+            return self._container.get_read_buffer(
+                self._container._file_path_or_raw,
+                self.extract,
+            )
+
+        # The buffer object is taken care of in get_read_buffer if it's a file
+        buffer.seek(self.data_start)
+        memfile = io.BytesIO()
+        memfile.write(buffer.read(self.data_length))
+        # Set the pointer to the beginning
+        memfile.seek(0)
         return memfile
 
     def extract_to(self, directory, name=None):
@@ -417,7 +435,7 @@ class DirectoryNode(object):
             self.record.extract_to(target_directory)
         
 
-class GGPKFile(AbstractFileReadOnly):
+class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
     """
 
     :ivar directory:
@@ -564,6 +582,10 @@ class GGPKFile(AbstractFileReadOnly):
             offset = buffer.tell()
         self.records = records
 
+    def read(self, file_path_or_raw, *args, **kwargs):
+        super(GGPKFile, self).read(file_path_or_raw, *args, **kwargs)
+        self._file_path_or_raw = file_path_or_raw
+
 
 if __name__ == '__main__':
     import cProfile
@@ -577,7 +599,7 @@ if __name__ == '__main__':
     ggpk = GGPKFile()
     ggpk.read(r'C:\Games\Path of Exile\Content.ggpk')
     ggpk.directory_build()
-    ggpk['Metadata/stat_descriptions.txt']
+    ggpk['Metadata/stat_descriptions.txt'].extract_to('C:/')
     #profiler.run("ggpk.read()")
 
     #profiler.add_function(GGPKFile.directory_build)
