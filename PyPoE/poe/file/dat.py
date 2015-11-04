@@ -702,8 +702,12 @@ class RelationalReader(object):
         :param path_or_ggpk: The path where the dat files are stored or a
         GGPKFile instance
         :type path_or_ggpk: :class:`GGPKFile` or str
-        :param Iterable files: Iterable of files that will be loaded right away
-        :param dict: options to pass to the reader for the DatFile
+
+        :param files: Iterable of files that will be loaded right away
+        :type files: Iterable
+
+        :param options: options to pass to the reader for the DatFile
+        :type options: dict
 
         :raises TypeError: if path_or_ggpk not specified or invalid type
         :raises ValueError: if a GGPKFile was passed, but it was not parsed
@@ -722,8 +726,9 @@ class RelationalReader(object):
         self.options = {} if options is None else options
 
         self.files = {}
-        for file_name in files:
-            self.read_file(file_name)
+        if files is not None:
+            for file_name in files:
+                self.read_file(file_name)
 
     def __getitem__(self, item):
         """

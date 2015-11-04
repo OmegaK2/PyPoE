@@ -32,7 +32,7 @@ See PyPoE/LICENSE
 
 # Python
 
-from enum import IntEnum
+from enum import IntEnum, Enum
 
 # 3rd-party
 
@@ -42,7 +42,14 @@ from enum import IntEnum
 # Globals
 # =============================================================================
 
-__all__ = ['DISTRIBUTOR', 'VERSION', 'MOD_DOMAIN', 'MOD_GENERATION_TYPE']
+__all__ = [
+    'DISTRIBUTOR',
+    'VERSION',
+    'SOCKET_COLOUR',
+    'ITEM_RARITY',
+    'MOD_DOMAIN',
+    'MOD_GENERATION_TYPE'
+]
 
 # =============================================================================
 # Classes
@@ -69,6 +76,33 @@ class DISTRIBUTOR(IntEnum):
 
     DEFAULT = ALL
 
+class SOCKET_COLOUR(Enum):
+    """
+    Representation of socket colours
+    """
+    R = 'R'
+    G = 'G'
+    B = 'B'
+    W = 'W'
+    RED = R
+    GREEN = G
+    BLUE = B
+    WHITE = W
+
+
+class ITEM_RARITY(Enum):
+    """
+    Representation of the possible item rarities.
+    """
+    NORMAL = (1, 'Normal', 'normal')
+    MAGIC = (2, 'Magic', 'magic')
+    RARE = (3, 'Rare', 'rare')
+    UNIQUE = (4, 'Unique', 'unique')
+
+    def __init__(self, id, upper, lower):
+        self.id = id
+        self.name_upper = upper
+        self.name_lower = lower
 
 class MOD_DOMAIN(IntEnum):
     """
