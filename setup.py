@@ -110,7 +110,7 @@ setup(
             'pypoe_exporter=PyPoE.cli.exporter.core:main',
         ],
         'gui_scripts': [
-            'pypoe_ui=PyPoE.ui.ggpk_viewer.core:main',
+            'pypoe_ui=PyPoE.ui:main',
         ],
     },
 )

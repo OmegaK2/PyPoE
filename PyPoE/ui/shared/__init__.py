@@ -32,6 +32,7 @@ See PyPoE/LICENSE
 # Python
 
 # 3rd-party
+from PySide.QtGui import *
 
 # self
 
@@ -39,11 +40,27 @@ See PyPoE/LICENSE
 # Globals
 # =============================================================================
 
-__all__ = []
+__all__ = ['SharedMainWindow']
 
 # =============================================================================
 # Classes
 # =============================================================================
+
+
+class SharedMainWindow(QMainWindow):
+    """
+    Shared Window class for use in sub applications to be launched from the
+    Launchpad.
+    """
+
+    name = ''
+
+    def closeEvent(self, *args, **kwargs):
+        p = self.parent()
+        if p is None:
+            return
+
+        p.child_closed.emit(self)
 
 # =============================================================================
 # Functions

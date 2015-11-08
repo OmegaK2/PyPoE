@@ -31,7 +31,6 @@ See PyPoE/LICENSE
 
 # Default Imports
 import time
-import sys
 from traceback import format_exc
 
 # Library Imports
@@ -40,6 +39,7 @@ from PySide.QtGui import *
 
 # Package Imports
 from PyPoE.poe.file import ggpk
+from PyPoE.ui.shared import SharedMainWindow
 from PyPoE.ui.shared.file.manager import FileDataManager
 from PyPoE.ui.shared.file.model import GGPKModel
 from PyPoE.ui.ggpk_viewer.toolbar import *
@@ -49,13 +49,14 @@ from PyPoE.ui.ggpk_viewer.menu import *
 # Classes
 # =============================================================================
 
-class MainWindow(QMainWindow):
+
+class GGPKViewerMainWindow(SharedMainWindow):
+    name = QT_TR_NOOP('GGPK Viewer')
 
     sig_log_message = Signal(str)
 
-    def __init__(self, app):
-        self.app = app
-        super(MainWindow, self).__init__()
+    def __init__(self, *args, **kwargs):
+        SharedMainWindow.__init__(self, *args, **kwargs)
 
         # Misc Variables set in other places
         self._last_node = None
@@ -151,7 +152,7 @@ class MainWindow(QMainWindow):
         # Setup the main window
         self.setCentralWidget(self.master)
         self.statusBar()
-        self.setWindowTitle(self.tr('GGPK View'))
+        self.setWindowTitle(self.name)
 
         #
         self.sig_log_message.connect(self._write_log)
@@ -162,7 +163,7 @@ class MainWindow(QMainWindow):
             notification = msg
         self.statusBar().showMessage(timef + notification)
         self.notification.append(timef + msg)
-        self.app.processEvents()
+        QApplication.instance().processEvents()
 
     def _reset_file_view(self, reset_hash=True):
         if reset_hash:
@@ -226,23 +227,6 @@ class MainWindow(QMainWindow):
 
         # Actually is a file record
 
-
-
-    def run(self):
-        self.show()
-        self.app.exec_()
-
 # =============================================================================
 # Functions
 # =============================================================================
-
-def main():
-    translator = QTranslator()
-    translator.load('i18n/en_US')
-    app = QApplication(sys.argv)
-    app.installTranslator(translator)
-    frame = MainWindow(app)
-    frame.run()
-
-if __name__ == '__main__':
-    main()
