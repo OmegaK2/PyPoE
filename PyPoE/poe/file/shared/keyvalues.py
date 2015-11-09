@@ -179,9 +179,6 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
         self.extends = extends
         #self._keys = keys if keys else {}
 
-        #for cls in self.SECTIONS:
-        #    self[cls.NAME] = cls(parent=self)
-
         self._parent_dir = None
         self._parent_file = None
         self._parent_ggpk = None
@@ -252,9 +249,9 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
                 self.merge(obj)
             else:
                 raise ParserError('File extends "%s", but parent_or_base_dir_or_ggpk has not been specified on class creation.' % extend)
-            self.__class__()
+            self.extends = extend
 
-        self.version = match.group('version')
+        self.version = int(match.group('version'))
 
         for section_match in self._re_find_kv_sections.finditer(match.group('remainder')):
             key = section_match.group('key')
