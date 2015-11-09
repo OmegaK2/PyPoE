@@ -37,7 +37,7 @@ import re
 
 # self
 from PyPoE.shared.containers import Record, TypedList, TypedContainerMeta
-from PyPoE.poe.file._shared import AbstractFile, ParserError
+from PyPoE.poe.file.shared import AbstractFile, ParserError
 
 # =============================================================================
 # Globals

@@ -49,7 +49,7 @@ from collections import Iterable
 
 # self
 from PyPoE import CUSTOM_TRANSLATION_FILE
-from PyPoE.poe.file._shared import AbstractFileReadOnly, ParserError
+from PyPoE.poe.file.shared import AbstractFileReadOnly, ParserError, ParserWarning
 
 # =============================================================================
 # Globals
@@ -98,7 +98,7 @@ _custom_translation_file = None
 # =============================================================================
 
 
-class TranslationWarning(UserWarning):
+class TranslationWarning(ParserWarning):
     pass
 
 

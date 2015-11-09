@@ -42,7 +42,7 @@ import re
 
 #
 from PyPoE.shared import InheritedDocStringsMeta
-from PyPoE.poe.file._shared import AbstractFileReadOnly, ParserError
+from PyPoE.poe.file.shared import AbstractFileReadOnly, ParserError
 
 # =============================================================================
 # Classes

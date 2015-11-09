@@ -64,7 +64,7 @@ import validate
 # Library imports
 from PyPoE import DAT_SPECIFICATION, DAT_SPECIFICATION_CONFIGSPEC
 from PyPoE.shared.decorators import deprecated
-from PyPoE.poe.file._shared import AbstractFileReadOnly
+from PyPoE.poe.file.shared import AbstractFileReadOnly
 from PyPoE.poe.file.ggpk import GGPKFile
 
 # =============================================================================

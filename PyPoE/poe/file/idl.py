@@ -36,7 +36,7 @@ import codecs
 import re
 
 # self
-from PyPoE.poe.file._shared import AbstractFile
+from PyPoE.poe.file.shared import AbstractFile
 from PyPoE.shared.containers import Record, TypedList, TypedContainerMeta
 
 # =============================================================================
