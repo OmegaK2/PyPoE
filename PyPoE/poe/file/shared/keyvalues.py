@@ -46,12 +46,11 @@ import re
 import warnings
 import os
 from collections import defaultdict
-from collections.abc import MutableMapping
-from enum import Enum
 
 # 3rd-party
 
 # self
+from PyPoE.shared.decorators import doc
 from PyPoE.poe.file.shared import AbstractFile, ParserError, ParserWarning
 from PyPoE.poe.file.ggpk import GGPKFile
 
@@ -165,15 +164,16 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
 
     _re_find_kv_pairs = re.compile(
         r'^[\s]*'
-        r'(?P<key>[\w]*)'
+        r'(?P<key>[\S]+)'
         r'[\s]*=[\s]*'
-        r'(?P<value>"[^"]*"|[\w]*)'
+        r'(?P<value>"[^"]*"|[\S]+)'
         r'[\s]*$',
         re.UNICODE | re.MULTILINE,
     )
 
     def __init__(self, parent_or_base_dir_or_ggpk=None, version=None, extends=None, keys=None):
-        super(AbstractKeyValueFile, self).__init__()
+        AbstractFile.__init__(self)
+        defaultdict.__init__(self, keys)
 
         self.version = version
         self.extends = extends
@@ -211,7 +211,8 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
             'keys': defaultdict.__repr__(self),
         }
 
-    def _read(self, buffer):
+    @doc(doc=AbstractFile._read)
+    def _read(self, buffer, *args, **kwargs):
         data = buffer.read().decode('utf-16')
 
         match = self._re_header.match(data)
@@ -269,24 +270,66 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
                     value = True
                 elif value == 'false':
                     value = False
-                elif value.isdigit():
-                    value = int(value)
                 else:
                     try:
-                        value = float(value)
+                        value = int(value)
                     except ValueError:
-                        pass
+                        try:
+                            value = float(value)
+                        except ValueError:
+                            pass
 
                 section[kv_match.group('key')] = value
 
+    @doc(doc=AbstractFile._write)
+    def _write(self, buffer, *args, **kwargs):
+        lines = [
+            'version %s' % self.version,
+            'extends "%s"' % (self.extends if self.extends else 'nothing'),
+        ]
+
+        for section, keyvalues in self.items():
+            lines.append('')
+            lines.append(section)
+            lines.append('{')
+            for key, value in keyvalues.items():
+                if isinstance(value, list):
+                    for v in value:
+                        lines.append(self._get_write_line(key, v))
+                else:
+                    lines.append(self._get_write_line(key, value))
+            lines.append('}')
+
+        buffer.write('\n'.join(lines).encode('utf-16le'))
+
+    @doc(doc=AbstractFile.write, append="""
+    .. warning::
+        The current values held by the file instance will be written. This
+        means values inherited from parent files will also be written.
+    """)
+    def write(self, *args, **kwargs):
+        return super(AbstractKeyValueFile, self).write(*args, **kwargs)
+
+    def _get_write_line(self, key, value):
+        return '\t%s = "%s"' % (key, value)
+
     def _get_name(self):
+        """
+        Name of the file
+
+        :return: Name
+        :rtype: str
+        """
         return self._name
 
     def merge(self, other):
         """
+        Merge with other file.
 
-        :param other:
+        :param other: Instance of the other file to merge with
         :type other: AbstractKeyValueFile
+
+        :raises ValueError: if other has a different type then this instance
         """
         if not isinstance(other, self.__class__):
             raise ValueError('Can\'t merge only with classes with the same base class, got "%s" instead' % other.__class__.__name__)

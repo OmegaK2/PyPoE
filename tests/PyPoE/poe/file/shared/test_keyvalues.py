@@ -31,6 +31,7 @@ See PyPoE/LICENSE
 
 # Python
 import os
+from tempfile import TemporaryDirectory
 
 # 3rd-party
 import pytest
@@ -57,7 +58,10 @@ data = {
         'no_warning': 42,
     },
     'Extra': {
-        'key': 42,
+        'key': -42,
+        'key_+': 42,
+        'key_-': 42,
+        'key_%': 42,
         'key_inherited': 1337,
     },
 }
@@ -87,6 +91,8 @@ class KeyValuesFile(keyvalues.AbstractKeyValueFile):
         KeyValuesSectionOverrideGeneric,
     ])
 
+_read_file_name = 'keyvalues.kv'
+_write_file_name = 'keyvalues_write.kv'
 
 # =============================================================================
 # Fixtures
@@ -103,13 +109,44 @@ class TestKeyValuesFile(object):
     @pytest.fixture
     def kf_file(self):
         kf = KeyValuesFile(parent_or_base_dir_or_ggpk=data_dir)
-        kf.read(os.path.join(data_dir, 'test.kv'))
+        kf.read(os.path.join(data_dir, _read_file_name))
+        return kf
+
+    @pytest.fixture
+    def kf_memory_file(self):
+        kf = KeyValuesFile()
+        kf.version = 2
+        kf.extends = None
+        kf['Section1'] = keyvalues.AbstractKeyValueSection(
+            parent=kf, name='Section'
+        )
+        kf['Section2'] = keyvalues.AbstractKeyValueSection(
+            parent=kf, name='Section'
+        )
+        kf['Section1']['key'] = 42
+        kf['Section2']['key'] = 42
+
         return kf
 
     def test_read_attrs(self, kf_file):
         assert kf_file.version == 2
-        assert kf_file.extends == 'test_base'
+        assert kf_file.extends == 'keyvalues_base'
 
     @pytest.mark.parametrize('section,key,value', data)
     def test_read_keyvalues(self, kf_file, section, key, value):
         assert kf_file[section][key] == value
+
+    def test_write(self, kf_memory_file):
+        with TemporaryDirectory() as d:
+            tmp_path = os.path.join(d, _write_file_name)
+            kf_memory_file.write(tmp_path)
+
+            kf_should = KeyValuesFile()
+            kf_should.read(os.path.join(data_dir, _write_file_name))
+
+            kf_target = KeyValuesFile()
+            kf_target.read(tmp_path)
+
+            assert kf_target == kf_should
+
+

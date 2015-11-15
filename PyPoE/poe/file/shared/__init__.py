@@ -70,13 +70,32 @@ class AbstractFileReadOnly(object):
     It provides common methods as well as methods that implementing classes
     should override.
     """
-    def __init__(self):
-        pass
-
     def _read(self, buffer, *args, **kwargs):
+        """
+        :param buffer: The file/byte buffer
+        :type buffer: io.BytesIO
+        """
         raise NotImplementedError()
 
     def get_read_buffer(self, file_path_or_raw, function, *args, **kwargs):
+        """
+        Will attempt to open the given file_path_or_raw in read mode and pass
+        the buffer to the specified function.
+        The function must accept at least one keyword argument called 'buffer'.
+
+        :param file_path_or_raw: file path, bytes or buffer to read from
+        :type file_path_or_raw: BytesIO, bytes or str
+
+        :param args: Additional positional arguments to pass to the specified
+        function
+
+        :param kwargs: Additional keyword arguments to pass to the specified
+        function
+
+        :return: Result of the function
+
+        :raises TypeError: if file_path_or_raw has an invalid type
+        """
         if isinstance(file_path_or_raw, BytesIO):
             return function(*args, buffer=file_path_or_raw, **kwargs)
         elif isinstance(file_path_or_raw, bytes):
@@ -98,10 +117,13 @@ class AbstractFileReadOnly(object):
         If a file path was given, the resulting data will be read from the
         specified file.
 
-        :param file_path_or_raw: file path, bytes or buffer to write to
-        :type file_path_or_raw: BytesIO, bytes, str
+        :param file_path_or_raw: file path, bytes or buffer to read from
+        :type file_path_or_raw: BytesIO, bytes or str
+
         :param args: Additional positional arguments
+
         :param kwargs: Additional keyword arguments
+
         :return: result of the read operation, if any
 
         :raises TypeError: if file_path_or_raw has an invalid type
@@ -118,9 +140,31 @@ class AbstractFile(AbstractFileReadOnly):
     """
 
     def _write(self, buffer, *args, **kwargs):
+        """
+        :param buffer: The file/byte buffer
+        :type buffer: io.BytesIO
+        """
         raise NotImplementedError()
 
     def get_write_buffer(self, file_path_or_raw, function, *args, **kwargs):
+        """
+        Will attempt to open the given file_path_or_raw in write mode and pass
+        the buffer to the specified function.
+        The function must accept at least one keyword argument called 'buffer'.
+
+        :param file_path_or_raw: file path, bytes or buffer to write to
+        :type file_path_or_raw: BytesIO, bytes or str
+
+        :param args: Additional positional arguments to pass to the specified
+        function
+
+        :param kwargs: Additional keyword arguments to pass to the specified
+        function
+
+        :return: Result of the function
+
+        :raises TypeError: if file_path_or_raw has an invalid type
+        """
         if isinstance(file_path_or_raw, BytesIO):
             return function(*args, buffer=file_path_or_raw, **kwargs)
         elif isinstance(file_path_or_raw, bytes):
