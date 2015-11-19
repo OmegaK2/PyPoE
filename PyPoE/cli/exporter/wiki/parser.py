@@ -82,6 +82,9 @@ class BaseParser(object):
                 result.source_ids, result.source_values, full_result=True
             )
 
+            temp_ids = []
+            temp_trans = []
+
             for i, tr in enumerate(default.found):
                 for j, tr2 in enumerate(result.found):
                     if tr.ids != tr2.ids:
@@ -90,9 +93,10 @@ class BaseParser(object):
                     r1 = tr.get_language().get_string(default.values[i], default.indexes[i])[0]
                     r2 = tr2.get_language().get_string(result.values[j], result.indexes[j])[0]
                     if r1 != r2:
-                        out.append(self._DETAILED_FORMAT % (r1, r2))
+                        temp_trans.append(self._DETAILED_FORMAT % (r1, r2))
                     elif r2:
-                        out.append(r2)
+                        temp_trans.append(r2)
+                    temp_ids.append(tr.ids)
 
                 is_missing = True
                 for tid in tr.ids:
@@ -103,12 +107,25 @@ class BaseParser(object):
 
                 r1 = tr.get_language().get_string(default.values[i], default.indexes[i])[0]
                 if r1:
-                    out.append(self._HIDDEN_FORMAT % r1)
+                    temp_trans.append(self._HIDDEN_FORMAT % r1)
+                    temp_ids.append(tr.ids)
 
                 for tid in tr.ids:
                     i = result.missing_ids.index(tid)
                     del result.missing_ids[i]
                     del result.missing_values[i]
+
+            index = 0
+            for i, tr in enumerate(result.found):
+                try:
+                    index = temp_ids.index(tr.ids)
+                except ValueError:
+                    temp_ids.insert(index, tr.ids)
+                    temp_trans.insert(index, tr.get_language().get_string(result.values[i], result.indexes[i])[0])
+                else:
+                    pass
+
+            out = temp_trans
         else:
             out = result.lines
 

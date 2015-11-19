@@ -72,6 +72,11 @@ class WikiHandler(object):
             type=int,
             default=16,
         )
+        parser.add_argument(
+            '--dry-run',
+            help='Don\'t actually save the wiki page',
+            action='store_true',
+        )
 
     def save_page(self, page, text, message):
         if text == page.text:
@@ -81,36 +86,37 @@ class WikiHandler(object):
         page.text = text
         page.save(pws.get_edit_message(message))
 
-    def handle_page(self, *a, pws, site, row, cmdargs):
+    def handle_page(self, *a, row):
         page_name = row['wiki_page']
         if self.rowmsg:
             console(self.rowmsg.format(page_name=page_name))
-        page = pws.pywikibot.Page(site, page_name)
+        page = self.pws.pywikibot.Page(self.site, page_name)
 
         self.save_page(
             page=page,
             text=''.join(row['lines']),
             message=self.name,
-            )
+        )
 
     def handle(self, *a, pws, result, cmdargs):
         site = pws.get_site()
 
         # First row is handled separately to prompt the user for his password
-        self.handle_page(pws=pws, site=site, row=result[0], cmdargs=cmdargs)
+        self.site = site
+        self.pws = pws
+        self.cmdargs = cmdargs
+        self.handle_page(row=result[0])
 
         tp = ThreadPoolExecutor(max_workers=cmdargs.wiki_threads)
 
         for row in result[1:]:
             tp.submit(
                 self.handle_page,
-                pws=pws,
-                site=site,
                 row=row,
-                cmdargs=cmdargs,
             )
 
         tp.shutdown(wait=True)
+
 
 class ExporterHandler(BaseHandler):
     def get_wrap(self, cls, func, handler, wiki_handler):
@@ -206,6 +212,7 @@ class ExporterHandler(BaseHandler):
             help='Write to the gamepedia page (requires pywikibot)',
             action='store_true',
         )
+
 
 class ExporterResult(list):
     def add_result(self, lines=None, out_file=None, wiki_page=None):

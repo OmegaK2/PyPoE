@@ -267,8 +267,8 @@ class GemWikiHandler(WikiHandler):
         '.*?(?===[\w ]*==)',
         re.UNICODE | re.IGNORECASE | re.MULTILINE | re.DOTALL)
 
-    def _find_page(self, pws, page_name, site):
-        page = pws.pywikibot.Page(site, page_name)
+    def _find_page(self, page_name):
+        page = self.pws.pywikibot.Page(self.site, page_name)
 
         if self.regex_search.search(page.text):
             return page
@@ -276,12 +276,12 @@ class GemWikiHandler(WikiHandler):
             console('Failed to find the progression on wiki page "%s"' % page_name, msg=Msg.warning)
             return None
 
-    def handle_page(self, *a, pws, site, row, cmdargs):
+    def handle_page(self, *a, row):
         page_name = row['wiki_page']
         console('Editing gem "%s"...' % page_name)
-        page = self._find_page(pws, page_name, site)
+        page = self._find_page(page_name)
         if page is None:
-            page = self._find_page(pws, '%s (support gem)' % page_name, site)
+            page = self._find_page('%s (support gem)' % page_name)
 
         if page is None:
             console('Can\'t find working wikipage. Skipping.', Msg.error)
@@ -296,6 +296,7 @@ class GemWikiHandler(WikiHandler):
             text=new_text,
             message='Gem level progression',
         )
+
 
 class GemsHandler(ExporterHandler):
     def __init__(self, sub_parser):

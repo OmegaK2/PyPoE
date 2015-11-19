@@ -35,6 +35,7 @@ FIX the jewel generator (corrupted)
 # =============================================================================
 
 # Python
+import re
 import warnings
 from collections import OrderedDict
 
@@ -57,6 +58,60 @@ __all__ = ['ModParser', 'ModsHandler']
 class OutOfBoundsWarning(UserWarning):
     pass
 
+
+class ModWikiHandler(WikiHandler):
+    _regex = re.compile(
+        '{{Mod[^}]*}}',
+        re.UNICODE | re.MULTILINE | re.DOTALL
+    )
+
+    def _find_page(self, row, page_name):
+        page = self.pws.pywikibot.Page(self.site, page_name)
+        match = self._regex.search(page.text)
+
+        if match:
+            console('Found wiki page "%s"' % page_name)
+            return page, page.text[:match.start()] + ''.join(row['lines']) + page.text[match.end():]
+        else:
+            console('Failed to find the mod table on wiki page "%s"' % page_name, msg=Msg.warning)
+            return None, None
+
+    def handle_page(self, *a, row):
+        page_name = row['wiki_page']
+        console('Editing Mod "%s"...' % page_name)
+
+        if self.cmdargs.force:
+            text = ''.join(row['lines'])
+        else:
+            kwargs = {
+                'row': row,
+                'page_name': page_name,
+            }
+
+            page, text = self._find_page(**kwargs)
+            if text is None:
+                kwargs['page_name'] = '%s (Mod)' % page_name
+                page, text = self._find_page(**kwargs)
+
+            if text is None:
+                console('Can\'t find working wikipage. Skipping.', Msg.error)
+                return
+
+        self.save_page(
+            page=page,
+            text=text,
+            message=self.name,
+        )
+
+    def add_arguments(self, parser):
+        super(ModWikiHandler, self).add_arguments(parser)
+        parser.add_argument(
+            '--force',
+            action='store_true',
+            help='Ignores the validation check and force replacement of the entire page',
+        )
+
+
 class ModsHandler(ExporterHandler):
     def __init__(self, sub_parser):
         self.parser = sub_parser.add_parser('mods', help='Mods Exporter')
@@ -70,7 +125,7 @@ class ModsHandler(ExporterHandler):
         )
         mparser.set_defaults(func=lambda args: mparser.print_help())
 
-        wiki_handler = WikiHandler(
+        wiki_handler = ModWikiHandler(
             name='Mod updater',
         )
 
@@ -115,18 +170,6 @@ class ModsHandler(ExporterHandler):
             wiki_handler=wiki_handler,
         )
 
-        # Map
-
-        parser = lua_sub.add_parser(
-            'map',
-            help='Extract map mods (DEPRECATED).'
-        )
-        self.add_default_parsers(
-            parser=parser,
-            cls=ModParser,
-            func=ModParser.map,
-        )
-
         # Tempest
 
         parser = lua_sub.add_parser(
@@ -139,50 +182,8 @@ class ModsHandler(ExporterHandler):
             func=ModParser.tempest,
         )
 
-        parser = lua_sub.add_parser(
-            'jewel',
-            help='Extract jewel mods (DEPRECATED).',
-        )
-        self.add_default_parsers(
-            parser=parser,
-            cls=ModParser,
-            func=ModParser.jewel,
-        )
-        parser.add_argument(
-            'type',
-            choices=('suffix', 'prefix', 'corrupted'),
-            help='The type of jewel mod to extract.',
-        )
 
 class ModParser(BaseParser):
-    dropdata = {
-            0: 'Any other item',
-            5: 'Bow',
-            9: 'Wand',
-            10: 'Staff',
-            11: 'Mace',
-            12: 'Sword',
-            13: 'Dagger',
-            14: 'Claw',
-            15: 'Axe',
-            29: 'Crimson' , # STR
-            30: 'Viridian', # DEX
-            31: 'Cobalt', # INT
-            143: 'Weapon Mod?',
-            144: 'Two-Hand',
-            145: 'Dual-Wield',
-            146: 'Shield',
-            147: '(2H/Dual/Shield???)',
-            148: '(Claw/Dagger/Wand/1h)',
-            #149: 'Melee?',
-        }
-
-    base_jewel_map = {
-        'not_str': ['int', 'dex'],
-        'not_int': ['dex', 'str'],
-        'not_dex': ['int', 'str'],
-    }
-    
     # Load files in advance
     _files = [
         'Mods.dat',
@@ -313,33 +314,6 @@ class ModParser(BaseParser):
         return r
 
     @deprecated(message='Will be done in-wiki in the future.')
-    def map(self, parsed_args):
-        tf = self.tc['map_stat_descriptions.txt']
-
-        mods = []
-        for mod in self.rr['Mods.dat']:
-            if mod['Domain'] != 5:
-                continue
-            if mod['GenerationType'] not in (1, 2):
-                continue
-            mods.append(mod)
-
-        # Output processing
-        out = []
-
-        for mod in mods:
-            try:
-                effects = self._get_stats(mod)
-                out.append("%s %s\n" % (mod['Name'], effects))
-            except:
-                pass
-
-        r = ExporterResult()
-        r.add_result(lines=out, out_file='map_mods.txt')
-
-        return r
-
-    @deprecated(message='Will be done in-wiki in the future.')
     def tempest(self, parsed_args):
         tf = self.tc['map_stat_descriptions.txt']
         data = []
@@ -410,85 +384,5 @@ class ModParser(BaseParser):
 
         r = ExporterResult()
         r.add_result(lines=out, out_file='tempest_mods.txt')
-
-        return r
-
-    @deprecated(message='Will be done in-wiki in the future.')
-    def jewel(self, parsed_args):
-        data = []
-        for mod in self.rr['Mods.dat']:
-            # not a jewel
-            if mod['Domain'] != 11:
-                continue
-            if parsed_args.type == 'prefix' and mod['GenerationType'] != 1:
-                continue
-            elif parsed_args.type == 'suffix' and mod['GenerationType'] != 2:
-                continue
-            elif parsed_args.type == 'corrupted' and mod['GenerationType'] != 5:
-                continue
-
-            listformat = {
-                'Name': mod['Name'],
-                'Description': '\n'.join(self._get_stats(mod)),
-                'Group': '<br>'.join([t['Id'] for t in mod['TagsKeys']]),
-                'GroupWeight': [],
-            }
-
-            # Check whether the mod can spawn at all
-            v = 0
-            for value in mod['SpawnWeight_Values']:
-                if value > 0:
-                    v = 1
-                    break
-            if v == 0:
-                continue
-
-            # Default is always last mod, so this should work
-            for i, tag in enumerate(mod['SpawnWeight_TagsKeys']):
-                weight = mod['SpawnWeight_Values'][i]
-                tid = tag['Id']
-                if tid == 'default':
-                    listformat[tid] = weight
-                    for k in ('int', 'dex', 'str'):
-                        if k not in listformat:
-                            listformat[k] = weight
-                elif tid in ('not_int', 'not_dex', 'not_str'):
-                    for k in self.base_jewel_map[tid]:
-                        listformat[k] = weight
-                else:
-                    listformat['GroupWeight'].append((tid,  weight))
-
-            listformat['GroupWeight'].sort(key=lambda x: x[0])
-            for i in range(0, len(listformat['GroupWeight'])):
-                listformat['GroupWeight'][i] = '%s: %s' % listformat['GroupWeight'][i]
-            listformat['GroupWeight'] = '<br>\n'.join(listformat['GroupWeight'])
-            data.append(listformat)
-        # Sort my name
-        data.sort(key=lambda lf: lf['Name'])
-
-        if parsed_args.type == 'corrupted':
-            fmt = (
-                '|- \n'
-                '| %(Description)s\n'
-            )
-        else:
-            fmt = (
-                '|-\n'
-                '| %(Name)s\n'
-                '| %(Description)s\n'
-                '| %(Group)s \n'
-                # '| %(default)s \n'
-                '| %(str)s \n'
-                '| %(int)s \n'
-                '| %(dex)s \n'
-                '| %(GroupWeight)s\n'
-            )
-
-        out = []
-        for lf in data:
-            out.append(fmt % lf)
-
-        r = ExporterResult()
-        r.add_result(lines=out, out_file='jewel_%s_mods.txt' % parsed_args.type)
 
         return r
