@@ -5,7 +5,7 @@ Overview
 -------------------------------------------------------------------------------
 
 +----------+------------------------------------------------------------------+
-| Path     | PyPoE/poe/file/ggpk.py                                           |
+| Path     | PyPoE/poe/file/ggpk/__init__.py                                  |
 +----------+------------------------------------------------------------------+
 | Version  | 1.0.0a0                                                          |
 +----------+------------------------------------------------------------------+
@@ -475,7 +475,7 @@ class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
     #
 
     def _is_parsed(self):
-        return self.directory is None
+        return self.directory is not None
 
     is_parsed = property(fget=_is_parsed)
 

@@ -65,6 +65,7 @@ import validate
 from PyPoE import DAT_SPECIFICATION, DAT_SPECIFICATION_CONFIGSPEC
 from PyPoE.shared.decorators import deprecated
 from PyPoE.poe.file.shared import AbstractFileReadOnly
+from PyPoE.poe.file.shared.cache import AbstractFileCache
 from PyPoE.poe.file.ggpk import GGPKFile
 
 # =============================================================================
@@ -687,13 +688,13 @@ class DatFile(AbstractFileReadOnly):
         return self.read(raw, **options)
 
 
-class RelationalReader(object):
+class RelationalReader(AbstractFileCache):
     """
     Read dat files in a relational matter.
 
     This acts both as a cache and as a way to easily access the instances.
     """
-    def __init__(self, path_or_ggpk=None, files=None, options=None):
+    def __init__(self, files=None, options=None, *args, **kwargs):
         """
         Creates a new Relational Reader instance.
 
@@ -712,16 +713,7 @@ class RelationalReader(object):
         :raises TypeError: if path_or_ggpk not specified or invalid type
         :raises ValueError: if a GGPKFile was passed, but it was not parsed
         """
-        if isinstance(path_or_ggpk, GGPKFile):
-            if not self._ggpk.is_parsed:
-                raise ValueError('The GGPK File must be parsed.')
-            self._ggpk = path_or_ggpk
-            self._path = None
-        elif isinstance(path_or_ggpk, str):
-            self._ggpk = None
-            self._path = path_or_ggpk
-        else:
-            raise TypeError('path_or_ggpk must be a valid directory or GGPKFile')
+        super(RelationalReader, self).__init__(*args, **kwargs)
 
         self.options = {} if options is None else options
 
@@ -794,7 +786,7 @@ class RelationalReader(object):
                 options=self.options
             )
             df.read(
-                self._ggpk.directory['Data'][name].node.extract(),
+                self._ggpk.directory['Data'][name].record.extract(),
                 **self.options
             )
         elif self._path:

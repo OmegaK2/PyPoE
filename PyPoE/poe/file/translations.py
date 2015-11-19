@@ -50,6 +50,7 @@ from collections import Iterable
 # self
 from PyPoE import CUSTOM_TRANSLATION_FILE
 from PyPoE.poe.file.shared import AbstractFileReadOnly, ParserError, ParserWarning
+from PyPoE.poe.file.shared.cache import AbstractFileCache
 
 # =============================================================================
 # Globals
@@ -1201,7 +1202,7 @@ class TranslationFile(AbstractFileReadOnly):
         return TranslationReverseResult(translations_found, values_found)
 
 
-class TranslationFileCache(object):
+class TranslationFileCache(AbstractFileCache):
     """
     Creates a memory cache of :class:`TranslationFile` objects.
 
@@ -1219,13 +1220,14 @@ class TranslationFileCache(object):
     There is a caveat though, for this to work files need to referenced with
     their internal location (i.e. by the root folder).
     """
-    def __init__(self, base_dir, merge_with_custom_file=None):
+    def __init__(self, *args, merge_with_custom_file=None, **kwargs):
         """
         Creates a new TranslationFileCache instance.
 
-        :param base_dir: The base directory where the files will be requested
-        from (without "Metadata/")
-        :type base_dir: str
+        :param path_or_ggpk: The path where the dat files are stored or a
+        GGPKFile instance
+        :type path_or_ggpk: :class:`GGPKFile` or str
+
         :param merge_with_custom_file: If this option is specified, each file
         will be merged with a custom translation file.
         If set to True, it will load the default translation file located in
@@ -1234,10 +1236,10 @@ class TranslationFileCache(object):
         be used.
         :type merge_with_custom_file: None, bool, TranslationFile
 
-        :raises TypeError: if merge_with_custom_file is of invalid type
+        :raises TypeError: if path_or_ggpk not specified or invalid type
+        :raises ValueError: if a GGPKFile was passed, but it was not parsed
         """
-        self._base_dir = base_dir
-        self._desc_dir = os.path.join(base_dir, 'Metadata')
+        super(TranslationFileCache, self).__init__(*args, **kwargs)
 
         if merge_with_custom_file is None or merge_with_custom_file is False:
             self._custom_file = None
@@ -1289,12 +1291,20 @@ class TranslationFileCache(object):
         :rtype: TranslationFile
         """
         if name not in self._files:
-            self._files[name] = TranslationFile(
-                file_path=os.path.join(self._base_dir, name),
+            tf = TranslationFile(
                 parent=self,
             )
+            if self._ggpk:
+                tf.read(file_path_or_raw=self._ggpk[name])
+            elif self._path:
+                tf.read(file_path_or_raw=os.path.join(self._path, name))
+
             if self._custom_file:
-                self._files[name].merge(self._custom_file)
+                tf.merge(self._custom_file)
+
+            self._files[name] = tf
+
+            return tf
 
         return self._files[name]
 

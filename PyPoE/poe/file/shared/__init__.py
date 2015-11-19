@@ -47,6 +47,7 @@ __all__ = [
     'ParserWarning'
     'AbstractFileReadOnly',
     'AbstractFile',
+    'AbstractFileCache',
 ]
 
 # =============================================================================
@@ -194,3 +195,29 @@ class AbstractFile(AbstractFileReadOnly):
         :raises TypeError: if file_path_or_raw has an invalid type
         """
         return self.get_write_buffer(file_path_or_raw, self._write, *args, **kwargs)
+
+
+class AbstractFileCache(object):
+    def __init__(self, path_or_ggpk=None, files=None, options=None):
+        """
+        Creates a new Relational Reader instance.
+
+        See DatReader for details on the options available.
+
+        :param path_or_ggpk: The path where the dat files are stored or a
+        GGPKFile instance
+        :type path_or_ggpk: :class:`GGPKFile` or str
+
+        :raises TypeError: if path_or_ggpk not specified or invalid type
+        :raises ValueError: if a GGPKFile was passed, but it was not parsed
+        """
+        if isinstance(path_or_ggpk, GGPKFile):
+            if not path_or_ggpk.is_parsed:
+                raise ValueError('The GGPK File must be parsed.')
+            self._ggpk = path_or_ggpk
+            self._path = None
+        elif isinstance(path_or_ggpk, str):
+            self._ggpk = None
+            self._path = path_or_ggpk
+        else:
+            raise TypeError('path_or_ggpk must be a valid directory or GGPKFile')

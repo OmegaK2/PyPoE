@@ -71,15 +71,22 @@ data = {
 
 @pytest.fixture
 def dbase():
-    return translations.TranslationFile(dbase_path)
+    tf = translations.TranslationFile()
+    tf.read(dbase_path)
+    return tf
+
 
 @pytest.fixture
 def dextended():
-    return translations.TranslationFile(dextended_path, base_dir=data_dir)
+    tf = translations.TranslationFile(base_dir=data_dir)
+    tf.read(dextended_path)
+    return tf
+
 
 @pytest.fixture
 def tcache():
-    return translations.TranslationFileCache(data_dir)
+    return translations.TranslationFileCache(path_or_ggpk=data_dir)
+
 
 def get_test(size, unid, nresults, values):
     tags = ['tag_size%s_uq%s_no%s' % (size, unid, i) for i in range(1, size+1)]
@@ -93,6 +100,7 @@ def get_test(size, unid, nresults, values):
 # =============================================================================
 # Tests
 # =============================================================================
+
 
 class TestTranslation:
     def build_get_translation_data(self=None):
@@ -133,6 +141,7 @@ class TestTranslation:
 
         assert trr.translations[0].ids == tags, 'Value skip reverse failed: incorrect tags'
         assert trr.values[0] == values, 'Value skip failed reverse: incorrect values'
+
 
 class TestTranslationFileCache:
     def test_init(self, tcache):
