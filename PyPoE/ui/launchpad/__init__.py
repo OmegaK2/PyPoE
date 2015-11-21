@@ -68,14 +68,19 @@ class LaunchpadMainWindow(QMainWindow):
 
         self.buttons = []
         self.instances = []
-        for i, qmainwindow in enumerate(apps):
-            button = QPushButton(qmainwindow.name)
-            button.clicked.connect(lambda: self.run_application(i))
+        for i, qmainwindow_cls in enumerate(apps):
+            button = QPushButton(qmainwindow_cls.name)
+            button.clicked.connect(self._wrap_clicked(i))
             layout.addWidget(button)
             self.buttons.append(button)
             self.instances.append(None)
 
         self.setCentralWidget(frame)
+
+    def _wrap_clicked(self, i):
+        def wrapped():
+            return self.run_application(i)
+        return wrapped
 
     def _handle_closed_child(self, qwidget):
         for i, item in enumerate(self.instances):
