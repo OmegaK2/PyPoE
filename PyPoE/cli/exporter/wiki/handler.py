@@ -43,7 +43,7 @@ except Exception as e:
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.handler import BaseHandler
 from PyPoE.cli.exporter import config
-from PyPoE.cli.exporter.wiki.util import check_hash
+from PyPoE.cli.exporter.util import check_hash
 
 # =============================================================================
 # Globals

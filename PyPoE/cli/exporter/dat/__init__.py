@@ -1,11 +1,11 @@
 """
-Utility functions for wiki exporters
+.dat Exporter
 
 Overview
 -------------------------------------------------------------------------------
 
 +----------+------------------------------------------------------------------+
-| Path     | PyPoE/cli/exporter/wiki/util.py                                  |
+| Path     | PyPoE/cli/exporter/dat/__init__.py                               |
 +----------+------------------------------------------------------------------+
 | Version  | 1.0.0a0                                                          |
 +----------+------------------------------------------------------------------+
@@ -17,7 +17,7 @@ Overview
 Description
 -------------------------------------------------------------------------------
 
-Utility functions for wiki exporters.
+.dat Exporter
 
 Agreement
 -------------------------------------------------------------------------------
@@ -30,46 +30,45 @@ See PyPoE/LICENSE
 # =============================================================================
 
 # Python
-import os
-import hashlib
+
+# 3rd-party
 
 # self
-from PyPoE.poe.path import PoEPath
-from PyPoE.cli.config import SetupError
-from PyPoE.cli.exporter import config
+try:
+    from PyPoE.cli.exporter.dat.sql import SQLHandler
+except ImportError:
+    SQLHandler = None
 
 # =============================================================================
 # Globals
 # =============================================================================
 
-__all__ = ['get_content_ggpk_path', 'get_content_ggpk_hash', 'check_hash']
+__all__ = ['DatHandler']
+
+# =============================================================================
+# Classes
+# =============================================================================
+
+
+class DatHandler(object):
+    """
+
+    :type sql: argparse.ArgumentParser
+    """
+    def __init__(self, sub_parser):
+        """
+
+        :type sub_parser: argparse._SubParsersAction
+        """
+        parser = sub_parser.add_parser(
+            'dat',
+            help='.dat export',
+        )
+        parser.set_defaults(func=lambda args: parser.print_help())
+        sub = parser.add_subparsers(help='Export type')
+        if SQLHandler:
+            SQLHandler(sub)
 
 # =============================================================================
 # Functions
 # =============================================================================
-
-def get_content_ggpk_path():
-    args = config.get_option('version'), config.get_option('distributor')
-    paths = PoEPath(*args).get_installation_paths()
-
-    if not paths:
-        raise SetupError('No PoE Installation found.')
-
-    return os.path.join(paths[0], 'content.ggpk')
-
-def get_content_ggpk_hash():
-    ggpk = get_content_ggpk_path()
-    with open(ggpk, 'rb') as f:
-        data = f.read(2**16)
-
-    return hashlib.md5(data).hexdigest()
-
-def check_hash():
-    hash_old = config.get_setup_variable('temp_dir', 'hash')
-    hash_new = get_content_ggpk_hash()
-
-    if hash_old == hash_new:
-        return True
-
-    config.set_setup_variable('temp_dir', 'performed', False)
-    return False

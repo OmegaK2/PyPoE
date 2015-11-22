@@ -37,7 +37,7 @@ from PyPoE.poe.file.ggpk import GGPKFile
 from PyPoE.cli.core import console
 from PyPoE.cli.handler import BaseHandler
 from PyPoE.cli.exporter import config
-from PyPoE.cli.exporter.wiki.util import get_content_ggpk_hash, get_content_ggpk_path
+from PyPoE.cli.exporter.util import get_content_ggpk_hash, get_content_ggpk_path
 from PyPoE.cli.exporter.wiki.parsers import WIKI_HANDLERS
 
 # =============================================================================
@@ -50,9 +50,8 @@ __all__ = ['WikiHandler']
 # Classes
 # =============================================================================
 
-class WikiHandler(BaseHandler):
-    LUA_OPTIONS = ('quest_rewards', 'vendor_rewards')
 
+class WikiHandler(BaseHandler):
     def __init__(self, sub_parser):
         # Config Options
         config.add_option('temp_dir', 'is_directory(exists=True)')
@@ -106,3 +105,4 @@ class WikiHandler(BaseHandler):
         config.set_setup_variable('temp_dir', 'hash', get_content_ggpk_hash())
 
         console('Done.')
+

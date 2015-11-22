@@ -39,6 +39,7 @@ import sys
 import traceback
 import warnings
 from enum import Enum
+from time import strftime
 
 # 3rd Party
 from colorama import Style, Fore
@@ -53,10 +54,12 @@ __all__ = ['Msg', 'OutputHook', 'run', 'console']
 # Classes
 # =============================================================================
 
+
 class Msg(Enum):
     default = Style.RESET_ALL
     error = Style.BRIGHT + Fore.RED
     warning = Style.BRIGHT + Fore.YELLOW
+
 
 class OutputHook(object):
     def __init__(self, show_warning):
@@ -83,6 +86,7 @@ class OutputHook(object):
 # Functions
 # =============================================================================
 
+
 def run(parser, config):
     args = parser.parse_args()
     if hasattr(args, 'func'):
@@ -100,7 +104,7 @@ def run(parser, config):
 
 
 def console(message, msg=Msg.default, rtr=False):
-    f = msg.value + message + Msg.default.value
+    f = msg.value + strftime('%X ') + message + Msg.default.value
     if rtr:
         return f
     else:

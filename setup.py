@@ -17,6 +17,17 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'DESCRIPTION.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+extras_require = {
+    'dev': ['sphinx', 'pytest'],
+    'cli': ['colorama', 'graphviz', 'tqdm'],
+    'cli-wikibot': ['pywikibot'],
+    'cli-sql': ['sqlalchemy', 'pymysql'],
+    'ui': ['PySide', 'PyOpenGL'],
+    'opt': ['mmh3'],
+}
+extras_require['full'] = [v for v in extras_require.values()]
+extras_require['cli-full'] = [v for k, v in extras_require.items() if k.startswith('cli')]
+
 setup(
     name='PyPoE',
 
@@ -80,13 +91,7 @@ setup(
     # dependencies). You can install these using the following syntax,
     # for example:
     # $ pip install -e .[dev,test]
-    extras_require={
-        'dev': ['sphinx', 'pytest'],
-        'cli': ['colorama', 'graphviz'],
-        'cli-wikibot': ['pywikibot'],
-        'ui': ['PySide', 'PyOpenGL'],
-        'opt': ['mmh3'],
-    },
+    extras_require=extras_require,
 
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these

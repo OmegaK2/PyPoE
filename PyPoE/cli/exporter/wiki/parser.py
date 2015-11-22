@@ -31,6 +31,7 @@ See PyPoE/LICENSE
 
 # Python
 import warnings
+import re
 
 # self
 from PyPoE.poe.file.dat import RelationalReader
@@ -40,6 +41,103 @@ from PyPoE.poe.file.translations import (
     get_custom_translation_file,
 )
 from PyPoE.poe.sim.mods import get_translation
+
+# =============================================================================
+# Globals
+# =============================================================================
+
+__all__ = ['BaseParser']
+
+_inter_wiki_map = (
+    #
+    # Attibutes
+    #
+    ('Dexterity', {}),
+    ('Intelligence', {}),
+    ('Strength', {}),
+    #
+    # Offense stats
+    #
+    ('Accuracy Rating', {}),
+    ('Accuracy', {}),
+    ('Attack Speed', {}),
+    ('Cast Speed', {}),
+    ('Critical Strike Chance', {}),
+    ('Critical Strike Multiplier', {}),
+    ('Movement Speed', {}),
+    ('Leech', {}), # Life Leech, Mana Leech
+    ('Life', {}),
+    ('Mana', {}),
+    #
+    # Damage
+    #
+    # Base types
+    ('Chaos Damage', {}),
+    ('Cold Damage', {}),
+    ('Fire Damage', {}),
+    ('Lightning Damage', {}),
+    ('Physical Damage', {}),
+    # Mixed and special
+    ('Attack Damage', {}),
+    ('Spell Damage', {}),
+    ('Elemental Damage', {}),
+    ('Minion Damage', {}),
+    # Just damage
+    #('Damage', {}),
+    #
+    # Defenses
+    #
+    ('Armour Rating', {}),
+    ('Armour', {}),
+    ('Energy Shield', {}),
+    ('Evasion Rating', {}),
+    ('Evasion Rating', {}),
+    ('Spell Block', {}),
+    ('Block', {}),
+    ('Spell Dodge', {}),
+    ('Dodge', {}),
+    #
+    ('Chaos Resistance', {}),
+    ('Cold Resistance', {}),
+    ('Fire Resistance', {}),
+    ('Lightning Resistance', {}),
+    ('Elemental Resistance', {}),
+    #
+    # Buffs
+    #
+
+    # Charges
+    ('Endurance Charge', {}),
+    ('Frenzy Charge', {}),
+    ('Power Charge', {}),
+
+    # Friendly
+    ('Rampage', {}),
+
+    # Hostile
+    ('Corrupted Blood', {}),
+    #
+    # Skills
+    #
+    ('Explosive Arrow', {}),
+    ('Viper Strike', {}),
+
+    #
+    # Misc
+    #
+    ('Minion', {}),
+    ('Mine', {}),
+    ('Totem', {}),
+    ('Trap', {}),
+    ('Dual Wield', {}),
+    ('Level', {}),
+    ('PvP', {}),
+)
+
+_inter_wiki_re = re.compile(
+    '|'.join([r'(%s)(?:[\w]*)' % item[0] for item in _inter_wiki_map]),
+    re.UNICODE | re.MULTILINE | re.IGNORECASE
+)
 
 # =============================================================================
 # Classes
@@ -73,8 +171,6 @@ class BaseParser(object):
         self.custom = get_custom_translation_file()
 
     def _get_stats(self, mod, translation_file=None):
-        out = []
-
         result = get_translation(mod, self.tc, translation_file)
 
         if mod['Domain'] == 3:
@@ -148,3 +244,44 @@ class BaseParser(object):
                     out.append(self._HIDDEN_FORMAT % line)
 
         return out
+
+# =============================================================================
+# Functions
+# =============================================================================
+
+
+def make_inter_wiki_links(string):
+    """
+    Formats the given string according to the predefined inter wiki formatting
+    rules and returns it.
+
+    :param string: String to format
+    :type string: str
+
+    :return: String formatted with inter wiki links
+    :rtype: str
+    """
+    out = []
+
+    last_index = 0
+
+    for match in _inter_wiki_re.finditer(string):
+        index = match.lastindex
+        full = match.group(0)
+        short = match.group(index)
+        index -= 1
+
+        out.append(string[last_index:match.start()])
+
+        if 'link' not in _inter_wiki_map[index] and short == full:
+            out.append('[[%s]]' % full)
+        elif 'link' in _inter_wiki_map[index]:
+            out.append('[[%s|%s]]' % (_inter_wiki_map[index], full))
+        else:
+            out.append('[[%s|%s]]' % (short, full))
+
+        last_index = match.end()
+
+    out.append(string[last_index:])
+
+    return ''.join(out)

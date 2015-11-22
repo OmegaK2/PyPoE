@@ -37,6 +37,7 @@ from . import config
 from PyPoE.poe.constants import VERSION, DISTRIBUTOR
 from PyPoE.cli.core import run
 from PyPoE.cli.handler import ConfigHandler, SetupHandler
+from PyPoE.cli.exporter.dat import DatHandler
 from PyPoE.cli.exporter.wiki.core import WikiHandler
 
 # =============================================================================
@@ -46,6 +47,7 @@ from PyPoE.cli.exporter.wiki.core import WikiHandler
 # =============================================================================
 # Functions
 # =============================================================================
+
 
 def main():
     # Setup
@@ -67,6 +69,7 @@ def main():
     }
     config.add_option('distributor', spec % kwargs)
 
+    DatHandler(main_sub)
     WikiHandler(main_sub)
     # In that order..
     SetupHandler(main_sub, config)
