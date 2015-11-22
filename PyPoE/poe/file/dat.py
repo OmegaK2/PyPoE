@@ -85,8 +85,10 @@ __all__ = [
 # Classes
 # =============================================================================
 
+
 class SpecificationError(ValueError):
     pass
+
 
 class DatValue(object):
     """
@@ -309,6 +311,7 @@ class DatValue(object):
             return [dv.get_value() for dv in self.children]
         else:
             return self.value
+
 
 class RecordList(list):
     __slots__ = ['parent', 'rowid']
@@ -824,6 +827,7 @@ class RelationalReader(AbstractFileCache):
 # Functions
 # =============================================================================
 
+
 def load_spec(path=None):
     """
     Loads a specification that can be used for the dat files. It will be
@@ -871,6 +875,7 @@ def load_spec(path=None):
                 )
 
     return spec
+
 
 def reload_default_spec():
     """
