@@ -519,6 +519,11 @@ class DatReader(object):
         offset = 4 + rowid * self.table_record_length
         row_data = RecordList(self, rowid)
         data_raw = self._file_raw[offset:offset+self.table_record_length]
+
+        # We don't have any data, return early
+        if len(data_raw) == 0:
+            return row_data
+
         if self.cast_spec:
             # Unpacking the entire row in one go will help breaking down the
             # function calls significantly
@@ -534,7 +539,10 @@ class DatReader(object):
                 offset += casts[0][1]
                 i += 1
         else:
-            unparsed = DatValue(value=data_raw, offset=offset, size=self.table_record_length)
+            if self.use_dat_value:
+                unparsed = DatValue(value=data_raw, offset=offset, size=self.table_record_length)
+            else:
+                unparsed = data_raw
             row_data.append(unparsed)
             offset += self.table_record_length
 
