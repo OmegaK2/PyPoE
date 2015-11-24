@@ -1,11 +1,11 @@
 """
-.dat Exporter
+.dat export to JSON
 
 Overview
 -------------------------------------------------------------------------------
 
 +----------+------------------------------------------------------------------+
-| Path     | PyPoE/cli/exporter/dat/__init__.py                               |
+| Path     | PyPoE/cli/exporter/dat/parsers/json.py                           |
 +----------+------------------------------------------------------------------+
 | Version  | 1.0.0a0                                                          |
 +----------+------------------------------------------------------------------+
@@ -17,7 +17,7 @@ Overview
 Description
 -------------------------------------------------------------------------------
 
-.dat Exporter
+.dat export to JSON
 
 Agreement
 -------------------------------------------------------------------------------
@@ -30,46 +30,63 @@ See PyPoE/LICENSE
 # =============================================================================
 
 # Python
-
-# 3rd-party
+import argparse
+from json import dump
 
 # self
-from PyPoE.cli.exporter.dat.parsers.json import JSONExportHandler
-try:
-    from PyPoE.cli.exporter.dat.parsers.sql import SQLExportHandler
-except ImportError:
-    SQLExportHandler = None
+from PyPoE.cli.core import console, Msg
+from PyPoE.cli.exporter.dat.handler import DatExportHandler
 
 # =============================================================================
 # Globals
 # =============================================================================
 
-__all__ = ['DatHandler']
+__all__ = ['JSONExportHandler']
 
 # =============================================================================
 # Classes
 # =============================================================================
 
-class DatHandler(object):
-    """
 
-    :type sql: argparse.ArgumentParser
-    """
+class JSONExportHandler(DatExportHandler):
     def __init__(self, sub_parser):
         """
 
         :type sub_parser: argparse._SubParsersAction
         """
-        parser = sub_parser.add_parser(
-            'dat',
-            help='.dat export',
+        self.json = sub_parser.add_parser(
+            'json',
+            help='Export to JSON',
+            formatter_class=argparse.RawTextHelpFormatter,
         )
-        parser.set_defaults(func=lambda args: parser.print_help())
+        self.json.add_argument(
+            'target',
+            help='target to export to',
+        )
 
-        sub = parser.add_subparsers(help='Export type')
-        JSONExportHandler(sub)
-        if SQLExportHandler:
-            SQLExportHandler(sub)
+        self.add_default_arguments(self.json)
+
+    def handle(self, args):
+        super(JSONExportHandler, self).handle(args)
+
+        with open(args.target, mode='w') as f:
+            dat_files = self._read_dat_files(args)
+
+            console('Building data object...')
+            out = []
+
+            for file_name in args.files:
+                out.append({
+                    'filename': file_name,
+                    'header': list(dat_files[file_name].reader.table_columns),
+                    'data': dat_files[file_name].reader.table_data,
+                })
+
+            console('Dumping data to "%s"...' % args.target)
+
+            dump(out, f)
+
+        console('Done.')
 
 # =============================================================================
 # Functions

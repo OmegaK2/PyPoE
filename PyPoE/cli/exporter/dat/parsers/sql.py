@@ -5,7 +5,7 @@ Overview
 -------------------------------------------------------------------------------
 
 +----------+------------------------------------------------------------------+
-| Path     | PyPoE/cli/exporter/dat/sql.py                                    |
+| Path     | PyPoE/cli/exporter/dat/parsers/sql.py                            |
 +----------+------------------------------------------------------------------+
 | Version  | 1.0.0a0                                                          |
 +----------+------------------------------------------------------------------+
@@ -42,22 +42,22 @@ from sqlalchemy.dialects.mysql import TINYINT, SMALLINT, INTEGER, BIGINT
 
 # self
 from PyPoE.poe.file.dat import load_spec, DatFile
-from PyPoE.poe.file.ggpk import GGPKFile
 from PyPoE.cli.core import console, Msg
-from PyPoE.cli.exporter.util import get_content_ggpk_path
+from PyPoE.cli.exporter.util import get_content_ggpk, get_content_ggpk_path
+from PyPoE.cli.exporter.dat.handler import DatExportHandler
 
 # =============================================================================
 # Globals
 # =============================================================================
 
-__all__ = []
+__all__ = ['SQLExportHandler']
 
 # =============================================================================
 # Classes
 # =============================================================================
 
 
-class SQLHandler(object):
+class SQLExportHandler(DatExportHandler):
     _type_to_sql_map = {
         'bool': Boolean(),
         'byte': TINYINT(),
@@ -84,7 +84,7 @@ class SQLHandler(object):
             help='Export to MySQL',
             formatter_class=argparse.RawTextHelpFormatter,
         )
-        self.sql.set_defaults(func=self.handle_sql)
+        self.sql.set_defaults(func=self.handle)
 
         self.sql.add_argument(
             '--url',
@@ -103,6 +103,8 @@ class SQLHandler(object):
             action='count',
         )
 
+        self.add_default_arguments(self.sql)
+
     def _get_data_table_name(self, name, field):
         return '%s_%s%s' % (name, field, self._data_suffix)
 
@@ -118,7 +120,7 @@ class SQLHandler(object):
             return Column(field, type)
 
 
-    def handle_sql(self, args):
+    def handle(self, args):
         """
 
         :param args:
@@ -126,6 +128,8 @@ class SQLHandler(object):
 
         :return:
         """
+        super(SQLExportHandler, self).handle(args)
+
         engine = create_engine(args.url, echo=False, convert_unicode=True, encoding='utf-8')
         metadata = MetaData(bind=engine)
 
@@ -137,7 +141,8 @@ class SQLHandler(object):
         prefix = 'SQL Tables - '
         console(prefix + 'Creating virtual tables from specification...')
         tables = {}
-        for name, top_section in tqdm(spec.items()):
+        for name in tqdm(args.files):
+            top_section = spec[name]
             name = name.replace('.dat', '')
             columns = [
                 Column('rid', BIGINT(unsigned=True), primary_key=True)
@@ -179,28 +184,7 @@ class SQLHandler(object):
         #
         prefix = 'SQL Data - '
 
-        path = get_content_ggpk_path()
-
-        console(prefix + 'Reading "%s"...' % path)
-
-        ggpk = GGPKFile()
-        ggpk.read(path)
-        ggpk.directory_build()
-
-        console(prefix + 'Parsing .dat files...')
-
-        dat_files = {}
-        ggpk_data = ggpk['Data']
-        for name in tqdm(spec):
-            node = ggpk_data[name]
-            if node is None:
-                console(prefix + 'Skipping "%s" (missing)' % name, msg=Msg.warning)
-                continue
-
-            df = DatFile(name)
-            df.read(file_path_or_raw=node.record.extract(), use_dat_value=False)
-
-            dat_files[name] = df
+        dat_files = self._read_dat_files(args, prefix=prefix)
 
         console(prefix + 'Committing data...')
         con = engine.connect()

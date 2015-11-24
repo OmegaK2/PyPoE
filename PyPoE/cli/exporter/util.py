@@ -35,6 +35,7 @@ import hashlib
 
 # self
 from PyPoE.poe.path import PoEPath
+from PyPoE.poe.file.ggpk import GGPKFile
 from PyPoE.cli.config import SetupError
 from PyPoE.cli.exporter import config
 
@@ -42,7 +43,12 @@ from PyPoE.cli.exporter import config
 # Globals
 # =============================================================================
 
-__all__ = ['get_content_ggpk_path', 'get_content_ggpk_hash', 'check_hash']
+__all__ = [
+    'get_content_ggpk_path',
+    'get_content_ggpk_hash',
+    'get_content_ggpk',
+    'check_hash',
+]
 
 # =============================================================================
 # Functions
@@ -81,6 +87,26 @@ def get_content_ggpk_hash():
         data = f.read(2**16)
 
     return hashlib.md5(data).hexdigest()
+
+
+def get_content_ggpk(path=None):
+    """
+    Gets the GGPKFile instance based on the stored config variables.
+
+    :param path: path to use if not None, otherwise determine path automatically
+    :type path: str or None
+
+    :return: Parsed GGPKFile instance
+    :rtype: GGPKFile()
+    """
+    if path is None:
+        path = get_content_ggpk_path()
+
+    ggpk = GGPKFile()
+    ggpk.read(path)
+    ggpk.directory_build()
+
+    return ggpk
 
 
 def check_hash():
