@@ -163,8 +163,8 @@ class BaseParser(object):
 
         # Load rr and translations which will be undoubtedly be needed for
         # parsing
-        self.rr = RelationalReader(data_path, files=self._files, options=opt)
-        self.tc = TranslationFileCache(base_path)
+        self.rr = RelationalReader(path_or_ggpk=data_path, files=self._files, options=opt)
+        self.tc = TranslationFileCache(path_or_ggpk=base_path)
         for file_name in self._translations:
             self.tc[file_name]
 
