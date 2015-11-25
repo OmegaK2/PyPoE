@@ -76,18 +76,25 @@ class DISTRIBUTOR(IntEnum):
 
     DEFAULT = ALL
 
+
 class SOCKET_COLOUR(Enum):
     """
     Representation of socket colours
     """
-    R = 'R'
-    G = 'G'
-    B = 'B'
-    W = 'W'
+    # IDs are from CharacterStarItems.dat->Sockets and game testing
+    R = ('R', 1)
+    G = ('G', 2)
+    B = ('B', 3)
+    # I can't actually confirm this id=4, but seems logical
+    W = ('W', 4)
     RED = R
     GREEN = G
     BLUE = B
     WHITE = W
+
+    def __init__(self, char, id):
+        self.char = char
+        self.id = id
 
 
 class ITEM_RARITY(Enum):

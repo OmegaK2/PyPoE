@@ -475,7 +475,7 @@ class ItemParser(object):
                 if i % 2 == 0:
                     found = False
                     for socket_colour in SOCKET_COLOUR:
-                        if socket_colour.value == char:
+                        if socket_colour.char == char:
                             found = True
                             break
 
