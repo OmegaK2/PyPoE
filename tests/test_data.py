@@ -48,6 +48,7 @@ from PyPoE.poe.file import dat, ggpk
 # Functions
 # =============================================================================
 
+
 def read_ggpk():
     path = PoEPath(
         version=VERSION.STABLE,
@@ -61,35 +62,67 @@ def read_ggpk():
 
     contents = ggpk.GGPKFile()
     contents.read(os.path.join(path, 'content.ggpk'))
-    root = contents.directory_build()
+    contents.directory_build()
 
     file_set = set()
 
-    for node in root['Data'].files:
+    for node in contents['Data'].files:
         name = node.record.name
         if not name.endswith('.dat'):
             continue
 
         file_set.add(name)
 
-    return root, file_set
+    file_set = list(file_set)
+    file_set.sort()
+
+    return contents, file_set
+
+
+def get_pk_validate_fields():
+    tests = []
+    for file_name, file_section in dat.load_spec().items():
+        for field_name, field_section in file_section['fields'].items():
+            if not field_section['primary_key']:
+                continue
+            tests.append((file_name, field_name))
+    return tests
+
+# =============================================================================
+# Setup
+# =============================================================================
+
+ggpk, file_set = read_ggpk()
+nodes = [ggpk['Data'][fn] for fn in file_set]
+rr = dat.RelationalReader(path_or_ggpk=ggpk, options={'use_dat_value': False})
 
 # =============================================================================
 # Tests
 # =============================================================================
 
-root, file_set = read_ggpk()
 
-@pytest.mark.parametrize("node",
-    [root['Data'][fn] for fn in file_set],
-)
+'''# Kind of testing the reading of the files twice, but whatever.
+@pytest.mark.parametrize("node", nodes)
 def test_definitions(node):
     opt = {
         'use_dat_value': False,
     }
     # Will raise errors accordingly if it fails
     df = dat.DatFile(node.name, options=opt)
-    df.read(node.record.extract())
+    df.read(node.record.extract())'''
 
 
+@pytest.mark.parametrize("file_name", file_set)
+def test_relations(file_name):
+    df = rr[file_name]
+
+
+@pytest.mark.parametrize("file_name, field_name", get_pk_validate_fields())
+def test_primary_key_uniqueness(file_name, field_name):
+    df = rr[file_name]
+    index = df.table_columns[field_name]['index']
+
+    data = [row[index] for row in df]
+
+    assert len(data) == len(set(data))
 

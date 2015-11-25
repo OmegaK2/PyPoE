@@ -37,13 +37,12 @@ import argparse
 # 3rd-party
 from tqdm import tqdm
 from sqlalchemy import Column, Table, MetaData, ForeignKey, create_engine
-from sqlalchemy.types import Boolean, Text
+from sqlalchemy.types import Boolean, Text, String
 from sqlalchemy.dialects.mysql import TINYINT, SMALLINT, INTEGER, BIGINT
 
 # self
-from PyPoE.poe.file.dat import load_spec, DatFile
+from PyPoE.poe.file.dat import load_spec
 from PyPoE.cli.core import console, Msg
-from PyPoE.cli.exporter.util import get_content_ggpk, get_content_ggpk_path
 from PyPoE.cli.exporter.dat.handler import DatExportHandler
 
 # =============================================================================
@@ -69,6 +68,7 @@ class SQLExportHandler(DatExportHandler):
         'long': BIGINT(),
         'ulong': BIGINT(unsigned=True),
         'string': Text(),
+        'varchar': String(255),
     }
 
     _data_suffix = ''
@@ -103,6 +103,12 @@ class SQLExportHandler(DatExportHandler):
             action='count',
         )
 
+        self.sql.add_argument(
+            '--skip-data',
+            help='Skip gathering the data and committing to the database',
+            action='store_true',
+        )
+
         self.add_default_arguments(self.sql)
 
     def _get_data_table_name(self, name, field):
@@ -112,13 +118,25 @@ class SQLExportHandler(DatExportHandler):
         return '%s%s' % (name, self._data_key_suffix)
 
     def _get_field(self, field, section, type):
+        args = []
+        kwargs = {}
+        if section['primary_key']:
+            kwargs['primary_key'] = section['primary_key']
+            if type == 'string':
+                type = 'varchar'
+
         if section['key']:
             # SQL doesn't like mixing types, force ulong
-            type = self._type_to_sql_map['ulong']
-            return Column(field, type, ForeignKey('%s.rid' % section['key'].replace('.dat', '')))
+            type = 'ulong'
+            args.append(ForeignKey('%s.rid' % section['key'][:-4]))
+            kwargs['nullable'] = True
+        # TODO: This is a bit of a temporary fix
+        elif section.name.startswith('Key'):
+            kwargs['nullable'] = True
         else:
-            return Column(field, type)
+            kwargs['nullable'] = False
 
+        return Column(field, self._type_to_sql_map[type], *args, **kwargs)
 
     def handle(self, args):
         """
@@ -162,14 +180,14 @@ class SQLExportHandler(DatExportHandler):
                     tables[table_name] = (Table(
                         table_name,
                         metadata,
-                        Column(self._get_data_reference_key(name), BIGINT(unsigned=True), ForeignKey('%s.rid' % (name, ))),
-                        self._get_field('value', section, self._type_to_sql_map[type_in]),
-                        Column('index', SMALLINT),
+                        Column(self._get_data_reference_key(name), BIGINT(unsigned=True), ForeignKey('%s.rid' % (name, )), nullable=False),
+                        self._get_field('value', section, type_in),
+                        Column('index', SMALLINT, nullable=False),
                     ))
                 elif dim >= 2:
                     raise ValueError('unsupported dim >=2')
                 else:
-                    col = self._get_field(field, section, self._type_to_sql_map[type_in])
+                    col = self._get_field(field, section, type_in)
                     columns.append(col)
             tables[name] = Table(name, metadata, *columns)
 
@@ -182,43 +200,44 @@ class SQLExportHandler(DatExportHandler):
         #
         # SQL Data
         #
-        prefix = 'SQL Data - '
+        if not args.skip_data:
+            prefix = 'SQL Data - '
 
-        dat_files = self._read_dat_files(args, prefix=prefix)
+            dat_files = self._read_dat_files(args, prefix=prefix)
 
-        console(prefix + 'Committing data...')
-        con = engine.connect()
-        con.execute('SET foreign_key_checks = 0;')
-        for name, df in tqdm(dat_files.items()):
-            name_noext = name.replace('.dat', '')
-            foreign_key = self._get_data_reference_key(name_noext)
-            data = []
-            for row in df.reader:
-                dt = {}
-                for k, v in zip(row.keys(), row):
-                    if isinstance(v, list) and v:
+            console(prefix + 'Committing data...')
+            con = engine.connect()
+            con.execute('SET foreign_key_checks = 0;')
+            for name, df in tqdm(dat_files.items()):
+                name_noext = name.replace('.dat', '')
+                foreign_key = self._get_data_reference_key(name_noext)
+                data = []
+                for row in df.reader:
+                    dt = {}
+                    for k, v in zip(row.keys(), row):
+                        if isinstance(v, list) and v:
 
-                        con.execute(
-                            tables[
-                                self._get_data_table_name(name_noext, k)
-                            ].insert(
-                                bind=engine,
-                                values=[
-                                    {
-                                        'value': item,
-                                        foreign_key: row.rowid,
-                                        'index': i,
-                                    } for i, item in enumerate(v)
-                                ]
+                            con.execute(
+                                tables[
+                                    self._get_data_table_name(name_noext, k)
+                                ].insert(
+                                    bind=engine,
+                                    values=[
+                                        {
+                                            'value': item,
+                                            foreign_key: row.rowid,
+                                            'index': i,
+                                        } for i, item in enumerate(v)
+                                    ]
+                                )
                             )
-                        )
-                    else:
-                        dt[k] = v
-                data.append(dt)
-            con.execute(
-                tables[name_noext].insert(bind=engine, values=data)
-            )
-        con.execute('SET foreign_key_checks = 1;')
+                        else:
+                            dt[k] = v
+                    data.append(dt)
+                con.execute(
+                    tables[name_noext].insert(bind=engine, values=data)
+                )
+            con.execute('SET foreign_key_checks = 1;')
 
         console(prefix + 'All done.')
 
