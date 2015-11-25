@@ -602,6 +602,13 @@ class DatReader(object):
 
         return self.table_data
 
+    def print_data(self):
+        for row in self.table_data:
+            print('Row: %s' % row.rowid)
+            for k in row.keys():
+                v = row[k]
+                print('|- %s: %s' % (k, v))
+
     @deprecated
     def export_to_html(self, export_table=True, export_data=False):
         outstr = []
@@ -660,43 +667,27 @@ class DatReader(object):
 class DatFile(AbstractFileReadOnly):
     """
     Representation of a .dat file.
+
+    :ivar reader:
+    :type reader: DatReader
     """
     
-    def __init__(self, file_name, *args, read_file=None, read_raw=None, options={}):
+    def __init__(self, file_name):
+        """
+        :param file_name: Name of the .dat file
+        :type file_name: str
+        """
         self._file_name = file_name
         self.reader = None
 
-        if read_file and read_raw:
-            raise ValueError('Only one of read_file and read_raw should be set.')
-
-        if read_file:
-            self.read(os.path.join(read_file, file_name), **options)
-        elif read_raw:
-            self.read(read_raw, **options)
-
-    def print_data(self):
-        for row in d.table_data:
-            print('Row: %s' % row.rowid)
-            for k in row.keys():
-                v = row[k]
-                print('|- %s: %s' % (k, v))
+    def __repr__(self):
+        return 'DatFile<%s>(file_name="%s")' % (hex(id(self)), self._file_name)
 
     def _read(self, buffer, *args, **kwargs):
         self.reader = DatReader(self._file_name, **kwargs)
         self.reader.read(buffer.read())
 
         return self.reader
-
-    @deprecated(message='Use of %(func)s is deprecated, use read instead.')
-    def read_from_file(self, path, **options):
-        return self.read(os.path.join(path, self._file_name), **options)
-
-    @deprecated(message='Use of %(func)s is deprecated, use read instead.')
-    def read_from_raw(self, raw, **options):
-        """
-        Specification as _ordered_ dictionary key:value format
-        """
-        return self.read(raw, **options)
 
 
 class RelationalReader(AbstractFileCache):
@@ -733,6 +724,11 @@ class RelationalReader(AbstractFileCache):
             for file_name in files:
                 self.read_file(file_name)
 
+    def __repr__(self):
+        return 'RelationalReader<%s>(options=%s)' % (
+            hex(id(self)), repr(self.options)
+        )
+
     def __getitem__(self, item):
         """
         Shortcut.
@@ -761,7 +757,7 @@ class RelationalReader(AbstractFileCache):
         if value.is_pointer:
             self._dv_set_value(value.child, other, key, offset)
         elif value.is_list:
-            [self._dv_set_value(dv, other, key, offset) for dv in self.children]
+            [self._dv_set_value(dv, other, key, offset) for dv in value.children]
         else:
             value.value = self._set_value(value.value, other, key, offset)
 
@@ -792,16 +788,13 @@ class RelationalReader(AbstractFileCache):
             return self.files[name]
 
         if self._ggpk:
-            df = DatFile(
-                name,
-                options=self.options
-            )
+            df = DatFile(name)
             df.read(
                 self._ggpk.directory['Data'][name].record.extract(),
                 **self.options
             )
         elif self._path:
-            df = DatFile(name, options=self.options)
+            df = DatFile(name)
             df.read(os.path.join(self._path, name), **self.options)
 
         self.files[name] = df
@@ -853,34 +846,31 @@ def load_spec(path=None):
     spec = configobj.ConfigObj(infile=path, configspec=DAT_SPECIFICATION_CONFIGSPEC)
     spec.validate(validate.Validator())
 
-    for file_name in spec:
-        for f in spec[file_name]['fields']:
-            other = spec[file_name]['fields'][f]['key']
-            if not other:
-                continue
-            if other not in spec:
-                raise SpecificationError(
-                    '%(dat_file)s->%(field)s->key: %(other)s not in '
-                    'specification' % {
-                        'dat_file': file_name,
-                        'field': f,
-                        'other': other,
-                    }
-                )
+    for file_name, file_spec in spec.items():
+        for field_name, field in file_spec['fields'].items():
+            other = field['key']
+            if other:
+                if other not in spec:
+                    raise SpecificationError(
+                        '%(dat_file)s->%(field)s->key: %(other)s not in '
+                        'specification' % {
+                            'dat_file': file_name,
+                            'field': file_name,
+                            'other': other,
+                        }
+                    )
 
-            other_key = spec[file_name]['fields'][f]['key_id']
-            if not other_key:
-                continue
-            if other_key not in spec[other]['fields']:
-                raise SpecificationError(
-                    '%(dat_file)s->%(field)s->key_id: %(other)s->%(other_key)s'
-                    ' not in specification' % {
-                        'dat_file': file_name,
-                        'field': f,
-                        'other': other,
-                        'other_key': other_key,
-                    }
-                )
+                other_key = field['key_id']
+                if other_key and other_key not in spec[other]['fields']:
+                    raise SpecificationError(
+                        '%(dat_file)s->%(field)s->key_id: %(other)s->%(other_key)s'
+                        ' not in specification' % {
+                            'dat_file': file_name,
+                            'field': file_name,
+                            'other': other,
+                            'other_key': other_key,
+                        }
+                    )
 
     return spec
 
