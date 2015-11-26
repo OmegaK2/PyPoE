@@ -121,14 +121,23 @@ class SQLExportHandler(DatExportHandler):
         args = []
         kwargs = {}
         if section['primary_key']:
-            kwargs['primary_key'] = section['primary_key']
+            kwargs['unique'] = True
             if type == 'string':
                 type = 'varchar'
 
         if section['key']:
             # SQL doesn't like mixing types, force ulong
-            type = 'ulong'
-            args.append(ForeignKey('%s.rid' % section['key'][:-4]))
+            if type != 'varchar':
+                type = 'ulong'
+            if section['key_offset']:
+                foreign_key = 'rid'
+            elif section['key_id']:
+                foreign_key = section['key_id']
+            else:
+                foreign_key = 'rid'
+            args.append(ForeignKey(
+                '%s.%s' % (section['key'][:-4], foreign_key)
+            ))
             kwargs['nullable'] = True
         # TODO: This is a bit of a temporary fix
         elif section.name.startswith('Key'):
@@ -180,7 +189,18 @@ class SQLExportHandler(DatExportHandler):
                     tables[table_name] = (Table(
                         table_name,
                         metadata,
-                        Column(self._get_data_reference_key(name), BIGINT(unsigned=True), ForeignKey('%s.rid' % (name, )), nullable=False),
+                        Column(
+                            'rid',
+                            BIGINT(unsigned=True),
+                            primary_key=True,
+                            autoincrement=True
+                        ),
+                        Column(
+                            self._get_data_reference_key(name),
+                            BIGINT(unsigned=True),
+                            ForeignKey('%s.rid' % (name, )),
+                            nullable=False
+                        ),
                         self._get_field('value', section, type_in),
                         Column('index', SMALLINT, nullable=False),
                     ))
