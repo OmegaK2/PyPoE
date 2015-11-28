@@ -120,42 +120,49 @@ class DocStringDecorator(object):
     wrap it. This is done so it can work with any type of object.
     """
 
-    def __init__(self, prepend='', append='', doc=None):
+    def __init__(self, prepend=None, append=None, doc=None):
         """
+        All parameters accept either a string or an arbitrary object. If an
+        arbitrary object is specified, it's doc string will be used.
+
         :param prepend: String to prepend to the docstring
-        :type prepend: str
+        :type prepend: None, str or object
 
         :param append: String to append to the docstring
-        :type append: str
+        :type append: None, str or object
 
-        :param doc: Docstring to use. If an object that doesn't inherit from str
-        is supplied, use object's docstring.
+        :param doc: Docstring to use. If None, use the object's docstring
         :type doc: None, str or object
         """
-        self.append = append
-        self.prepend = prepend
+        self.append = self._get_str(append)
+        self.prepend = self._get_str(prepend)
         self.doc = doc
 
-    def __call__(self, function):
-        if self.doc is None:
-            docs = function.__doc__
-        elif isinstance(self.doc, str):
-            docs = self.doc
+    def _get_str(self, obj):
+        if obj is None:
+            return ''
+        elif isinstance(obj, str):
+            return obj
+        elif obj.__doc__:
+            return obj.__doc__
         else:
-            docs = self.doc.__doc__
+            return ''
 
-        if docs is None:
-            docs = ''
+    def __call__(self, object):
+        if self.doc is None:
+            docs = self._get_str(object)
+        else:
+            docs = self._get_str(self.doc)
 
         docs = self.prepend + docs + self.append
 
         if docs != '':
-            if hasattr(function, '__func__'):
-                function.__func__.__doc__ = docs
+            if hasattr(object, '__func__'):
+                object.__func__.__doc__ = docs
             else:
-                function.__doc__ = docs
+                object.__doc__ = docs
 
-        return function
+        return object
 
 
 # =============================================================================
