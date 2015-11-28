@@ -30,6 +30,7 @@ See PyPoE/LICENSE
 # =============================================================================
 
 # Python
+from collections import OrderedDict
 
 # 3rd-party
 import pytest
@@ -68,14 +69,18 @@ class TestReprMixin:
         assert repr(r) == 'Repr<%s>(a=5, b=42)' % hex(id(r))
 
     def test_override(self, r):
-        r._REPR_ATTRIBUTES = {'b': 'extra'}
+        r._REPR_ARGUMENTS_TO_ATTRIBUTES = {'b': 'extra'}
         assert repr(r) == 'Repr<%s>(a=5, b=1337)' % hex(id(r))
 
     def test_override_missing(self, r):
-        r._REPR_ATTRIBUTES = {'b': 'extra'}
-        r._REPR_IGNORE_MISSING_ATTRIBUTES = True
+        r._REPR_ARGUMENTS_TO_ATTRIBUTES = {'b': 'extra'}
+        r._REPR_ARGUMENTS_IGNORE_MISSING = True
         assert repr(r) == 'Repr<%s>(b=1337)' % hex(id(r))
 
     def test_ingore(self, r):
-        r._REPR_ATTRIBUTES_IGNORE = {'a'}
+        r._REPR_ARGUMENTS_IGNORE = {'a'}
         assert repr(r) == 'Repr<%s>()' % hex(id(r))
+
+    def test_extra_attributes(self, r):
+        r._REPR_EXTRA_ATTRIBUTES = OrderedDict((('b', '_b',), ('extra', None)))
+        assert repr(r) == 'Repr<%s>(a=5, b=42, extra=1337)' % hex(id(r))
