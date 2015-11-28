@@ -38,7 +38,7 @@ from PyPoE.poe.file.dat import DatFile, RelationalReader
 from PyPoE.poe.file.ggpk import GGPKFile
 from PyPoE.poe.file.idl import IDLFile
 from PyPoE.poe.file.idt import IDTFile
-from PyPoE.poe.file.ot import OTFile
+from PyPoE.poe.file.ot import OTFile, OTFileCache
 from PyPoE.poe.file.translations import TranslationFile, TranslationFileCache
 
 # =============================================================================

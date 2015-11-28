@@ -1,11 +1,11 @@
 """
-Tests for parser.py
+
 
 Overview
 -------------------------------------------------------------------------------
 
 +----------+------------------------------------------------------------------+
-| Path     | tests/PyPoE/cli/exporter/wiki/parser/test_parser.py              |
+| Path     | scripts/profile/PyPoE/poe/file/ot.py                             |
 +----------+------------------------------------------------------------------+
 | Version  | 1.0.0a0                                                          |
 +----------+------------------------------------------------------------------+
@@ -17,7 +17,7 @@ Overview
 Description
 -------------------------------------------------------------------------------
 
-Tests for PyPoE.cli.exporter.wiki.parser
+
 
 Agreement
 -------------------------------------------------------------------------------
@@ -33,56 +33,57 @@ See PyPoE/LICENSE
 import os
 
 # 3rd-party
-import pytest
+import line_profiler
 
 # self
-from PyPoE.cli.exporter.wiki import parser
+from PyPoE.poe.file.shared.keyvalues import *
+from PyPoE.poe.file.ot import OTFile
 
 # =============================================================================
-# Setup
+# Globals
 # =============================================================================
 
-# TODO extract files
-path = 'C:/Temp'
-data_path = os.path.join(path, 'Data')
-desc_path = os.path.join(path, 'Metadata')
+__all__ = []
 
 # =============================================================================
-# Fixtures
+# Classes
 # =============================================================================
 
-@pytest.fixture(scope='module')
-def parserobj():
-    return parser.BaseParser(base_path=path)
-
 # =============================================================================
-# Tests
+# Functions
 # =============================================================================
 
-data = (
-    # Mod ID, expected results
-    (
-        'Strength1',
-        [
-            '(8 to 12) to Strength',
-        ],
-    ),
-    (
-        'MonsterCriticals1',
-        [
-            '<abbr title="300% increased Global Critical Strike Chance">Powerful Crits</abbr>',
-            '50% increased Global Critical Strike Multiplier (Hidden)',
-        ],
-    ),
+# =============================================================================
+# Init
+# =============================================================================
 
-)
+if __name__ == '__main__':
+    profiler = line_profiler.LineProfiler()
+    profiler.add_function(AbstractKeyValueFile._read)
+    profiler.add_function(AbstractKeyValueFile.__missing__)
 
-class TestBaseParser():
-    @pytest.mark.parametrize('mod_id,result', data)
-    def test_get_stats(self, parserobj, mod_id, result):
-        mods = parserobj.rr['Mods.dat']
-        for mod in mods:
-            if mod['Id'] == mod_id:
-                break
+    def run():
+        f = 'C:/Temp/'
+        sections = set()
+        for path, dirnames, filenames in os.walk(f):
+            for filename in filenames:
+                if not filename.endswith('.ot'):
+                    continue
 
-        assert parserobj._get_stats(mod) == result
+                ot = OTFile(parent_or_base_dir_or_ggpk=f)
+                ot.read(os.path.join(path, filename))
+                for k in ot.keys():
+                    sections.add(k)
+
+        sections = list(sections)
+        sections.sort()
+        print(sections)
+
+
+    profiler.run('run()')
+
+    #ot = OTFile(parent_or_base_dir_or_ggpk=f)
+    #ot.read('C:\Temp\Metadata\Items\Armours\BodyArmours\AbstractBodyArmour.ot')
+    #print(ot.keys())
+
+    profiler.print_stats()

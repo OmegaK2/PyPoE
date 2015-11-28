@@ -1,11 +1,11 @@
 """
-Tests for parser.py
+
 
 Overview
 -------------------------------------------------------------------------------
 
 +----------+------------------------------------------------------------------+
-| Path     | tests/PyPoE/cli/exporter/wiki/parser/test_parser.py              |
+| Path     | scripts/profile/PyPoE/poe/file/.py                               |
 +----------+------------------------------------------------------------------+
 | Version  | 1.0.0a0                                                          |
 +----------+------------------------------------------------------------------+
@@ -17,7 +17,7 @@ Overview
 Description
 -------------------------------------------------------------------------------
 
-Tests for PyPoE.cli.exporter.wiki.parser
+
 
 Agreement
 -------------------------------------------------------------------------------
@@ -33,56 +33,57 @@ See PyPoE/LICENSE
 import os
 
 # 3rd-party
-import pytest
+from line_profiler import LineProfiler
 
 # self
-from PyPoE.cli.exporter.wiki import parser
+from PyPoE.poe.file import dat
 
 # =============================================================================
-# Setup
+# Globals
 # =============================================================================
 
-# TODO extract files
-path = 'C:/Temp'
-data_path = os.path.join(path, 'Data')
-desc_path = os.path.join(path, 'Metadata')
+__all__ = []
+
+dir = 'C:/Temp/'
 
 # =============================================================================
-# Fixtures
+# Classes
 # =============================================================================
 
-@pytest.fixture(scope='module')
-def parserobj():
-    return parser.BaseParser(base_path=path)
-
 # =============================================================================
-# Tests
+# Functions
 # =============================================================================
 
-data = (
-    # Mod ID, expected results
-    (
-        'Strength1',
-        [
-            '(8 to 12) to Strength',
-        ],
-    ),
-    (
-        'MonsterCriticals1',
-        [
-            '<abbr title="300% increased Global Critical Strike Chance">Powerful Crits</abbr>',
-            '50% increased Global Critical Strike Multiplier (Hidden)',
-        ],
-    ),
+def read_dat(file_name='GrantedEffects.dat'):
+    d = dat.DatFile('GrantedEffects.dat')
+    d.read(os.path.join(dir, 'Data', file_name))
+    return d
 
-)
+def rr(files=['BaseItemTypes.dat']):
+    rr = dat.RelationalReader(path_or_ggpk=dir, files=files)
 
-class TestBaseParser():
-    @pytest.mark.parametrize('mod_id,result', data)
-    def test_get_stats(self, parserobj, mod_id, result):
-        mods = parserobj.rr['Mods.dat']
-        for mod in mods:
-            if mod['Id'] == mod_id:
-                break
 
-        assert parserobj._get_stats(mod) == result
+
+# =============================================================================
+# Init
+# =============================================================================
+
+if __name__ == '__main__':
+
+    profiler = LineProfiler()
+    profiler.add_function(dat.DatValue.__init__)
+    profiler.add_function(dat.DatReader._cast_from_spec)
+    profiler.add_function(dat.DatReader._process_row)
+    profiler.add_function(dat.RecordList.__getitem__)
+
+    profiler.run("d = read_dat()")
+    profiler.run("for i in range(0, 10000): d.reader[0]['Data1']")
+
+    #print(d.reader[0])
+
+    profiler.add_function(dat.RelationalReader._set_value)
+    profiler.add_function(dat.RelationalReader._dv_set_value)
+    profiler.add_function(dat.RelationalReader._simple_set_value)
+    profiler.add_function(dat.RelationalReader.read_file)
+    profiler.run("rr = dat.RelationalReader(path_or_ggpk=dir, files=['Data/BaseItemTypes.dat'], options={'use_dat_value': False})")
+    profiler.print_stats()

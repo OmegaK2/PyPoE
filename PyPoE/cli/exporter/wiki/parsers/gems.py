@@ -508,11 +508,11 @@ class GemsParser(BaseParser):
             sys.exit(-1)
 
         console('Loading additional files...')
-        self.rr.read_file('GrantedEffects.dat')
-        self.rr.read_file('GrantedEffectsPerLevel.dat')
-        self.rr.read_file('ItemExperiencePerLevel.dat')
-        self.rr.read_file('MonsterTypes.dat')
-        self.rr.read_file('MonsterVarieties.dat')
+        self.rr['GrantedEffects.dat']
+        self.rr['GrantedEffectsPerLevel.dat']
+        self.rr['ItemExperiencePerLevel.dat']
+        self.rr['MonsterTypes.dat']
+        self.rr['MonsterVarieties.dat']
 
         console('Processing information...')
 

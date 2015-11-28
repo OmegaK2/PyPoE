@@ -52,13 +52,14 @@ from collections import defaultdict
 # self
 from PyPoE.shared.decorators import doc
 from PyPoE.poe.file.shared import AbstractFile, ParserError, ParserWarning
+from PyPoE.poe.file.shared.cache import AbstractFileCache
 from PyPoE.poe.file.ggpk import GGPKFile
 
 # =============================================================================
 # Globals
 # =============================================================================
 
-__all__ = []
+__all__ = ['AbstractKeyValueFile', 'AbstractKeyValueFileCache', 'AbstractKeyValueSection']
 
 # =============================================================================
 # Classes
@@ -119,10 +120,9 @@ class AbstractKeyValueSection(dict):
             self[k] = v
 
 
+@doc(prepend=AbstractFile)
 class AbstractKeyValueFile(AbstractFile, defaultdict):
     """
-
-
     :ivar _parent_dir:
     :type _parent_dir: str
 
@@ -302,12 +302,13 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
 
         buffer.write('\n'.join(lines).encode('utf-16le'))
 
-    @doc(doc=AbstractFile.write, append="""
-    .. warning::
-        The current values held by the file instance will be written. This
-        means values inherited from parent files will also be written.
-    """)
+    @doc(prepend=AbstractFile.write)
     def write(self, *args, **kwargs):
+        """
+        .. warning::
+            The current values held by the file instance will be written. This
+            means values inherited from parent files will also be written.
+        """
         return super(AbstractKeyValueFile, self).write(*args, **kwargs)
 
     def _get_write_line(self, key, value):
@@ -340,9 +341,18 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
             else:
                 self[k] = v
 
-
     name = property(fget=_get_name)
 
+
+class AbstractKeyValueFileCache(AbstractFileCache):
+    FILE_TYPE = AbstractKeyValueFile
+
+    @doc(doc=AbstractFileCache._get_file_instance_args)
+    def _get_file_instance_args(self, file_name):
+        options = super(AbstractKeyValueFileCache, self)._get_file_instance_args(file_name)
+        options['parent_or_base_dir_or_ggpk'] = self._ggpk or self._path
+
+        return options
 # =============================================================================
 # Functions
 # =============================================================================

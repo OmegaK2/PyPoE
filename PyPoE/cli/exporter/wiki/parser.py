@@ -145,6 +145,18 @@ _inter_wiki_re = re.compile(
 
 
 class BaseParser(object):
+    """
+    :ivar str base_path:
+
+    :ivar rr:
+    :type rr: RelationalReader
+
+    :ivar tc:
+    :type tc: TranslationFileCache
+
+    :ivar custom:
+    :type custom: TranslationFile
+    """
 
     _DETAILED_FORMAT = '<abbr title="%s">%s</abbr>'
     _HIDDEN_FORMAT = '%s (Hidden)'
@@ -152,10 +164,8 @@ class BaseParser(object):
     _files = []
     _translations = []
 
-    def __init__(self, base_path, data_path, desc_path):
+    def __init__(self, base_path):
         self.base_path = base_path
-        self.data_path = data_path
-        self.desc_path = desc_path
 
         opt = {
             'use_dat_value': False,
@@ -163,7 +173,7 @@ class BaseParser(object):
 
         # Load rr and translations which will be undoubtedly be needed for
         # parsing
-        self.rr = RelationalReader(path_or_ggpk=data_path, files=self._files, options=opt)
+        self.rr = RelationalReader(path_or_ggpk=base_path, files=self._files, read_options=opt)
         self.tc = TranslationFileCache(path_or_ggpk=base_path)
         for file_name in self._translations:
             self.tc[file_name]

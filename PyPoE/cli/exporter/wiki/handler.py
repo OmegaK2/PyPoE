@@ -128,16 +128,14 @@ class ExporterHandler(BaseHandler):
             # Check outdir, if specified:
             out_dir = pargs.outdir if pargs.outdir is not None else config.get_option('out_dir')
             temp_dir = config.get_option('temp_dir')
-            data_dir = os.path.join(temp_dir, 'Data')
-            desc_dir = os.path.join(temp_dir, 'Metadata')
 
-            for item in (out_dir, data_dir, desc_dir):
+            for item in (out_dir, temp_dir):
                 if not os.path.exists(item):
                     console('Path "%s" does not exist' % item, msg=Msg.error)
                     return -1
 
             console('Reading .dat files...')
-            parser = cls(base_path=temp_dir, data_path=data_dir, desc_path=desc_dir)
+            parser = cls(base_path=temp_dir)
 
             console('Parsing...')
             if handler:

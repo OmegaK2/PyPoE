@@ -45,10 +45,12 @@ import re
 import os
 import warnings
 from string import ascii_letters
-from collections import Iterable
+from collections import Iterable, OrderedDict
 
 # self
 from PyPoE import CUSTOM_TRANSLATION_FILE
+from PyPoE.shared.decorators import doc
+from PyPoE.shared.mixins import ReprMixin
 from PyPoE.poe.file.shared import AbstractFileReadOnly, ParserError, ParserWarning
 from PyPoE.poe.file.shared.cache import AbstractFileCache
 
@@ -118,7 +120,19 @@ class DuplicateIdentifierWarning(TranslationWarning):
 # Classes
 # =============================================================================
 
-class Translation(object):
+
+class TranslationReprMixin(ReprMixin):
+
+    _REPR_ARGUMENTS_TO_ATTRIBUTES = {
+        'parent': '_parent_repr',
+    }
+
+    @property
+    def _parent_repr(self):
+        return '%s<%s>' % (self.parent.__class__.__name__, hex(id(self.parent)))
+
+
+class Translation(TranslationReprMixin):
     """
     Representation of a single translation.
 
@@ -133,6 +147,10 @@ class Translation(object):
     """
 
     __slots__ = ['languages', 'ids']
+
+    _REPR_EXTRA_ATTRIBUTES = OrderedDict((
+        ('ids', None),
+    ))
 
     def __init__(self):
         self.languages = []
@@ -149,9 +167,6 @@ class Translation(object):
             return False
 
         return True
-
-    def __repr__(self):
-        return 'Translation<%s>(ids=%s)' % (id(self), self.ids)
 
     def __hash__(self):
         return hash((tuple(self.languages), tuple(self.ids)))
@@ -190,7 +205,7 @@ class Translation(object):
         return etr
 
 
-class TranslationLanguage(object):
+class TranslationLanguage(TranslationReprMixin):
     """
     Representation of a language in the translation file. Each language has
     one or multiple strings.
@@ -322,7 +337,7 @@ class TranslationLanguage(object):
         return None
 
 
-class TranslationString(object):
+class TranslationString(TranslationReprMixin):
     """
     Representation of a single translation string. Each string comes with
     it's own quantifiers and acceptable range.
@@ -337,24 +352,38 @@ class TranslationString(object):
     for each index
     :type range: list[TranslationRange]
 
-    :ivar string: the actual string to use for translation
-    :type string: str
+    :ivar strings: translation string broken down into segments
+    :type strings: list[str]
 
-    :ivar string_re: a compiled regular expression string for reverse matching
+    :ivar tags: tags for value replacement between segments
+    :type tags: list[str]
     """
 
-    __slots__ = ['parent', 'quantifier', 'range', 'string', 'string_re']
+    __slots__ = ['parent', 'quantifier', 'range', 'strings', 'tags']
+    
+    _REPR_EXTRA_ATTRIBUTES = OrderedDict((
+        ('string', None),
+    ))
 
     # replacement tags used in translations
-    tags = '%%%s%%', '%%%s$+d'
+    _re_split = re.compile(r'(?:%(?P<id>[0-9]+)(?:%|\$\+d))', re.UNICODE)
 
     def __init__(self, parent):
         parent.strings.append(self)
         self.parent = parent
         self.quantifier = TranslationQuantifier()
         self.range = []
-        self.string = ''
-        self.string_re = ''
+        self.tags = []
+        self.strings = []
+
+    @property
+    def string(self):
+        s = []
+        for i, tag in enumerate(self.tags):
+            s.append(self.strings[i])
+            s.append(str(tag))
+        s.append(self.strings[-1])
+        return ''.join(s)
 
     def __eq__(self, other):
         if not isinstance(other, TranslationString):
@@ -374,30 +403,16 @@ class TranslationString(object):
     def __hash__(self):
         return hash((self.string, tuple(self.range), self.quantifier))
 
-    def __repr__(self):
-        return 'TranslationString(string=%s, range=%s, quantifier=%s)' % (self.string, self.range, self.quantifier)
-
-    def _tag_iter(self, i):
-        i += 1
-        for tag in self.tags:
-            tag = tag % i
-            yield tag
-
-    def _replace(self, i, s, rpl):
-        new = s
-        for tag in self._tag_iter(i):
-            new = new.replace(tag, rpl)
-        return new, s == new
-
     def _set_string(self, string):
-        self.string = string.replace('%%', '%')
+        string = string.replace('%%', '%')
 
-        # TODO: Maybe make optional?
-        self.string_re = re.compile('^' + re.sub(
-            r'\\\%[0-9]+\\\%(|\+d)',
-            '([0-9\.]+)',
-            re.escape(self.string)
-        ) + '$')
+        start = None
+        for match in self._re_split.finditer(string):
+            self.strings.append(string[start:match.start()])
+            # Py indexes start at 0, not at 1
+            self.tags.append(int(match.group('id'))-1)
+            start = match.end()
+        self.strings.append(string[start:])
 
     def diff(self, other):
         if not isinstance(other, TranslationString):
@@ -437,41 +452,36 @@ class TranslationString(object):
         parsed values is returned.
         :rtype: str, list[int] or list[int], list[int]
         """
-        s = self.string
         values = self.quantifier.handle(values, is_range)
-        unused = []
 
-        if only_values:
-            rtr = []
-            # Some translations don't use all values, so only return the ones
-            # actually used
-            for i, value in enumerate(values):
-                for tag in self._tag_iter(i):
-                    if tag in s:
-                        rtr.append(value)
-                    else:
-                        unused.append(value)
-
-            return rtr, unused
-
-        if use_placeholder:
-            for i, val in enumerate(values):
-                # It will go to uppercase letters if above 3, but should be
-                # no problem otherwise
-                s, r = self._replace(i, s, ascii_letters[23+i])
-                if r:
-                    unused.append(val)
-            return s, unused
-
+        replace = []
         for i, val in enumerate(values):
-            if is_range[i]:
-                rpl = '(%s to %s)' % tuple(val)
+            if use_placeholder:
+                val = ascii_letters[23+i]
+            elif is_range[i]:
+                val = '(%s to %s)' % tuple(val)
             else:
-                rpl = str(val)
-            s, r = self._replace(i, s, rpl)
-            if r:
-                unused.append(val)
-        return s, unused
+                val = str(val)
+            replace.append(val)
+
+        string = []
+        used = set()
+        for i, tagid in enumerate(self.tags):
+            if not only_values:
+                string.append(self.strings[i])
+            string.append(replace[tagid])
+            used.add(tagid)
+
+        unused = []
+        for i, val in enumerate(replace):
+            if i in used:
+                continue
+            unused.append(val)
+
+        if not only_values:
+            string = ''.join(string + [self.strings[-1]])
+
+        return string, unused
 
     def match_range(self, values, indexes):
         """
@@ -505,50 +515,67 @@ class TranslationString(object):
         :return: handled list of values or None if no match
         :rtype: list[int] or None
         """
-        match = self.string_re.match(string)
-        if match:
-            values = list(match.groups())
+        index = 0
+        values_indexes = []
+        for partial in self.strings:
+            match = string.find(partial, index)
+            if match == -1:
+                return None
+            # Matched at the start of string, no preceeding value
 
-            for i in range(0, len(self.parent.parent.ids)):
-                found = False
-                for tag in self._tag_iter(i):
-                    found = self.string.find(tag) != -1
-                    if found:
-                        break
+            index = match + len(partial)
+            values_indexes.append(index)
 
-                if found:
-                    values[i] = float(values[i])
+        # Fix for TR strings starting with value
+        if self.strings[0] == '':
+            values_indexes.append(None)
+        # Fix for TR strings ending with value
+        if self.strings[-1] == '':
+            values_indexes[-1] = None
+
+        values = []
+        for i in range(0, len(values_indexes)-1):
+            j = i + 1
+            values.append(string[values_indexes[i]:values_indexes[j]])
+
+        # tags may appear multiple times, reduce to one tag per value
+        tags = {}
+        for i, tag in enumerate(self.tags):
+            tags[tag] = values[i]
+
+        values = list(range(0, len(self.range)))
+        for i in values:
+            if i in tags:
+                values[i] = tags[i]
+            else:
+                # The only definitive case
+                r = self.range[i]
+                warn = True
+                if r.min == r.max and r.max is not None:
+                    val = r.min
+                    warn = False
+                elif r.min is not None and r.max is not None:
+                    val = r.max
+                elif r.min is None and r.max is not None:
+                    val = r.max
+                elif r.min is not None and r.min is None:
+                    val = r.min
                 else:
-                    r = self.range[i]
-                    warn = None
-                    # The only definitive case
-                    if r.min == r.max and r.max is not None:
-                        values.insert(i, r.max)
-                    elif r.min is not None and r.max is not None:
-                        values.insert(i, r.max)
-                        warn = r.max
-                    elif r.min is None and r.max is not None:
-                        values.insert(i, r.max)
-                        warn = r.max
-                    elif r.min is not None and r.min is None:
-                        values.insert(i, r.min)
-                        warn = r.min
-                    else:
-                        values.insert(i, None)
+                    val = 0
 
-                    if warn:
-                        warnings.warn(
-                            'Can not safely find a value at index "%s", using '
-                            'range value "%s" instead' % (i, warn),
-                            TranslationWarning
-                        )
+                if warn:
+                    warnings.warn(
+                        'Can not safely find a value at index "%s", using '
+                        'range value "%s" instead' % (i, val),
+                        TranslationWarning
+                    )
 
-            return self.quantifier.handle_reverse(values)
-        else:
-            return None
+                values[i] = val
+
+        return self.quantifier.handle_reverse(values)
 
 
-class TranslationRange(object):
+class TranslationRange(TranslationReprMixin):
     """
     Object to represent the acceptable range of a translation.
 
@@ -575,9 +602,6 @@ class TranslationRange(object):
         self.parent = parent
         self.min = min
         self.max = max
-
-    def __repr__(self):
-        return 'TranslationRange(min=%s, max=%s, parent=%s)' % (self.min, self.max, hex(id(self.parent)))
 
     def __eq__(self, other):
         if not isinstance(other, TranslationRange):
@@ -626,14 +650,22 @@ class TranslationRange(object):
         return 0
 
 
-class TranslationQuantifier(object):
+class TranslationQuantifier(TranslationReprMixin):
     """
     Class to represent and handle translation quantifiers.
 
     In the GGG files often there are qualifiers specified to adjust the output
     of the values; for example, a value might be negated (i.e so that it would
     show "5% reduced Damage" instead of "-5% reduced Damage").
+    
+    :ivar registered_handlers: Mapping of the name of registered handlers
+    to the ids they apply to
+    :type registered_handlers: dict[str, list[int]]
     """
+
+    _REPR_EXTRA_ATTRIBUTES = OrderedDict((
+        ('registered_handlers', None),
+    ))
 
     handlers = {
         'deciseconds_to_seconds': lambda v: v*10,
@@ -655,28 +687,25 @@ class TranslationQuantifier(object):
     }
 
     reverse_handlers = {
-        'deciseconds_to_seconds': lambda v: v/10,
-        'divide_by_one_hundred': lambda v: v*100,
-        'per_minute_to_per_second': lambda v: v*60,
-        'milliseconds_to_seconds': lambda v: v*1000,
-        'negate': lambda v: v*-1,
+        'deciseconds_to_seconds': lambda v: float(v)/10,
+        'divide_by_one_hundred': lambda v: float(v)*100,
+        'per_minute_to_per_second': lambda v: float(v)*60,
+        'milliseconds_to_seconds': lambda v: float(v)*1000,
+        'negate': lambda v: int(v)*-1,
         'divide_by_one_hundred_and_negate': lambda v: -v*100,
-        'old_leech_percent': lambda v: v*5,
-        'old_leech_permyriad': lambda v: v*50,
+        'old_leech_percent': lambda v: float(v)*5,
+        'old_leech_permyriad': lambda v: float(v)*50,
         # TODO hardly possible to accurately reverse rounding
-        'per_minute_to_per_second_0dp': lambda v: v*60,
-        'per_minute_to_per_second_2dp': lambda v: v*60,
-        'milliseconds_to_seconds_0dp': lambda v: v*1000,
-        'milliseconds_to_seconds_2dp': lambda v: v*1000,
+        'per_minute_to_per_second_0dp': lambda v: int(v)*60,
+        'per_minute_to_per_second_2dp': lambda v: float(v)*60,
+        'milliseconds_to_seconds_0dp': lambda v: int(v)*1000,
+        'milliseconds_to_seconds_2dp': lambda v: float(v)*1000,
     }
 
     __slots__ = ['registered_handlers']
 
     def __init__(self):
         self.registered_handlers = {}
-
-    def __repr__(self):
-        return 'TranslationQuantifier(registered_handlers=%s)' % (self.registered_handlers, )
 
     def __eq__(self, other):
         if not isinstance(other, TranslationQuantifier):
@@ -697,7 +726,6 @@ class TranslationQuantifier(object):
 
         #if self.registered_handlers != other.registered_handlers:
         _diff_dict(self.registered_handlers, other.registered_handlers)
-
 
     def register(self, handler, index):
         """
@@ -750,16 +778,22 @@ class TranslationQuantifier(object):
         :return: handled list of values
         :rtype: list[int]
         """
+        indexes = set(range(0, len(values)))
         for handler_name in self.registered_handlers:
-            f = self.handlers[handler_name]
+            f = self.reverse_handlers[handler_name]
             for index in self.registered_handlers[handler_name]:
                 index -= 1
+                indexes.remove(index)
+                # TODO: handle string values
                 values[index] = f(values[index])
+
+        for index in indexes:
+            values[index] = int(values[index])
 
         return values
 
 
-class TranslationResult(object):
+class TranslationResult(TranslationReprMixin):
     """
     Translation result and utility functions.
 
@@ -829,8 +863,12 @@ class TranslationResult(object):
 
     found_ids = property(fget=_get_found_ids)
 
+    @property
+    def missing(self):
+        return zip(self.missing_ids, self.missing_values)
 
-class TranslationReverseResult(object):
+
+class TranslationReverseResult(TranslationReprMixin):
     """
     Result of TranslationFile.reverse_translation
 
@@ -1202,6 +1240,7 @@ class TranslationFile(AbstractFileReadOnly):
         return TranslationReverseResult(translations_found, values_found)
 
 
+@doc(append=AbstractFileCache)
 class TranslationFileCache(AbstractFileCache):
     """
     Creates a memory cache of :class:`TranslationFile` objects.
@@ -1215,32 +1254,20 @@ class TranslationFileCache(AbstractFileCache):
     accordingly - separately loading those files would read any included
     file multiple times, as such there is a fairly significant performance
     improvement over using single files.
-
-
-    There is a caveat though, for this to work files need to referenced with
-    their internal location (i.e. by the root folder).
     """
+    FILE_TYPE = TranslationFile
+
+    @doc(prepend=AbstractFileCache.__init__)
     def __init__(self, *args, merge_with_custom_file=None, **kwargs):
         """
-        Creates a new TranslationFileCache instance.
-
-        :param path_or_ggpk: The path where the dat files are stored or a
-        GGPKFile instance
-        :type path_or_ggpk: :class:`GGPKFile` or str
-
         :param merge_with_custom_file: If this option is specified, each file
         will be merged with a custom translation file.
         If set to True, it will load the default translation file located in
         PyPoE's data directory.
         Alternatively a TranslationFile instance can be passed which then will
         be used.
-        :type merge_with_custom_file: None, bool, TranslationFile
-
-        :raises TypeError: if path_or_ggpk not specified or invalid type
-        :raises ValueError: if a GGPKFile was passed, but it was not parsed
+        :type merge_with_custom_file: None, bool or TranslationFile
         """
-        super(TranslationFileCache, self).__init__(*args, **kwargs)
-
         if merge_with_custom_file is None or merge_with_custom_file is False:
             self._custom_file = None
         elif merge_with_custom_file is True:
@@ -1253,7 +1280,8 @@ class TranslationFileCache(AbstractFileCache):
                 {'type': type(merge_with_custom_file)}
             )
 
-        self._files = {}
+        # Call order matters here
+        super(TranslationFileCache, self).__init__(*args, **kwargs)
 
     def __getitem__(self, item):
         """
@@ -1273,7 +1301,13 @@ class TranslationFileCache(AbstractFileCache):
             item = 'Metadata/' + item
         return self.get_file(item)
 
-    def get_file(self, name):
+    @doc(doc=AbstractFileCache._get_file_instance_args)
+    def _get_file_instance_args(self, file_name, *args, **kwargs):
+        return {
+            'parent': self,
+        }
+
+    def get_file(self, file_name):
         """
         Returns the specified file from the cache (and loads it if not in the
         cache already).
@@ -1285,32 +1319,29 @@ class TranslationFileCache(AbstractFileCache):
         For a shortcut consider using obj[name] instead.
 
 
-        :param str name: file name/path relative to the root path of exile dir
+        :param str file_name: file name/path relative to the root path of exile
+        directory
 
         :return: the specified TranslationFile
         :rtype: TranslationFile
         """
-        if name not in self._files:
-            tf = TranslationFile(
-                parent=self,
-            )
-            if self._ggpk:
-                tf.read(file_path_or_raw=self._ggpk[name])
-            elif self._path:
-                tf.read(file_path_or_raw=os.path.join(self._path, name))
+        if file_name not in self.files:
+            tf = self._create_instance(file_name=file_name)
 
             if self._custom_file:
                 tf.merge(self._custom_file)
 
-            self._files[name] = tf
+            self.files[file_name] = tf
 
             return tf
 
-        return self._files[name]
+        return self.files[file_name]
+
 
 # =============================================================================
 # Functions
 # =============================================================================
+
 
 def _diff_list(self, other, diff=True):
     len_self = len(self)
@@ -1376,28 +1407,3 @@ custom_translation_file = property(
     fget=get_custom_translation_file,
     fset=set_custom_translation_file,
 )
-
-# =============================================================================
-# Init
-# =============================================================================
-
-
-
-if __name__ == '__main__':
-    from line_profiler import LineProfiler
-
-    profiler = LineProfiler()
-
-    #profiler.add_function(TranslationFile.get_translation)
-    #profiler.add_function(TranslationFile._read)
-    #profiler.add_function(Translation.get_language)
-    #profiler.add_function(TranslationQuantifier.handle)
-    #profiler.add_function(TranslationRange.in_range)
-    #profiler.add_function(TranslationLanguage.get_string)
-
-    profiler.run("s = TranslationFile('C:/Temp/MetaData/stat_descriptions.txt')")
-    profiler.run("for i in range(0, 100): t = s.get_translation(tags=['additional_chance_to_take_critical_strike_%', 'additional_chance_to_take_critical_strike_%'], values=((3, 5), 6))")
-
-    profiler.print_stats()
-
-    print('Translation:', t)

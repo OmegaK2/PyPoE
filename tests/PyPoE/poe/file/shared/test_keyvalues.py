@@ -91,6 +91,10 @@ class KeyValuesFile(keyvalues.AbstractKeyValueFile):
         KeyValuesSectionOverrideGeneric,
     ])
 
+
+class KeyValuesFileCache(keyvalues.AbstractKeyValueFileCache):
+    FILE_TYPE = KeyValuesFile
+
 _read_file_name = 'keyvalues.kv'
 _write_file_name = 'keyvalues_write.kv'
 
@@ -148,5 +152,17 @@ class TestKeyValuesFile(object):
             kf_target.read(tmp_path)
 
             assert kf_target == kf_should
+
+
+class TestKeyValuesFileCache(object):
+    @pytest.fixture
+    def kf_cache(self):
+        kfc = KeyValuesFileCache(path_or_ggpk=data_dir)
+
+        return kfc
+
+    def test_cache_get_file(self, kf_cache):
+        kf = kf_cache.get_file(_read_file_name)
+        assert kf is kf_cache.get_file(_read_file_name)
 
 

@@ -173,12 +173,13 @@ class QuestRewardReader(BaseParser):
             quest = row['QuestKey']
             character = row['CharactersKey']
             difficulty = row['Difficulty']
+            itemcls = item['ItemClass']['Name']
 
             # Format the data
             data = {}
 
             data['quest'] = quest['Title']
-            data['quest_id'] = quest['UniqueId']
+            data['quest_id'] = quest['Id']
             # Quest not implemented or buggy or master stuff
             if not data['quest']:
                 continue
@@ -188,17 +189,16 @@ class QuestRewardReader(BaseParser):
                     continue
             data['act'] = quest['Act']
 
-            itemcls_n = item['ItemClass']['Id']
-            if itemcls_n in (19, 20): # Skills
-                itemcls = 'skill'
-            elif itemcls_n == 40: # can be ignored I guess
-                itemcls = 'hideout'
-            else: #item
-                itemcls = 'item'
+            if itemcls in ['Active Skill Gems', 'Support Skill Gems']: # Skills
+                item_type = 'skill'
+            elif itemcls == 'Hideout Doodads': # can be ignored I guess
+                item_type = 'hideout'
+            else:
+                item_type = 'item'
 
             # Item is default class
-            if itemcls != 'item':
-                data['type'] = itemcls
+            if item_type != 'item':
+                data['type'] = item_type
 
             # TODO: Unused class_id atm, only for sorting
             if character is None:
@@ -223,15 +223,15 @@ class QuestRewardReader(BaseParser):
             name = item['Name']
 
             # Some of unique items follow special rules
-            if itemcls_n == 32 and name.startswith('Book of'):
+            if itemcls == 'Quest Items' and name.startswith('Book of'):
                 data['page_link'] = '%s (%s)' % (name, data['quest'])
             # Non non quest items or skill gems have their rarity added
-            if itemcls_n not in (19, 20, 32):
+            if itemcls not in {'Active Skill Gems', 'Support Skill Gems', 'Quest Items'}:
                 data['itemlevel'] = row['ItemLevel']
                 data['rarity'] = rarity
                 # Unique and not a quest item or gem
                 if rarity == 'Unique':
-                    uid = row['UniqueId']
+                    uid = row['Key0']
                     if uid in item_map:
                         name = item_map[uid]
                     else:
@@ -240,7 +240,7 @@ class QuestRewardReader(BaseParser):
             data['reward'] = name
 
             if name == 'Two-Stone Ring':
-                itemid = item['ItemVisualIdentityKey']['ItemNameId']
+                itemid = item['ItemVisualIdentityKey']['Id']
                 if itemid in two_stone_map:
                     data['page_link'] = two_stone_map[itemid]
                 else:
@@ -254,7 +254,7 @@ class QuestRewardReader(BaseParser):
         outdata = []
         eternal_nightmare_quest = None
         for row in self.rr['Quest.dat']:
-            if row['UniqueId'] == 'a4q1':
+            if row['Id'] == 'a4q1':
                 eternal_nightmare_quest = row
                 break
 
@@ -298,7 +298,7 @@ class QuestRewardReader(BaseParser):
                         data = {}
 
                         data['quest'] = quest['Title']
-                        data['quest_id'] = quest['UniqueId']
+                        data['quest_id'] = quest['Id']
                         data['act'] = quest['Act']
                         data['reward'] = item['Name']
                         # Pretty sure they are all skills...

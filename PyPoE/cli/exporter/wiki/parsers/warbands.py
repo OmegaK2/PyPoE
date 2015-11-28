@@ -101,7 +101,7 @@ class WarbandsParser(BaseParser):
     def warbands(self, parsed_args):
         out = []
         for warband in self.rr['WarbandsPackMonsters.dat']:
-            out.append(warband['Name'])
+            out.append(warband['Id'])
             out.append('\n\n')
 
             '''for key in warband['Data0']:

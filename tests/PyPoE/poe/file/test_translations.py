@@ -57,6 +57,7 @@ data = {
         # Size, Unique ID,  values
         (1, 1, ((1, ), )),
         (1, 2, ((40, ), (1, ))),
+        (1, 3, ((1, ), )),
         (2, 1, ((1, 99), (99, 1), (99, 99))),
         (3, 1, ((50, 1, 1), (100, 1, 1))),
     ),
@@ -158,7 +159,7 @@ class TestTranslationFileCache:
     def test_is_cache_working(self, tcache):
         a = tcache['descriptions_extended.txt']
         # Should have cached the included file
-        tcache._files['Metadata/descriptions_base.txt']
+        tcache.files['Metadata/descriptions_base.txt']
 
         assert tcache['descriptions_extended.txt'] is a, 'Cache should return identical object'
 

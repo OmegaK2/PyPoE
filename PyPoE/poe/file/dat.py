@@ -63,10 +63,10 @@ import validate
 
 # Library imports
 from PyPoE import DAT_SPECIFICATION, DAT_SPECIFICATION_CONFIGSPEC
-from PyPoE.shared.decorators import deprecated
+from PyPoE.shared.decorators import deprecated, doc
+from PyPoE.shared.mixins import ReprMixin
 from PyPoE.poe.file.shared import AbstractFileReadOnly
 from PyPoE.poe.file.shared.cache import AbstractFileCache
-from PyPoE.poe.file.ggpk import GGPKFile
 
 # =============================================================================
 # Globals
@@ -690,52 +690,24 @@ class DatFile(AbstractFileReadOnly):
         return self.reader
 
 
+@doc(doc=AbstractFileCache, prepend="""
+Read dat files in a relational matter.
+
+This acts both as a cache and as a way to easily access the instances.
+""")
 class RelationalReader(AbstractFileCache):
-    """
-    Read dat files in a relational matter.
-
-    This acts both as a cache and as a way to easily access the instances.
-    """
-    def __init__(self, files=None, options=None, *args, **kwargs):
-        """
-        Creates a new Relational Reader instance.
-
-        See DatReader for details on the options available.
-
-        :param path_or_ggpk: The path where the dat files are stored or a
-        GGPKFile instance
-        :type path_or_ggpk: :class:`GGPKFile` or str
-
-        :param files: Iterable of files that will be loaded right away
-        :type files: Iterable
-
-        :param options: options to pass to the reader for the DatFile
-        :type options: dict
-
-        :raises TypeError: if path_or_ggpk not specified or invalid type
-        :raises ValueError: if a GGPKFile was passed, but it was not parsed
-        """
-        super(RelationalReader, self).__init__(*args, **kwargs)
-
-        self.options = {} if options is None else options
-
-        self.files = {}
-        if files is not None:
-            for file_name in files:
-                self.read_file(file_name)
-
-    def __repr__(self):
-        return 'RelationalReader<%s>(options=%s)' % (
-            hex(id(self)), repr(self.options)
-        )
+    FILE_TYPE = DatFile
 
     def __getitem__(self, item):
         """
-        Shortcut.
+        Shortcut that also appends Data/ if missing
 
         self[item] <==> read_file(item).reader
         """
-        return self.read_file(item).reader
+        if not item.startswith('Data/'):
+            item = 'Data/' + item
+
+        return self.get_file(item).reader
 
     def _set_value(self, obj, other, key, offset):
         if obj is None:
@@ -769,7 +741,12 @@ class RelationalReader(AbstractFileCache):
         else:
             return self._set_value(value, other, key, offset)
 
-    def read_file(self, name):
+    def _get_file_instance_args(self, file_name, *args, **kwargs):
+        opts = super(RelationalReader, self)._get_file_instance_args(file_name)
+        opts['file_name'] = file_name.replace('Data/', '')
+        return opts
+
+    def get_file(self, file_name):
         """
         Attempts to return a dat file from the cache and if it isn't available,
         reads it in.
@@ -780,24 +757,16 @@ class RelationalReader(AbstractFileCache):
         Note that a related row may be "None" if no key was specified in the
         read dat file.
 
-        :param str name: The name of the .dat to read. Extension is required.
+        :param str file_name: The name of the .dat to read. Extension is required.
         :return: Returns the given DatFile instance
         :rtype: DatFile
         """
-        if name in self.files:
-            return self.files[name]
+        if file_name in self.files:
+            return self.files[file_name]
 
-        if self._ggpk:
-            df = DatFile(name)
-            df.read(
-                self._ggpk.directory['Data'][name].record.extract(),
-                **self.options
-            )
-        elif self._path:
-            df = DatFile(name)
-            df.read(os.path.join(self._path, name), **self.options)
+        df = self._create_instance(file_name)
 
-        self.files[name] = df
+        self.files[file_name] = df
 
         vf = self._dv_set_value if df.reader.use_dat_value else self._simple_set_value
 
@@ -805,7 +774,7 @@ class RelationalReader(AbstractFileCache):
             other = df.reader.specification['fields'][key]['key']
             if not other:
                 continue
-            df_other = self.read_file(other)
+            df_other_reader = self[other]
 
             key_id = df.reader.specification['fields'][key]['key_id']
             key_offset = df.reader.specification['fields'][key]['key_offset']
@@ -815,13 +784,12 @@ class RelationalReader(AbstractFileCache):
             for i, row in enumerate(df.reader.table_data):
                 df.reader.table_data[i][index] = vf(
                     row[index],
-                    df_other.reader,
+                    df_other_reader,
                     key_id,
                     key_offset,
                 )
 
         return df
-
 
 
 # =============================================================================
@@ -887,34 +855,4 @@ def reload_default_spec():
 # =============================================================================
 
 reload_default_spec()
-        
-if __name__ == '__main__':
-    from line_profiler import LineProfiler
-    profiler = LineProfiler()
-    #profiler.add_function(DatValue.__init__)
-    #profiler.add_function(DatReader._cast_from_spec)
-    #profiler.add_function(DatReader._process_row)
-    #profiler.add_function(RecordList.__getitem__)
-
-    #profiler.run("d = DatFile('GrantedEffects.dat', read_file='C:/Temp/Data')")
-    #profiler.run("for i in range(0, 10000): d.reader[0]['Data1']")
-    #profiler.print_stats()
-
-    #print(d.reader[0])
-
-    #profiler.add_function(RelationalReader._set_value)
-    #profiler.add_function(RelationalReader._dv_set_value)
-    #profiler.add_function(RelationalReader._simple_set_value)
-    #profiler.add_function(RelationalReader.read_file)
-    #profiler.run("r = RelationalReader('C:/Temp/Data', files=['BaseItemTypes.dat'], options={'use_dat_value': False})")
-    #profiler.print_stats()
-
-    #for a in d.reader.column_iter(): print(a)
-
-    #r = RelationalReader(path_or_ggpk='C:/Temp/Data', files=['BaseItemTypes.dat'], options={'use_dat_value': True})
-    #print(r.files['BaseItemTypes.dat'].reader[0]['ItemVisualIdentityKey'])
-
-    #print(d.table_data)
-    import cProfile
-    #cProfile.run("d = DatFile('GrantedEffectsPerLevel.dat', read_file='C:/Temp/Data')")
 

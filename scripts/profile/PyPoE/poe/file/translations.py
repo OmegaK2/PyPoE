@@ -1,11 +1,11 @@
 """
-Tests for parser.py
+
 
 Overview
 -------------------------------------------------------------------------------
 
 +----------+------------------------------------------------------------------+
-| Path     | tests/PyPoE/cli/exporter/wiki/parser/test_parser.py              |
+| Path     | translations.py                                                |
 +----------+------------------------------------------------------------------+
 | Version  | 1.0.0a0                                                          |
 +----------+------------------------------------------------------------------+
@@ -17,7 +17,7 @@ Overview
 Description
 -------------------------------------------------------------------------------
 
-Tests for PyPoE.cli.exporter.wiki.parser
+
 
 Agreement
 -------------------------------------------------------------------------------
@@ -30,59 +30,45 @@ See PyPoE/LICENSE
 # =============================================================================
 
 # Python
-import os
 
 # 3rd-party
-import pytest
+from line_profiler import LineProfiler
 
 # self
-from PyPoE.cli.exporter.wiki import parser
+from PyPoE.poe.file import translations
 
 # =============================================================================
-# Setup
+# Globals
 # =============================================================================
 
-# TODO extract files
-path = 'C:/Temp'
-data_path = os.path.join(path, 'Data')
-desc_path = os.path.join(path, 'Metadata')
+__all__ = []
 
 # =============================================================================
-# Fixtures
+# Classes
 # =============================================================================
 
-@pytest.fixture(scope='module')
-def parserobj():
-    return parser.BaseParser(base_path=path)
-
 # =============================================================================
-# Tests
+# Functions
 # =============================================================================
 
-data = (
-    # Mod ID, expected results
-    (
-        'Strength1',
-        [
-            '(8 to 12) to Strength',
-        ],
-    ),
-    (
-        'MonsterCriticals1',
-        [
-            '<abbr title="300% increased Global Critical Strike Chance">Powerful Crits</abbr>',
-            '50% increased Global Critical Strike Multiplier (Hidden)',
-        ],
-    ),
+# =============================================================================
+# Init
+# =============================================================================
 
-)
+if __name__ == '__main__':
+    profiler = LineProfiler()
 
-class TestBaseParser():
-    @pytest.mark.parametrize('mod_id,result', data)
-    def test_get_stats(self, parserobj, mod_id, result):
-        mods = parserobj.rr['Mods.dat']
-        for mod in mods:
-            if mod['Id'] == mod_id:
-                break
+    #profiler.add_function(translations.TranslationFile.get_translation)
+    #profiler.add_function(translations.TranslationFile._read)
+    profiler.add_function(translations.TranslationString._set_string)
+    #profiler.add_function(translations.Translation.get_language)
+    #profiler.add_function(translations.TranslationQuantifier.handle)
+    #profiler.add_function(translations.TranslationRange.in_range)
+    #profiler.add_function(translations.TranslationLanguage.get_string)
 
-        assert parserobj._get_stats(mod) == result
+    profiler.run("s = translations.TranslationFile('C:/Temp/MetaData/stat_descriptions.txt')")
+    profiler.run("for i in range(0, 100): t = s.get_translation(tags=['additional_chance_to_take_critical_strike_%', 'additional_chance_to_take_critical_strike_%'], values=((3, 5), 6))")
+
+    profiler.print_stats()
+
+    print('translations.Translation:', t)

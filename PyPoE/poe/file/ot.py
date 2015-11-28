@@ -48,15 +48,14 @@ See also
 # 3rd-party
 
 # self
-from PyPoE.poe.file.shared.keyvalues import (
-    AbstractKeyValueSection, AbstractKeyValueFile
-)
+from PyPoE.shared.decorators import doc
+from PyPoE.poe.file.shared.keyvalues import *
 
 # =============================================================================
 # Globals
 # =============================================================================
 
-__all__ = ['OTFile']
+__all__ = ['OTFile', 'OTFileCache']
 
 # =============================================================================
 # Classes
@@ -113,9 +112,10 @@ class StatsKeyValueSection(AbstractKeyValueSection):
     OVERRIDE_WARNING = False
 
 
+@doc(append=AbstractKeyValueFile)
 class OTFile(AbstractKeyValueFile):
     """
-    Representation of a .dat file.
+    Representation of a .ot file.
     """
 
     SECTIONS = dict((s.NAME, s) for s in [
@@ -135,41 +135,9 @@ class OTFile(AbstractKeyValueFile):
         super(OTFile, self).__init__(*args, **kwargs)
 
 
-# =============================================================================
-# Functions
-# =============================================================================
-
-
-if __name__ == '__main__':
-    import os
-
-    import line_profiler
-    profiler = line_profiler.LineProfiler()
-    profiler.add_function(AbstractKeyValueFile._read)
-    profiler.add_function(AbstractKeyValueFile.__missing__)
-
-    def run():
-        f = 'C:/Temp/'
-        sections = set()
-        for path, dirnames, filenames in os.walk(f):
-            for filename in filenames:
-                if not filename.endswith('.ot'):
-                    continue
-
-                ot = OTFile(parent_or_base_dir_or_ggpk=f)
-                ot.read(os.path.join(path, filename))
-                for k in ot.keys():
-                    sections.add(k)
-
-        sections = list(sections)
-        sections.sort()
-        print(sections)
-
-
-    profiler.run('run()')
-
-    #ot = OTFile(parent_or_base_dir_or_ggpk=f)
-    #ot.read('C:\Temp\Metadata\Items\Armours\BodyArmours\AbstractBodyArmour.ot')
-    #print(ot.keys())
-
-    profiler.print_stats()
+@doc(append=AbstractKeyValueFileCache)
+class OTFileCache(AbstractKeyValueFileCache):
+    """
+    Cache for OTFile instances.
+    """
+    FILE_TYPE = OTFile
