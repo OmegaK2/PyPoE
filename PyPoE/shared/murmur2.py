@@ -48,15 +48,24 @@ int32 = 0xFFFFFFFF
 # Functions
 # =============================================================================
 
+
 def murmur2_32(byte_data, seed=DEFAULT_SEED):
+    """
+    Creates a murmur2 32 bit integer hash from the given byte_data and seed.
+
+    :param bytes byte_data: the bytes to hash
+    :param int seed: seed to initialize this with
+    :return int: 32 bit hash
+    """
+
+    length = len(byte_data)
     # Initialize the hash to a 'random' value
-    h = (seed ^ len(s)) & int32
+    h = (seed ^ length) & int32
 
     # Mix 4 bytes at a time into the hash
     index = 0
-    length = len(s)
 
-    while(length >= 4):
+    while length >= 4:
         k = struct.unpack('<i', byte_data[index:index+4])[0]
 
         k = k * M & int32
