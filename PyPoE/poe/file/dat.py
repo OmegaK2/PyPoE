@@ -52,8 +52,6 @@ TODO
 
 # Python
 import struct
-import os
-import multiprocessing
 from io import BytesIO
 from collections import OrderedDict
 
@@ -314,19 +312,37 @@ class DatValue(object):
 
 
 class RecordList(list):
+    """
+    :ivar DatReader parent:
+    :ivar int rowid:
+    """
+
     __slots__ = ['parent', 'rowid']
 
     def __init__(self, parent, rowid):
+        """
+        :param DatReader parent:
+        :param int rowid:
+        """
         list.__init__(self)
         self.parent = parent
         self.rowid = rowid
 
     def __getitem__(self, item):
         if isinstance(item, str):
-            value = list.__getitem__(self, self.parent.table_columns[item]['index'])
-            if isinstance(value, DatValue):
-                value = value.get_value()
-            return value
+            if item in self.parent.table_columns:
+                value = list.__getitem__(self, self.parent.table_columns[item]['index'])
+                if isinstance(value, DatValue):
+                    value = value.get_value()
+                return value
+            elif item in self.parent.specification['virtual_fields']:
+                field = self.parent.specification['virtual_fields'][item]
+                value = [self[fn] for fn in field['fields']]
+                if field['zip']:
+                    value = zip(*value)
+                return value
+            else:
+                raise KeyError(item)
         return list.__getitem__(self, item)
 
     def __repr__(self):
@@ -352,7 +368,35 @@ class RecordList(list):
         return self.parent.table_columns.keys()
 
 
-class DatReader(object):
+class DatReader(ReprMixin):
+    """
+    :cvar int _table_offset: Starting offset of table data in bytes
+    :cvar _cast_table: Mapping of cast type to the corresponding struct
+    type and the size of the cast in bytes
+    :type _cast_table: dict[str, list[str, int]]
+    :cvar bytes _data_magic_number: Magic number that marks the beginning of
+    data section
+
+    :ivar str file_name: File name
+    :ivar int file_length: File length in bytes
+    :ivar list[RecordList] table_data:
+    :ivar int table_length: Length of table in bytes
+    :ivar int table_record_length: Length of each record in bytes
+    :ivar int table_rows: Number of rows in table
+
+    :ivar list[object] data_parsed: List of parsed data values
+    :ivar int data_offset: Data section offset
+
+    :ivar OrderedDict columns: Shortened list of columns excluding intermediate
+    columns
+    :ivar OrderedDict columns_zip: Shortened list of columns excluding zipped
+    columns
+    :ivar OrderedDict columns_all: Complete list of columns, including all
+    intermediate and virtual columns
+    :ivar OrderedDict columns_data: List of all columns directly derived
+    from the data
+    :ivar OrderedDict table_columns: Used for mapping columns to indexes
+    """
     _table_offset = 4
     _cast_table = {
         'bool': ['?', 1],
@@ -398,7 +442,7 @@ class DatReader(object):
         self.cast_spec = []
         self.cast_row = []
         if specification:
-            for i, key in enumerate(specification['fields']):
+            for i, key in enumerate(specification['columns_data']):
                 k = specification['fields'][key]
                 self.table_columns[key] = {'index': i, 'section': k}
                 casts = []
@@ -413,10 +457,14 @@ class DatReader(object):
 
             self.cast_row = '<' + ''.join(self.cast_row)
 
+            for var in ('columns', 'columns_all', 'columns_zip', 'columns_data'):
+                setattr(self, var, specification[var])
         else:
             s = configobj.Section(None, 0, None)
             s.name = 'Unparsed'
             self.table_columns.append(s)
+            for var in ('columns', 'columns_all', 'columns_zip', 'columns_data'):
+                setattr(self, var, OrderedDict([s.name, ]))
 
     def __iter__(self):
         return iter(self.table_data)
@@ -815,7 +863,9 @@ def load_spec(path=None):
     spec.validate(validate.Validator())
 
     for file_name, file_spec in spec.items():
+        columns = OrderedDict()
         for field_name, field in file_spec['fields'].items():
+            # Validation
             other = field['key']
             if other:
                 if other not in spec:
@@ -831,14 +881,79 @@ def load_spec(path=None):
                 other_key = field['key_id']
                 if other_key and other_key not in spec[other]['fields']:
                     raise SpecificationError(
-                        '%(dat_file)s->%(field)s->key_id: %(other)s->%(other_key)s'
-                        ' not in specification' % {
+                        '%(dat_file)s->%(field)s->key_id: %(other)s->'
+                        '%(other_key)s not in specification' % {
                             'dat_file': file_name,
                             'field': file_name,
                             'other': other,
                             'other_key': other_key,
                         }
                     )
+            # Extra fields
+            columns[field_name] = None
+
+        columns_zip = OrderedDict(columns)
+        columns_all = OrderedDict(columns)
+        columns_data = OrderedDict(columns)
+
+        for field_name, field in file_spec['virtual_fields'].items():
+            # Validation
+            if field_name in file_spec['fields']:
+                raise SpecificationError(
+                    '%(dat_file)s->virtual_fields->%(field)s use the same name '
+                    'as a key specified in %(dat_file)s->fields' %
+                    {
+                        'dat_file': file_name,
+                        'field': field_name,
+                    }
+                )
+
+            if not field['fields']:
+                raise SpecificationError(
+                    '%(dat_file)s->virtual_fields->%(field)s->fields is empty' %
+                    {
+                        'dat_file': file_name,
+                        'field': field_name,
+                    }
+                )
+
+            for other_field in field['fields']:
+                if other_field not in file_spec['fields'] and \
+                                other_field not in file_spec['virtual_fields']:
+                    raise SpecificationError(
+                        '%(dat_file)s->virtual_fields->%(field)s->fields: '
+                        'Field "%(other_field)s" does not exist' %
+                        {
+                            'dat_file': file_name,
+                            'field': field_name,
+                            'other_field': other_field,
+                        }
+                    )
+                if field['zip'] and other_field in file_spec['fields'] and \
+                        not file_spec['fields'][other_field]['type'].startswith(
+                            'ref|list'):
+                    raise SpecificationError(
+                        '%(dat_file)s->virtual_fields->%(field)s->zip: The zip '
+                        'option requires "%(other_field)s" to be a list' %
+                        {
+                            'dat_file': file_name,
+                            'field': field_name,
+                            'other_field': other_field,
+                        }
+                    )
+            # Extra fields
+            columns_all[field_name] = None
+            columns[field_name] = None
+            if field['zip']:
+                columns_zip[field_name] = None
+
+            for f in field['fields']:
+                del columns[f]
+                if field['zip']:
+                    del columns_zip[f]
+
+        for var in ('columns', 'columns_all', 'columns_zip', 'columns_data'):
+            file_spec[var] = locals()[var]
 
     return spec
 
