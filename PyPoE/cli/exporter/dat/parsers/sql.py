@@ -184,7 +184,7 @@ class SQLExportHandler(DatExportHandler):
 
     def _get_data_list_field_name(self, section, index=None):
         if section['key']:
-            return self._get_data_reference_key(section['key'][:4])
+            return self._get_data_reference_key(section['key'][:-4])
         elif index is not None:
             return 'value' + str(index)
         else:
