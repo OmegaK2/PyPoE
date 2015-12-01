@@ -91,17 +91,17 @@ class AbstractKeyValueSection(dict):
 
     def __setitem__(self, key, value):
         if key in self.APPEND_KEYS:
-            if isinstance(value, set):
+            if isinstance(value, list):
                 if key in self:
-                    value = self[key].union(value)
+                    value = self[key] + value
                 else:
                     pass
             else:
                 if key in self:
-                    self[key].add(value)
+                    self[key].append(value)
                     return
                 else:
-                    value = {value, }
+                    value = [value, ]
         elif self.OVERRIDE_WARNING and key in self and self[key] != value and key not in self.OVERRIDE_KEYS:
             warnings.warn('Override of %s[%s] to %s (was %s)' % (
                 self.name, repr(key), repr(value), repr(self[key])
