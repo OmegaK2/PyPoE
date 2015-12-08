@@ -109,7 +109,7 @@ class IDTFile(AbstractFile):
     _regex_parse = re.compile(
         r'^'
         r'version (?P<version>[0-9]+)[\r\n]*'
-        r'image "(?P<image>[\w\./_]+)"[\r\n]*'
+        r'image "(?P<image>[\w\./\\_\'\-]+)"[\r\n]*'
         r'(?P<texture_count>[0-9]+)[\r\n]*'
         r'(?P<textures>.*)' # Match the rest
         r'$',
@@ -153,7 +153,7 @@ class IDTFile(AbstractFile):
         """
         if data is None:
             self.version = 0
-            self.image = None
+            self._image = None
             self._records = TextureList()
         else:
             tex = TextureList()
@@ -190,13 +190,21 @@ class IDTFile(AbstractFile):
 
     records = property(fget=_get_records, fset=_set_records)
 
+    def _get_image(self):
+        return self._image
+
+    def _set_image(self, value):
+        self._image = value.replace('\\', '/')
+
+    image = property(fget=_get_image, fset=_set_image)
+
     # Private
 
     def _write(self, buffer):
         out = []
 
         out.append('version %s\n' % self.version)
-        out.append('image "%s"\n' % self.image)
+        out.append('image "%s"\n' % self._image)
         out.append('%s\n' % len(self._records))
         for tex_record in self._records:
             out.append('%s %s' % (tex_record.name, len(tex_record.records)))

@@ -402,7 +402,7 @@ class GemsParser(BaseParser):
         for row in self.rr['MonsterTypes.dat']:
             found = False
             for types_name_index in worker:
-                if types_name_index == row['Index0']:
+                if types_name_index == row['Id']:
                     found = True
                     break
 
@@ -448,7 +448,7 @@ class GemsParser(BaseParser):
         default = self.rr['DefaultMonsterStats.dat'][minion_level-1]
 
         life = default['Life'] * mv['LifeMultiplier'] // 100
-        damage_min =  default['Damage'] * mv['DamageMultiplier'] // 100
+        damage_min = default['Damage'] * mv['DamageMultiplier'] // 100
         damage_max = damage_min * 7 // 3
         aspd = 1500 / mv['AttackSpeed']
 
@@ -684,6 +684,9 @@ class GemsParser(BaseParser):
             # Out put processing
             #
             out = []
+            if has_monster_stats and is_minion:
+                out.append('Please help to verify the monster stats. In particar maximum base damage and base attack speed.')
+
             out.append('{{GemLevelTable\n')
             for attr in tuple(attributes):
                 if skill_gem[attr]:

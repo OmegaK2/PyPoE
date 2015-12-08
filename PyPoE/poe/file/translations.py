@@ -31,8 +31,9 @@ See PyPoE/LICENSE
 TODO
 -------------------------------------------------------------------------------
 
-optimize __hash__ - very slow atm; or remove, but it is needed for the diffs
+- optimize __hash__ - very slow atm; or remove, but it is needed for the diffs
 reverse for non-number values?
+- Fix empty translation strings
 """
 
 # =============================================================================
@@ -314,7 +315,10 @@ class TranslationLanguage(TranslationReprMixin):
 
         # Only the highest scoring/matching translation...
         temp.sort(key=lambda x: -x[0])
-        ts = temp[0][1]
+        rating, ts = temp[0]
+
+        if rating == 0:
+            return None
 
         return ts.format_string(short_values, is_range, use_placeholder, only_values)
 
@@ -331,8 +335,10 @@ class TranslationLanguage(TranslationReprMixin):
         # TODO: Should only match one at a time. But may be not?
         for ts in self.strings:
             result = ts.reverse_string(string)
-            if result is not None:
-                return result
+            if result is None:
+                continue
+
+            return result
 
         return None
 
@@ -510,8 +516,8 @@ class TranslationString(TranslationReprMixin):
         For missing values, it will try to insert the range maximum/minimum
         values if set, otherwise None.
 
-        :param values: string to match against
-        :type values: str
+        :param string: string to match against
+        :type string: str
         :return: handled list of values or None if no match
         :rtype: list[int] or None
         """

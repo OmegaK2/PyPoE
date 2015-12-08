@@ -58,6 +58,7 @@ data = {
         (1, 1, ((1, ), )),
         (1, 2, ((40, ), (1, ))),
         (1, 3, ((1, ), )),
+        (1, 4, ((1, ), )),
         (2, 1, ((1, 99), (99, 1), (99, 99))),
         (3, 1, ((50, 1, 1), (100, 1, 1))),
     ),
@@ -142,6 +143,15 @@ class TestTranslation:
 
         assert trr.translations[0].ids == tags, 'Value skip reverse failed: incorrect tags'
         assert trr.values[0] == values, 'Value skip failed reverse: incorrect values'
+
+    def test_value_not_in_range(self, dbase):
+        tags = ['test_value_not_in_range', ]
+        values = [0, ]
+        result = []
+
+        tr = dbase.get_translation(tags, values, full_result=True)
+
+        assert tr.lines == [], 'Not in range value returned a result'
 
 
 class TestTranslationFileCache:
