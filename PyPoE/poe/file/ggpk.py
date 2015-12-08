@@ -502,8 +502,8 @@ class DirectoryNode(object):
 
         Walks over the nodes and it's sub nodes and executes the specified
         function.
-        The function should one argument which will be a dict containing the
-        following:
+
+        The function will be called with the following dictionary arguments:
         node - DirectoryNode
         depth - Depth
 
@@ -516,7 +516,7 @@ class DirectoryNode(object):
 
         while len(q) > 0:
             data = q.pop()
-            function(data)
+            function(**data)
             for child in data['node'].children:
                 q.append({'node': child, 'depth': data['depth']+1})
 

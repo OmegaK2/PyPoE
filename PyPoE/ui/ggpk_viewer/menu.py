@@ -89,8 +89,7 @@ class GGPKThread(QThread):
 
         return temp
 
-    def _ggpk_sort(self, args):
-        node = args['node']
+    def _ggpk_sort(self, node, depth, **kwargs):
         sorter = lambda obj: (isinstance(obj.record, ggpk.FileRecord), obj.name)
         node.children = sorted(node.children, key=sorter)
 
