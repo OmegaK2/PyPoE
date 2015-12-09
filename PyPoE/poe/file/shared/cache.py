@@ -1,6 +1,4 @@
 """
-Abstract Cache
-
 Overview
 -------------------------------------------------------------------------------
 
@@ -17,12 +15,27 @@ Overview
 Description
 -------------------------------------------------------------------------------
 
-Abstract Cache
+All file caches classes will inherit :class:`AbstractFileCache`.
+
+.. warning::
+    None of the abstract classes found here should be instantiated directly.
+
+See also:
+
+* :mod:`PyPoE.poe.file.shared`
+* :mod:`PyPoE.poe.file.shared.keyvalues`
+
 
 Agreement
 -------------------------------------------------------------------------------
 
 See PyPoE/LICENSE
+
+Documentation
+-------------------------------------------------------------------------------
+
+.. autoclass:: AbstractFileCache
+    :private-members:
 """
 
 # =============================================================================
@@ -51,14 +64,14 @@ __all__ = ['AbstractFileCache']
 
 class AbstractFileCache(ReprMixin):
     """
-    :ivar _ggpk:
-    :type _ggpk: GGPKFile
+    Attributes
+    ----------
+    _ggpk : GGPKFile
 
-    :ivar _path:
-    :type _path: str
+    _path : str
 
-    :ivar files:
-    :type files: dict[str, AbstractFileReadOnly]
+    files : dict[str, AbstractFileReadOnly]
+        Dictionary of loaded file instances and their related path
     """
 
     FILE_TYPE = None
@@ -66,25 +79,27 @@ class AbstractFileCache(ReprMixin):
     def __init__(self, path_or_ggpk=None, files=None, files_shortcut=True,
                  instance_options=None, read_options=None):
         """
-        :param path_or_ggpk: The root path (i.e. relative to content.ggpk) where
-        the files are stored or a GGPKFile instance
-        :type path_or_ggpk: str or :class:`GGPKFile`
+        Parameters
+        ----------
+        path_or_ggpk : str | GGPKFile
+            The root path (i.e. relative to content.ggpk) where the files are
+            stored or a GGPKFile instance
+        files : Iterable
+            Iterable of files that will be loaded right away
+        files_shortcut : bool
+            Whether to use the shortcut function, i.e. self.__getitem__
+        instance_options : dict[str, object]
+            options to pass to the file's __init__ method
+        read_options : dict[str, object]
+            options to pass to the file instance's read method
 
-        :param files: Iterable of files that will be loaded right away
-        :type files: Iterable
 
-        :param files_shortcut: Whether to use the shortcut function, i.e.
-        self.__getitem__
-        :type files_shortcut: bool
-
-        :param instance_options: options to pass to the file's __init__ method
-        :type instance_options: dict[str, object]
-
-        :param read_options: options to pass to the file instance's read method
-        :type read_options: dict[str, object]
-
-        :raises TypeError: if path_or_ggpk not specified or invalid type
-        :raises ValueError: if a GGPKFile was passed, but it was not parsed
+        Raises
+        ------
+        TypeError
+            if path_or_ggpk not specified or invalid type
+        ValueError
+            if a :class:`GGPKFile` was passed, but it was not parsed
         """
         if isinstance(path_or_ggpk, GGPKFile):
             if not path_or_ggpk.is_parsed:
@@ -113,10 +128,18 @@ class AbstractFileCache(ReprMixin):
         Shortcut.
 
         Equivalent:
+
         * AbstractFileCache[item] <==> AbstractFileCache.read_file(item)
 
-        :param item:
-        :return:
+        Parameters
+        ----------
+        item : str
+            item to retrieve
+
+        Returns
+        -------
+        AbstractFileReadOnly
+            instance
         """
         return self.get_file(item)
 
@@ -125,10 +148,16 @@ class AbstractFileCache(ReprMixin):
         Returns a dictionary of keyword arguments to pass to the file's
         __init__ method upon initial reading.
 
-        :param str file_name: Name of the file
+        Parameters
+        ----------
+        file_name :  str
+            Name of the file
 
-        :return: Dictionary of keyword arguments
-        :rtype: dict[str, object]
+
+        Returns
+        -------
+        dict[str, object]
+            Dictionary of keyword arguments
         """
         options = dict(self.instance_options)
         return options
@@ -141,10 +170,16 @@ class AbstractFileCache(ReprMixin):
         In particular it sets file_path_or_raw based on how the cache was
         instantiated.
 
-        :param str file_name: Name of the file
+        Parameters
+        ----------
+        file_name :  str
+            Name of the file
 
-        :return: Dictionary of keyword arguments
-        :rtype: dict[str, object]
+
+        Returns
+        -------
+        dict[str, object]
+            Dictionary of keyword arguments
         """
         options = dict(self.read_options)
         if self._ggpk:
@@ -158,9 +193,16 @@ class AbstractFileCache(ReprMixin):
         """
         Creates a new instance for the given file name
 
-        :param str file_name: Name to the file to pass on
+        Parameters
+        ----------
+        file_name :  str
+            Name to the file to pass on
 
-        :return: File instance
+
+        Returns
+        -------
+
+            File instance
         """
         f = self.FILE_TYPE(
             **self._get_file_instance_args(file_name=file_name, *args, **kwargs)
@@ -175,9 +217,16 @@ class AbstractFileCache(ReprMixin):
         If the file does not exist, read it from the path specified on cache
         creation, add it to the cache and then return it.
 
-        :param str file_name: File to retrieve
+        Parameters
+        ----------
+        file_name :  str
+            File to retrieve
 
-        :return: read file instance
+
+        Returns
+        -------
+        AbstractFileReadOnly
+            read file instance
         """
         if file_name not in self.files:
             f = self._create_instance(file_name=file_name)
@@ -189,4 +238,10 @@ class AbstractFileCache(ReprMixin):
 
     @property
     def path_or_ggpk(self):
+        """
+        Returns
+        -------
+        GGPKFile | str
+            The path or GGPKFile instance the cache was created with
+        """
         return self._path or self._ggpk

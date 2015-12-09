@@ -1,6 +1,4 @@
 """
-Library init
-
 Overview
 -------------------------------------------------------------------------------
 
@@ -17,12 +15,18 @@ Overview
 Description
 -------------------------------------------------------------------------------
 
-Library Init
+Utilities for retrieving Path of Exile related paths.
 
 Agreement
 -------------------------------------------------------------------------------
 
 See PyPoE/LICENSE
+
+Documentation
+-------------------------------------------------------------------------------
+
+.. autoclass:: PoEPath
+    :special-members: __init__
 """
 # =============================================================================
 # Imports
@@ -50,6 +54,7 @@ __all__ = ['PoEPath']
 # Classes
 # =============================================================================
 
+
 class PoEPathList(list):
     """
     Special list object to make managing list objects easier.
@@ -73,28 +78,34 @@ class PoEPathList(list):
 
         list.append(self, PoEPathValue(path, version, distributor))
 
+
 class PoEPathValue(str):
-    """
-    :param path: Path to the base path of exile folder
-    :type path: str
-    :param version: Combination of PoEPath VERSION
-    :type version: VERSION
-    :param distributor: Combination of PoEPath DISTRIBUTOR values
-    :type distributor: DISTRIBUTOR
-    """
     def __new__(self, path, version, distributor):
+        """
+
+        Parameters
+        ----------
+        path : str
+            Path to the base path of exile folder
+        version : VERSION
+            Combination of PoEPath VERSION
+        distributor : DISTRIBUTOR
+            Combination of PoEPath DISTRIBUTOR values
+        """
         self.path = path
         self.version = version
         self.distributor = distributor
 
         return str.__new__(self, path)
 
+
 class PoEPath(object):
     """
     Class for retrieving default paths related to path of exile.
 
-    Note that most of the functions currently only work on Windows, as PoE is
-    only officially available on windows.
+    .. warning::
+        Currently this only works on the Windows platform, as there is no
+        official Path of Exile client on Linux.
     """
 
     def __init__(self, version=VERSION.DEFAULT, distributor=DISTRIBUTOR.DEFAULT):
@@ -102,10 +113,12 @@ class PoEPath(object):
         Change the version or distributor if you only watch to search for
         specific installations.
 
-        :param version: Combination of VERSION constants
-        :type version: VERSION
-        :param distributor: Combination of DISTRIBUTOR constants
-        :type distributor: DISTRIBUTOR
+        Parameters
+        ----------
+        version : VERSION
+            Combination of :class:`PyPoE.poe.constants.VERSION` constants
+        distributor : DISTRIBUTOR
+            Combination of :class:`PyPoE.poe.constants.DISTRIBUTOR` constants
         """
         self.version = version
         self.distributor = distributor
@@ -130,10 +143,15 @@ class PoEPath(object):
         Returns a PoEPathList instance containing PoEPathValues depending on
         the version and distributor values set on class construction.
 
-        :param only_existing: If True, only existing directory will be returned.
-        :type only_existing: bool
-        :return: returns a PoEPathList containing PoEPathValues
-        :rtype: PoEPathList
+        Parameters
+        ----------
+        only_existing : bool
+            If True, only existing directory will be returned.
+
+        Returns
+        -------
+        list
+            returns a PoEPathList containing PoEPathValues
         """
         paths = PoEPathList(only_existing)
 

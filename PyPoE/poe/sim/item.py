@@ -40,7 +40,7 @@ from enum import Enum
 # 3rd-party
 
 # self
-from PyPoE.poe.constants import ITEM_RARITY, SOCKET_COLOUR
+from PyPoE.poe.constants import RARITY, SOCKET_COLOUR
 from PyPoE.poe.file.dat import RelationalReader
 
 # =============================================================================
@@ -403,7 +403,7 @@ class ItemParser(object):
                 raise ValueError('No rarity found in the item header')
 
             rarity = rarity.group('rarity')
-            for rarity_const in ITEM_RARITY:
+            for rarity_const in RARITY:
                 if rarity_const.name_upper == rarity:
                     self.rarity = rarity_const
                     self._type = ITEM_TYPES.ITEM
@@ -416,7 +416,7 @@ class ItemParser(object):
                     self._type = ITEM_TYPES.CURRENCY
                 else:
                     raise ValueError('Unsupported value for "Rarity": %s' % rarity)
-            elif self.rarity == ITEM_RARITY.MAGIC:
+            elif self.rarity == RARITY.MAGIC:
                 self.prefix = None
                 self.suffix = None
 
@@ -528,7 +528,7 @@ class ItemParser(object):
             last_sec -= 1
 
         # Flavour text
-        if (self._type == ITEM_TYPES.ITEM and self.rarity == ITEM_RARITY.UNIQUE) or is_vaal_fragment:
+        if (self._type == ITEM_TYPES.ITEM and self.rarity == RARITY.UNIQUE) or is_vaal_fragment:
             self.flavour_text = section(index=last_sec)
             # Unidentified uniques don't have a flavour text, I think setting
             # "Unidentifed" is appropriate, but still have to make sure not to
@@ -548,7 +548,7 @@ class ItemParser(object):
                 self.stats = self._re_split_newline.split(section(offset=1))
             elif remaining == 1:
                 # Normal items can't have explicit stats
-                if self.rarity == ITEM_RARITY.NORMAL:
+                if self.rarity == RARITY.NORMAL:
                     self.implicit_stats = self._re_split_newline.split(section())
                     self.stats = []
                 # And magic/rare/unique items MUST have stats
@@ -571,7 +571,7 @@ class ItemParser(object):
                 raise ValueError('All sections (%s) should be parsed now.' % remaining)
 
         # Do a final pass on the prefix for magic items
-        if self._type == ITEM_TYPES.ITEM and self.rarity == ITEM_RARITY.MAGIC and ((self.suffix is None and len(self.stats) >= 1) or (self.suffix is not None and len(self.stats) >= 2)):
+        if self._type == ITEM_TYPES.ITEM and self.rarity == RARITY.MAGIC and ((self.suffix is None and len(self.stats) >= 1) or (self.suffix is not None and len(self.stats) >= 2)):
             match = self._re_prefix.match(self.base_item_name)
             self.prefix = match.group('prefix')
             self.base_item_name = self.base_item_name.replace(self.prefix + ' ', '')

@@ -1,6 +1,4 @@
 """
-Formulas
-
 Overview
 -------------------------------------------------------------------------------
 
@@ -28,6 +26,13 @@ TODO
 -------------------------------------------------------------------------------
 
 Find out the real function for calculating the stat requirement.
+
+Documentation
+-------------------------------------------------------------------------------
+
+.. autoclass:: GemTypes
+
+.. autofunction:: gem_stat_requirement
 """
 # =============================================================================
 # Imports
@@ -47,6 +52,14 @@ __all__ = ['GemTypes', 'gem_stat_requirement']
 # =============================================================================
 
 class GemTypes(Enum):
+    """
+    Attributes
+    ----------
+    support
+        Support Skill Gem
+    active
+        Active Skill Gem
+    """
     support = 1
     active = 2
 
@@ -65,30 +78,42 @@ def gem_stat_requirement(level, gtype=GemTypes.support, multi=100):
     Currently only multipliers of 100, 60 and 40 are supported.
 
 
-    ON CALCULATIONS
+    .. warning::
+        These functions are primarily reverse engineered and may break with
+        updates.
 
-    Generally, the gem stat requirements seem to be based on a linear function
-    (i.e. f(x) = ax+b), however values are rounded.
+        Generally, the gem stat requirements seem to be based on a linear
+        function (i.e. f(x) = ax+b), however values are rounded.
 
-    For the values a & b were calculated with linear regression, then sightly
-    adjusted to produce the correct results for existing gems, but it may
-    not be entirely accurate.
-    In particular it seems strange that the formula changes depending on the
-    multiplier; I haven't been able to figure out a single formula that works
-    for all, so for the time being each multiplier comes with their own
-    formula.
+        For the values a & b were calculated with linear regression, then
+        sightly adjusted to produce the correct results for existing gems, but
+        it may not be entirely accurate.
+        In particular it seems strange that the formula changes depending on the
+        multiplier; I haven't been able to figure out a single formula that
+        works for all, so for the time being each multiplier comes with their
+        own formula.
+
+    Parameters
+    ----------
+    level : int
+        Level requirement for the current gem level
+    gtype : GemTypes
+        Type of the gem; i.e. GemTypes.support or GemTypes.active
+    multi : int
+        Stat multiplier, i.e. from SkillGems.dat
 
 
-    :param level: Level requirement for the current gem level
-    :type level: int
-    :param gtype: Type of the gem; i.e. GemTypes.support or GemTypes.active
-    :type gtype: GemTypes
-    :param multi: Stat Multiplier
-    :type multi: int
-    :return: cacluated stat requirement
+    Returns
+    -------
+    int
+        calculated stat requirement
 
-    :raise ValueError: if multi is unsupported
-    :raise ValueError: if gtype is invalid
+
+    Raises
+    ------
+    ValueError
+        if multi is unsupported
+        if gtype is invalid
     """
     if gtype == GemTypes.active:
         b = 8 * multi / 100

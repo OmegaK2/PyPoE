@@ -1,6 +1,4 @@
 """
-Dat Reader Tool
-
 Overview
 -------------------------------------------------------------------------------
 
@@ -17,9 +15,9 @@ Overview
 Description
 -------------------------------------------------------------------------------
 
-Toolkit for reading & writing GGG .dat files.
+Support for .dat file format.
 
-.dat files can be found in Data/ and are read by the class DatFile.
+.dat files can be found in Data/ and are read by :class:`DatFile`.
 Unfortunately, there is no magic keyword for identifying the GGG .dat format,
 so advise caution when trying to read dat files.
 
@@ -32,7 +30,7 @@ generally done by pointers (int) or list pointers (size, int) from the
 table-data.
 
 A list of default specification is included with PyPoE; to reload those or load
-other specifications, load_spec may be used.
+other specifications, :func:`load_spec` may be used.
 
 Agreement
 -------------------------------------------------------------------------------
@@ -44,6 +42,35 @@ TODO
 
 - DatValue.get_value might hit the python recursion limit, but is not a problem
   for any of the actual dat file.
+
+Documentation
+-------------------------------------------------------------------------------
+
+Public API
+===============================================================================
+
+.. autoclass:: DatFile
+
+.. autoclass:: RelationalReader
+
+.. autofunction:: load_spec
+
+.. autofunction:: reload_default_spec
+
+Internal API
+===============================================================================
+
+.. autoclass:: DatReader
+
+.. autoclass:: RecordList
+    :exclude-members: append, clear, copy, count, extend, index, insert, pop, remove, reverse, sort
+
+.. autoclass:: DatValue
+
+Exceptions & Warnings
+===============================================================================
+
+.. autoclass:: SpecificationError
 """
 
 # =============================================================================
@@ -80,12 +107,17 @@ __all__ = [
 ]
 
 # =============================================================================
-# Classes
+# Exceptions & Warnings
 # =============================================================================
 
 
 class SpecificationError(ValueError):
     pass
+
+
+# =============================================================================
+# Classes
+# =============================================================================
 
 
 class DatValue(object):
@@ -181,12 +213,19 @@ class DatValue(object):
 
     def _get_data_size(self):
         """
-        Retrieves site of the data held by the current instance in the data
+        Retrieves size of the data held by the current instance in the data
         section.
 
-        :raises TypeError: If performed on DatValue instances without data
+        Returns
+        -------
+        int
+            size of data
 
-        :return: Returns the end offset
+
+        Raises
+        ------
+        TypeError
+            If performed on DatValue instances without data
         """
         if self.is_list:
             if self.children:
@@ -204,9 +243,16 @@ class DatValue(object):
         Retrieves the start offset of the data held by the current instance in
         the data section.
 
-        :raises TypeError: If performed on DatValue instances without data
+        Returns
+        -------
+        int
+            start offset of data
 
-        :return: Returns the start offset
+
+        Raises
+        ------
+        TypeError
+            If performed on DatValue instances without data
         """
         if self.is_list:
             return self.value[1]
@@ -220,9 +266,16 @@ class DatValue(object):
         Retrieves the end offset of the data held by the current instance in the
         data section.
 
-        :raises TypeError: If performed on DatValue instances without data
+        Returns
+        -------
+        int
+            end offset of data
 
-        :return: Returns the end offset
+
+        Raises
+        ------
+        TypeError
+            If performed on DatValue instances without data
         """
         return self._get_data_start_offset() + self._get_data_size()
 
@@ -230,8 +283,9 @@ class DatValue(object):
         """
         Whether this DatValue instance is data or not.
 
-        :return: True or False
-        :rtype: bool
+        Returns
+        -------
+        bool
         """
         return self.parent is not None
 
@@ -240,8 +294,9 @@ class DatValue(object):
         Whether this DatValue instance has data or not; this applies to types
         that hold a pointer.
 
-        :return: True or False
-        :rtype: bool
+        Returns
+        -------
+        bool
         """
         return self.is_list or self.is_pointer
 
@@ -249,8 +304,9 @@ class DatValue(object):
         """
         Whether this DatValue instance is a list.
 
-        :return: True or False
-        :rtype: bool
+        Returns
+        -------
+        bool
         """
         return self.children is not None
 
@@ -258,8 +314,9 @@ class DatValue(object):
         """
         Whether this DatValue instance is a pointer.
 
-        :return: True or False
-        :rtype: bool
+        Returns
+        -------
+        bool
         """
         return self.child is not None
 
@@ -267,8 +324,9 @@ class DatValue(object):
         """
         Whether this DatValue instance is parsed (i.e. non bytes).
 
-        :return: True or False
-        :rtype: bool
+        Returns
+        -------
+        bool
         """
         return not isinstance(self.value, bytes)
 
@@ -301,7 +359,10 @@ class DatValue(object):
         Note, that values may be nested i.e. if a list contains a list, a
         nested list will be returned accordingly.
 
-        :return: Returns the dereference value
+        Returns
+        -------
+        object
+            the dereferenced value
         """
         if self.is_pointer:
             return self.child.get_value()
@@ -313,16 +374,24 @@ class DatValue(object):
 
 class RecordList(list):
     """
-    :ivar DatReader parent:
-    :ivar int rowid:
+    Attributes
+    ----------
+    parent :  DatReader
+        The parent DatReader instance this RecordList instance belongs to
+    rowid :  int
+        The rowid of this RecordList instance
     """
 
     __slots__ = ['parent', 'rowid']
 
     def __init__(self, parent, rowid):
         """
-        :param DatReader parent:
-        :param int rowid:
+        Parameters
+        ----------
+        parent :  DatReader
+            The parent DatReader instance this RecordList instance belongs to
+        rowid :  int
+            The rowid of this RecordList instance
         """
         list.__init__(self)
         self.parent = parent
@@ -359,43 +428,63 @@ class RecordList(list):
     def iter(self):
         """
         Iterates over the RecordList and returns key, value and index
+
+        Yields
+        ------
+        str
+            key
+        object
+            the value
+        int
+            index
         """
         for index, key in enumerate(self.parent.table_columns):
             yield key, self[key], index
 
-
     def keys(self):
+        """
+
+        Returns
+        -------
+
+        """
         return self.parent.table_columns.keys()
 
 
 class DatReader(ReprMixin):
     """
-    :cvar int _table_offset: Starting offset of table data in bytes
-    :cvar _cast_table: Mapping of cast type to the corresponding struct
-    type and the size of the cast in bytes
-    :type _cast_table: dict[str, list[str, int]]
-    :cvar bytes _data_magic_number: Magic number that marks the beginning of
-    data section
-
-    :ivar str file_name: File name
-    :ivar int file_length: File length in bytes
-    :ivar list[RecordList] table_data:
-    :ivar int table_length: Length of table in bytes
-    :ivar int table_record_length: Length of each record in bytes
-    :ivar int table_rows: Number of rows in table
-
-    :ivar list[object] data_parsed: List of parsed data values
-    :ivar int data_offset: Data section offset
-
-    :ivar OrderedDict columns: Shortened list of columns excluding intermediate
-    columns
-    :ivar OrderedDict columns_zip: Shortened list of columns excluding zipped
-    columns
-    :ivar OrderedDict columns_all: Complete list of columns, including all
-    intermediate and virtual columns
-    :ivar OrderedDict columns_data: List of all columns directly derived
-    from the data
-    :ivar OrderedDict table_columns: Used for mapping columns to indexes
+    Attributes
+    ----------
+    _table_offset :  int
+        Starting offset of table data in bytes
+    _cast_table : dict[str, list[str, int]]
+        Mapping of cast type to the corresponding struct
+    type and the size
+        of the cast in bytes
+    _data_magic_number :  bytes
+        Magic number that marks the beginning of data section
+    file_name :  str
+        File name
+    file_length :  int
+        File length in bytes
+    table_length :  int
+        Length of table in bytes
+    table_record_length :  int
+        Length of each record in bytes
+    table_rows :  int
+        Number of rows in table
+    data_offset :  int
+        Data section offset
+    columns :  OrderedDict
+        Shortened list of columns excluding intermediate columns
+    columns_zip :  OrderedDict
+        Shortened list of columns excluding zipped columns
+    columns_all :  OrderedDict
+        Complete list of columns, including all intermediate and virtual columns
+    columns_data :  OrderedDict
+        List of all columns directly derived from the data
+    table_columns :  OrderedDict
+        Used for mapping columns to indexes
     """
     _table_offset = 4
     _cast_table = {
@@ -412,6 +501,22 @@ class DatReader(ReprMixin):
     _data_magic_number = b'\xBB\xbb\xBB\xbb\xBB\xbb\xBB\xbb'
 
     def __init__(self, file_name, *args, use_dat_value=True, specification=None):
+        """
+
+        Parameters
+        ----------
+        file_name : str
+            Name of the dat file
+        use_dat_value : bool
+            Whether to use :class:`DatValue` instances or values
+        specification: ConfigObj
+            Specification to use
+
+        Raises
+        -------
+        SpecificationError
+            if the dat file is not in the specification
+        """
         self.data_parsed = []
         self.data_offset = 0
         self.file_length = 0
@@ -473,9 +578,23 @@ class DatReader(ReprMixin):
         return self.table_data[item]
 
     def row_iter(self):
+        """
+        Returns
+        -------
+        iter
+            Iterator over the rows
+        """
         return iter(self.table_data)
 
     def column_iter(self):
+        """
+        Iterators over the columns
+
+        Yields
+        ------
+        list
+            Values per column
+        """
         for ci, column in enumerate(self.table_columns):
             yield [item[ci] for item in self]
 
@@ -651,6 +770,9 @@ class DatReader(ReprMixin):
         return self.table_data
 
     def print_data(self):
+        """
+        For debugging. Prints out data.
+        """
         for row in self.table_data:
             print('Row: %s' % row.rowid)
             for k in row.keys():
@@ -716,14 +838,18 @@ class DatFile(AbstractFileReadOnly):
     """
     Representation of a .dat file.
 
-    :ivar reader:
-    :type reader: DatReader
+    Attributes
+    ----------
+    reader : DatReader
+        reference to the DatReader instance once :meth:`read` has been called
     """
     
     def __init__(self, file_name):
         """
-        :param file_name: Name of the .dat file
-        :type file_name: str
+        Parameters
+        ----------
+        file_name : str
+            Name of the .dat file
         """
         self._file_name = file_name
         self.reader = None
@@ -750,7 +876,10 @@ class RelationalReader(AbstractFileCache):
         """
         Shortcut that also appends Data/ if missing
 
-        self[item] <==> read_file(item).reader
+        The following calls are equivalent:
+
+        * self['DF.dat'] <==> read_file('Data/DF.dat').reader
+        * self['Data/DF.dat'] <==> read_file('Data/DF.dat').reader
         """
         if not item.startswith('Data/'):
             item = 'Data/' + item
@@ -805,9 +934,16 @@ class RelationalReader(AbstractFileCache):
         Note that a related row may be "None" if no key was specified in the
         read dat file.
 
-        :param str file_name: The name of the .dat to read. Extension is required.
-        :return: Returns the given DatFile instance
-        :rtype: DatFile
+        Parameters
+        ----------
+        file_name :  str
+            The name of the .dat to read. Extension is required.
+
+
+        Returns
+        -------
+        DatFile
+            Returns the given DatFile instance
         """
         if file_name in self.files:
             return self.files[file_name]
@@ -850,12 +986,22 @@ def load_spec(path=None):
     Loads a specification that can be used for the dat files. It will be
     verified and errors will be raised accordingly if any errors occur.
 
-    :param str path: If specified, read the specified file as config
-    :return: returns the ConfigObj of the read file.
-    :rtype: :class:`ConfigObj`
+    Parameters
+    ----------
+    path :  str
+        If specified, read the specified file as config
 
-    :raises SpecificationError: if key or key_id point to invalid files or
-    keys respectively
+
+    Returns
+    -------
+    :class:`ConfigObj`
+        returns the ConfigObj of the read file.
+
+
+    Raises
+    ------
+    SpecificationError
+        if key or key_id point to invalid files or keys respectively
     """
     if path is None:
         path = DAT_SPECIFICATION

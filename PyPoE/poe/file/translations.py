@@ -1,5 +1,5 @@
 """
-Utilities for accessing GGG translations
+Utilities for accessing Path of Exile's translation file format.
 
 Overview
 -------------------------------------------------------------------------------
@@ -21,7 +21,6 @@ Utilities for parsing and using GGG translations.
 
 The translation GGG provides are generally suffixed by _descriptions.txt and
 can be found in the MetaData/ folder.
-To read those, use the class DescriptionFile.
 
 Agreement
 -------------------------------------------------------------------------------
@@ -31,9 +30,69 @@ See PyPoE/LICENSE
 TODO
 -------------------------------------------------------------------------------
 
-- optimize __hash__ - very slow atm; or remove, but it is needed for the diffs
-reverse for non-number values?
+- optimize __hash__ very slow atm; or remove, but it is needed for the diffs
+  reverse for non-number values?
 - Fix empty translation strings
+
+Documentation
+-------------------------------------------------------------------------------
+
+Public API
+===============================================================================
+
+API for common and every day use.
+
+Most of the time you'll just want to import the :class:`TranslationFile` or
+:class:`TranslationFileCache` classes and work with the instantiated
+:meth:`TranslationFile.get_translation` and
+:meth:`TranslationFile.reverse_translation` methods.
+
+The result formats :class:`TranslationResult` and
+:class:`TranslationReverseResult` provide optional wrappers around the function
+results that contain extra information and utility methods.
+
+
+.. autoclass:: TranslationFile
+    :inherited-members:
+
+.. autoclass:: TranslationFileCache
+    :inherited-members:
+
+.. autoclass:: TranslationResult
+
+.. autoclass:: TranslationReverseResult
+
+Internal API
+===============================================================================
+
+API for internal use, but still may be useful to work with more directly.
+
+.. autoclass:: Translation
+    :special-members: __eq__
+
+.. autoclass:: TranslationLanguage
+    :special-members: __eq__
+
+.. autoclass:: TranslationString
+    :special-members: __eq__
+
+.. autoclass:: TranslationRange
+    :special-members: __eq__
+
+.. autoclass:: TranslationQuantifier
+    :special-members: __eq__
+
+Warnings
+===============================================================================
+
+.. autoclass:: TranslationWarning
+
+.. autoclass:: MissingIdentifierWarning
+
+.. autoclass:: UnknownIdentifierWarning
+
+.. autoclass:: DuplicateIdentifierWarning
+
 """
 
 # =============================================================================
@@ -140,11 +199,12 @@ class Translation(TranslationReprMixin):
     A translation has at least one id and at least the English language (along
     with the respective strings).
 
-    :ivar languages: List of TranslationLanguage instances for this Translation
-    :type languages: list[TranslationLanguage]
-
-    :ivar ids: List of ids associated with this Translation
-    :type ids: list[str]
+    Attributes
+    ----------
+    languages : list[TranslationLanguage]
+        List of TranslationLanguage instances for this Translation
+    ids : list[str]
+        List of ids associated with this Translation
     """
 
     __slots__ = ['languages', 'ids']
@@ -189,12 +249,17 @@ class Translation(TranslationReprMixin):
         As a fallback if the language is not found, the English
         TranslationLanguage record will be returned.
 
-        :param language: The language to get.
-        :type language: str
+        Parameters
+        ----------
+        language : str
+            The language to get.
 
-        :return: Returns the TranslationLanguage record for the specified
-        language or the English one if not found
-        :rtype: TranslationLanguage
+
+        Returns
+        -------
+        TranslationLanguage
+            Returns the TranslationLanguage record for the specified language
+            or the English one if not found
         """
         etr = None
         for tr in self.languages:
@@ -211,14 +276,14 @@ class TranslationLanguage(TranslationReprMixin):
     Representation of a language in the translation file. Each language has
     one or multiple strings.
 
-    :ivar parent: The parent Translation instance
-    :type parent: Translation
-
-    :ivar language: the language of this instance
-    :type language: str
-
-    :ivar strings: List of Translation String instances
-    :type strings: list[TranslationString]
+    Attributes
+    ----------
+    parent : Translation
+        The parent Translation instance
+    language : str
+        the language of this instance
+    strings : list[TranslationString]
+        List of Translation String instances
     """
 
     __slots__ = ['parent', 'language', 'strings']
@@ -267,23 +332,23 @@ class TranslationLanguage(TranslationReprMixin):
         values will be returned.
 
 
-        :param values: A list of values to be used for substitution
-        :type values: list[int]
+        Parameters
+        ----------
+        values : list[int]
+            A list of values to be used for substitution
+        indexes : list[int]
+            A list of relevant indexes corresponding to the values for this
+            string.
+        use_placeholder : bool
+            Whether to use placeholders instead of the actual values.
+        only_values : bool
+            Whether to return formatted values instead of the formatted string.
 
-        :param indexes: A list of relevant indexes corresponding to the values
-        for this string.
-        :type indexes: list[int]
 
-        :param use_placeholder: Whether to use placeholders instead of the
-        actual values.
-        :type use_placeholder: bool
-
-        :param only_values: Whether to return formatted values instead of the
-        formatted string.
-        :type only_values: bool
-
-        :return: Returns the formatted string
-        :rtype: str, list[int] or list[int], list[int]
+        Returns
+        -------
+        str, list[int] or list[int], list[int]
+            Returns the formatted string
         """
         # Support for ranges
         is_range = []
@@ -327,10 +392,16 @@ class TranslationLanguage(TranslationReprMixin):
         Attempts to find a match for the given string and returns a list of
         reversed values if a match is found for this language.
 
-        :param string: String to match against
-        :type string: str
-        :return: handled list of values or None if not found
-        :rtype: None or list
+        Parameters
+        ----------
+        string : str
+            String to match against
+
+
+        Returns
+        -------
+        None or list
+            handled list of values or None if not found
         """
         # TODO: Should only match one at a time. But may be not?
         for ts in self.strings:
@@ -348,21 +419,19 @@ class TranslationString(TranslationReprMixin):
     Representation of a single translation string. Each string comes with
     it's own quantifiers and acceptable range.
 
-    :ivar parent: parent language
-    :type parent: TranslationLanguage
-
-    :ivar quantifier: the quantifier for this translation string
-    :type quantifier: TranslationQuantifier
-
-    :ivar range: acceptable ranges for this translation as a list of instances
-    for each index
-    :type range: list[TranslationRange]
-
-    :ivar strings: translation string broken down into segments
-    :type strings: list[str]
-
-    :ivar tags: tags for value replacement between segments
-    :type tags: list[str]
+    Attributes
+    ----------
+    parent : TranslationLanguage
+        parent language
+    quantifier : TranslationQuantifier
+        the quantifier for this translation string
+    range : list[TranslationRange]
+        acceptable ranges for this translation as a list of instances for each
+        index
+    strings : list[str]
+        translation string broken down into segments
+    tags : list[str]
+        tags for value replacement between segments
     """
 
     __slots__ = ['parent', 'quantifier', 'range', 'strings', 'tags']
@@ -384,6 +453,12 @@ class TranslationString(TranslationReprMixin):
 
     @property
     def string(self):
+        """
+        Returns
+        -------
+        str
+            Reconstructed original string that would be used for translation
+        """
         s = []
         for i, tag in enumerate(self.tags):
             s.append(self.strings[i])
@@ -444,19 +519,25 @@ class TranslationString(TranslationReprMixin):
         If only_values is specified, no string formatting will performed
         and instead just parsed values will be returned.
 
-        :param values: List of values to use for the formatting
-        :type values: list[int]
-        :param is_range: List of bools representing whether the values at the
-        list index is a range or not
-        :type is_range: list[bool]
-        :param use_placeholder: Use a placeholder instead of replacing the values
-        :type use_placeholder: bool
-        :param only_values: Only return the values and not
-        :type only_values: bool
-        :return: Returns the formatted string and a list of unused values.
-        If only placeholder is specified, instead of the string a list of
-        parsed values is returned.
-        :rtype: str, list[int] or list[int], list[int]
+        Parameters
+        ----------
+        values : list[int]
+            List of values to use for the formatting
+        is_range : list[bool]
+            List of bools representing whether the values at the list index is
+            a range or not
+        use_placeholder : bool
+            Use a placeholder instead of replacing the values
+        only_values : bool
+            Only return the values and not
+
+
+        Returns
+        -------
+        str, list[int] or list[int], list[int]
+            Returns the formatted string and a list of unused values. If only
+            placeholder is specified, instead of the string a list of parsed
+            values is returned.
         """
         values = self.quantifier.handle(values, is_range)
 
@@ -494,12 +575,18 @@ class TranslationString(TranslationReprMixin):
         Returns the accumulative range rating of the specified values at
         the specified indexes
 
-        :param values: List of values
-        :type values: list[int] or list[float]
-        :param indexes: List of indexes
-        :type indexes: list[int]
-        :return: Sum of the ratings
-        :rtype: int
+        Parameters
+        ----------
+        values : list[int] or list[float]
+            List of values
+        indexes : list[int]
+            List of indexes
+
+
+        Returns
+        -------
+        int
+            Sum of the ratings
         """
         rating = 0
         for i in indexes:
@@ -516,10 +603,16 @@ class TranslationString(TranslationReprMixin):
         For missing values, it will try to insert the range maximum/minimum
         values if set, otherwise None.
 
-        :param string: string to match against
-        :type string: str
-        :return: handled list of values or None if no match
-        :rtype: list[int] or None
+        Parameters
+        ----------
+        string : str
+            string to match against
+
+
+        Returns
+        -------
+        list[int] or None
+            handled list of values or None if no match
         """
         index = 0
         values_indexes = []
@@ -591,14 +684,14 @@ class TranslationRange(TranslationReprMixin):
     For example, 100 for freeze turns into "Always Freeze" whereas less is
     "chance to freeze".
 
-    :ivar parent: parent
-    :type parent: TranslationString
-
-    :ivar min: minimum range
-    :type min: int
-
-    :ivar max: maximum range
-    :type max: int
+    Attributes
+    ----------
+    parent : TranslationString
+        parent
+    min : int
+        minimum range
+    max : int
+        maximum range
     """
 
     __slots__ = ['parent', 'min', 'max']
@@ -629,15 +722,20 @@ class TranslationRange(TranslationReprMixin):
         Checks whether the value is in range and returns the rating/accuracy
         of the check performed.
 
-        0 if no match
-        1 if any range is accepted
-        2 if either minimum or maximum is specified
-        3 if both minimum and maximum is specified
+        Parameters
+        ----------
+        value : int
+            Value to check
 
-        :param value: Value to check
-        :type value: int
-        :return: Returns the rating of the value
-        :rtype: int
+
+        Returns
+        -------
+        int
+            Returns the rating of the value
+            0 if no match
+            1 if any range is accepted
+            2 if either minimum or maximum is specified
+            3 if both minimum and maximum is specified
         """
         # Any range is accepted
         if self.min is None and self.max is None:
@@ -664,9 +762,10 @@ class TranslationQuantifier(TranslationReprMixin):
     of the values; for example, a value might be negated (i.e so that it would
     show "5% reduced Damage" instead of "-5% reduced Damage").
     
-    :ivar registered_handlers: Mapping of the name of registered handlers
-    to the ids they apply to
-    :type registered_handlers: dict[str, list[int]]
+    Attributes
+    ----------
+    registered_handlers : dict[str, list[int]]
+        Mapping of the name of registered handlers to the ids they apply to
     """
 
     _REPR_EXTRA_ATTRIBUTES = OrderedDict((
@@ -738,10 +837,12 @@ class TranslationQuantifier(TranslationReprMixin):
         Registers that the specified handler should be used for the given
         index of the value.
 
-        :param handler: id of the handler
-        :type handler: str
-        :param index: index of the handler value
-        :type index: int
+        Parameters
+        ----------
+        handler : str
+            id of the handler
+        index : int
+            index of the handler value
         """
 
         if handler in self.registered_handlers:
@@ -755,13 +856,18 @@ class TranslationQuantifier(TranslationReprMixin):
         """
         Handle the given values based on the registered quantifiers.
 
-        :param values: list of values
-        :type values: list[int]
-        :param is_range: specifies whether the value at the index is a range or
-        not. Must be the same length as values.
-        :type is_range: Iterable of bools
-        :return: handled list of values
-        :rtype: list[int]
+        Parameters
+        ----------
+        values : list[int]
+            list of values
+        is_range : Iterable of bools
+            specifies whether the value at the index is a range or not. Must be
+            the same length as values.
+
+        Returns
+        -------
+        list[int]
+            handled list of values
         """
         values = list(values)
         for handler_name in self.registered_handlers:
@@ -779,10 +885,16 @@ class TranslationQuantifier(TranslationReprMixin):
         """
         Reverses the quantifier for the given values.
 
-        :param values: list of values
-        :type values: list[int]
-        :return: handled list of values
-        :rtype: list[int]
+        Parameters
+        ----------
+        values : list[int]
+            list of values
+
+
+        Returns
+        -------
+        list[int]
+            handled list of values
         """
         indexes = set(range(0, len(values)))
         for handler_name in self.registered_handlers:
@@ -801,38 +913,28 @@ class TranslationQuantifier(TranslationReprMixin):
 
 class TranslationResult(TranslationReprMixin):
     """
-    Translation result and utility functions.
+    Translation result of :meth:`TranslationFile:get_translation`.
 
-    :ivar found:
-    :type found: list[Translation]
-
-    :ivar lines:
-    :type lines: list[str]
-
-    :ivar indexes:
-    :type indexes: list[int]
-
-    :ivar missing_ids:
-    :type missing_ids: list[str]
-
-    :ivar missing_values:
-    :type missing_values: list[int]
-
-    :ivar values:
-    :type values: list[int]
-
-    :ivar invalid:
-    :type invalid: list[str]
-
-    :ivar values:
-    :type values_unused: list[int]
-
-    :ivar source_ids:
-    :type source_ids: list[str]
-
-    :ivar source_values:
-    :type source_values: list[int] or list[int, int]
-
+    Attributes
+    ----------
+    found : list[Translation]
+        List of found Translations (in order)
+    lines : list[str]
+        List of related translated strings (in order)
+    indexes : list[int]
+        List of related indexes (i.e. for use with TranslationLanguage.get_string)
+    missing_ids : list[str]
+        List of missing identifier tags
+    missing_values : list[int]
+        List of missing identifier values
+    values : list[int]
+        List of processed values (in order)
+    invalid : list[str]
+        List of invalid values (in order)
+    source_ids : list[str]
+        List of the original tags passed before the translation occurred
+    source_values : list[int] or list[int, int]
+        List of the original values passed before the translation occurred
     """
     __slots__ = [
         'found',
@@ -861,6 +963,14 @@ class TranslationResult(TranslationReprMixin):
         self.source_values = source_values
 
     def _get_found_ids(self):
+        """
+        Generates a list of found ids and returns it.
+
+        Returns
+        -------
+        list[str]
+            List of found ids
+        """
         ids = []
         for tr in self.found:
             ids += tr.ids
@@ -871,18 +981,26 @@ class TranslationResult(TranslationReprMixin):
 
     @property
     def missing(self):
+        """
+        Zips :attr:`missing_ids` and :attr:`missing_values`.
+
+        Returns
+        -------
+        zip
+        """
         return zip(self.missing_ids, self.missing_values)
 
 
 class TranslationReverseResult(TranslationReprMixin):
     """
-    Result of TranslationFile.reverse_translation
+    Result of :meth:`TranslationFile.reverse_translation`
 
-    :ivar translations: List of Translation instances
-    :type translations: list[Translation]
-
-    :ivar values: List of values
-    :type values: list[list[float]]
+    Attributes
+    ----------
+    translations : list[Translation]
+        List of Translation instances
+    values : list[list[float]]
+        List of values
     """
     __slots__ = [
         'translations',
@@ -904,7 +1022,7 @@ class TranslationFile(AbstractFileReadOnly):
         file(s).
 
         file_path can be specified to initialize the file(s) right away. It
-        takes the same arguments as :method:`TranslationFile.read`.
+        takes the same arguments as :meth:`TranslationFile.read`.
 
         Some translation files have an "include" tag which includes the
         translation strings of another translation file automatically. By
@@ -912,20 +1030,24 @@ class TranslationFile(AbstractFileReadOnly):
         To enable the automatic include, specify either of the base_dir or
         parent variables.
 
+        Parameters
+        ----------
+        file_path : Iterable or str or None
+            The file to read. Can also accept an iterable of files to read
+            which will all be merged into one file. Also see
+            :meth:`read`
+        base_dir : str or None
+            Base directory from where other translation files that contain the
+            "include" tag will be included
+        parent : :class:`TranslationFileCache` or None
+            parent :class:`TranslationFileCache` that will be used for inclusion
 
-        :param file_path: The file to read. Can also accept an iterable of
-        files to read which will all be merged into one file. Also see
-        :method:`TranslationFile.read`
-        :type: Iterable or str or None
-        :param base_dir: Base directory from where other translation files that
-        contain the "include" tag will be included
-        :type base_dir: str or None
-        :param parent: parent TranslationFileCache that will be used for
-        inclusion
-        :type parent: TranslationFileCache or None
-
-        :raises TypeError: if parent is not a :class:`TranslationFileCache`
-        :raises ValueError: if both parent and base_dir are specified
+        Raises
+        ------
+        ValueError
+            if both parent and base_dir are specified
+        TypeError
+            if parent is not a :class:`TranslationFileCache`
         """
         self._translations = []
         self._translations_hash = {}
@@ -1093,8 +1215,10 @@ class TranslationFile(AbstractFileReadOnly):
 
         Note that the same objects will still be referenced.
 
-        :return: copy of self
-        :rtype: :class:`TranslationFile`
+        Returns
+        -------
+        :class:`TranslationFile`
+            copy of self
         """
         t = TranslationFile()
         for name in self.__slots__:
@@ -1106,9 +1230,15 @@ class TranslationFile(AbstractFileReadOnly):
         """
         Merges the current translation file with another translation file.
 
-        :param other: other :class:`TranslationFile` object to merge with
-        :type: :class:`TranslationFile`
-        :return: None
+        Parameters
+        ----------
+        other : :class:`TranslationFile`
+            other :class:`TranslationFile` object to merge with
+
+
+        Returns
+        -------
+        None
         """
 
         if not isinstance(other, TranslationFile):
@@ -1134,31 +1264,34 @@ class TranslationFile(AbstractFileReadOnly):
         on the values.
 
 
-        :param tags: A list of identifiers for the tags
-        :type tags: list[str]
-        :param values: A list of integer values to use for the translations. It
-        is also possible to use a list of size 2 for each elemented, which then
-        will be treated as range of acceptable value and formatted accordingly
-        (i.e. (x to y) instead of just x).
-        :type values: list[int] or list[int, int]
-        :param lang: Language to use. If it doesn't exist, English will be used
-        as fallback.
-        :type lang: str
-        :param full_result: If true, a :class:`TranslationResult` object will
-         be returned
-        :type full_result: bool
-        :param use_placeholder: If true, Instead of values in the translations
-        a placeholder (i.e. x, y, z) will be used. Values are still required
-        however to find the "correct" wording of the translation.
-        :type use_placeholder: bool
-        :param only_values: If true, only the handled values instead of the
-        string are returned
-        :type only_values: bool
+        Parameters
+        ----------
+        tags : list[str]
+            A list of identifiers for the tags
+        values : list[int] or list[int, int]
+            A list of integer values to use for the translations. It is also
+            possible to use a list of size 2 for each elemented, which then
+            will be treated as range of acceptable value and formatted
+            accordingly (i.e. (x to y) instead of just x).
+        lang : str
+            Language to use. If it doesn't exist, English will be used as
+            fallback.
+        full_result : bool
+            If true, a :class:`TranslationResult` object will  be returned
+        use_placeholder : bool
+            If true, Instead of values in the translations a placeholder (i.e.
+            x, y, z) will be used. Values are still required however to find
+            the "correct" wording of the translation.
+        only_values : bool
+            If true, only the handled values instead of the string are returned
 
-        :return: Returns a list of found translation strings. The list may be
-        empty if none are found. If full_result is specified, a
-        :class:`TranslationResult` object is returned instead
-        :rtype: list[str] or TranslationResult
+
+        Returns
+        -------
+        list[str] or TranslationResult
+            Returns a list of found translation strings. The list may be empty
+            if none are found. If full_result is specified, a
+            :class:`TranslationResult` object is returned instead
         """
         # A single translation might have multiple references
         # I.e. the case for always_freeze
@@ -1233,6 +1366,32 @@ class TranslationFile(AbstractFileReadOnly):
         return trans_lines
 
     def reverse_translation(self, string, lang='English'):
+        """
+        Attempt to reverse a translation string and return probable candidates
+        as well as probable values the translation string was used with.
+
+        .. warning::
+            During translation there is a loss of information incurred and
+            there are cases where it might be impossible reconstruct the string.
+
+        .. warning::
+            The method can only work of **exact** translation strings, so
+            minor differences already might result in failure detection. As
+            such strings from previous versions of Path of Exile may not work.
+
+        Parameters
+        ----------
+        string : str
+            The translation string to reverse
+        lang
+            The language the string is in
+
+        Returns
+        -------
+        TranslationReverseResult
+            :class:`TranslationReverseResult` instance containing any found
+            translation instances as well as the values.
+        """
         translations_found = []
         values_found = []
 
@@ -1266,13 +1425,13 @@ class TranslationFileCache(AbstractFileCache):
     @doc(prepend=AbstractFileCache.__init__)
     def __init__(self, *args, merge_with_custom_file=None, **kwargs):
         """
-        :param merge_with_custom_file: If this option is specified, each file
-        will be merged with a custom translation file.
-        If set to True, it will load the default translation file located in
-        PyPoE's data directory.
-        Alternatively a TranslationFile instance can be passed which then will
-        be used.
-        :type merge_with_custom_file: None, bool or TranslationFile
+        Parameters
+        ----------
+        merge_with_custom_file : None, bool or TranslationFile
+            If this option is specified, each file will be merged with a custom
+            translation file. If set to True, it will load the default
+            translation file located in PyPoE's data directory. Alternatively a
+            TranslationFile instance can be passed which then will be used.
         """
         if merge_with_custom_file is None or merge_with_custom_file is False:
             self._custom_file = None
@@ -1291,17 +1450,23 @@ class TranslationFileCache(AbstractFileCache):
 
     def __getitem__(self, item):
         """
-        Shortcut for :method:`TranslationFileCache.get_file` that will also
+        Shortcut for :meth:`TranslationFileCache.get_file` that will also
         added Metadata automatically.
 
         That means the following is equivalent:
         obj['stat_descriptions.txt']
         obj.get_file('Metadata/stat_descriptions.txt')
 
-        :param str item: file name/path relative to the Metadata/ directory
+        Parameters
+        ----------
+        item :  str
+            file name/path relative to the Metadata/ directory
 
-        :return: the specified TranslationFile
-        :rtype: TranslationFile
+
+        Returns
+        -------
+        TranslationFile
+            the specified TranslationFile
         """
         if not item.startswith('Metadata/'):
             item = 'Metadata/' + item
@@ -1325,11 +1490,16 @@ class TranslationFileCache(AbstractFileCache):
         For a shortcut consider using obj[name] instead.
 
 
-        :param str file_name: file name/path relative to the root path of exile
-        directory
+        Parameters
+        ----------
+        file_name :  str
+            file name/path relative to the root path of exile directory
 
-        :return: the specified TranslationFile
-        :rtype: TranslationFile
+
+        Returns
+        -------
+        TranslationFile
+            the specified TranslationFile
         """
         if file_name not in self.files:
             tf = self._create_instance(file_name=file_name)

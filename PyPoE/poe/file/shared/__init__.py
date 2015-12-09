@@ -1,6 +1,4 @@
 """
-Shared classes/functions
-
 Overview
 -------------------------------------------------------------------------------
 
@@ -20,6 +18,17 @@ Description
 Shared classes & functions for the file API. Used for exposing the same basic
 API.
 
+All file classes inherit the base classes defined here or in the other shared
+file modules.
+
+.. warning::
+    None of the abstract classes found here should be instantiated directly.
+
+See also:
+
+* :mod:`PyPoE.poe.file.shared.cache`
+* :mod:`PyPoE.poe.file.shared.keyvalues`
+
 Agreement
 -------------------------------------------------------------------------------
 
@@ -29,6 +38,23 @@ TODO
 -------------------------------------------------------------------------------
 
 The abstract classes should probably actually be using python abc api.
+
+Documentation
+-------------------------------------------------------------------------------
+
+Abstract Classes
+===============================================================================
+
+.. autoclass:: AbstractFileReadOnly
+
+.. autoclass:: AbstractFile
+
+Exceptions & Warnings
+===============================================================================
+
+.. autoclass:: ParserError
+
+.. autoclass:: ParserWarning
 """
 
 # =============================================================================
@@ -50,7 +76,6 @@ __all__ = [
     'ParserWarning'
     'AbstractFileReadOnly',
     'AbstractFile',
-    'AbstractFileCache',
 ]
 
 # =============================================================================
@@ -59,10 +84,19 @@ __all__ = [
 
 
 class ParserError(Exception):
+    """
+    This exception or subclasses of this exception are raised when general
+    errors related to the parsing of files occur, such as malformed files.
+    """
     pass
 
 
 class ParserWarning(UserWarning):
+    """
+    This warning or subclasses of this warning are emitted when during the
+    parsing process there are cases where issues are not severe enough to
+    entirely fail the passing, but could pose serious problems.
+    """
     pass
 
 
@@ -80,8 +114,10 @@ class AbstractFileReadOnly(ReprMixin):
     """
     def _read(self, buffer, *args, **kwargs):
         """
-        :param buffer: The file/byte buffer
-        :type buffer: io.BytesIO
+        Parameters
+        ----------
+        buffer : io.BytesIO
+            The file/byte buffer
         """
         raise NotImplementedError()
 
@@ -91,18 +127,26 @@ class AbstractFileReadOnly(ReprMixin):
         the buffer to the specified function.
         The function must accept at least one keyword argument called 'buffer'.
 
-        :param file_path_or_raw: file path, bytes or buffer to read from
-        :type file_path_or_raw: BytesIO, bytes or str
+        Parameters
+        ----------
+        file_path_or_raw : BytesIO | bytes | str
+            file path, bytes or buffer to read from
+        args :
+            Additional positional arguments to pass to the specified function
+        kwargs :
+            Additional keyword arguments to pass to the specified function
 
-        :param args: Additional positional arguments to pass to the specified
-        function
 
-        :param kwargs: Additional keyword arguments to pass to the specified
-        function
+        Returns
+        -------
+        object
+            Result of the function
 
-        :return: Result of the function
 
-        :raises TypeError: if file_path_or_raw has an invalid type
+        Raises
+        ------
+        TypeError
+            if file_path_or_raw has an invalid type
         """
         if isinstance(file_path_or_raw, BytesIO):
             return function(*args, buffer=file_path_or_raw, **kwargs)
@@ -125,16 +169,26 @@ class AbstractFileReadOnly(ReprMixin):
         If a file path was given, the resulting data will be read from the
         specified file.
 
-        :param file_path_or_raw: file path, bytes or buffer to read from
-        :type file_path_or_raw: BytesIO, bytes or str
+        Parameters
+        ----------
+        file_path_or_raw : BytesIO | bytes | str
+            file path, bytes or buffer to read from
+        args :
+            Additional positional arguments
+        kwargs :
+            Additional keyword arguments
 
-        :param args: Additional positional arguments
 
-        :param kwargs: Additional keyword arguments
+        Returns
+        -------
+        object
+            result of the read operation, if any
 
-        :return: result of the read operation, if any
 
-        :raises TypeError: if file_path_or_raw has an invalid type
+        Raises
+        ------
+        TypeError
+            if file_path_or_raw has an invalid type
         """
         return self.get_read_buffer(file_path_or_raw, self._read, *args, **kwargs)
 
@@ -149,8 +203,10 @@ class AbstractFile(AbstractFileReadOnly):
 
     def _write(self, buffer, *args, **kwargs):
         """
-        :param buffer: The file/byte buffer
-        :type buffer: io.BytesIO
+        Parameters
+        ----------
+        buffer : io.BytesIO
+            The file/byte buffer
         """
         raise NotImplementedError()
 
@@ -160,18 +216,26 @@ class AbstractFile(AbstractFileReadOnly):
         the buffer to the specified function.
         The function must accept at least one keyword argument called 'buffer'.
 
-        :param file_path_or_raw: file path, bytes or buffer to write to
-        :type file_path_or_raw: BytesIO, bytes or str
+        Parameters
+        ----------
+        file_path_or_raw : BytesIO | bytes | str
+            file path, bytes or buffer to write to
+        args :
+            Additional positional arguments to pass to the specified function
+        kwargs :
+            Additional keyword arguments to pass to the specified function
 
-        :param args: Additional positional arguments to pass to the specified
-        function
 
-        :param kwargs: Additional keyword arguments to pass to the specified
-        function
+        Returns
+        -------
+        object
+            Result of the function
 
-        :return: Result of the function
 
-        :raises TypeError: if file_path_or_raw has an invalid type
+        Raises
+        ------
+        TypeError
+            if file_path_or_raw has an invalid type
         """
         if isinstance(file_path_or_raw, BytesIO):
             return function(*args, buffer=file_path_or_raw, **kwargs)
@@ -193,12 +257,25 @@ class AbstractFile(AbstractFileReadOnly):
         If a file path was given, the resulting data should be written to the
         specified file.
 
-        :param file_path_or_raw: file path, bytes or buffer to write to
-        :type file_path_or_raw: BytesIO, bytes, str
-        :param args: Additional positional arguments
-        :param kwargs: Additional keyword arguments
-        :return: result of the write operation, if any
+        Parameters
+        ----------
+        file_path_or_raw : BytesIO | bytes | str
+            file path, bytes or buffer to write to
+        args :
+            Additional positional arguments
+        kwargs :
+            Additional keyword arguments
 
-        :raises TypeError: if file_path_or_raw has an invalid type
+
+        Returns
+        -------
+        object
+            result of the write operation, if any
+
+
+        Raises
+        ------
+        TypeError
+            if file_path_or_raw has an invalid type
         """
         return self.get_write_buffer(file_path_or_raw, self._write, *args, **kwargs)

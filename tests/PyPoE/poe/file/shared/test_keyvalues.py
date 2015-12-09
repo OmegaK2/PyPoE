@@ -47,7 +47,7 @@ data_dir = os.path.join(os.path.split(os.path.split(os.path.realpath(__file__))[
 
 data = {
     'Append': {
-        'key': set([1, 2, 3]),
+        'key': [1, 2, 3],
     },
     'Override': {
         'key': 42,

@@ -1,6 +1,4 @@
 """
-Utilities for Mods.dat
-
 Overview
 -------------------------------------------------------------------------------
 
@@ -19,15 +17,29 @@ Description
 
 Utilities for dealing with Mods.dat.
 
-**This module is intended to be used with RelationReader.**
-
 This module implements some generic functions to simplify dealing with Mods.dat
 and perform several common tasks.
+
+.. warning::
+    This module is intended to be used with
+    :class:`PyPoE.poe.file.dat.RelationalReader`.
 
 Agreement
 -------------------------------------------------------------------------------
 
 See PyPoE/LICENSE
+
+Documentation
+-------------------------------------------------------------------------------
+
+.. autoclass:: SpawnChanceCalculator
+    :special-members: __init__
+
+.. autofunction:: get_translation
+.. autofunction:: get_mod_from_id
+.. autofunction:: get_spawn_weight
+.. autofunction:: generate_spawnable_mod_list
+
 """
 
 # =============================================================================
@@ -72,27 +84,76 @@ class SpawnChanceCalculator(object):
     """
     def __init__(self, mod_list, tags):
         """
-        :param mod_list: The mod list to base the calculations on
-        :type mod_list: list[RecordList]
-
-        :param tags: List of tag identifiers
-        :type tags: list[str]
+        Parameters
+        ----------
+        mod_list : list[RecordList]
+            The mod list to base the calculations on
+        tags : list[str]
+            List of tag identifiers
         """
         self.mod_list = mod_list
         self.tags = tags
         self.total_spawn_weight = self.get_total_spawn_weight()
 
     def get_total_spawn_weight(self):
+        """
+        Calculate the total spawn weight based on the stored modifier list
+
+        Returns
+        -------
+        int
+            Sum of spawn weights
+        """
         total_spawn_weight = 0
         for mod in self.mod_list:
             total_spawn_weight += self.get_spawn_weight(mod)
 
         return total_spawn_weight
 
-    def get_mod(self, modid):
-        return get_mod_from_id(modid, self.mod_list)
+    def get_mod(self, mod_id):
+        """
+        Returns the mod for the specified mod id based on the stored modifier
+        list or None if it isn't found.
+
+        Parameters
+        ----------
+        mod_id : str
+            The mod identifier to look for
+
+        Returns
+        -------
+        RecordList or None
+            Returns the mod if found, None otherwise
+
+        See Also
+        --------
+        :func:`get_mod_from_id`
+        """
+        return get_mod_from_id(mod_id, self.mod_list)
 
     def get_spawn_weight(self, mod):
+        """
+        Calculates the spawn weight of the given mod based on the stored list
+        of tags.
+
+        Parameters
+        ----------
+        mod : RecordList
+            The mod to calculate the spawn weight for.
+        tags : list[str]
+            List of applicable tag identifiers.
+
+
+        Returns
+        -------
+        int
+            Calculated spawn weight
+
+        See Also
+        --------
+        :func:`get_spawn_weight`
+
+        """
         return get_spawn_weight(mod, self.tags)
 
     def spawn_chance(self, mod_or_id, remove=True):
@@ -105,18 +166,26 @@ class SpawnChanceCalculator(object):
         updating tags and mods of the same grouping, which will guarantee
         that future mods rolled on this instance will be calculated properly.
 
-        :param mod_or_id: Id of the mod or the instance of the mod row
-        :type mod_or_id: str or RecordList
+        Parameters
+        ----------
+        mod_or_id : str | RecordList
+            Id of the mod or the instance of the mod row
+        remove : bool
+            Remove the mod from the list once the chance has been calculated
 
-        :param remove: Remove the mod from the list once the chance has been
-        calculated
-        :type remove: bool
 
-        :return: The calcuated spawn chance for the mod
-        :rtype: float
+        Returns
+        -------
+        float
+            The calcuated spawn chance for the mod
 
-        :raises TypeError: if mod_or_id has an invalid type
-        :raises ValueError: if mod_or_id not found
+
+        Raises
+        ------
+        TypeError
+            if mod_or_id has an invalid type
+        ValueError
+            if mod_or_id not found
         """
         if isinstance(mod_or_id, str):
             mod = self.get_mod(mod_or_id)
@@ -160,17 +229,22 @@ def get_translation(mod, translation_cache, translation_file=None):
     Returns the Translation result of the stats found on the specified mod
     using the specified TranslationFileCache.
 
-    :param mod:
-    :type mod: RecordList
+    Parameters
+    ----------
+    mod : RecordList
 
-    :param translation_cache:
-    :type translation_cache: TranslationFileCache
+    translation_cache : TranslationFileCache
+        :class:`PyPoE.poe.file.TranslationCache` instance to retrieve the
+        translation file from.
 
-    :param translation_file:
-    :type translation_file: str
+    translation_file : str
+        Name of the translation file to use. If left empty, it will be
+        automatically determined based on the mod domain.
 
-    :return:
-    :rtype: TranslationResult
+    Returns
+    -------
+    TranslationResult
+
     """
     stats = []
     for i in range(1, 6):
@@ -202,14 +276,18 @@ def get_mod_from_id(mod_id, mod_list):
     """
     Returns the mod for given mod or None if it isn't found.
 
-    :param mod_id: The mod identifier to look for
-    :type mod_id: str
+    Parameters
+    ----------
+    mod_id : str
+        The mod identifier to look for
+    mod_list : list[RecordList]
+        List of mods to search in (or dat file)
 
-    :param mod_list: List of mods to search in (or dat file)
-    :type mod_list: list[RecordList]
 
-    :return: Returns the mod if found, None otherwise
-    :rtype: RecordList or None
+    Returns
+    -------
+    RecordList or None
+        Returns the mod if found, None otherwise
     """
     for mod in mod_list:
         if mod['Id'] == mod_id:
@@ -221,14 +299,18 @@ def get_spawn_weight(mod, tags):
     """
     Calculates the spawn weight of the given mod for the given tags.
 
-    :param mod: The mod to calculate the spawn weight for.
-    :type mod: RecordList
+    Parameters
+    ----------
+    mod : RecordList
+        The mod to calculate the spawn weight for.
+    tags : list[str]
+        List of applicable tag identifiers.
 
-    :param tags: List of applicable tag identifiers.
-    :type tags: list[str]
 
-    :return: Calculated spawn weight
-    :rtype: int
+    Returns
+    -------
+    int
+        Calculated spawn weight
     """
     current_weight = 0
     for i, tag in enumerate(mod['SpawnWeight_TagsKeys']):
@@ -253,28 +335,32 @@ def generate_spawnable_mod_list(
 
     TODO: Certain generation types/domains may have different rules.
 
-    :param mod_dat_file:
-    :type mod_dat_file: `DatFile`
+    Parameters
+    ----------
+    mod_dat_file : `DatFile`
 
-    :param domain: The mod domain
-    :type domain: MOD_DOMAIN
+    domain : MOD_DOMAIN
+        The mod domain
+    generation_type : MOD_GENERATION_TYPE
+        The mod generation type
+    level : int
+        The level of object to the mod would be spawned on
+    tags : list[str]
+        List of tags for this object
 
-    :param generation_type: The mod generation type
-    :type generation_type: MOD_GENERATION_TYPE
 
-    :param level: The level of object to the mod would be spawned on
-    :type level: int
+    Returns
+    -------
+    list[RecordList]
+        Returns a list of applicable mod rows that have a spawn weighting
+        above 0.
 
-    :param tags: List of tags for this object
-    :type tags: list[str]
 
-    :return: Returns a list of applicable mod rows that have a spawn weighting
-    above 0.
-    :rtype: list[RecordList]
-
-    :raises TypeError: if domain is not a valid MOD_DOMAIN constant
-    :raises TypeError: if generation_type is not a valid MOD_GENERATION_TYPE
-    constant
+    Raises
+    ------
+    TypeError
+        if domain is not a valid MOD_DOMAIN constant
+        if generation_type is not a valid MOD_GENERATION_TYPE constant
     """
     if not isinstance(domain, MOD_DOMAIN):
         raise TypeError('domain must be a MOD_DOMAIN instance.')

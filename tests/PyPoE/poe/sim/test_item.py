@@ -47,7 +47,7 @@ ItemParser
 import pytest
 
 # self
-from PyPoE.poe.constants import ITEM_RARITY, SOCKET_COLOUR
+from PyPoE.poe.constants import RARITY, SOCKET_COLOUR
 from PyPoE.poe.sim import item
 
 # =============================================================================
@@ -77,7 +77,7 @@ Item Level: 18
 --------
 +25% to Fire Resistance''',
              {
-                 'rarity': ITEM_RARITY.NORMAL,
+                 'rarity': RARITY.NORMAL,
                  'name': 'Ruby Ring',
                  'required_level': 11,
                  'item_level': 18,
@@ -112,7 +112,7 @@ Adds 24-44 Cold Damage
 Adds 6-65 Lightning Damage
 28% increased Global Critical Strike Multiplier''',
             {
-                'rarity': ITEM_RARITY.RARE,
+                'rarity': RARITY.RARE,
                 'name': 'Ghoul Cry',
                 'base_item_name': 'Abyssal Sceptre',
                 'physical_damage': [38, 57],
@@ -155,7 +155,7 @@ Sockets: W-W-W-W-W-W
 --------
 Item Level: 73''',
             {
-                'rarity': ITEM_RARITY.UNIQUE,
+                'rarity': RARITY.UNIQUE,
                 'name': 'Tabula Rasa',
                 'base_item_name': 'Simple Robe',
                 'sockets': [item.ItemSocket(i, SOCKET_COLOUR.W) for i in range(0, 6)],
@@ -172,7 +172,7 @@ Adds 1-4 Physical Damage to Attacks
 --------
 Unidentified''',
              {
-                 'rarity': ITEM_RARITY.UNIQUE,
+                 'rarity': RARITY.UNIQUE,
                  'name': 'Iron Ring',
                  'item_level': 18,
                  'implicit_stats': [
@@ -199,7 +199,7 @@ Adds 1-3 Chaos Damage to Attacks
 --------
 Fear is highly infectious.''',
             {
-                'rarity': ITEM_RARITY.UNIQUE,
+                'rarity': RARITY.UNIQUE,
                 'name': 'Blackheart',
                 'base_item_name': 'Iron Ring',
                 'item_level': 18,
@@ -229,7 +229,7 @@ The Vaal shall never fear the setting of our sun.
 --------
 Can be used in the Eternal Laboratory or a personal Map Device.''',
             {
-                'rarity': ITEM_RARITY.NORMAL,
+                'rarity': RARITY.NORMAL,
                 'name': 'Sacrifice at Dusk',
                 'base_item_name': 'Sacrifice at Dusk',
                 'item_level': 69,
@@ -247,7 +247,7 @@ Item Level: 71
 --------
 Travel to this Map by using it in the Eternal Laboratory or a personal Map Device. Maps can only be used once.''',
             {
-                'rarity': ITEM_RARITY.NORMAL,
+                'rarity': RARITY.NORMAL,
                 'name': 'Tropical Island Map',
                 'base_item_name': 'Tropical Island Map',
                 'map_tier': 1,
@@ -268,7 +268,7 @@ Monsters cannot be Stunned
 --------
 Travel to this Map by using it in the Eternal Laboratory or a personal Map Device. Maps can only be used once.''',
             {
-                'rarity': ITEM_RARITY.MAGIC,
+                'rarity': RARITY.MAGIC,
                 'name': 'Unwavering Tropical Island Map of Commanders',
                 'prefix': 'Unwavering',
                 'suffix': 'of Commanders',
@@ -300,7 +300,7 @@ Unique Boss has 25% increased Attack and Cast Speed
 --------
 Travel to this Map by using it in the Eternal Laboratory or a personal Map Device. Maps can only be used once.''',
             {
-                'rarity': ITEM_RARITY.RARE,
+                'rarity': RARITY.RARE,
                 'name': 'Evil Remains',
                 'base_item_name': 'Vaal Pyramid Map',
                 'map_tier': 3,
@@ -327,7 +327,7 @@ Unidentified
 --------
 Travel to this Map by using it in the Eternal Laboratory or a personal Map Device. Maps can only be used once.''',
             {
-                'rarity': ITEM_RARITY.UNIQUE,
+                'rarity': RARITY.UNIQUE,
                 'name': 'Strand Map',
                 'base_item_name': 'Strand Map',
                 'map_tier': 6,
@@ -357,7 +357,7 @@ We all began life in darkness, we shall all end it there.
 --------
 Travel to this Map by using it in the Eternal Laboratory or a personal Map Device. Maps can only be used once.''',
             {
-                'rarity': ITEM_RARITY.UNIQUE,
+                'rarity': RARITY.UNIQUE,
                 'name': 'Whakawairua Tuahu',
                 'base_item_name': 'Strand Map',
                 'map_tier': 6,
@@ -383,7 +383,7 @@ Item Level: 71
 --------
 Place into an allocated Jewel Socket on the Passive Skill Tree. Right click to remove from the Socket.''',
             {
-                'rarity': ITEM_RARITY.NORMAL,
+                'rarity': RARITY.NORMAL,
                 'name': 'Crimson Jewel',
                 'item_level': 71,
                 'help_text': 'Place into an allocated Jewel Socket on the Passive Skill Tree. Right click to remove from the Socket.',
@@ -398,7 +398,7 @@ Item Level: 69
 --------
 Place into an allocated Jewel Socket on the Passive Skill Tree. Right click to remove from the Socket.''',
             {
-                'rarity': ITEM_RARITY.MAGIC,
+                'rarity': RARITY.MAGIC,
                 'name': 'Viridian Jewel of Order',
                 'base_item_name': 'Viridian Jewel',
                 'prefix': None,
@@ -419,7 +419,7 @@ Item Level: 73
 --------
 Place into an allocated Jewel Socket on the Passive Skill Tree. Right click to remove from the Socket.''',
             {
-                'rarity': ITEM_RARITY.MAGIC,
+                'rarity': RARITY.MAGIC,
                 'name': 'Resonant Cobalt Jewel',
                 'base_item_name': 'Cobalt Jewel',
                 'prefix': 'Resonant',
@@ -449,7 +449,7 @@ Place into an allocated Jewel Socket on the Passive Skill Tree. Right click to r
 --------
 Corrupted''',
             {
-                'rarity': ITEM_RARITY.UNIQUE,
+                'rarity': RARITY.UNIQUE,
                 'name': 'Conqueror\'s Potency',
                 'base_item_name': 'Cobalt Jewel',
                 'limit': 1,

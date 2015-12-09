@@ -1,6 +1,4 @@
 """
-Shared Utilities for files that contain key-value pairs
-
 Overview
 -------------------------------------------------------------------------------
 
@@ -17,7 +15,7 @@ Overview
 Description
 -------------------------------------------------------------------------------
 
-Shared utilities for files that contain key-value pairs.
+Shared abstract classes for files that contain key-value pairs.
 
 When implementing support for other file types that use the generic key-value
 format GGG uses, the file should subclass the files found here and appropriately
@@ -25,16 +23,55 @@ change the logic.
 
 The key value format is generally something like this:
 
-SectionName
-{
-    key = value
-    key = "quoted value"
-}
+.. code-block:: none
+    SectionName
+    {
+        key = value
+        key = "quoted value"
+    }
+
+.. warning::
+    None of the abstract classes found here should be instantiated directly.
+
+See also:
+
+* :mod:`PyPoE.poe.file.shared`
+* :mod:`PyPoE.poe.file.shared.cache`
+
 
 Agreement
 -------------------------------------------------------------------------------
 
 See PyPoE/LICENSE
+
+Documentation
+-------------------------------------------------------------------------------
+
+Abstract Classes
+===============================================================================
+
+.. autoclass:: AbstractKeyValueSection
+    :private-members:
+    :no-inherited-members:
+
+.. autoclass:: AbstractKeyValueFile
+    :exclude-members: write
+    :private-members:
+    :no-inherited-members:
+
+    .. automethod:: read
+    .. automethod:: get_read_buffer
+    .. automethod:: write
+    .. automethod:: get_write_buffer
+
+
+.. autoclass:: AbstractKeyValueFileCache
+    :private-members:
+
+Exceptions & Warnings
+===============================================================================
+
+.. autoclass:: DuplicateKeyWarning
 """
 
 # =============================================================================
@@ -120,23 +157,24 @@ class AbstractKeyValueSection(dict):
             self[k] = v
 
 
-@doc(prepend=AbstractFile)
 class AbstractKeyValueFile(AbstractFile, defaultdict):
     """
-    :ivar _parent_dir:
-    :type _parent_dir: str
+    Attributes
+    ----------
+    SECTIONS : dict[AbstractKeyValueSection]
+        Registered sections for this class
+    EXTENSION : str
+        File extension (if any) for this file class
+    _parent_dir : str
 
-    :ivar _parent_ggpk:
-    :type _parent_ggpk: GGPKFile
+    _parent_ggpk : GGPKFile
 
-    :ivar _parent_file:
-    :type _parent_file: AbstractKeyValueFile
+    _parent_file : AbstractKeyValueFile
 
-    :ivar version:
-    :type version: None or int
-
-    :ivar extends:
-    :type extends: None or str
+    version : None or int
+        File format version of the file
+    extends : None or str
+        Whether the file extends another file
     """
     version = None
     extends = None
@@ -192,6 +230,29 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
         elif parent_or_base_dir_or_ggpk is not None:
             raise TypeError('parent_or_base_dir_or_ggpk is of invalid type.')
 
+    #
+    # Properties
+    #
+    def _get_name(self):
+        """
+        Name of the file
+
+        Returns
+        -------
+        str
+            Name
+        """
+        return self._name
+
+    name = property(fget=_get_name)
+
+    @property
+    def parent_or_base_dir_or_ggpk(self):
+        return self._parent_file or self._parent_dir or self._parent_ggpk
+
+    #
+    # Special
+    #
     def __missing__(self, key):
         try:
             self[key] = self.SECTIONS[key](parent=self)
@@ -305,7 +366,8 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
     @doc(prepend=AbstractFile.write)
     def write(self, *args, **kwargs):
         """
-        .. warning::
+        Warning
+        -------
             The current values held by the file instance will be written. This
             means values inherited from parent files will also be written.
         """
@@ -314,23 +376,20 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
     def _get_write_line(self, key, value):
         return '\t%s = "%s"' % (key, value)
 
-    def _get_name(self):
-        """
-        Name of the file
-
-        :return: Name
-        :rtype: str
-        """
-        return self._name
-
     def merge(self, other):
         """
         Merge with other file.
 
-        :param other: Instance of the other file to merge with
-        :type other: AbstractKeyValueFile
+        Parameters
+        ----------
+        other : AbstractKeyValueFile
+            Instance of the other file to merge with
 
-        :raises ValueError: if other has a different type then this instance
+
+        Raises
+        ------
+        ValueError
+            if other has a different type then this instance
         """
         if not isinstance(other, self.__class__):
             raise ValueError('Can\'t merge only with classes with the same base class, got "%s" instead' % other.__class__.__name__)
@@ -341,7 +400,6 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
             else:
                 self[k] = v
 
-    name = property(fget=_get_name)
 
 
 class AbstractKeyValueFileCache(AbstractFileCache):

@@ -1,6 +1,4 @@
 """
-.ot File Format
-
 Overview
 -------------------------------------------------------------------------------
 
@@ -17,6 +15,8 @@ Overview
 Description
 -------------------------------------------------------------------------------
 
+Support for .ot file format.
+
 .ot file seem to be generally used for server-side settings related to abstract
 objects.
 
@@ -26,6 +26,10 @@ the key/value pairs found are in relevance to the context.
 
 Usually they're accompanied by .otc files which handle client-side settings.
 
+See also:
+
+* :mod:`PyPoE.poe.file.otc`
+* :mod:`PyPoE.poe.file.dat`
 
 Agreement
 -------------------------------------------------------------------------------
@@ -33,10 +37,14 @@ Agreement
 See PyPoE/LICENSE
 
 
-See also
+Documentation
 -------------------------------------------------------------------------------
-* :ref:`PyPoE.poe.file.otc`
-* :ref:`PyPoE.poe.file.dat`
+
+.. autoclass:: OTFile
+    :exclude-members: clear, copy, default_factory, fromkeys, get, items, keys, pop, popitem, setdefault, update, values
+
+.. autoclass:: OTFileCache
+
 """
 
 # =============================================================================
