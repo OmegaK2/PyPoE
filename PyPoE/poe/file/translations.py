@@ -565,7 +565,9 @@ class TranslationString(TranslationReprMixin):
                 continue
             unused.append(val)
 
-        if not only_values:
+        if only_values:
+            string = values
+        else:
             string = ''.join(string + [self.strings[-1]])
 
         return string, unused

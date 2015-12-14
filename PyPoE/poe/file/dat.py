@@ -890,7 +890,11 @@ class RelationalReader(AbstractFileCache):
         if obj is None:
             obj = None
         elif offset:
-            obj = other[obj-offset]
+            try:
+                obj = other[obj-offset]
+            except IndexError:
+                #todo warning
+                obj = None
         elif key:
             for row in other:
                 if row[key] == obj:

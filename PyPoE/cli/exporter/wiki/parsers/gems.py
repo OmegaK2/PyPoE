@@ -57,6 +57,7 @@ abbreviations = {
     'Can deal x-y base Lightning damage': 'Lightning<br>Damage',
     'Can summon up to x Skeletons at a time': '# Skeletons',
     'Can use Items requiring up to level x': 'max.<br>Item<br>Level',
+    'Chain x Times': '# Chains',
     'Chains x Times': '# Chains',
     'Creates Corpses up to Level x': 'Corpse<br>Level',
     'Cursed enemies are x% slower': '% slower',
@@ -165,6 +166,8 @@ abbreviations = {
     'x additional Accuracy Rating': 'Accuracy',
     'x additional Armour': 'Armour',
     'x additional Arrows': 'extra<br>Arrows',
+    'x additional Projectiles': '# Projectiles',
+    'x to Melee Weapon Range': 'Range',
     'x to Level of Supported Active Skill Gems': '+Gem<br>Level',
     'x% Chance to Block': 'Block<br>Chance',
     'x% Chance to Block Spells': 'Spell Block<br>Chance',
@@ -192,6 +195,7 @@ abbreviations = {
     'x% increased Critical Strike Multiplier': 'increased<br>Critical<br>Multiplier',
     'x% increased Damage': 'increased<br>Damage',
     'x% increased Damage per one hundred nearby Enemies': 'increased<br>Damage<br>per enemy',
+    'x% increased Damage with Poison': 'Poison<br>Damage',
     'x% increased Duration ': 'increased<br>Duration',
     'x% increased Life Leeched per second': 'increased<br>Life<br>leeched',
     'x% increased Life Leech rate': 'increased<br>Life<br>Leech<br>Rate',
@@ -205,6 +209,7 @@ abbreviations = {
     'x% increased Projectile Damage': 'increased<br>Projectile<br>Damage',
     'x% increased Projectile Speed': 'increased<br>Projectile<br>Speed',
     'x% increased Quantity of Items Dropped by Slain Enemies': 'increased<br>Quantity',
+    'x% increased Radius of Curses': 'Curse<br>Radius',
     'x% increased Rarity of Items Dropped by Slain Enemies': 'increased<br>Rarity',
     'x% increased Spell Damage': 'increased<br>Spell<br>Damage',
     'x% increased effect of Aura': 'increased<br>Aura<br>Effect',
@@ -226,6 +231,7 @@ abbreviations = {
     'x% more Damage per Repeat': 'more<br>Damage<br>per repeat',
     'x% more Damage while Dead': 'more<br>Damage<br>while dead',
     'x% more Melee Attack Speed': 'more<br>Melee<br>Attack<br>Speed',
+    'x% more Melee Splash Radius': 'more<br>Radius',
     'x% more Melee Physical Damage': 'more<br>Melee<br>Physical<br>Damage',
     'x% more Melee Physical Damage against Bleeding Enemies': 'more<br>Melee<br>Physical<br>Damage<br>vs. bleeding',
     'x% more Melee Physical Damage when on Full Life': 'more<br>Melee<br>Physical<br>Damage<br>on full Life',
@@ -242,6 +248,7 @@ abbreviations = {
     'x% reduced Mana Cost': 'reduced<br>Mana<br>Cost',
     'x% reduced Movement Speed': 'reduced<br>Movement<br>Speed',
     'x% reduced Movement Speed per Nearby Enemy': 'reduced<br>Movement<br>Speed<br>per nearby enemy',
+    'x% reduced Skill Cooldown': 'reduced<br>Cooldown',
     'x% to Quality of Supported Active Skill Gems': '+% Gem<br>Quality',
 }
 
@@ -511,8 +518,8 @@ class GemsParser(BaseParser):
         self.rr['GrantedEffects.dat']
         self.rr['GrantedEffectsPerLevel.dat']
         self.rr['ItemExperiencePerLevel.dat']
-        self.rr['MonsterTypes.dat']
-        self.rr['MonsterVarieties.dat']
+        #self.rr['MonsterTypes.dat']
+        #self.rr['MonsterVarieties.dat']
 
         console('Processing information...')
 
