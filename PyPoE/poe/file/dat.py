@@ -467,6 +467,8 @@ class DatReader(ReprMixin):
         File name
     file_length :  int
         File length in bytes
+    table_data : list[RecordList[object]]
+        List of rows containing RecordList entries.
     table_length :  int
         Length of table in bytes
     table_record_length :  int
