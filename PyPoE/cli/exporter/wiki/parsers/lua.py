@@ -33,6 +33,7 @@ See PyPoE/LICENSE
 
 # Python
 import warnings
+from collections import namedtuple
 
 # Self
 from PyPoE.cli.core import console, Msg
@@ -76,13 +77,28 @@ two_stone_map = {
 }
 
 item_format_order = [
-    'reward', 'type', 'class', 'difficulty', 'quest', 'quest_id', 'npc', 'act',
-    'itemlevel', 'rarity', 'sockets', 'page_link'
+    'reward', 'type', 'class_name', 'difficulty', 'quest', 'quest_id', 'npc',
+    'act', 'itemlevel', 'rarity', 'sockets', 'page_link'
 ]
+
+out_key_map = {
+    'class_name': 'class',
+}
 
 # =============================================================================
 # Classes
 # =============================================================================
+
+# class factory
+RewardDataTuple = namedtuple('RewardDataTuple', [
+    'quest', 'quest_id', 'act', 'type', 'class_name', 'class_id', 'rarity',
+    'difficulty', 'sockets', 'page_link', 'itemlevel', 'reward'
+])
+VendorRewardDataTuple = namedtuple('VendorRewardDataTuple', [
+    'quest', 'quest_id', 'act', 'reward', 'type', 'class_name', 'class_id',
+    'npc'
+])
+
 
 class LuaHandler(ExporterHandler):
     def __init__(self, sub_parser):
@@ -131,26 +147,34 @@ class QuestRewardReader(BaseParser):
             subpage = 'data'
 
         # Pre-sort
-        outdata.sort(key=lambda x: x['class_id'])
-        outdata.sort(key=lambda x: x['reward'])
-        outdata.sort(key=lambda x: x['quest_id'])
-        outdata.sort(key=lambda x: x['act'])
+        outdata.sort(key=lambda x: x.class_id)
+        outdata.sort(key=lambda x: x.reward)
+        outdata.sort(key=lambda x: x.quest_id)
+        outdata.sort(key=lambda x: x.act)
         if data_type != 'vendor':
-            outdata.sort(key=lambda x: x['difficulty'])
+            outdata.sort(key=lambda x: x.difficulty)
 
         out = []
         out.append('local rewards = {\n')
         for data in outdata:
             out.append('\t{\n')
             for item in item_format_order:
-                if item not in data:
+                if not hasattr(data, item):
                     continue
-                value = data[item]
+                value = getattr(data, item)
+                if value is None:
+                    continue
+
                 if isinstance(value, int):
                     f = '\t\t%s=%s,\n'
                 else:
                     f = '\t\t%s="%s",\n'
-                out.append(f % (item, value))
+
+                try:
+                    outkey = out_key_map[item]
+                except KeyError:
+                    outkey = item
+                out.append(f % (outkey, value))
             out.append('\t},\n')
         out.append('\n}')
         out.append('\n')
@@ -166,7 +190,7 @@ class QuestRewardReader(BaseParser):
         return r
 
     def read_quest_rewards(self, args):
-        outdata = []
+        outdata = set()
         for row in self.rr['QuestRewards.dat']:
             # Find the corresponding keys
             item = row['BaseItemTypesKey']
@@ -202,10 +226,10 @@ class QuestRewardReader(BaseParser):
 
             # TODO: Unused class_id atm, only for sorting
             if character is None:
-                data['class'] = 'All'
+                data['class_name'] = 'All'
                 data['class_id'] = -1
             else:
-                data['class'] = character['Name']
+                data['class_name'] = character['Name']
                 data['class_id'] = character.rowid
 
             r = row['Rarity']
@@ -246,12 +270,16 @@ class QuestRewardReader(BaseParser):
                 else:
                     warnings.warn('Fix ItemID for two-stones')
 
+            for field in RewardDataTuple._fields:
+                if field not in data:
+                    data[field] = None
+
             # Add to formatting list
-            outdata.append(data)
-        return self._write_lua(outdata, 'quest')
+            outdata.add(RewardDataTuple(**data))
+        return self._write_lua(list(outdata), 'quest')
 
     def read_vendor_rewards(self, args):
-        outdata = []
+        outdata = set()
         eternal_nightmare_quest = None
         for row in self.rr['Quest.dat']:
             if row['Id'] == 'a4q1':
@@ -303,9 +331,9 @@ class QuestRewardReader(BaseParser):
                         data['reward'] = item['Name']
                         # Pretty sure they are all skills...
                         data['type'] = 'skill'
-                        data['class'] = cls['Name']
+                        data['class_name'] = cls['Name']
                         data['class_id'] = cls.rowid
                         data['npc'] = row['NPCKey']['Name']
 
-                        outdata.append(data)
-        return self._write_lua(outdata, 'vendor')
+                        outdata.add(VendorRewardDataTuple(**data))
+        return self._write_lua(list(outdata), 'vendor')
