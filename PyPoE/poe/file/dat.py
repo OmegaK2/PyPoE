@@ -735,7 +735,7 @@ class DatReader(ReprMixin):
         if self.data_offset == -1:
             raise ValueError(
                 'Did not find data magic number in "%(file)s"' % {
-                    'file:': self.file_name,
+                    'file': self.file_name,
                 }
             )
 
