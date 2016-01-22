@@ -395,31 +395,3 @@ class TextDataHandler(FileDataHandler):
 
         # TODO ?
         #file_data.close()
-
-if __name__ == '__main__':
-
-    import sys
-    from line_profiler import LineProfiler
-    import cProfile
-    profiler = LineProfiler(DatStyle.sizeHint, DatStyle._get_text, DatStyle._show_value)
-    translator = QTranslator()
-    translator.load('i18n/en_US')
-    app = QApplication(sys.argv)
-    app.installTranslator(translator)
-    frame = QMainWindow()
-
-    f = 'ShopItem.dat'
-    with open('C:/Temp/Data/' + f, 'rb') as file:
-        data = file.read()
-    #for item in dir(o):
-     #   print(item, getattr(o, item))
-    from PyPoE.ui.shared.file.manager import FileDataManager
-    fm = FileDataManager(None)
-    h = fm.get_handler(f)
-    #profiler.run('w = h.get_widget(data, f, parent=frame)')
-    #profiler.print_stats()
-    w = h.get_widget(data, f, parent=frame)
-    frame.setCentralWidget(w)
-
-    frame.show()
-    app.exec_()

@@ -51,6 +51,7 @@ __all__ = [
 # Classes
 # =============================================================================
 
+
 class DatModelShared(QAbstractTableModel):
     """
     TODO: master should be a DatFrame... but circular dependencies
@@ -60,6 +61,7 @@ class DatModelShared(QAbstractTableModel):
         if not isinstance(dat_file, DatFile):
             raise TypeError('datfile must be a DatFile instance')
         self._dat_file = dat_file
+
 
 class DatTableModel(DatModelShared):
     def __init__(self, *args, **kwargs):
@@ -86,16 +88,22 @@ class DatTableModel(DatModelShared):
             return self._dat_file.reader.table_data[index.row()][c-1]
 
     def headerData(self, section, orientation, role=Qt.DisplayRole):
-        if role != Qt.DisplayRole:
+        if orientation != Qt.Horizontal:
             return None
 
-        if orientation == Qt.Horizontal:
-            # Is a specification entry
-            if section > 0:
-                s = self._columns[section-1]
-                return s['display'].replace('\\n','\n') if s['display'] else s.name
-            return self.tr('RowID')
+        # Is a specification entry
+        s = self._columns[section-1] if section > 0 else None
+
+        if role == Qt.DisplayRole:
+            if s:
+                return s['display'].replace('\\n', '\n') if s['display'] else s.name
+            else:
+                return self.tr('RowID')
+        elif role == Qt.ToolTipRole and s:
+            return s['description'] or None
+
         return None
+
 
 class DatDataModel(DatModelShared):
     def __init__(self, *args, **kwargs):
@@ -146,9 +154,7 @@ class DatDataModel(DatModelShared):
         if role != Qt.DisplayRole:
             return None
 
-        dv = self._data[index.row()]
-
-        return self._sections[index.column()][1](dv)
+        return self._sections[index.column()][1](self._data[index.row()])
 
     def headerData(self, section, orientation, role=Qt.DisplayRole):
         if not self.rowCount():
@@ -159,6 +165,7 @@ class DatDataModel(DatModelShared):
         if orientation == Qt.Horizontal:
             return self._sections[section][0]
         return None
+
 
 class GGPKModel(QAbstractItemModel):
     def __init__(self, data=None):

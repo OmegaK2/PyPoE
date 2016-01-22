@@ -94,25 +94,25 @@ def get_pk_validate_fields():
 
 ggpk, file_set = read_ggpk()
 nodes = [ggpk['Data'][fn] for fn in file_set]
-rr = dat.RelationalReader(path_or_ggpk=ggpk, options={'use_dat_value': False})
+rr = dat.RelationalReader(path_or_ggpk=ggpk, read_options={'use_dat_value': False})
 
 # =============================================================================
 # Tests
 # =============================================================================
 
 
-'''# Kind of testing the reading of the files twice, but whatever.
+# Kind of testing the reading of the files twice, but whatever.
 @pytest.mark.parametrize("node", nodes)
 def test_definitions(node):
     opt = {
         'use_dat_value': False,
     }
     # Will raise errors accordingly if it fails
-    df = dat.DatFile(node.name, options=opt)
-    df.read(node.record.extract())'''
+    df = dat.DatFile(node.name)
+    df.read(node.record.extract(), **opt)
 
 
-@pytest.mark.parametrize("file_name", file_set)
+'''@pytest.mark.parametrize("file_name", file_set)
 def test_relations(file_name):
     df = rr[file_name]
 
@@ -124,5 +124,5 @@ def test_primary_key_uniqueness(file_name, field_name):
 
     data = [row[index] for row in df]
 
-    assert len(data) == len(set(data))
+    assert len(data) == len(set(data))'''
 
