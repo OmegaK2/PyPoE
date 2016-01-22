@@ -47,6 +47,7 @@ except ImportError:
 # self
 from PyPoE.poe.file.dat import DatFile, DatValue
 from PyPoE.ui.shared.proxy_filter_model import FilterMenu
+from PyPoE.ui.shared.table_context_menus import TableContextReadOnlyMenu
 from PyPoE.ui.shared.file.model import (
     DatTableModel, DatDataModel, DatValueProxyModel
 )
@@ -132,8 +133,7 @@ class DatStyle(QStyledItemDelegate):
         else:
             outstr.append(format.format(dat_value.value))
 
-    def _get_text(self, index):
-        data = index.data()
+    def _get_text(self, data):
         if isinstance(data, DatValue):
             outstr = []
             self._show_value(outstr, data, data.specification['display_type'])
@@ -148,7 +148,7 @@ class DatStyle(QStyledItemDelegate):
 
         QStyledItemDelegate.paint(self, painter, option, QModelIndex())
 
-        text = self._get_text(index)
+        text = self._get_text(index.data())
         rect = option.rect.adjusted(4, 0, -4, 0)
 
         painter.drawText(rect, self.CELL_ALIGNMENT, text)
@@ -165,9 +165,14 @@ class DatStyle(QStyledItemDelegate):
 
     def sizeHint(self, option=QStyleOptionViewItem(), index=QModelIndex()):
         fm = QFontMetrics(option.font)
-        text = self._get_text(index)
+        text = self._get_text(index.data())
         size = fm.boundingRect(option.rect, self.CELL_ALIGNMENT, text).size()
         return size+QSize(4,0)
+
+
+class DatTableViewContextMenu(TableContextReadOnlyMenu):
+    def _handle_data(self, data):
+        return self.parent().itemDelegate()._get_text(data)
 
 
 class DatFrame(QFrame):
@@ -229,7 +234,9 @@ class DatFrame(QFrame):
         #
         # Data Tables
         #
+
         self.table_main = QTableView(parent=self)
+        self.table_main_context = DatTableViewContextMenu(parent=self.table_main)
         self.table_main_model = DatTableModel(dat_file)
         self.table_main_proxy_model = DatValueProxyModel(parent=self)
         self.table_main_proxy_model.setSourceModel(self.table_main_model)
@@ -247,6 +254,7 @@ class DatFrame(QFrame):
         )
 
         self.table_data = QTableView(parent=self)
+        self.table_data_context = DatTableViewContextMenu(parent=self.table_data)
         self.table_data_model = DatDataModel(dat_file)
         self.table_data_proxy_model = DatValueProxyModel(self)
         self.table_data_proxy_model.setSourceModel(self.table_data_model)
