@@ -42,6 +42,8 @@ TODO
 
 - DatValue.get_value might hit the python recursion limit, but is not a problem
   for any of the actual dat file.
+- Update RR with the new indexing
+- Errors for invalid foreignkey indexing
 
 Documentation
 -------------------------------------------------------------------------------
@@ -80,7 +82,7 @@ Exceptions & Warnings
 # Python
 import struct
 from io import BytesIO
-from collections import OrderedDict
+from collections import OrderedDict, Iterable
 
 # 3rd Party Library
 import configobj
@@ -156,7 +158,8 @@ class DatValue(object):
         'child',
     ]
 
-    def __init__(self, value=None, offset=None, size=None, parent=None, specification=None):
+    def __init__(self, value=None, offset=None, size=None, parent=None,
+                 specification=None):
         self.value = value
         self.size = size
         self.offset = offset
@@ -485,6 +488,8 @@ class DatReader(ReprMixin):
         Complete list of columns, including all intermediate and virtual columns
     columns_data :  OrderedDict
         List of all columns directly derived from the data
+    columns_unique:  OrderedDict
+        List of all unique columns (which are also considered indexable)
     table_columns :  OrderedDict
         Used for mapping columns to indexes
     """
@@ -519,6 +524,7 @@ class DatReader(ReprMixin):
         SpecificationError
             if the dat file is not in the specification
         """
+        self.index = {}
         self.data_parsed = []
         self.data_offset = 0
         self.file_length = 0
@@ -564,7 +570,8 @@ class DatReader(ReprMixin):
 
             self.cast_row = '<' + ''.join(self.cast_row)
 
-            for var in ('columns', 'columns_all', 'columns_zip', 'columns_data'):
+            for var in ('columns', 'columns_all', 'columns_zip', 'columns_data',
+                        'columns_unique'):
                 setattr(self, var, specification[var])
         else:
             s = configobj.Section(None, 0, None)
@@ -572,12 +579,38 @@ class DatReader(ReprMixin):
             self.table_columns.append(s)
             for var in ('columns', 'columns_all', 'columns_zip', 'columns_data'):
                 setattr(self, var, OrderedDict([s.name, ]))
+            self.columns_unique = OrderedDict()
 
     def __iter__(self):
         return iter(self.table_data)
 
     def __getitem__(self, item):
         return self.table_data[item]
+
+    def build_index(self, column=None):
+        columns = set()
+        if column is None:
+            for column in self.columns_unique:
+                columns.add(column)
+        elif isinstance(column, str):
+            columns.add(column)
+        elif isinstance(column, Iterable):
+            for c in column:
+                columns.add(c)
+
+        for column in columns:
+            if column not in self.columns_unique:
+                raise ValueError('Column %s is not indexable' % column)
+
+            if column in self.index:
+                columns.remove(column)
+            else:
+                self.index[column] = {}
+
+        # Second loop
+        for row in self:
+            for column in columns:
+                self.index[column][row[column]] = row
 
     def row_iter(self):
         """
@@ -1016,6 +1049,7 @@ def load_spec(path=None):
 
     for file_name, file_spec in spec.items():
         columns = OrderedDict()
+        columns_unique = OrderedDict()
         for field_name, field in file_spec['fields'].items():
             # Validation
             other = field['key']
@@ -1043,6 +1077,8 @@ def load_spec(path=None):
                     )
             # Extra fields
             columns[field_name] = None
+            if field['unique']:
+                columns_unique[field_name] = None
 
         columns_zip = OrderedDict(columns)
         columns_all = OrderedDict(columns)
@@ -1100,11 +1136,16 @@ def load_spec(path=None):
                 columns_zip[field_name] = None
 
             for f in field['fields']:
-                del columns[f]
-                if field['zip']:
-                    del columns_zip[f]
+                try:
+                    del columns[f]
+                    if field['zip']:
+                        del columns_zip[f]
+                except KeyError:
+                    # The key could already be consumed by a previous field
+                    pass
 
-        for var in ('columns', 'columns_all', 'columns_zip', 'columns_data'):
+        for var in ('columns', 'columns_all', 'columns_zip', 'columns_data',
+                    'columns_unique'):
             file_spec[var] = locals()[var]
 
     return spec
