@@ -554,32 +554,24 @@ class DatReader(ReprMixin):
         self.cast_size = 0
         self.cast_spec = []
         self.cast_row = []
-        if specification:
-            for i, key in enumerate(specification['columns_data']):
-                k = specification['fields'][key]
-                self.table_columns[key] = {'index': i, 'section': k}
-                casts = []
-                remainder = k['type']
-                while remainder:
-                    remainder, cast_type = self._get_cast_type(remainder)
-                    casts.append(cast_type)
-                self.cast_size += casts[0][1]
+        for i, key in enumerate(specification['columns_data']):
+            k = specification['fields'][key]
+            self.table_columns[key] = {'index': i, 'section': k}
+            casts = []
+            remainder = k['type']
+            while remainder:
+                remainder, cast_type = self._get_cast_type(remainder)
+                casts.append(cast_type)
+            self.cast_size += casts[0][1]
 
-                self.cast_spec.append((k, casts))
-                self.cast_row.append(casts[0][2])
+            self.cast_spec.append((k, casts))
+            self.cast_row.append(casts[0][2])
 
-            self.cast_row = '<' + ''.join(self.cast_row)
+        self.cast_row = '<' + ''.join(self.cast_row)
 
-            for var in ('columns', 'columns_all', 'columns_zip', 'columns_data',
-                        'columns_unique'):
-                setattr(self, var, specification[var])
-        else:
-            s = configobj.Section(None, 0, None)
-            s.name = 'Unparsed'
-            self.table_columns.append(s)
-            for var in ('columns', 'columns_all', 'columns_zip', 'columns_data'):
-                setattr(self, var, OrderedDict([s.name, ]))
-            self.columns_unique = OrderedDict()
+        for var in ('columns', 'columns_all', 'columns_zip', 'columns_data',
+                    'columns_unique'):
+            setattr(self, var, specification[var])
 
     def __iter__(self):
         return iter(self.table_data)
@@ -726,27 +718,19 @@ class DatReader(ReprMixin):
         if len(data_raw) == 0:
             return row_data
 
-        if self.cast_spec:
-            # Unpacking the entire row in one go will help breaking down the
-            # function calls significantly
-            row_unpacked = struct.unpack(self.cast_row, data_raw)
-            i = 0
-            for spec, casts in self.cast_spec:
-                if casts[0][0] == 3:
-                    cell_data = row_unpacked[i:i+2]
-                    i += 1
-                else:
-                    cell_data = (row_unpacked[i], )
-                row_data.append(self._cast_from_spec(spec, casts, data=cell_data, offset=offset))
-                offset += casts[0][1]
+        # Unpacking the entire row in one go will help breaking down the
+        # function calls significantly
+        row_unpacked = struct.unpack(self.cast_row, data_raw)
+        i = 0
+        for spec, casts in self.cast_spec:
+            if casts[0][0] == 3:
+                cell_data = row_unpacked[i:i+2]
                 i += 1
-        else:
-            if self.use_dat_value:
-                unparsed = DatValue(value=data_raw, offset=offset, size=self.table_record_length)
             else:
-                unparsed = data_raw
-            row_data.append(unparsed)
-            offset += self.table_record_length
+                cell_data = (row_unpacked[i], )
+            row_data.append(self._cast_from_spec(spec, casts, data=cell_data, offset=offset))
+            offset += casts[0][1]
+            i += 1
 
         return row_data
 
