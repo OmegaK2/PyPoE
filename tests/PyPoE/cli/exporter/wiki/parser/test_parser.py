@@ -64,13 +64,13 @@ data = (
     (
         'Strength1',
         [
-            '(8 to 12) to Strength',
+            '(8 to 12) to [[Strength]]',
         ],
     ),
     (
         'MonsterCriticals1',
         [
-            '<abbr title="300% increased Global Critical Strike Chance">Powerful Crits</abbr>',
+            '<abbr title="Powerful Crits">300% increased Global [[Critical Strike Chance]]</abbr>',
             '50% increased Global Critical Strike Multiplier (Hidden)',
         ],
     ),
