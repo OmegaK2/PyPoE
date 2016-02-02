@@ -180,6 +180,15 @@ class BaseParser(object):
 
         self.custom = get_custom_translation_file()
 
+    def _format_hidden(self, custom):
+        return self._HIDDEN_FORMAT % make_inter_wiki_links(custom)
+
+    def _format_detailed(self, custom, ingame):
+        return self._DETAILED_FORMAT % (
+            ingame,
+            make_inter_wiki_links(custom)
+        )
+
     def _get_stats(self, mod, translation_file=None):
         result = get_translation(mod, self.tc, translation_file)
 
@@ -199,9 +208,9 @@ class BaseParser(object):
                     r1 = tr.get_language().get_string(default.values[i], default.indexes[i])[0]
                     r2 = tr2.get_language().get_string(result.values[j], result.indexes[j])[0]
                     if r1 != r2:
-                        temp_trans.append(self._DETAILED_FORMAT % (r1, r2))
+                        temp_trans.append(self._format_detailed(r1, r2))
                     elif r2:
-                        temp_trans.append(r2)
+                        temp_trans.append(self._format_hidden(r2))
                     temp_ids.append(tr.ids)
 
                 is_missing = True
@@ -227,13 +236,17 @@ class BaseParser(object):
                     index = temp_ids.index(tr.ids)
                 except ValueError:
                     temp_ids.insert(index, tr.ids)
-                    temp_trans.insert(index, tr.get_language().get_string(result.values[i], result.indexes[i])[0])
+                    temp_trans.insert(index, make_inter_wiki_links(
+                        tr.get_language().get_string(
+                            result.values[i], result.indexes[i]
+                        )[0]
+                    ))
                 else:
                     pass
 
             out = temp_trans
         else:
-            out = result.lines
+            out = [make_inter_wiki_links(line) for line in result.lines]
 
         if result.missing_ids:
             custom_result = self.custom.get_translation(
@@ -253,7 +266,14 @@ class BaseParser(object):
                 if line:
                     out.append(self._HIDDEN_FORMAT % line)
 
-        return out
+        finalout = []
+        for line in out:
+            if '\n' in line:
+                finalout.extend(line.split('\n'))
+            else:
+                finalout.append(line)
+
+        return finalout
 
 # =============================================================================
 # Functions

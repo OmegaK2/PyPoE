@@ -485,7 +485,7 @@ class TranslationString(TranslationReprMixin):
         return hash((self.string, tuple(self.range), self.quantifier))
 
     def _set_string(self, string):
-        string = string.replace('%%', '%')
+        string = string.replace('%%', '%').replace('\\n', '\n')
 
         start = None
         for match in self._re_split.finditer(string):

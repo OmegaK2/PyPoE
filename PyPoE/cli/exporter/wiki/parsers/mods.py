@@ -82,6 +82,7 @@ class ModWikiHandler(WikiHandler):
 
         if self.cmdargs.force:
             text = ''.join(row['lines'])
+            page = self.pws.pywikibot.Page(self.site, page_name)
         else:
             kwargs = {
                 'row': row,
@@ -258,7 +259,6 @@ class ModParser(BaseParser):
                 'No mods found for the specified parameters. Quitting.'
             )
             return r
-
 
         for mod in mods:
             data = OrderedDict()
