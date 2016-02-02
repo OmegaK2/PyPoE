@@ -1,30 +1,48 @@
 """
-.idt File Format
-
 Overview
--------------------------------------------------------------------------------
+===============================================================================
 
 +----------+------------------------------------------------------------------+
 | Path     | PyPoE/poe/file/idt.py                                            |
 +----------+------------------------------------------------------------------+
 | Version  | 1.0.0a0                                                          |
 +----------+------------------------------------------------------------------+
-| Revision | $Id$                                                             |
+| Revision | $Id$                  |
 +----------+------------------------------------------------------------------+
 | Author   | Omega_K2                                                         |
 +----------+------------------------------------------------------------------+
 
 Description
--------------------------------------------------------------------------------
+===============================================================================
 
 File Format handler for Grinding Gear Games' .idt format.
 
 .idt files are generally used to link the inventory texture to an object.
 
 Agreement
--------------------------------------------------------------------------------
+===============================================================================
 
 See PyPoE/LICENSE
+
+Documentation
+===============================================================================
+
+Public API
+-------------------------------------------------------------------------------
+
+.. autoclass:: IDTFile
+
+.. autoclass:: TextureRecord
+
+.. autoclass:: CoordinateRecord
+
+
+Internal API
+-------------------------------------------------------------------------------
+
+.. autoclass:: TextureList
+
+.. autoclass:: CoordinateList
 """
 
 # =============================================================================
@@ -49,41 +67,70 @@ __all__ = ['IDTFile', 'TextureRecord', 'CoordinateRecord']
 # Classes
 # =============================================================================
 
+
 class CoordinateRecord(Record):
     """
     Object that represents a single coordinate with the relevant attributes
+
+    Attributes
+    ----------
+    x :  int
+        x-coordinate
+    y :  int
+        y-coordinate
     """
     __slots__ = ['x', 'y']
 
     def __init__(self, x, y):
         """
-        :param int x: x-coordinate
-        :param int y: y-coordinate
+        Parameters
+        ----------
+        x :  int
+            x-coordinate
+        y :  int
+            y-coordinate
         """
         self.x = int(x)
         self.y = int(y)
 
 
 class CoordinateList(TypedList, metaclass=TypedContainerMeta):
+    """
+    A list that only accepts CoordinateRecord instances.
+    """
     ACCEPTED_TYPES = CoordinateRecord
 
 
 class TextureRecord(Record):
     """
     Object that represents a single texture with the relevant attributes
+
+    Attributes
+    ----------
+    name :  str
+        name (internal path) of the texture
+    records : CoordinateList[CoordinateRecord]
+        CoordinateList of CoordinateRecords for this texture.
     """
 
     __slots__ = ['name', 'records']
 
     def __init__(self, name, records=None):
         """
-        :param str name: name (internal path) of the texture
-        :param records: :class:`CoordinateList` of :class:`CoordinateRecords`
-        for this texture. If None, an empty coordinate list will be created.
-        :type records: None or CoordinateList
+        Parameters
+        ----------
+        name :  str
+            name (internal path) of the texture
+        records : None or CoordinateList[CoordinateRecord]
+            CoordinateList of CoordinateRecords for this texture. If None, an
+            empty coordinate list will be created.
 
-        :raises TypeError: If records is of invalid type
-        :raises TypeError: If the containing types of records are invalid
+        Raises
+        ------
+        TypeError
+            If records is of invalid type
+        TypeError
+            If the containing types of records are invalid
         """
         self.name = name
         if records is None:
@@ -96,8 +143,10 @@ class TextureRecord(Record):
             raise TypeError('records must a valid CoordinateList.')
 
 
-
 class TextureList(TypedList, metaclass=TypedContainerMeta):
+    """
+    A list that only accepts TextureRecord instances.
+    """
     ACCEPTED_TYPES = TextureRecord
 
 
@@ -134,6 +183,8 @@ class IDTFile(AbstractFile):
         re.UNICODE | re.MULTILINE | re.DOTALL
     )
 
+    EXTENSION = '.idt'
+
     def __init__(self, data=None):
         """
         Creates a new IDTFile instance.
@@ -141,15 +192,19 @@ class IDTFile(AbstractFile):
         Optionally data can be specified to initialize the object in memory
         with the given data. The same can be achieved by simply setting the
         relevant attributes.
-        Note that :method:`IDTFile.read` will override any initial data.
+        Note that IDTFile.read will override any initial data.
 
+        Parameters
+        ----------
+        data : dict or None
+            Take a dict containing the data to create this object and it's
+            attributes with. The dict should match the structure of the classes
+            attributes and the respective sub attributes.
 
-        :param data: Take a dict containing the data to create this object
-        and it's attributes with. The dict should match the structure of
-        the classes attributes and the respective sub attributes.
-        :type data: None or dict
-
-        :raises: TypeError if dict contains data of invalid types
+        Raises
+        ------
+        TypeError
+            if dict contains data of invalid types
         """
         if data is None:
             self.version = 0
@@ -175,12 +230,30 @@ class IDTFile(AbstractFile):
 
     def _get_records(self):
         """
-        :return: List of stored :class:`TextureRecord`s
-        :rtype: :class:`TextureList`
+        Get records
+
+        Returns
+        -------
+        TextureList[TextureRecord]
+            List of stored TextureRecord
         """
         return self._records
 
     def _set_records(self, value):
+        """
+        Set records
+
+        Parameters
+        ----------
+        value : TextureList[TextureRecord]
+            value to set the records to
+
+        Raises
+        ------
+        TypeError
+            if the record is an invalid texture list
+
+        """
         if isinstance(value, TextureList):
             self._records = value
         elif isinstance(value, list):
@@ -191,9 +264,25 @@ class IDTFile(AbstractFile):
     records = property(fget=_get_records, fset=_set_records)
 
     def _get_image(self):
+        """
+        Get image path
+
+        Returns
+        -------
+        str
+            image path relative to content.ggpk root
+        """
         return self._image
 
     def _set_image(self, value):
+        """
+        Set image path
+
+        Parameters
+        ----------
+        value : str
+            image path relative to content.ggpk root
+        """
         self._image = value.replace('\\', '/')
 
     image = property(fget=_get_image, fset=_set_image)

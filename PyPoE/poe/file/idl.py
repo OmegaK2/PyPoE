@@ -1,30 +1,39 @@
 """
-.idl File Format
-
 Overview
--------------------------------------------------------------------------------
+===============================================================================
 
 +----------+------------------------------------------------------------------+
 | Path     | PyPoE/poe/file/idl.py                                            |
 +----------+------------------------------------------------------------------+
 | Version  | 1.0.0a0                                                          |
 +----------+------------------------------------------------------------------+
-| Revision | $Id$                                                             |
+| Revision | $Id$                  |
 +----------+------------------------------------------------------------------+
 | Author   | Omega_K2                                                         |
 +----------+------------------------------------------------------------------+
 
 Description
--------------------------------------------------------------------------------
+===============================================================================
 
 File Format handler for Grinding Gear Games' .idl format.
 
 .idl files are used to link multiple virtual texture out of single image file.
 
 Agreement
--------------------------------------------------------------------------------
+===============================================================================
 
 See PyPoE/LICENSE
+
+Documentation
+===============================================================================
+
+Public API
+-------------------------------------------------------------------------------
+
+.. autoclass:: IDLFile
+
+.. autoclass:: IDLRecord
+
 """
 
 # =============================================================================
@@ -49,7 +58,24 @@ __all__ = ['IDLRecord', 'IDLFile']
 # Classes
 # =============================================================================
 
+
 class IDLRecord(Record):
+    """
+    Attributes
+    ----------
+    destination :  str
+        destination file (virtual path)
+    source :  str
+        source image file (path relative to content.ggpk)
+    x1 :  int
+        Upper left x coordinate
+    y1 :  int
+        Upper left y coordinate
+    x2 :  int
+        Lower right x coordinate
+    y2 :  int
+        Lower right y coordinate
+    """
     __slots__ = ['destination', 'source', 'x1', 'y1', 'x2', 'y2']
 
     def __init__(self, destination, source, x1, y1, x2, y2):
@@ -59,12 +85,20 @@ class IDLRecord(Record):
         The coordinates (x1, y1) and (x2, y2) can be understood as the upper
         left and lower right corner of a bounding rectangle respectively.
 
-        :param str destination: destination file (virtual path)
-        :param str source: source image file (internal path)
-        :param int x1: Upper left x coordinate
-        :param int y1: Upper left y coordinate
-        :param int x2: Lower right x coordinate
-        :param int y2: Lower right y coordinate
+        Parameters
+        ----------
+        destination :  str
+            destination file (virtual path)
+        source :  str
+            source image file (path relative to content.ggpk)
+        x1 :  int
+            Upper left x coordinate
+        y1 :  int
+            Upper left y coordinate
+        x2 :  int
+            Lower right x coordinate
+        y2 :  int
+            Lower right y coordinate
         """
         self.destination = destination
         self.source = source
@@ -94,6 +128,8 @@ class IDLFile(AbstractFile, TypedList, metaclass=TypedContainerMeta):
     """
 
     ACCEPTED_TYPES = IDLRecord
+
+    EXTENSION = '.idl'
 
     _regex_parse = re.compile(
         r'^'

@@ -7,7 +7,7 @@ Overview
 +----------+------------------------------------------------------------------+
 | Version  | 1.0.0a0                                                          |
 +----------+------------------------------------------------------------------+
-| Revision | $Id$                                                             |
+| Revision | $Id$                  |
 +----------+------------------------------------------------------------------+
 | Author   | Omega_K2                                                         |
 +----------+------------------------------------------------------------------+
@@ -145,29 +145,29 @@ class BaseRecord(ReprMixin):
 class MixinRecord(object):
     def __init__(self, *args, **kwargs):
         super(MixinRecord, self).__init__(*args, **kwargs)
-    
-    def _get_name(self):
+        self._name = ''
+        self._name_length = 0
+
+    @property
+    def name(self):
         """
+        Returns and sets the name of the file
+
+        If setting, it also takes care of adjusting name_length accordingly.
         Returns name of the file.
 
         Returns
-        ----------
+        -------
         str
             name of the file
         """
         return self._name
-    
-    def _set_name(self, name):
-        """
-        Set name of file.
-        
-        Takes care of adjusting name_length accordingly.
-        """
+
+    @name.setter
+    def name(self, name):
         self._name = name
         # Account for null bytes
         self._name_length = len(name) + 1
-        
-    name = property(fget=_get_name, fset=_set_name)
 
 
 @doc(append=BaseRecord)
@@ -510,8 +510,9 @@ class DirectoryNode(object):
             list of DirectoryNodes which contain a FileRecord
         """
         return [node for node in self.children if isinstance(node.record, FileRecord)]
-        
-    def _get_name(self):
+
+    @property
+    def name(self):
         """
         Returns the name associated with the stored record.
 
@@ -521,8 +522,6 @@ class DirectoryNode(object):
             name of the file/directory
         """
         return self.record.name if self.record.name else 'ROOT'
-        
-    name = property(_get_name)
 
     def search(self, regex, search_files=True, search_directories=True):
         """

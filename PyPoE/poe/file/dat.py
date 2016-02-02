@@ -1,19 +1,19 @@
 """
 Overview
--------------------------------------------------------------------------------
+===============================================================================
 
 +----------+------------------------------------------------------------------+
 | Path     | PyPoE/poe/file/dat.py                                            |
 +----------+------------------------------------------------------------------+
 | Version  | 1.0.0a0                                                          |
 +----------+------------------------------------------------------------------+
-| Revision | $Id$                                                             |
+| Revision | $Id$                  |
 +----------+------------------------------------------------------------------+
 | Author   | Omega_K2                                                         |
 +----------+------------------------------------------------------------------+
 
 Description
--------------------------------------------------------------------------------
+===============================================================================
 
 Support for .dat file format.
 
@@ -33,12 +33,12 @@ A list of default specification is included with PyPoE; to reload those or load
 other specifications, :func:`load_spec` may be used.
 
 Agreement
--------------------------------------------------------------------------------
+===============================================================================
 
 See PyPoE/LICENSE
 
 TODO
--------------------------------------------------------------------------------
+===============================================================================
 
 - DatValue.get_value might hit the python recursion limit, but is not a problem
   for any of the actual dat file.
@@ -46,10 +46,10 @@ TODO
 - Errors for invalid foreignkey indexing
 
 Documentation
--------------------------------------------------------------------------------
+===============================================================================
 
 Public API
-===============================================================================
+-------------------------------------------------------------------------------
 
 .. autoclass:: DatFile
 
@@ -60,7 +60,7 @@ Public API
 .. autofunction:: reload_default_spec
 
 Internal API
-===============================================================================
+-------------------------------------------------------------------------------
 
 .. autoclass:: DatReader
 
@@ -70,7 +70,7 @@ Internal API
 .. autoclass:: DatValue
 
 Exceptions & Warnings
-===============================================================================
+-------------------------------------------------------------------------------
 
 .. autoclass:: SpecificationError
 """
@@ -884,9 +884,9 @@ class DatFile(AbstractFileReadOnly):
 
 
 @doc(doc=AbstractFileCache, prepend="""
-Read dat files in a relational matter.
+    Read dat files in a relational matter.
 
-This acts both as a cache and as a way to easily access the instances.
+    This acts both as a cache and as a way to easily access the instances.
 """)
 class RelationalReader(AbstractFileCache):
     FILE_TYPE = DatFile
