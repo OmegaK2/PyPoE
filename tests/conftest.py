@@ -5,7 +5,7 @@ Overview
 -------------------------------------------------------------------------------
 
 +----------+------------------------------------------------------------------+
-| Path     | scripts/profile/PyPoE/poe/file/.py                               |
+| Path     | tests/conftest.py                                                |
 +----------+------------------------------------------------------------------+
 | Version  | 1.0.0a0                                                          |
 +----------+------------------------------------------------------------------+
@@ -30,21 +30,22 @@ See PyPoE/LICENSE
 # =============================================================================
 
 # Python
-import os
+import os.path
 
 # 3rd-party
-from line_profiler import LineProfiler
+import pytest
 
 # self
-from PyPoE.poe.file import dat
+from PyPoE.poe.constants import VERSION, DISTRIBUTOR
+from PyPoE.poe.path import PoEPath
+from PyPoE.poe.file.dat import RelationalReader
+from PyPoE.poe.file.ggpk import GGPKFile
 
 # =============================================================================
 # Globals
 # =============================================================================
 
 __all__ = []
-
-dir = 'C:/Temp/'
 
 # =============================================================================
 # Classes
@@ -54,37 +55,31 @@ dir = 'C:/Temp/'
 # Functions
 # =============================================================================
 
-def read_dat(file_name='GrantedEffects.dat'):
-    d = dat.DatFile('GrantedEffects.dat')
-    d.read(os.path.join(dir, 'Data', file_name))
-    return d
 
-def rr(files=['BaseItemTypes.dat']):
-    rr = dat.RelationalReader(path_or_ggpk=dir, files=files)
+@pytest.fixture(scope='session')
+def poe_path():
+    return PoEPath(
+        version=VERSION.STABLE,
+        distributor=DISTRIBUTOR.INTERNATIONAL
+    ).get_installation_paths(only_existing=True)[0]
 
 
+@pytest.fixture(scope='session')
+def ggpkfile(poe_path):
+    ggpk = GGPKFile()
+    ggpk.read(os.path.join(poe_path, 'content.ggpk'))
+    ggpk.directory_build()
 
-# =============================================================================
-# Init
-# =============================================================================
+    return ggpk
 
-if __name__ == '__main__':
 
-    profiler = LineProfiler()
-    #profiler.add_function(dat.DatValue.__init__)
-    #profiler.add_function(dat.DatReader._cast_from_spec)
-    #profiler.add_function(dat.DatReader._process_row)
-    #profiler.add_function(dat.RecordList.__getitem__)
+@pytest.fixture(scope='session')
+def rr(ggpkfile):
+    return RelationalReader(
+        path_or_ggpk=ggpkfile,
+        read_options={
+            # When we use this, speed > dat value features
+            'use_dat_value': False
+        },
+    )
 
-    #profiler.run("d = read_dat()")
-    #profiler.run("for i in range(0, 10000): d.reader[0]['Data1']")
-
-    #print(d.reader[0])
-
-    #profiler.add_function(dat.RelationalReader._set_value)
-    #profiler.add_function(dat.RelationalReader._dv_set_value)
-    #profiler.add_function(dat.RelationalReader._simple_set_value)
-    #profiler.add_function(dat.RelationalReader.read_file)
-    #profiler.run("rr = dat.RelationalReader(path_or_ggpk=dir, files=['Data/BaseItemTypes.dat'], read_options={'use_dat_value': False})")
-    #profiler.print_stats()
-    rr = dat.RelationalReader(path_or_ggpk=dir, files=['Data/MonsterVarieties.dat'], read_options={'use_dat_value': False})

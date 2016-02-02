@@ -1,11 +1,9 @@
 """
-GGPK Toolkit
-
 Overview
--------------------------------------------------------------------------------
+===============================================================================
 
 +----------+------------------------------------------------------------------+
-| Path     | PyPoE/poe/file/ggpk/__init__.py                                  |
+| Path     | PyPoE/poe/file/ggpk.py                                           |
 +----------+------------------------------------------------------------------+
 | Version  | 1.0.0a0                                                          |
 +----------+------------------------------------------------------------------+
@@ -15,19 +13,62 @@ Overview
 +----------+------------------------------------------------------------------+
 
 Description
--------------------------------------------------------------------------------
+===============================================================================
 
-Toolkit for reading & writing GGPK Files. Provides additional utility functions.
+Support for reading .ggpk files.
+
+A .ggpk file, namely content.ggpk, is a container containing a virtual directory
+and file contents. It is basically just packing the files together without
+compression.
 
 Agreement
--------------------------------------------------------------------------------
+===============================================================================
 
 See PyPoE/LICENSE
 
 TODO
+===============================================================================
+
+- write functionality is not working
+
+Documentation
+===============================================================================
+
+Public API
 -------------------------------------------------------------------------------
 
-write untested
+.. autoclass:: GGPKFile
+
+    .. automethod:: __getitem__
+
+Internal API
+-------------------------------------------------------------------------------
+
+General
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: DirectoryNode
+
+    .. automethod:: __getitem__
+
+Records
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: GGPKRecord
+
+.. autoclass:: DirectoryRecord
+
+.. autoclass:: FileRecord
+
+.. autoclass:: FreeRecord
+
+Miscellaneous
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: BaseRecord
+
+.. autoclass:: MixinRecord
+
+.. autoclass:: DirectoryRecordEntry
 """
 
 # =============================================================================
@@ -40,11 +81,17 @@ import struct
 import os
 import re
 
-#
+# self
 from PyPoE.shared import InheritedDocStringsMeta
 from PyPoE.shared.decorators import doc
 from PyPoE.shared.mixins import ReprMixin
 from PyPoE.poe.file.shared import AbstractFileReadOnly, ParserError
+
+# =============================================================================
+# Globals
+# =============================================================================
+
+__all__ = ['GGPKFile']
 
 # =============================================================================
 # Classes
@@ -53,14 +100,14 @@ from PyPoE.poe.file.shared import AbstractFileReadOnly, ParserError
 
 class BaseRecord(ReprMixin):
     """
-    :ivar _container:
-    :type container: GGPKFile
-
-    :ivar length:
-    :type length: int
-
-    :ivar offset:
-    :type offset: int
+    Attributes
+    ----------
+    _container : GGPKFile
+        Parent GGPKFile
+    length : int
+        Length
+    offset : int
+        Starting offset in ggpk
     """
     tag = None
 
@@ -75,15 +122,21 @@ class BaseRecord(ReprMixin):
         """
         Read this record's header for the given GGPKFile instance.
 
-        :param GGPKFile ggpkfile: GGPKFile instance
+        Parameters
+        ----------
+        ggpkfile : GGPKFile
+            GGPKFile instance
         """
         pass
 
     def write(self, ggpkfile):
         """
-        Wriite this record's header for the given GGPKFile instance.
+        Write this record's header for the given GGPKFile instance.
 
-        :param GGPKFile ggpkfile: GGPKFile instance
+        Parameters
+        ----------
+        ggpkfile : GGPKFile
+            GGPKFile instance
         """
         ggpkfile.write(struct.pack('<i', self.length))
         ggpkfile.write(self.tag)
@@ -97,7 +150,10 @@ class MixinRecord(object):
         """
         Returns name of the file.
 
-        :return str: name of the file
+        Returns
+        ----------
+        str
+            name of the file
         """
         return self._name
     
@@ -146,13 +202,21 @@ class GGPKRecord(BaseRecord):
 
 class DirectoryRecordEntry(ReprMixin):
     """
-    :ivar int hash: murmur2 32bit hash
-    :ivar int offset: offset in GGPKFile
+    Attributes
+    ----------
+    hash :  int
+        murmur2 32bit hash
+    offset :  int
+        offset in GGPKFile
     """
     def __init__(self, hash, offset):
         """
-        :param int hash: murmur2 32bit hash
-        :param int offset:  ffset in GGPKFile
+        Parameters
+        ----------
+        hash :  int
+            murmur2 32bit hash
+        offset :  int
+            offset in GGPKFile
         """
         self.hash = hash
         self.offset = offset
@@ -163,11 +227,16 @@ class DirectoryRecord(MixinRecord, BaseRecord):
     """
     Represents a directory in the virtual GGPKFile file tree.
 
-    :ivar str _name: Name of directory
-    :ivar int _name_length: Length of name
-    :ivar int _entries_length: Number of directory entries
-    :ivar int hash: SHA256 hash of file contents
-    :ivar list[DirectoryRecordEntry] entries: Directory entries
+    Attributes
+    ----------
+    _name :  str
+        Name of directory
+    _name_length :  int
+        Length of name
+    _entries_length :  int
+        Number of directory entries
+    hash :  int
+        SHA256 hash of file contents
     """
 
     tag = 'PDIR'
@@ -220,11 +289,18 @@ class FileRecord(MixinRecord, BaseRecord):
     """
     Represents a file in the virtual GGPKFile file tree.
 
-    :ivar str _name: Name of file
-    :ivar int _name_length: Length of name
-    :ivar int hash: SHA256 hash of file contents
-    :ivar int data_start: starting offset of data
-    :ivar int data_length: length of data
+    Attributes
+    ----------
+    _name :  str
+        Name of file
+    _name_length :  int
+        Length of name
+    hash :  int
+        SHA256 hash of file contents
+    data_start :  int
+        starting offset of data
+    data_length :  int
+        length of data
     """
 
     tag = 'FILE'
@@ -238,12 +314,17 @@ class FileRecord(MixinRecord, BaseRecord):
         """
         Extracts this file contents into a memory file object.
 
-        :param buffer: GGPKFile Buffer to use; if None, open the parent GGPKFile
-        and use it as buffer.
-        :type buffer: io.Bytes or None
+        Parameters
+        ----------
+        buffer : io.Bytes or None
+            GGPKFile Buffer to use; if None, open the parent GGPKFile and use
+            it as buffer.
 
-        :return: memory file buffer object
-        :rtype: io.BytesIO
+
+        Returns
+        -------
+        io.BytesIO
+            memory file buffer object
         """
         if buffer is None:
             return self._container.get_read_buffer(
@@ -263,9 +344,12 @@ class FileRecord(MixinRecord, BaseRecord):
         """
         Extracts the file to the given directory.
         
-        :param str directory: the directory to extract the file to
-        :param name: the name of the file; if None use the file name as in the record.
-        :type name: str or None
+        Parameters
+        ----------
+        directory :  str
+            the directory to extract the file to
+        name : str or None
+            the name of the file; if None use the file name as in the record.
         """
         name = self._name if name is None else name 
         path = os.path.join(directory, name)
@@ -308,7 +392,10 @@ class FileRecord(MixinRecord, BaseRecord):
 @doc(append=BaseRecord)
 class FreeRecord(BaseRecord):
     """
-    :param int next_free: offset of next free record
+    Attributes
+    ----------
+    next_free : int
+        offset of next free record
     """
     tag = 'FREE'
 
@@ -328,17 +415,16 @@ class FreeRecord(BaseRecord):
 
 class DirectoryNode(object):
     """
-    :ivar children:
-    :type children: list[DirectoryNode]
-
-    :ivar parent:
-    :type parent: DirectoryNode
-
-    :ivar record:
-    :type record: DirectoryRecord or FileRecord
-
-    :ivar hash:
-    :type hash: str
+    Attributes
+    ----------
+    children : list[DirectoryNode]
+        list of parent DirectoryNodes (i.e. files and directories)
+    parent : DirectoryNode
+        parent DirectoryNode or None if this is the root node
+    record : DirectoryRecord or FileRecord
+        associated record
+    hash : str
+        some kind of hash the game uses
     """
 
     __slots__ = ['children', 'parent', 'record', 'hash']
@@ -364,49 +450,64 @@ class DirectoryNode(object):
         - self['directory1/directory2']['file.ext']
         - self['directory1/directory2/file.ext']
 
-        :param item: file or directory path
-        :type item: str
+        Parameters
+        ----------
+        item : str
+            file path or file name
 
-        :return: returns the DirectoryNode of the specified item if found, None
-        otherwise
-        :rtype: DirectoryNode or None
+        Returns
+        -------
+        DirectoryNode
+            returns the DirectoryNode of the specified item
+
+        Raises
+        ------
+        FileNotFoundError
+            if the specified item is not found
         """
         path = []
-        while item:
-            item, result = os.path.split(item)
+        partial = item
+        while partial:
+            partial, result = os.path.split(partial)
             path.insert(0, result)
 
         obj = self
         while True:
             try:
-                item = path.pop(0)
+                partial = path.pop(0)
             except IndexError:
                 return obj
 
             for child in obj.children:
-                if child.name == item:
+                if child.name == partial:
                     obj = child
                     break
             else:
-                return None
+                raise FileNotFoundError('%s/%s not found' % (
+                    self.get_path(), item
+                ))
 
     @property
     def directories(self):
         """
-        Returns a list of directories with a file record.
+        Returns a list of nodes which belong to directories
 
-        :return:
-        :rtype: list[DirectoryRecord]
+        Returns
+        -------
+        list[DirectoryNode]
+            list of DirectoryNodes which contain a DirectoryRecord
         """
         return [node for node in self.children if isinstance(node.record, DirectoryRecord)]
 
     @property
     def files(self):
         """
-        Returns a list of nodes with a file record.
+        Returns a list of nodes which belong to files
 
-        :return:
-        :rtype: list[FileRecord]
+        Returns
+        -------
+        list[DirectoryNode]
+            list of DirectoryNodes which contain a FileRecord
         """
         return [node for node in self.children if isinstance(node.record, FileRecord)]
         
@@ -414,8 +515,10 @@ class DirectoryNode(object):
         """
         Returns the name associated with the stored record.
 
-        :return: name of the file/directory
-        :rtype: str
+        Returns
+        -------
+        str
+            name of the file/directory
         """
         return self.record.name if self.record.name else 'ROOT'
         
@@ -424,17 +527,20 @@ class DirectoryNode(object):
     def search(self, regex, search_files=True, search_directories=True):
         """
 
-        :param regex: compiled regular expression to use
-        :type regex: re.compile()
+        Parameters
+        ----------
+        regex : re.compile()
+            compiled regular expression to use
+        search_files : bool
+            Whether FileRecords should be searched
+        search_directories : bool
+            Whether DirectoryRecords should be searched
 
-        :param search_files: Whether FileRecords should be searched
-        :type search_files: bool
 
-        :param search_directories: Whether DirectoryRecords should be searched
-        :type search_directories: bool
-
-        :return: List of matching nodes
-        :rtype: list containing DirectoryNode
+        Returns
+        -------
+        list containing DirectoryNode
+            List of matching nodes
         """
         if isinstance(regex, str):
             regex = re.compile(regex)
@@ -459,6 +565,17 @@ class DirectoryNode(object):
 
         return nodes
 
+    def get_path(self):
+        """
+        Returns the full path
+
+        Returns
+        -------
+        str
+            Full path
+        """
+        return '/'.join([n.name for n in self.get_parent(make_list=True)])
+
     def get_parent(self, n=-1, stop_at=None, make_list=False):
         """
         Gets the n-th parent or returns root parent if at top level.
@@ -468,17 +585,20 @@ class DirectoryNode(object):
         following form will be returned:
         [n-th parent, (n-1)-th parent, ..., self]
 
-        :param n: Up to which depth to go to.
-        :type n: int
+        Parameters
+        ----------
+        n : int
+            Up to which depth to go to.
+        stop_at : DirectoryNode or None
+            DirectoryNode instance to stop the iteration at
+        make_list : bool
+            Return a list of nodes instead of parent
 
-        :param stop_at: DirectoryNode instance to stop the iteration at
-        :type stop_at: DirectoryNode or None
 
-        :param make_list: Return a list of nodes instead of parent
-        :type make_list: bool
-
-        :return: Returns parent or root node
-        :rtype: DirectoryNode
+        Returns
+        -------
+        DirectoryNode
+            Returns parent or root node
         """
         nodes = []
         node = self
@@ -507,8 +627,10 @@ class DirectoryNode(object):
         node - DirectoryNode
         depth - Depth
 
-        :param function: function to call when walking
-        :type: callable
+        Parameters
+        ----------
+        function : callable
+            function to call when walking
         """
 
         q = []
@@ -529,8 +651,10 @@ class DirectoryNode(object):
         Extracts the node and its contents (including sub-directories) to the
         specified target directory.
         
-        :param target_directory: Path to directory where to extract to.
-        :type target_directory: str
+        Parameters
+        ----------
+        target_directory : str
+            Path to directory where to extract to.
         """
         if isinstance(self.record, DirectoryRecord):
             dir_path = os.path.join(target_directory, self.name)
@@ -548,13 +672,17 @@ class DirectoryNode(object):
 
 class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
     """
+    Representation of a .ggpk file.
 
-    :ivar directory:
-    :type directory: DirectoryNode
+    Attributes
+    ----------
+    directory : DirectoryNode
 
-    :ivar file_path:
-    :type file_path: str
+    records : dict[int, BaseRecord]
+        mapping of offset -> record
     """
+
+    EXTENSION = '.ggpk'
 
     def __init__(self, *args, **kwargs):
         AbstractFileReadOnly.__init__(self, *args, **kwargs)
@@ -563,11 +691,28 @@ class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
 
     def __getitem__(self, item):
         """
+        Returns the specified node for the specified file path
 
-        :param item:
+        Parameters
+        ----------
+        item : str
+            file path
 
-        :return:
-        :rtype: DirectoryNode
+        Returns
+        -------
+        DirectoryNode
+            the node if found
+
+        Raises
+        ------
+        ValueError
+            if directory is not build
+        FileNotFoundError
+            if file was not found
+
+        See Also
+        --------
+        DirectoryNode.__getitem__
         """
         if self.directory is None:
             raise ValueError('Directory not build')
@@ -582,9 +727,11 @@ class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
 
     def _is_parsed(self):
         """
+        Whether the directory has been built.
 
-        :return:
-        :rtype: bool
+        Returns
+        -------
+        bool
         """
         return self.directory is not None
 
@@ -624,15 +771,24 @@ class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
         If the root directory is rebuild it will be stored in the directory
         object variable.
         
-        :param parent: parent DirectoryNode. If None generate the root directory
-        :type parent: DirectorNode or None
+        Parameters
+        ----------
+        parent : DirectorNode or None
+            parent DirectoryNode. If None generate the root directory
 
-        :return: Returns the parent node or the root node if parent was None
-        :rtype: DirectoryNode
 
-        :raises ParserError: if performed without calling .read() first
-        :raises ParserError: if offsets pointing to records types which are not
-        FileRecord or DirectoryRecord
+        Returns
+        -------
+        DirectoryNode
+            Returns the parent node or the root node if parent was None
+
+
+        Raises
+        ------
+        ParserError
+            if performed without calling .read() first
+            if offsets pointing to records types which are not FileRecord or
+            DirectoryRecord
         """
         if not self.records:
             raise ParserError('No records - perform .read() first')
@@ -693,6 +849,7 @@ class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
             offset = buffer.tell()
         self.records = records
 
+    @doc(prepend=AbstractFileReadOnly.read)
     def read(self, file_path_or_raw, *args, **kwargs):
         super(GGPKFile, self).read(file_path_or_raw, *args, **kwargs)
         self._file_path_or_raw = file_path_or_raw
@@ -710,7 +867,7 @@ if __name__ == '__main__':
     ggpk = GGPKFile()
     ggpk.read(r'C:\Games\Path of Exile\Content.ggpk')
     ggpk.directory_build()
-    ggpk['Metadata/Items/Rings/AbstractRing.ot'].extract_to('C:/')
+    print(ggpk['Metadata/Items/Rings/AbstractRing.ot'].get_path())
     #profiler.run("ggpk.read()")
 
     #profiler.add_function(GGPKFile.directory_build)

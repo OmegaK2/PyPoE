@@ -33,57 +33,23 @@ See PyPoE/LICENSE
 # =============================================================================
 
 # Python
-import os.path
-import warnings
 
 # 3rd Party
 import pytest
 
 # self
-from PyPoE.poe.constants import DISTRIBUTOR, VERSION
-from PyPoE.poe.path import PoEPath
-from PyPoE.poe.file import dat, ggpk
+from PyPoE.poe.file import dat
 
 # =============================================================================
 # Functions
 # =============================================================================
 
 
-def read_ggpk():
-    path = PoEPath(
-        version=VERSION.STABLE,
-        distributor=DISTRIBUTOR.INTERNATIONAL,
-    ).get_installation_paths()
-    if path:
-        path = path[0]
-    else:
-        warnings.warn('PoE not found, skipping test.')
-        return
-
-    contents = ggpk.GGPKFile()
-    contents.read(os.path.join(path, 'content.ggpk'))
-    contents.directory_build()
-
-    file_set = set()
-
-    for node in contents['Data'].files:
-        name = node.record.name
-        if not name.endswith('.dat'):
-            continue
-
-        file_set.add(name)
-
-    file_set = list(file_set)
-    file_set.sort()
-
-    return contents, file_set
-
-
 def get_pk_validate_fields():
     tests = []
     for file_name, file_section in dat.load_spec().items():
         for field_name, field_section in file_section['fields'].items():
-            if not field_section['primary_key']:
+            if not field_section['unique']:
                 continue
             tests.append((file_name, field_name))
     return tests
@@ -92,9 +58,7 @@ def get_pk_validate_fields():
 # Setup
 # =============================================================================
 
-ggpk, file_set = read_ggpk()
-nodes = [ggpk['Data'][fn] for fn in file_set]
-rr = dat.RelationalReader(path_or_ggpk=ggpk, read_options={'use_dat_value': False})
+files = [section.name for section in dat.load_spec().values()]
 
 # =============================================================================
 # Tests
@@ -102,27 +66,50 @@ rr = dat.RelationalReader(path_or_ggpk=ggpk, read_options={'use_dat_value': Fals
 
 
 # Kind of testing the reading of the files twice, but whatever.
-@pytest.mark.parametrize("node", nodes)
-def test_definitions(node):
+@pytest.mark.parametrize("file_name", files)
+def test_definitions(file_name, ggpkfile):
     opt = {
         'use_dat_value': False,
     }
     # Will raise errors accordingly if it fails
-    df = dat.DatFile(node.name)
-    df.read(node.record.extract(), **opt)
+    df = dat.DatFile(file_name)
+    try:
+        node = ggpkfile['Data/' + file_name]
+        df.read(node.record.extract(), **opt)
+    # If a file is in the spec, but not in the dat file this is allright
+    except FileNotFoundError:
+        return
 
 
-'''@pytest.mark.parametrize("file_name", file_set)
-def test_relations(file_name):
-    df = rr[file_name]
+def test_missing(ggpkfile):
+    file_set = set()
+
+    for node in ggpkfile['Data'].files:
+        name = node.record.name
+        if not name.endswith('.dat'):
+            continue
+
+        # Not a regular dat file, ignore
+        if name in ['Languages.dat']:
+            continue
+
+        file_set.add(name)
+
+    assert file_set.difference(set(files)) == set(), 'ggpk contains unhandled .dat files'
 
 
 @pytest.mark.parametrize("file_name, field_name", get_pk_validate_fields())
-def test_primary_key_uniqueness(file_name, field_name):
+def test_uniqueness(file_name, field_name, rr):
     df = rr[file_name]
     index = df.table_columns[field_name]['index']
 
-    data = [row[index] for row in df]
+    data = []
+    for row in df:
+        value = row[index] if not isinstance(row[index], dat.RecordList) else row[index].rowid
+        # Duplicate "None" values are acceptable.
+        if value is None:
+            continue
+        data.append(value)
 
-    assert len(data) == len(set(data))'''
+    assert len(data) == len(set(data))
 
