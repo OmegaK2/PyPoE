@@ -1,0 +1,11 @@
+{% extends "!layout.html" %}
+
+{% block header %}
+{% if fullname is defined %}
+    {% set parent_name = fullname.rsplit('.', 1)[0] %}
+    {% if parent_name %}
+        {{parent_name}}
+    {% endif %}
+{% endif %}
+
+{% endblock %}

@@ -2,5 +2,9 @@
 .idea
 .svn
 .pyc
+.cache
 __pycache__
 /PyPoE.egg-info
+/docs/build
+/docs/source/_autosummary
+/docs/source/autosummary.rst
