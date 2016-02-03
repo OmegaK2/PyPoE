@@ -2,7 +2,9 @@ PyPoE
 ========
 Collection of Python Tools for [Path of Exile](https://www.pathofexile.com/).
 
-More detailed docs: [http://pathofexile.gamepedia.com/User:OmegaK2/PyPoE](http://pathofexile.gamepedia.com/User:OmegaK2/PyPoE])
+More detailed docs: [http://omegak2.net/poe/PyPoE/](http://omegak2.net/poe/PyPoE/)
+
+The docs are ocasionally updated until I get a build bot up - however docs can also be manually built with sphinx.
 
 Overview
 --------
