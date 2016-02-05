@@ -32,13 +32,13 @@ See PyPoE/LICENSE
 # 3rd-party
 
 # self
-from PyPoE.poe import constants, path, util, file, sim
+from PyPoE.poe import constants, path, file, sim
 
 # =============================================================================
 # Globals
 # =============================================================================
 
-__all__ = ['constants', 'path', 'util', 'file', 'sim']
+__all__ = ['constants', 'path', 'file', 'sim']
 
 # =============================================================================
 # Classes
