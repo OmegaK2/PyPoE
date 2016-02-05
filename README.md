@@ -4,7 +4,7 @@ Collection of Python Tools for [Path of Exile](https://www.pathofexile.com/).
 
 More detailed docs: [http://omegak2.net/poe/PyPoE/](http://omegak2.net/poe/PyPoE/)
 
-The docs are ocasionally updated until I get a build bot up - however docs can also be manually built with sphinx.
+The docs are occasionally updated until I get a build bot up - however docs can also be manually built with sphinx.
 
 Overview
 --------
@@ -38,13 +38,13 @@ These instructions are for the current development version of PyPoE.
 * checkout PyPoE with git
 * go into the PyPoE folder
 * Minimum install: ```pip install -e . ```
-* Full install: ```pip install -e .[ui,cli,cli-wikibot,dev]```
+* Full install: ```pip install -e .[full]```
 
 Usage
 --------
 * UI: ```pypoe_ui```
 * CLI: ```pypoe_exporter``` (follow the instructions)
-* API: check the individual files in PyPoE/poe/ (documenation will be generated a later point, i.e. when nearing the first release)
+* API: check the individual files in PyPoE/poe/ or the docs [http://omegak2.net/poe/PyPoE/](http://omegak2.net/poe/PyPoE/)
 
 Credits
 --------
