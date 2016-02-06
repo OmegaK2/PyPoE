@@ -354,6 +354,7 @@ class GemsParser(BaseParser):
         'Rejuvenation Totem': ['Totem', ],
         'Searing Bond': ['Totem', ],
         'Shockwave Totem': ['Totem', ],
+        'Siege Ballista': ['Totem', ],
         # Support Totems
         'Spell Totem': ['Totem', ],
         'Ranged Attack Totem': ['Totem', ],
@@ -757,9 +758,9 @@ class GemsParser(BaseParser):
 
             out.append('}}\n')
 
-            if base_item_type['ItemClass']['Name'] == 'Active Skill Gems':
+            if base_item_type['ItemClassesKey']['Name'] == 'Active Skill Gems':
                 gtype = GemTypes.active
-            elif base_item_type['ItemClass']['Name'] == 'Support Skill Gems':
+            elif base_item_type['ItemClassesKey']['Name'] == 'Support Skill Gems':
                 gtype = GemTypes.support
 
             # Is sorted already, but just in case..

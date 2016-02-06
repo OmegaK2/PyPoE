@@ -197,7 +197,7 @@ class QuestRewardReader(BaseParser):
             quest = row['QuestKey']
             character = row['CharactersKey']
             difficulty = row['Difficulty']
-            itemcls = item['ItemClass']['Name']
+            itemcls = item['ItemClassesKey']['Name']
 
             # Format the data
             data = {}
