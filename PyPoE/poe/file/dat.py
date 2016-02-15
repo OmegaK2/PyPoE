@@ -590,7 +590,8 @@ class DatReader(ReprMixin):
             for c in column:
                 columns.add(c)
 
-        for column in columns:
+        # new object to avoid "RuntimeError: Set changed size during iteration"
+        for column in list(columns):
             if column not in self.columns_unique:
                 raise ValueError('Column %s is not indexable' % column)
 
