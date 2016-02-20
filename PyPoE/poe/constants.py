@@ -294,6 +294,10 @@ class MOD_GENERATION_TYPE(IntEnum):
         For 'torment' mods that can appear on monsters
     TEMPEST
         For 'tempest' mods that can appear on areas
+    TALISMAN
+        For 'talisman' mods that can appear on monsters
+    ENCHANTMENT
+        For the ascendancy/labyrinth enchantment mods that can appear on items
 
     """
     PREFIX = 1
@@ -304,6 +308,8 @@ class MOD_GENERATION_TYPE(IntEnum):
     BLOODLINES = 6
     TORMENT = 7
     TEMPEST = 8
+    TALISMAN = 9
+    ENCHANTMENT = 10
 
 # =============================================================================
 # Functions
