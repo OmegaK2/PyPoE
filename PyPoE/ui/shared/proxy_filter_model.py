@@ -91,7 +91,7 @@ class AbstractFilter(object):
 
 class RegexFilter(AbstractFilter):
 
-    NAME = 'Regular Expression Filter'
+    NAME = QT_TR_NOOP('Regular Expression Filter')
 
     def __init__(self, value, flags=0):
         self.value = value
@@ -187,7 +187,7 @@ class TypedFilter(AbstractFilter):
         }),
     ))
 
-    NAME = 'Simple Operation Filter'
+    NAME = QT_TR_NOOP('Simple Operation Filter')
 
     def __init__(self, value, operation, type):
         if type not in self.types:
@@ -271,8 +271,8 @@ FILTERS = [RegexFilter, TypedFilter]
 # Filter Wizard & Pages
 #
 
-class FilterWizard(QWizard):
 
+class FilterWizard(QWizard):
     PAGE_COLUMN_SELECTION = 1
     PAGE_FILTER_SELECTION = 2
     PAGE_FILTER_SETTINGS = 3
@@ -300,6 +300,11 @@ class FilterWizard(QWizard):
             self.PAGE_FILTER_CREATE,
             FilterWizardCreateFilterPage(parent=self),
         )
+
+        self.currentIdChanged.connect(self._hide_back_button)
+
+    def _hide_back_button(self, id):
+        self.button(QWizard.BackButton).setEnabled(False)
 
 
 class FilterWizardPageShared(QWizardPage):
@@ -411,8 +416,13 @@ class FilterWizardCreateFilterPage(FilterWizardPageShared):
         for filter_cls in FILTERS:
             self.filter_type_list.addItem(filter_cls.NAME)
 
+        self.layout.addWidget(self.filter_type_list)
+
     def cleanupPage(self):
-        self.get_filters()[self.field('COLUMN_LIST')].pop(-1)
+        try:
+            self.get_filters()[self.field('COLUMN_LIST')].pop(-1)
+        except IndexError:
+            pass
 
     def validatePage(self):
         self.get_filters()[self.field('COLUMN_LIST')].append(
@@ -442,10 +452,19 @@ class FilterMenu(QMenu):
             raise TypeError("proxy_model has invalid type %s" % type(proxy_model))
         self.proxy_model = proxy_model
 
-        self.action_add_filter = self.addAction("Add/Change filter", self.add_filter)
-        self.action_reset_filter = self.addAction("Reset filter")
+        self.action_add_filter = self.addAction(
+            self.tr("Add/Change filter"),
+            self.add_filter,
+        )
+        self.action_reset_filter = self.addAction(
+            self.tr("Reset filter"),
+            self.reset_filter,
+        )
         self.addSeparator()
-        self.action_reset_all_filters = self.addAction("Reset all filters")
+        self.action_reset_all_filters = self.addAction(
+            self.tr("Reset all filters"),
+            self.reset_all_filters,
+        )
 
         self.point = None
 
@@ -461,11 +480,11 @@ class FilterMenu(QMenu):
 
     def reset_filter(self, *args, **kwargs):
         index = self.parent().logicalIndexAt(self.point)
-        #TODO
+        self.proxy_model.filters[index] = []
+        self.proxy_model.invalidateFilter()
 
     def reset_all_filters(self, *args, **kwargs):
-        index = self.parent().logicalIndexAt(self.point)
-        self.proxy_model.filters[index] = []
+        self.proxy_model.reset_all_filters()
         self.proxy_model.invalidateFilter()
 
     def popup(self, point, *args, **kwargs):
@@ -477,9 +496,13 @@ class FilterProxyModel(QSortFilterProxyModel):
     def __init__(self, parent, *args, **kwargs):
         QSortFilterProxyModel.__init__(self, *args, parent=parent, **kwargs)
 
+        self.reset_all_filters()
+
+    def reset_all_filters(self):
+        """
+        Resets all filters
+        """
         self.filters = defaultdict(lambda: [])
-        #self.add_filter(3, RegexFilter(''))
-        #self.add_filter(0, TypedFilter(100, type=int, operation='lt'))
 
     def add_filter(self, row, filter):
         if row not in self.filters:
