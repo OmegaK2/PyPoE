@@ -30,8 +30,10 @@ See PyPoE/LICENSE
 # =============================================================================
 
 # Python
+import sys
 
 # 3rd-party
+from PySide.QtCore import *
 from PySide.QtGui import *
 
 # self
@@ -40,7 +42,7 @@ from PySide.QtGui import *
 # Globals
 # =============================================================================
 
-__all__ = ['SharedMainWindow']
+__all__ = ['SharedMainWindow', 'main']
 
 # =============================================================================
 # Classes
@@ -65,3 +67,24 @@ class SharedMainWindow(QMainWindow):
 # =============================================================================
 # Functions
 # =============================================================================
+
+
+def main(maincls, *args, **kwargs):
+    """
+    Load translations/app and start the qt application.
+
+    Parameters
+    ----------
+    maincls
+        Class to instantiate with the given arguments and keywords
+    """
+    translator = QTranslator()
+    translator.load('i18n/en_US')
+
+    app = QApplication(sys.argv)
+    app.installTranslator(translator)
+
+    maininst = maincls(*args, **kwargs)
+    maininst.show()
+
+    sys.exit(app.exec_())

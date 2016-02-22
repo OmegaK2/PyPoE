@@ -35,6 +35,7 @@ See PyPoE/LICENSE
 
 # self
 from PyPoE.ui.ggpk_viewer.core import GGPKViewerMainWindow
+from PyPoE.ui.shared import main
 
 # =============================================================================
 # Globals
@@ -49,3 +50,6 @@ __all__ = ['GGPKViewerMainWindow']
 # =============================================================================
 # Functions
 # =============================================================================
+
+if __name__ == '__main__':
+    main(GGPKViewerMainWindow)

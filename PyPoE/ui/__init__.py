@@ -35,7 +35,7 @@ See PyPoE/LICENSE
 
 # self
 from PyPoE.ui.ggpk_viewer import GGPKViewerMainWindow
-from PyPoE.ui.launchpad import main as launchpad_main
+from PyPoE.ui.launchpad import launchpad_main
 
 # =============================================================================
 # Globals
@@ -48,6 +48,7 @@ _apps = [GGPKViewerMainWindow]
 # =============================================================================
 # Entry point
 # =============================================================================
+
 
 def main(*args, **kwargs):
     launchpad_main(_apps, *args, **kwargs)

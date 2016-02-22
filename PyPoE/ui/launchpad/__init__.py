@@ -37,12 +37,13 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 
 # self
+from PyPoE.ui.shared import main
 
 # =============================================================================
 # Globals
 # =============================================================================
 
-__all__ = []
+__all__ = ['LaunchpadMainWindow', 'launchpad_main']
 
 # =============================================================================
 # Classes
@@ -103,14 +104,6 @@ class LaunchpadMainWindow(QMainWindow):
 # Functions
 # =============================================================================
 
-def main(apps):
-    translator = QTranslator()
-    translator.load('i18n/en_US')
 
-    app = QApplication(sys.argv)
-    app.installTranslator(translator)
-
-    launchpad = LaunchpadMainWindow(apps)
-    launchpad.show()
-
-    return app.exec_()
+def launchpad_main(*args, **kwargs):
+    main(LaunchpadMainWindow, *args, **kwargs)
