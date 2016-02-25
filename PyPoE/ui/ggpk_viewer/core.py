@@ -30,7 +30,6 @@ See PyPoE/LICENSE
 # =============================================================================
 
 # Default Imports
-import time
 from traceback import format_exc
 
 # Library Imports
@@ -51,9 +50,7 @@ from PyPoE.ui.ggpk_viewer.menu import *
 
 
 class GGPKViewerMainWindow(SharedMainWindow):
-    name = QT_TR_NOOP('GGPK Viewer')
-
-    sig_log_message = Signal(str)
+    NAME = 'GGPK Viewer'
 
     def __init__(self, *args, **kwargs):
         SharedMainWindow.__init__(self, *args, **kwargs)
@@ -76,10 +73,7 @@ class GGPKViewerMainWindow(SharedMainWindow):
         self.master.setOrientation(Qt.Vertical)
         self.work_area_splitter = QSplitter()
         self.master.addWidget(self.work_area_splitter)
-        self.notification = QTextEdit(readOnly=True)
-        self.notification.setFixedHeight(100)
         self.master.addWidget(self.notification)
-
 
         self.ggpk_view = QTreeView()
         self.ggpk_view.setModel(GGPKModel())
@@ -152,18 +146,7 @@ class GGPKViewerMainWindow(SharedMainWindow):
         # Setup the main window
         self.setCentralWidget(self.master)
         self.statusBar()
-        self.setWindowTitle(self.name)
-
-        #
-        self.sig_log_message.connect(self._write_log)
-
-    def _write_log(self, msg, notification=None):
-        timef = time.strftime("%H:%M:%S - ")
-        if notification is None:
-            notification = msg
-        self.statusBar().showMessage(timef + notification)
-        self.notification.append(timef + msg)
-        QApplication.instance().processEvents()
+        self.setWindowTitle(self.tr(self.NAME))
 
     def _reset_file_view(self, reset_hash=True):
         if reset_hash:

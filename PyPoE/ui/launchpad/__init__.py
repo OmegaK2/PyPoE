@@ -70,7 +70,7 @@ class LaunchpadMainWindow(QMainWindow):
         self.buttons = []
         self.instances = []
         for i, qmainwindow_cls in enumerate(apps):
-            button = QPushButton(qmainwindow_cls.name)
+            button = QPushButton(qmainwindow_cls.NAME)
             button.clicked.connect(self._wrap_clicked(i))
             layout.addWidget(button)
             self.buttons.append(button)
@@ -89,7 +89,7 @@ class LaunchpadMainWindow(QMainWindow):
                 break
 
         self.buttons[i].setEnabled(True)
-        self.buttons[i].setText(qwidget.name)
+        self.buttons[i].setText(qwidget.NAME)
 
     def run_application(self, i):
         self.buttons[i].setEnabled(False)

@@ -302,7 +302,30 @@ class DDSDataHandler(FileDataHandler):
     see: https://msdn.microsoft.com/en-us/library/bb943982.aspx
 
     """
-    def _get_image(self, file_data):
+    @staticmethod
+    def dds_file_to_qimage(path):
+        q = QGLWidget()
+        q.makeCurrent()
+        texture = q.bindTexture(path)
+        if not texture:
+            return
+
+        GL.glBindTexture(GL.GL_TEXTURE_2D, texture)
+        w = GL.glGetTexLevelParameteriv(GL.GL_TEXTURE_2D, 0, GL.GL_TEXTURE_WIDTH)
+        h = GL.glGetTexLevelParameteriv(GL.GL_TEXTURE_2D, 0, GL.GL_TEXTURE_HEIGHT)
+
+        if w == 0 or h == 0:
+            return
+
+        pbuffer = QGLPixelBuffer(w, h, q.format(), q)
+        if not pbuffer.makeCurrent():
+            return
+
+        pbuffer.drawTexture(QRectF(-1, -1, 2, 2), texture)
+        return pbuffer.toImage()
+
+    @staticmethod
+    def get_image(file_data):
         """
         based on http://www.qtcentre.org/threads/29933-How-to-display-DDS-images
 
@@ -329,25 +352,7 @@ class DDSDataHandler(FileDataHandler):
                     dxt_type = 'DXT5'
                 tmp_file.write(dxt_type.encode('ascii'))
                 tmp_file.write(file_data.read())
-            q = QGLWidget()
-            q.makeCurrent()
-            texture = q.bindTexture(tmp_file_path)
-            if not texture:
-                return
-
-            GL.glBindTexture(GL.GL_TEXTURE_2D, texture)
-            w = GL.glGetTexLevelParameteriv(GL.GL_TEXTURE_2D, 0, GL.GL_TEXTURE_WIDTH)
-            h = GL.glGetTexLevelParameteriv(GL.GL_TEXTURE_2D, 0, GL.GL_TEXTURE_HEIGHT)
-
-            if w == 0 or h == 0:
-                return
-
-            pbuffer = QGLPixelBuffer(w, h, q.format(), q)
-            if not pbuffer.makeCurrent():
-                return
-
-            pbuffer.drawTexture(QRectF(-1, -1, 2, 2), texture)
-            return pbuffer.toImage()
+            return DDSDataHandler.dds_file_to_qimage(tmp_file_path)
         return None
 
     def get_widget(self, file_data, file_name, *args, **kwargs):
@@ -356,7 +361,7 @@ class DDSDataHandler(FileDataHandler):
         if GL is None:
             label.setText(label.tr('Install PyOpenGL to view DDS files.'))
 
-        img = self._get_image(file_data)
+        img = DDSDataHandler.get_image(file_data)
         if img is None:
             label.setText(label.tr('Unsupported DDS Format.'))
         else:

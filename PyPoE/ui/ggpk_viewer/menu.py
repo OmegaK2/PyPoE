@@ -30,17 +30,14 @@ See PyPoE/LICENSE
 # =============================================================================
 
 # Python
-import os
-from functools import wraps
 
 # 3rd Party
-from PySide.QtCore import *
 from PySide.QtGui import *
 
 # self
-from PyPoE.poe.constants import DISTRIBUTOR, VERSION
-from PyPoE.poe.file import dat, ggpk
-from PyPoE.poe.path import PoEPath
+from PyPoE.poe.file import dat
+from PyPoE.poe.file.ggpk import FileRecord
+from PyPoE.ui.shared.file.ggpk import GGPKOpenAction
 from PyPoE.ui.shared.file.model import GGPKModel
 
 # =============================================================================
@@ -53,158 +50,63 @@ __all__ = ['FileMenu', 'MiscMenu', 'ViewMenu']
 # Classes
 # =============================================================================
 
-class GGPKThread(QThread):
 
-    sig_update_progress = Signal(str, int)
+class CustomOpenAction(GGPKOpenAction):
+    def __init__(self, *args, **kwargs):
+        super(CustomOpenAction, self).__init__(*args, **kwargs)
 
-    def __init__(self, file_path, *args, **kwargs):
-        QThread.__init__(self, *args, **kwargs)
-        self._file_path = file_path
-        self.m = None
-        self._size = 0
+        self._thread = None
 
-        self.sig_update_progress.connect(self._progress_updater)
+    def _main_window(self):
+        return self.parent().parent()
 
-        self.progress_bar = GGPKProgress('')
+    def _open_ggpk(self):
+        self._thread = super(CustomOpenAction, self)._open_ggpk()
 
-    def _progress_ggpk(self, func):
-        """
-        Hook for GGPKFile._read_record
-        """
-        fm = self.parent()
+        # User cancelled
+        if self._thread is None:
+            return
 
-        @wraps(func)
-        def temp(*args, **kwargs):
-            if not self._size:
-                self._size = kwargs['ggpkfile'].seek(0, os.SEEK_END)
-                kwargs['ggpkfile'].seek(0, os.SEEK_SET)
-            else:
-                #kwargs['offset'])
+        # Destroy the old object or we're massively memory-leaking
+        # TODO for some reason 2 objects are still kept in memory
+        p = self._main_window()
+        p._reset_file_view(reset_hash=True)
+        p.ggpk_view.model().deleteLater()
+        p.ggpk_view.setModel(GGPKModel())
 
-                self.progress_bar.sig_progress.emit(
-                    int(kwargs['offset'] / self._size * 100)
-                )
-
-            return func(*args, **kwargs)
-
-        return temp
+        self._thread.finished.connect(self._update_ggpk_model)
+        self._thread.start()
 
     def _ggpk_sort(self, node, depth, **kwargs):
-        sorter = lambda obj: (isinstance(obj.record, ggpk.FileRecord), obj.name)
+        sorter = lambda obj: (isinstance(obj.record, FileRecord), obj.name)
         node.children = sorted(node.children, key=sorter)
 
-    def _progress_updater(self, title, max, *args, **kwargs):
-        p = self.parent().parent()
+    def _update_ggpk_model(self):
+        p = self._main_window()
 
-        p._write_log(title)
-        #self.progress_bar = GGPKProgress(title, max, *args, **kwargs)
-        self.progress_bar.setLabelText(title)
-        self.progress_bar.setWindowTitle(title)
-        self.progress_bar.setMaximum(max)
-        self.progress_bar.setValue(0)
+        p._write_log(self.tr('Sorting GGPK directory...'))
+        self._thread.ggpk_file.directory.walk(self._ggpk_sort)
 
-    def run(self):
-        fm = self.parent()
-        p = fm.parent()
+        p._write_log(self.tr('Viewing GGPK contents...'))
 
-        p.sig_log_message.emit(self.tr('Open GGPK file "%(file)s".') % {'file': self._file_path})
+        p.ggpk_view.setModel(GGPKModel(self._thread.ggpk_file.directory))
+        p.ggpk_view.show()
 
-        self.sig_update_progress.emit(self.tr('Reading GGPK records...'), 100)
-        ggpk_file = ggpk.GGPKFile()
-        # Hook the function for progress bar
-        ggpk_file._read_record = self._progress_ggpk(ggpk_file._read_record)
-        ggpk_file.read(self._file_path)
-        # Finished
-        self.progress_bar.sig_progress.emit(100)
-
-        ds = 0
-        for item in ggpk_file.records.values():
-            if isinstance(item, ggpk.DirectoryRecord):
-                ds += 1
-
-        p.sig_log_message.emit(self.tr('Building GGPK directory...'))
-        ggpk_file.directory_build()
-
-        p.sig_log_message.emit(self.tr('Sorting GGPK directory...'))
-        ggpk_file.directory.walk(self._ggpk_sort)
-
-        self.m = GGPKModel(ggpk_file.directory)
-
-        p.sig_log_message.emit(self.tr('Viewing GGPK contents...'))
-        fm.sig_update_ggpk.emit()
-
-class GGPKProgress(QProgressDialog):
-    sig_progress = Signal(int)
-
-    def __init__(self, title, maximum=100, *args, **kwargs):
-        QProgressDialog.__init__(self, *args, **kwargs)
-
-        self.setWindowTitle(title)
-        self.setLabelText(title)
-        self.setMinimum(0)
-        self.setMaximum(maximum)
-        self.setCancelButton(None)
-        self.setMinimumWidth(250)
-        #self.setMinimumSize(300, 50)
-        self.show()
-
-        self.sig_progress.connect(self.setValue)
+        p._write_log(self.tr('Done.'))
 
 
 class FileMenu(QMenu):
     """
     Create file menu and handle related actions
     """
-    sig_update_ggpk = Signal()
     def __init__(self, *args, **kwargs):
         QMenu.__init__(self, *args, **kwargs)
 
-        # Get the paths and store them for efficiency
-        self.poe_install_paths = PoEPath().get_installation_paths()
-        self.poe_install_paths = sorted(self.poe_install_paths, key=lambda item: item.version)
-
-        self.action_open = QAction(self, text=self.tr('Open'))
-        self.action_open.setStatusTip(self.tr('Open GGPK File'))
-        self.action_open.triggered.connect(self._open_ggpk)
+        self.action_open = CustomOpenAction(self)
         self.addAction(self.action_open)
 
         self.setTitle(self.tr('File'))
         self.parent().menuBar().addMenu(self)
-
-        self.sig_update_ggpk.connect(self._update_ggpk_model)
-
-    def _open_ggpk(self):
-        # Use the first found path
-        if self.poe_install_paths:
-            dir = os.path.join(self.poe_install_paths[0].path, 'content.ggpk')
-        else:
-            dir = '.'
-
-        file = QFileDialog.getOpenFileName(self, self.tr("Open GGPK"), dir, self.tr("GGPK Files (*.ggpk)"))
-        # User Aborted
-        if not file[0]:
-            return
-
-        p = self.parent()
-        file_path = file[0]
-
-        # Destroy the old object or we're massively memory-leaking
-        # TODO for some reason 2 objects are still kept in memory
-        p._reset_file_view(reset_hash=True)
-        p.ggpk_view.model().deleteLater()
-        p.ggpk_view.setModel(GGPKModel())
-
-        self.t = GGPKThread(file_path, parent=self)
-        self.t.start()
-
-    def _update_ggpk_model(self):
-        p = self.parent()
-        p.ggpk_view.setModel(self.t.m)
-        p.ggpk_view.show()
-
-        p.sig_log_message.emit(self.tr('Done.'))
-
-
 
 
 class ViewMenu(QMenu):
@@ -226,6 +128,7 @@ class ViewMenu(QMenu):
     def _toggle_view_toolbar(self):
         tb = self.parent().context_toolbar
         tb.setVisible(not tb.isVisible())
+
 
 class MiscMenu(QMenu):
     """
