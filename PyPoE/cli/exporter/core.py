@@ -17,12 +17,25 @@ Overview
 Description
 ===============================================================================
 
-Exporter main function(s).
+Exporter main function(s) and entry point.
+
+The following calls are equivalent:
+
+.. code-block:: none
+
+    pypoe_exporter
+    python PyPoE/cli/exporter/core.py
+
 
 Agreement
 ===============================================================================
 
 See PyPoE/LICENSE
+
+Documentation
+===============================================================================
+
+.. autofunction:: main
 """
 
 # =============================================================================
@@ -32,8 +45,11 @@ See PyPoE/LICENSE
 # Python
 import argparse
 
+# 3rd party
+
 # self
 from . import config
+from PyPoE.shared.config.validator import IntEnumValidator
 from PyPoE.poe.constants import VERSION, DISTRIBUTOR
 from PyPoE.cli.core import run
 from PyPoE.cli.handler import ConfigHandler, SetupHandler
@@ -41,8 +57,9 @@ from PyPoE.cli.exporter.dat import DatHandler
 from PyPoE.cli.exporter.wiki.core import WikiHandler
 
 # =============================================================================
-# class
+# Classes
 # =============================================================================
+
 
 # =============================================================================
 # Functions
@@ -50,24 +67,26 @@ from PyPoE.cli.exporter.wiki.core import WikiHandler
 
 
 def main():
+    """
+    Entry point for the CLI PyPoE exporter
+    """
     # Setup
     main_parser = argparse.ArgumentParser()
     main_sub = main_parser.add_subparsers()
 
-    spec = 'integer(min=%(min)s, max=%(max)s, default=%(default)s)'
-    kwargs = {
-        'min': 1,
-        'max': VERSION.ALL.value,
-        'default': VERSION.DEFAULT.value,
-    }
-    config.add_option('version', spec % kwargs)
+    config.validator.functions.update({
+        'is_version': IntEnumValidator(
+            enum=VERSION,
+        ),
+        'is_distributor': IntEnumValidator(
+            enum=DISTRIBUTOR,
+        )
+    })
 
-    kwargs = {
-        'min': 1,
-        'max': DISTRIBUTOR.ALL.value,
-        'default': DISTRIBUTOR.DEFAULT.value,
-    }
-    config.add_option('distributor', spec % kwargs)
+    config.add_option('version', 'is_version(default=%s)' %
+                      VERSION.DEFAULT.value)
+    config.add_option('distributor', 'is_distributor(default=%s)' %
+                      DISTRIBUTOR.DEFAULT.value)
 
     DatHandler(main_sub)
     WikiHandler(main_sub)
