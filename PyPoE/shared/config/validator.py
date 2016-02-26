@@ -73,7 +73,7 @@ class IntEnumValidator(object):
         ----------
         enum : :py:class:`enum.IntEnum`
             base enum class for this validator
-        default : :py:class:`enum.IntEnum` | int | str | None
+        default : :py:class:`enum.IntEnum` | int | None
             default attribute of the enum
         Raises
         ------
@@ -93,8 +93,6 @@ class IntEnumValidator(object):
             self._default = default
         elif isinstance(default, int):
             self._default = enum(int)
-        elif isinstance(default, str):
-            self._default = getattr(enum, default)
         else:
             raise TypeError('default must be a subtype of default')
         self._default = None
@@ -145,6 +143,12 @@ class IntEnumValidator(object):
             try:
                 value = int(value)
             except ValueError:
+                # If the value was stored, it will be stored as
+                # MyEnum.attribute
+                #
+                # This will get rid of the class portion for casting if present
+                if value.startswith(self._enum.__name__ + '.'):
+                    value = value[len(self._enum.__name__) + 1:]
                 try:
                     value = getattr(self._enum, value)
                 except AttributeError:

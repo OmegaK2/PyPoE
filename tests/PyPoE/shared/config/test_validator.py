@@ -52,9 +52,11 @@ class MyIntEnum(IntEnum):
 # Fixtures
 # =============================================================================
 
+
 @pytest.fixture(scope='module')
 def int_enum_tester():
     return validator.IntEnumValidator(enum=MyIntEnum, default=MyIntEnum.a)
+
 
 @pytest.fixture(scope='module')
 def file_path():
@@ -70,11 +72,14 @@ def dir_path():
 # Tests
 # =============================================================================
 
+
 class TestIntEnumValidator:
     values = (
         (1, MyIntEnum.a),
         ('a', MyIntEnum.a),
         ('1', MyIntEnum.a),
+        # Will be written as this value into config
+        ('MyIntEnum.a', MyIntEnum.a),
     )
 
     fvalues = (
@@ -97,10 +102,9 @@ class TestIntEnumValidator:
         assert int_enum_tester(value) == expected
 
     @pytest.mark.parametrize('value,errmsg', fvalues)
-    def test_success(self, int_enum_tester, value, errmsg):
+    def test_fail(self, int_enum_tester, value, errmsg):
         with pytest.raises(ValidateError):
             int_enum_tester(value)
-
 
 
 class TestIsFile:
