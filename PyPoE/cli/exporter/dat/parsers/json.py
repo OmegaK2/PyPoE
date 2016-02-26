@@ -76,10 +76,14 @@ class JSONExportHandler(DatExportHandler):
             out = []
 
             for file_name in args.files:
+                dat_file = dat_files[file_name]
                 out.append({
                     'filename': file_name,
-                    'header': list(dat_files[file_name].reader.table_columns),
-                    'data': dat_files[file_name].reader.table_data,
+                    'header': [
+                        dict([('name', k)] + f.items()) for k, f in
+                        dat_file.reader.specification['fields'].items()
+                    ],
+                    'data': dat_file.reader.table_data,
                 })
 
             console('Dumping data to "%s"...' % args.target)
