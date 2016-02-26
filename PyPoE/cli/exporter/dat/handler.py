@@ -1,5 +1,5 @@
 """
-
+.dat export base handler
 
 Overview
 ===============================================================================
@@ -17,7 +17,7 @@ Overview
 Description
 ===============================================================================
 
-
+.dat export base handler
 
 Agreement
 ===============================================================================
@@ -101,8 +101,9 @@ class DatExportHandler(object):
         ggpk_data = ggpk['Data']
         remove = []
         for name in tqdm(args.files):
-            node = ggpk_data[name]
-            if node is None:
+            try:
+                node = ggpk_data[name]
+            except FileNotFoundError:
                 console('Skipping "%s" (missing)' % name, msg=Msg.warning)
                 remove.append(name)
                 continue
