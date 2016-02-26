@@ -30,11 +30,19 @@ Getting Started
     report_issue
     contribution
 
-GUI Overview
+GUI
 ==============================================================================
 
-CLI Overview
+CLI
 ==============================================================================
+
+.. toctree::
+
+    CLI/overview
+    CLI/config
+    CLI/setup
+    CLI/dat
+    CLI/wiki
 
 Developer Overview
 ==============================================================================
