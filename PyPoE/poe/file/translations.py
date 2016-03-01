@@ -131,7 +131,7 @@ regex_translation_string = re.compile(
     r'[\s]*'
     r'(?P<minmax>(?:[0-9\-\|#]+[ \t]+)+)'
     r'"(?P<description>.*)"'
-    r'(?P<quantifier>(?:[ \t]+[\w]+[ \t]+[0-9]+)*)'
+    r'(?P<quantifier>(?:[ \t]*[\w]+[ \t]+[0-9]+)*)'
     r'[ \t]*[\r\n]*'
     r'$',
     re.UNICODE | re.MULTILINE

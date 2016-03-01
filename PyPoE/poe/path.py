@@ -163,7 +163,10 @@ class PoEPath(object):
         if self.distributor & DISTRIBUTOR.GGG:
             for item in (
                 ('Software\GrindingGearGames\Path of Exile', VERSION.STABLE),
-                ('Software\GrindingGearGames\Path of Exile - The Awakening Closed Beta', VERSION.BETA),
+                ('Software\GrindingGearGames\Path of Exile - The Awakening '
+                 'Closed Beta', VERSION.BETA),
+                ('Software\GrindingGearGames\Path of Exile - Alpha',
+                 VERSION.ALPHA)
             ):
                 if self.version & item[1]:
                     basepath =  self._get_winreg_path(item[0], 'InstallLocation')

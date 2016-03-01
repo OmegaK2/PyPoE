@@ -89,6 +89,8 @@ class VERSION(IntEnum):
         Beta version of Path of Exile.
         As of currently, there is no beta running and this was only used
         for the Awakening Beta.
+    ALPHA
+        Alpha version of Path of Exile.
     ALL
         All registered version types.
     DEFAULT
@@ -98,8 +100,9 @@ class VERSION(IntEnum):
     """
     STABLE = 1
     BETA = 2
+    ALPHA = 4
 
-    ALL = STABLE | BETA
+    ALL = STABLE | BETA | ALPHA
 
     DEFAULT = STABLE
 

@@ -466,6 +466,8 @@ class DatReader(ReprMixin):
         of the cast in bytes
     _data_magic_number :  bytes
         Magic number that marks the beginning of data section
+    auto_build_index : bool
+        Whether the index is automatically build after reading
     file_name :  str
         File name
     file_length :  int
@@ -507,23 +509,26 @@ class DatReader(ReprMixin):
     }
     _data_magic_number = b'\xBB\xbb\xBB\xbb\xBB\xbb\xBB\xbb'
 
-    def __init__(self, file_name, *args, use_dat_value=True, specification=None):
+    def __init__(self, file_name, *args, use_dat_value=True, specification=None,
+                 auto_build_index=False):
         """
-
         Parameters
         ----------
         file_name : str
             Name of the dat file
         use_dat_value : bool
             Whether to use :class:`DatValue` instances or values
-        specification: ConfigObj
+        specification : ConfigObj
             Specification to use
+        auto_build_index : bool
+            Whether to automatically build the index after reading.
 
         Raises
         -------
         SpecificationError
             if the dat file is not in the specification
         """
+        self.auto_build_index = auto_build_index
         self.index = {}
         self.data_parsed = []
         self.data_offset = 0
@@ -580,6 +585,30 @@ class DatReader(ReprMixin):
         return self.table_data[item]
 
     def build_index(self, column=None):
+        """
+        Builds or rebuilds the index for the specified column.
+
+        Indexed columns can be accessed though the instance variable index.
+
+        For example:
+        self.index[column_name][indexed_value]
+
+        .. warning::
+            This method only works for columns that are marked as unique in the
+            specification.
+
+        Parameters
+        ----------
+        column : str or Iterable or None
+            if specified the index will the built for the specified column
+            or iterable of columns
+
+        Raises
+        ------
+        ValueError
+            if the specified column is not unique and therefore not indexable
+
+        """
         columns = set()
         if column is None:
             for column in self.columns_unique:
@@ -787,6 +816,9 @@ class DatReader(ReprMixin):
         for i in range(0, self.table_rows):
             self.table_data.append(self._process_row(i))
 
+        if self.auto_build_index:
+            self.build_index()
+
         return self.table_data
 
     def print_data(self):
@@ -916,11 +948,9 @@ class RelationalReader(AbstractFileCache):
                 #todo warning
                 obj = None
         elif key:
-            for row in other:
-                if row[key] == obj:
-                    obj = row
-                    break
-            if obj is not row:
+            try:
+                obj = other.index[key][obj]
+            except KeyError:
                 raise SpecificationError('Did not find proper value for foreign key %s' % key)
         else:
             obj = other[obj]
@@ -986,6 +1016,11 @@ class RelationalReader(AbstractFileCache):
 
             key_id = df.reader.specification['fields'][key]['key_id']
             key_offset = df.reader.specification['fields'][key]['key_offset']
+            # Don't need to rebuild the index if it was specified as generic
+            # read option already.
+            if not self.read_options.get('auto_build_index') \
+                    and not key_offset and key_id:
+                df_other_reader.build_index(key_id)
 
             index = df.reader.table_columns[key]['index']
 
