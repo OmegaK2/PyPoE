@@ -921,8 +921,10 @@ class TranslationResult(TranslationReprMixin):
     ----------
     found : list[Translation]
         List of found Translations (in order)
+    found_lines : list[str]:
+        List of related translated strings (in order)L
     lines : list[str]
-        List of related translated strings (in order)
+        List of translated strings (minus missing ones)
     indexes : list[int]
         List of related indexes (i.e. for use with TranslationLanguage.get_string)
     missing_ids : list[str]
@@ -940,6 +942,7 @@ class TranslationResult(TranslationReprMixin):
     """
     __slots__ = [
         'found',
+        'found_lines',
         'lines',
         'indexes',
         'missing_ids',
@@ -951,9 +954,11 @@ class TranslationResult(TranslationReprMixin):
         'source_values',
     ]
 
-    def __init__(self, found, lines, indexes, missing, missing_values, values,
-                 invalid, unused, source_ids, source_values):
+    def __init__(self, found, found_lines, lines, indexes, missing,
+                 missing_values, values, invalid, unused, source_ids,
+                 source_values):
         self.found = found
+        self.found_lines = found_lines
         self.lines = lines
         self.indexes = indexes
         self.missing_ids = missing
@@ -970,14 +975,10 @@ class TranslationResult(TranslationReprMixin):
 
         Returns
         -------
-        list[str]
+        list[list[str]]
             List of found ids
         """
-        ids = []
-        for tr in self.found:
-            ids += tr.ids
-
-        return ids
+        return [tr.ids for tr in self.found]
 
     found_ids = property(fget=_get_found_ids)
 
@@ -1342,6 +1343,7 @@ class TranslationFile(AbstractFileReadOnly):
             del trans_found_values[index]
 
         trans_lines = []
+        trans_found_lines = []
         unused = []
         for i, tr in enumerate(trans_found):
 
@@ -1349,12 +1351,16 @@ class TranslationFile(AbstractFileReadOnly):
             result = tl.get_string(trans_found_values[i], trans_found_indexes[i], use_placeholder, only_values)
             if result:
                 trans_lines.append(result[0])
+                trans_found_lines.append(result[0])
                 if full_result:
                     unused.append(result[1])
+            else:
+                trans_found_lines.append('')
 
         if full_result:
             return TranslationResult(
                 found=trans_found,
+                found_lines=trans_found_lines,
                 lines=trans_lines,
                 indexes=trans_found_indexes,
                 missing=trans_missing,
