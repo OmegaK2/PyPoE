@@ -763,7 +763,92 @@ class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
 
         record.read(ggpkfile)
         records[offset] = record
-    
+
+    def diff(self, other_ggpk, out_file=None):
+        """
+        Creates a list of file paths that differ between this GGPKFile instance
+        and another GGPKFile instance.
+        This will take into account new, deleted and changed files.
+
+        Optionally writes this list to the specified out_file
+
+        Parameters
+        ----------
+        other_ggpk : GGPKFile
+            Other parsed GGPKFile instance to compare against
+        out_file : str or None
+            File to optionally write the output to.
+
+        Returns
+        -------
+        list[str]
+            List of new file paths
+        list[str]
+            List of deleted file paths
+        list[str]
+            List of changed file paths (different hash)
+
+        Raises
+        ------
+        TypeError
+            if other_ggpk is not a GGPKFile instance
+        ValueError
+            if any of the GGPKFile instances are not parsed
+        ValueError
+            if any of the GGPKFile instances do not have their directory build
+        """
+        if not isinstance(other_ggpk, GGPKFile):
+            raise TypeError('other_ggpk must a parsed GGPK file instance')
+
+        if not self.is_parsed or  not other_ggpk.is_parsed:
+            raise ValueError('Both ggpk files must be parsed and have their '
+                             'directory build.')
+
+        data = [{'ggpk': self}, {'ggpk': other_ggpk}]
+
+        for gdict in data:
+            gdict['files'] = {}
+
+            def add_file(node, depth):
+                if not isinstance(node.record, FileRecord):
+                    return
+                gdict['files'][node.get_path()] = node.record.hash
+
+            gdict['ggpk'].directory.walk(add_file)
+
+            gdict['set'] = set(gdict['files'].keys())
+
+        new_files = sorted(list(data[0]['set'].difference(data[1]['set'])))
+        deleted_files = sorted(list(data[1]['set'].difference(data[0]['set'])))
+        changed_files = []
+        for fn in sorted(list(data[0]['set'].union(data[1]['set']))):
+                try:
+                    if data[0]['files'][fn] != data[1]['files'][fn]:
+                        changed_files.append(fn)
+                except KeyError:
+                    pass
+
+        if out_file:
+            with open(out_file, 'w') as f:
+                f.write('Diff between two ggpk files\n')
+                f.write('\n')
+
+                for header, k in (
+                    ('New files', new_files),
+                    ('Removed files', deleted_files),
+                    ('Changed files', changed_files),
+                ):
+                    f.write('\n')
+                    f.write('='*80)
+                    f.write('\n')
+                    f.write(header)
+                    f.write('\n\n')
+                    for fn in k:
+                        f.write(fn)
+                        f.write('\n')
+
+        return new_files, deleted_files, changed_files
+
     def directory_build(self, parent=None):
         """
         Rebuilds the directory or directory node. 
@@ -852,6 +937,9 @@ class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
     def read(self, file_path_or_raw, *args, **kwargs):
         super(GGPKFile, self).read(file_path_or_raw, *args, **kwargs)
         self._file_path_or_raw = file_path_or_raw
+
+
+
 
 
 if __name__ == '__main__':
