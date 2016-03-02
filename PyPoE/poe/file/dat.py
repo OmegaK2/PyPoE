@@ -506,6 +506,8 @@ class DatReader(ReprMixin):
         'uint': ['I', 4],
         'long': ['q', 8],
         'ulong': ['Q', 8],
+        'float': ['f', 4],
+        'double': ['d', 8],
     }
     _data_magic_number = b'\xBB\xbb\xBB\xbb\xBB\xbb\xBB\xbb'
 
