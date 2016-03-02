@@ -169,6 +169,7 @@ class BaseParser(object):
 
         opt = {
             'use_dat_value': False,
+            'auto_build_index': True,
         }
 
         # Load rr and translations which will be undoubtedly be needed for
