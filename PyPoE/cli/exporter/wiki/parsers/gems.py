@@ -362,10 +362,23 @@ class GemWikiHandler(WikiHandler):
         '==gem level progression==',
         re.UNICODE | re.IGNORECASE | re.MULTILINE)
 
-    regex_replace = re.compile(
+    regex_progression_replace = re.compile(
         '==gem level progression=='
         '.*?(?===[\w ]*==)',
         re.UNICODE | re.IGNORECASE | re.MULTILINE | re.DOTALL)
+
+    # This only works as long there aren't nested templates inside the infobox
+    regex_infobox_search = re.compile(
+        '\{\{Gem Infobox\n'
+        '(?P<data>[^\}]*)'
+        '\n\}\}',
+        re.UNICODE | re.IGNORECASE | re.MULTILINE | re.DOTALL
+    )
+
+    regex_infobox_split = re.compile(
+        '\|(?P<key>[\S]+)[\s]*=[\s]*(?P<value>[^|]*)',
+        re.UNICODE | re.IGNORECASE | re.MULTILINE | re.DOTALL,
+    )
 
     def _find_page(self, page_name):
         page = self.pws.pywikibot.Page(self.site, page_name)
@@ -387,14 +400,33 @@ class GemWikiHandler(WikiHandler):
             console('Can\'t find working wikipage. Skipping.', Msg.error)
             return
 
+        infobox = self.regex_infobox_search.search(page.text)
+        if not infobox:
+            console('Can\'t find gem infobox on wikipage "%s"' % page_name,
+                    msg=Msg.error)
+            return
+
+        for match in self.regex_infobox_split.finditer(infobox.group('data')):
+            k = match.group('key')
+            if k not in row['infobox'] and k != 'quality':
+                row['infobox'][k] = match.group('value').strip('\n')
+
+        infobox_text = ['{{Gem Infobox\n', ]
+        for k, v in row['infobox'].items():
+            infobox_text.append('|%s=%s\n' % (k, v))
+        infobox_text.append('}}\n')
+
+        new_text = page.text[:infobox.start()] + ''.join(infobox_text) + \
+                   page.text[infobox.end():]
+
         row['lines'].insert(0, '==Gem level progression==\n\n')
 
-        new_text = self.regex_replace.sub(''.join(row['lines']), page.text)
+        new_text = self.regex_progression_replace.sub(''.join(row['lines']), new_text)
 
         self.save_page(
             page=page,
             text=new_text,
-            message='Gem level progression',
+            message='Gem export',
         )
 
 
@@ -525,14 +557,69 @@ class GemsParser(BaseParser):
 
     _cp_columns = (
         'Level', 'LevelRequirement', 'ManaMultiplier', 'CriticalStrikeChance',
-        'ManaCost', 'DamageMultiplier', 'VaalSouls',
+        'ManaCost', 'DamageMultiplier', 'VaalSouls', 'VaalStoredUses',
+        'Cooldown', 'StoredUses'
     )
+
+    _column_map = OrderedDict((
+        ('ManaCost', {
+            'template': None, #'mana_cost',
+            'default': 0,
+            'format': lambda v: '{0:n}'.format(v),
+        }),
+        ('ManaMultiplier', {
+            'template': 'mana_cost_multiplier',
+            'default': 100,
+            'format': lambda v: '{0:n}'.format(v),
+        }),
+        ('StoredUses', {
+            'template': 'stored_uses',
+            'default': 0,
+            'format': lambda v: '{0:n}'.format(v),
+        }),
+        ('Cooldown', {
+            'template': 'cooldown',
+            'default': 0,
+            'format': lambda v: '{0:n}'.format(v/1000),
+        }),
+        ('VaalSouls', {
+            'template': 'souls_per_use',
+            'default': 0,
+            'format': lambda v: '{0:n} / {1:n} / {2:n}'.format(v, v*1.5, v*2),
+        }),
+        ('VaalStoredUses', {
+            'template': 'stored_uses',
+            'default': 0,
+            'format': lambda v: '{0:n}'.format(v),
+        }),
+        ('CriticalStrikeChance', {
+            'template': 'critical_strike_chance',
+            'default': None,
+            'format': lambda v: '{0:n}%'.format(v/100),
+        }),
+        ('DamageEffectiveness', {
+            'template': 'damage_effectiveness',
+            'default': 0,
+            'format': lambda v: '{0:n}%'.format(v+100),
+        }),
+        ('DamageMultiplier', {
+            'template': None,
+            'default': 0,
+            'format': lambda v: '{0:n}%'.format(v/100+100),
+        }),
+    ))
 
     _monster_level_stats = (
         'display_minion_monster_level',
         'base_active_skill_totem_level',
         'totem_support_gem_level',
     )
+
+    _attribute_map = {
+        'Str': 'Strength',
+        'Dex': 'Dexterity',
+        'Int': 'Intelligence',
+    }
 
     def _get_monster_data(self, gem_name):
         """
@@ -668,6 +755,8 @@ class GemsParser(BaseParser):
 
             gepl.sort(key=lambda x:x['Level'])
 
+            max_level = len(exp_total)-1
+
             is_aura = False
             is_minion = False
             is_totem = False
@@ -689,8 +778,6 @@ class GemsParser(BaseParser):
                     is_totem = True
                 elif tag['Id'] == 'bow':
                     is_bow = True
-
-            attributes = ['Str', 'Dex', 'Int']
 
             stat_ids = []
             stat_indexes = []
@@ -747,13 +834,13 @@ class GemsParser(BaseParser):
                         (tr, 'stats'),
                         (qtr, 'qstats'),
                 ):
-                    for i, stats in enumerate(result.found_ids):
+                    for j, stats in enumerate(result.found_ids):
                         k = '__'.join(stats)
                         stat_key_order[key][k] = None
                         data[key]['__'.join(stats)] = {
-                            'line': result.found_lines[i],
+                            'line': result.found_lines[j],
                             'stats': stats,
-                            'values': result.values[i],
+                            'values': result.values[j],
                         }
                     for stat, value in result.missing:
                         warnings.warn('Missing translation for %s' % stat)
@@ -797,8 +884,8 @@ class GemsParser(BaseParser):
 
             static = {
                 'columns': set(self._cp_columns),
-                'stats': stat_key_order['stats'],
-                'qstats': stat_key_order['qstats']
+                'stats': OrderedDict(stat_key_order['stats']),
+                'qstats': OrderedDict(stat_key_order['qstats']),
             }
             dynamic = {
                 'columns': set(),
@@ -834,7 +921,106 @@ class GemsParser(BaseParser):
 
 
             #
-            # Output handling
+            # Output handling for gem infobox
+            #
+            infobox = OrderedDict()
+
+            infobox['name'] = base_item_type['Name']
+
+            infobox['type'] = base_item_type['ItemClassesKey']['Id']
+
+            attrs = [(text, skill_gem[k]) for k, text in
+                     self._attribute_map.items() if skill_gem[k]]
+            attrs.sort(key=lambda row: row[1])
+            infobox['attributes'] = ', '.join(['[[%s]]' % a[0] for a in attrs])
+
+            infobox['keywords'] = ', '.join(
+                ['[[%s]]' % gtag['Tag'] for gtag in
+                 skill_gem['GemTagsKeys'] if gtag['Tag']]
+            )
+
+            infobox['required_level'] = level_data[0]['LevelRequirement']
+
+            ae = gepl[0]['ActiveSkillsKey']
+            if ae:
+                infobox['cast_time'] = '{0:n}s'.format(ae['CastTime'] / 1000)
+                infobox['description'] = ae['Description']
+            else:
+                infobox['cast_time'] = ''
+                infobox['description'] = ''
+
+            def infobox_set_range(key, column):
+                cdata = self._column_map[column]
+
+                if key is None:
+                    infobox[key] = ''
+                    return
+
+                if column in dynamic['columns']:
+                    infobox[key] = '%s to %s' % (
+                        cdata['format'](level_data[0][column]),
+                        cdata['format'](level_data[max_level][column])
+                    )
+                elif column in static['columns']:
+                    if level_data[0][column] == cdata['default']:
+                        infobox[key] = ''
+                        return
+
+                    infobox[key] = cdata['format'](level_data[0][column])
+
+            if is_aura:
+                infobox_set_range('mana_reserved', 'ManaCost')
+                infobox['mana_cost'] = ''
+            else:
+                infobox['mana_reserved'] = ''
+                infobox_set_range('mana_cost', 'ManaCost')
+
+            for column, data in self._column_map.items():
+                infobox_set_range(data['template'], column)
+
+            # Quality stats
+            lines = []
+            for key in static['qstats']:
+                stat_dict = level_data[0]['qstats'][key]
+                values = []
+                for v in stat_dict['values']:
+                    v /= 50
+                    values.append(int(v) if v.is_integer() else v)
+                lines.extend(tf.get_translation(stat_dict['stats'], values))
+
+
+            infobox['quality20'] = '<br>'.join(lines)
+
+            # Normal stats
+            lines = []
+            for key in stat_key_order['stats']:
+                if key in static['stats']:
+                    line = level_data[0]['stats'][key]['line']
+                elif key in dynamic['stats']:
+                    stat_dict = level_data[0]['stats'][key]
+                    stat_dict_max = level_data[max_level]['stats'][key]
+                    values = []
+                    for j, value in enumerate(stat_dict['values']):
+                        values.append((value, stat_dict_max['values'][j]))
+
+                    # Should only be one
+                    line = tf.get_translation(stat_dict['stats'], values)[0]
+
+                if line:
+                    lines.append(line)
+
+            for j, line in enumerate(lines):
+                infobox['modifier' + str(j+1)] = line
+
+            # Offset one because wiki starts 1
+            # And offset another one to avoid overriding the last modifier
+            for j in range(j+2, 9):
+                infobox['modifier' + str(j)] = ''
+
+            #print([(c, gepl[0][c]) for c in self.rr['GrantedEffectsPerLevel.dat'].columns_data if c.startswith('Un')])
+
+            #
+            # Output handling for progression
             #
             out = []
 
@@ -845,6 +1031,7 @@ class GemsParser(BaseParser):
             # Header
             #
             out.append('{{GemLevelTable\n')
+            attributes = ['Str', 'Dex', 'Int']
             for attr in tuple(attributes):
                 if skill_gem[attr]:
                     out.append('| %s=yes\n' % attr.lower())
@@ -887,7 +1074,7 @@ class GemsParser(BaseParser):
                         )
                         if not line:
                             # Remove missing translation
-                            dynamic[stat_key].remove(key)
+                            del dynamic[stat_key][key]
                             continue
                         else:
                             line = line[0]
@@ -945,7 +1132,6 @@ class GemsParser(BaseParser):
             elif base_item_type['ItemClassesKey']['Name'] == 'Support Skill Gems':
                 gtype = GemTypes.support
 
-            out.append('|-')
             for i, row in enumerate(level_data):
                 out.append('|- \n')
                 out.append('! %s\n' % row['Level'])
@@ -963,21 +1149,14 @@ class GemsParser(BaseParser):
                         ))
 
                 # Column handling
-                if 'ManaCost' in dynamic['columns']:
-                    add_line(row['ManaCost'])
-
-                if 'CriticalStrikeChance' in dynamic['columns']:
-                    add_line('{0:n}'.format(row['CriticalStrikeChance']/100))
-
-                if 'ManaMultiplier' in dynamic['columns']:
-                    add_line('{0:n}'.format(row['ManaMultiplier']))
-
-                if 'CriticalStrikeChance' in dynamic['columns']:
-                    add_line('{0:n}'.format(row['DamageMultiplier']/100+100))
+                for column in ('ManaCost', 'CriticialStrikeChance',
+                               'ManaMultiplier', 'DamageMultiplier'):
+                    if column in dynamic['columns']:
+                        add_line(self._column_map[column]['format'](row[column]))
 
                 # Stat handling
                 for stat_key in ('stats', 'qstats'):
-                    for key in row[stat_key]:
+                    for key in stat_key_order[stat_key]:
                         if key not in dynamic[stat_key]:
                             continue
 
@@ -1024,44 +1203,13 @@ class GemsParser(BaseParser):
                     except IndexError:
                         add_line('{{n/a}}')
 
-            '''
-
-
-                fmt_values = [row['Stat%sValue' % i] for i in stat_indexes]
-                values_result = tf.get_translation(stat_ids, fmt_values, full_result=True, only_values=True)
-                for j in range(0, len(values_result.values)):
-                    try:
-                        values_result.lines[j]
-                    except IndexError:
-                        values_result.lines.append([])
-
-                    for k in range(0, len(values_result.values[j])):
-                        value_real = values_result.values[j][k]
-                        try:
-                            value_fmt = values_result.lines[j][k]
-                        except IndexError:
-                            values_result.lines[j].append(0)
-                            value_fmt = value_real
-
-                        if isinstance(value_fmt, float):
-                            #if value_fmt.is_integer():
-                            #    value_fmt = '{0:n}'.format(value_fmt)
-                            value_fmt = '{0:.2f}'.format(value_fmt)
-                        else:
-                            value_fmt = '{0:n}'.format(value_fmt)
-
-                        if formatting_indexes[j][k]['%']:
-                            value_fmt += '%'
-                        elif formatting_indexes[j][k]['second']:
-                            value_fmt += 's'
-
-                        values_result.lines[j][k] = value_fmt])'''
-
             out.append('|}\n')
+
             r.add_result(
                 lines=out,
                 out_file='level_progression_%s.txt' % gem,
                 wiki_page=base_item_type['Name'],
+                infobox=infobox,
             )
 
         return r

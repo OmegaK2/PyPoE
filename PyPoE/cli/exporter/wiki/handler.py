@@ -74,7 +74,8 @@ class WikiHandler(object):
         )
         parser.add_argument(
             '--dry-run',
-            help='Don\'t actually save the wiki page',
+            dest='dry_run',
+            help='Don\'t actually save the wiki page and print it instead',
             action='store_true',
         )
 
@@ -83,8 +84,11 @@ class WikiHandler(object):
             console('No update required. Skipping.')
             return
 
-        page.text = text
-        page.save(pws.get_edit_message(message))
+        if self.cmdargs.dry_run:
+            print(text)
+        else:
+            page.text = text
+            page.save(pws.get_edit_message(message))
 
     def handle_page(self, *a, row):
         page_name = row['wiki_page']
@@ -213,9 +217,12 @@ class ExporterHandler(BaseHandler):
 
 
 class ExporterResult(list):
-    def add_result(self, lines=None, out_file=None, wiki_page=None):
-        self.append({
+    def add_result(self, lines=None, out_file=None, wiki_page=None, **extra):
+        data = {
             'lines': lines,
             'out_file': out_file,
             'wiki_page': wiki_page,
-        })
+        }
+        data.update(extra)
+
+        self.append(data)
