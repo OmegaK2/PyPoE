@@ -94,7 +94,7 @@ _inter_wiki_map = (
     ('Armour', {}),
     ('Energy Shield', {}),
     ('Evasion Rating', {}),
-    ('Evasion Rating', {}),
+    ('Evasion', {}),
     ('Spell Block', {}),
     ('Block', {}),
     ('Spell Dodge', {}),
@@ -120,9 +120,21 @@ _inter_wiki_map = (
     # Hostile
     ('Corrupted Blood', {}),
     #
-    # Items
+    # Misc stats
     #
 
+    ('Character Size', {}),
+    #
+    # Groups
+    #
+    ('Physical(?:Skill|Gem)', {'link': 'Physical Skills'}),
+    ('Fire (?:Skill|Gem)', {'link': 'Fire Skills'}),
+    ('Cold (?:Skill|Gem)', {'link': 'Cold Skills'}),
+    ('Lightning (?:Skill|Gem)', {'link': 'Lightning Skills'}),
+    ('Chaos (?:Skill|Gem)', {'link': 'Chaos Skills'}),
+    ('Melee (?:Skill|Gem)', {'link': 'Melee Skills'}),
+    ('Bow (?:Skill|Gem)', {'link': 'Bow Skills'}),
+    ('Minion (?:Skill|Gem)', {'link': 'Minion Skills'}),
 
     #
     # Skills
@@ -385,8 +397,32 @@ _inter_wiki_map = (
     ('Word of the Tempest', {}),
 
     #
+    # Armour & weapon types
+    #
+
+    # Generic
+    ('Two Handed Melee Weapons', {}),
+
+    # Armour
+    ('Shield', {}),
+
+    # Melee
+    ('Axe', {}),
+    ('Claw', {}),
+    ('Dagger', {}),
+    ('Mace', {}),
+    ('Staff|Staves', {'link': 'Staff'}),
+    ('Sword', {}),
+
+    # Range
+    ('Bow', {}),
+    ('Wand', {}),
+
+    #
     # Misc
     #
+    ('Spell', {}),
+    ('Attack', {}),
     ('Minion', {}),
     ('Mine', {}),
     ('Totem', {}),
@@ -399,10 +435,19 @@ _inter_wiki_map = (
     ('Charge', {}),
 )
 
-_inter_wiki_re = re.compile(
-    r'(?P<short>%s)(?:[\w]*)' % '|'.join([item[0] for item in _inter_wiki_map]),
-    re.UNICODE | re.MULTILINE | re.IGNORECASE
-)
+'''_inter_wiki_re = re.compile(
+    r'(?: |^)(?P<full>(?P<short>%s)(?:[\w]*))' % '|'.join([item[0] for item in _inter_wiki_map]),
+    re.UNICODE | re.IGNORECASE
+)'''
+_inter_wiki_re = []
+_MAX_RE = 97
+for i in range(0, (len(_inter_wiki_map)//_MAX_RE)+1):
+    id = i*_MAX_RE
+    _inter_wiki_re.append(re.compile(
+        r'(?: |^)(?P<full>(?P<short>%s)(?:[\w]*))' %
+        '|'.join(['(%s)' % item[0] for item in _inter_wiki_map[id:id+_MAX_RE]]),
+        re.UNICODE | re.IGNORECASE,
+    ))
 
 # =============================================================================
 # Classes
@@ -488,7 +533,7 @@ class BaseParser(object):
 
                 r1 = tr.get_language().get_string(default.values[i], default.indexes[i])
                 if r1 and r1[0]:
-                    temp_trans.append(self._HIDDEN_FORMAT % r1[0])
+                    temp_trans.append(self._format_hidden(r1[0]))
                     temp_ids.append(tr.ids)
 
                 for tid in tr.ids:
@@ -561,27 +606,29 @@ def make_inter_wiki_links(string):
     str
         String formatted with inter wiki links
     """
-    out = []
 
-    last_index = 0
+    for i, regex in enumerate(_inter_wiki_re):
+        out = []
+        last_index = 0
+        for match in regex.finditer(string):
+            full = match.group('full')
+            short = match.group('short')
+            # Offset by 2 to account for full/short groups
+            index = match.groups().index(short , 2)-2
+            data = _inter_wiki_map[i*_MAX_RE+index][1]
 
-    for match in _inter_wiki_re.finditer(string):
-        index = match.lastindex
-        full = match.group(0)
-        short = match.group('short')
-        index -= 1
+            out.append(string[last_index:match.start('full')])
 
-        out.append(string[last_index:match.start()])
+            if 'link' not in data and short == full:
+                out.append('[[%s]]' % full)
+            elif 'link' in data:
+                out.append('[[%s|%s]]' % (data['link'], full))
+            else:
+                out.append('[[%s|%s]]' % (short, full))
 
-        if 'link' not in _inter_wiki_map[index] and short == full:
-            out.append('[[%s]]' % full)
-        elif 'link' in _inter_wiki_map[index]:
-            out.append('[[%s|%s]]' % (_inter_wiki_map[index], full))
-        else:
-            out.append('[[%s|%s]]' % (short, full))
+            last_index = match.end('full')
 
-        last_index = match.end()
+        out.append(string[last_index:])
+        string = ''.join(out)
 
-    out.append(string[last_index:])
-
-    return ''.join(out)
+    return string

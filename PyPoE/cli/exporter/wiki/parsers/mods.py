@@ -242,7 +242,7 @@ class ModParser(BaseParser):
             requested_mods.pop(i)
             mods.append(mod)
 
-        return self.mod(self, args, mods)
+        return self.mod(args, mods)
 
     def rowid(self, args):
         mods = list(self.rr['Mods.dat'])
