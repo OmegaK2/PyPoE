@@ -369,7 +369,7 @@ class GemWikiHandler(WikiHandler):
 
     # This only works as long there aren't nested templates inside the infobox
     regex_infobox_search = re.compile(
-        '\{\{Gem Infobox\n'
+        '\{\{Gem[ _]Infobox\n'
         '(?P<data>[^\}]*)'
         '\n\}\}',
         re.UNICODE | re.IGNORECASE | re.MULTILINE | re.DOTALL
@@ -992,6 +992,7 @@ class GemsParser(BaseParser):
             infobox['quality20'] = '<br>'.join(lines)
 
             # Normal stats
+            # TODO: Loop properly - some stats not available at level 0
             lines = []
             for key in stat_key_order['stats']:
                 if key in static['stats']:
@@ -1004,7 +1005,8 @@ class GemsParser(BaseParser):
                         values.append((value, stat_dict_max['values'][j]))
 
                     # Should only be one
-                    line = tf.get_translation(stat_dict['stats'], values)[0]
+                    line = tf.get_translation(stat_dict['stats'], values)
+                    line = line[0] if line else ''
 
                 if line:
                     lines.append(line)
@@ -1160,8 +1162,16 @@ class GemsParser(BaseParser):
                         if key not in dynamic[stat_key]:
                             continue
 
+                        values = tf.get_translation(
+                            row[stat_key][key]['stats'],
+                            row[stat_key][key]['values'],
+                            only_values=True
+                        )
+                        if values:
+                            values = values[0]
+
                         values_formatted = []
-                        for j, value in enumerate(row[stat_key][key]['values']):
+                        for j, value in enumerate(values):
                             if isinstance(value, float):
                                 #if value_fmt.is_integer():
                                 #    value_fmt = '{0:n}'.format(value_fmt)
