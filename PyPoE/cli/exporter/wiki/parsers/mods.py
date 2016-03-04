@@ -40,6 +40,7 @@ import warnings
 from collections import OrderedDict
 
 # Self
+from PyPoE.poe.constants import MOD_DOMAIN, MOD_GENERATION_TYPE
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter.wiki.handler import *
 from PyPoE.cli.exporter.wiki.parser import BaseParser
@@ -133,7 +134,6 @@ class ModsHandler(ExporterHandler):
         sub = mparser.add_subparsers(help='Method of extracting mods')
 
         parser = sub.add_parser('modid', help='Use the string mod identifer')
-        parser.set_defaults(mod_selection_type='modid')
         parser.add_argument(
             'modid',
             help='Ids of the mods to update; can be specified multiple times',
@@ -143,12 +143,11 @@ class ModsHandler(ExporterHandler):
         self.add_default_parsers(
             parser=parser,
             cls=ModParser,
-            func=ModParser.mod,
+            func=ModParser.modid,
             wiki_handler=wiki_handler,
         )
 
         parser = sub.add_parser('rowid', help='Use the rowid')
-        parser.set_defaults(mod_selection_type='rowid')
         parser.add_argument(
             'start',
             help='Starting index',
@@ -167,7 +166,29 @@ class ModsHandler(ExporterHandler):
         self.add_default_parsers(
             parser=parser,
             cls=ModParser,
-            func=ModParser.mod,
+            func=ModParser.rowid,
+            wiki_handler=wiki_handler,
+        )
+
+        parser = sub.add_parser('filter', help='Filter mods')
+        parser.add_argument(
+            '--domain',
+            dest='domain',
+            help='Mod domain',
+            choices=[k.name for k in MOD_DOMAIN],
+        )
+
+        parser.add_argument(
+            '--generation-type', '--type',
+            dest='generation_type',
+            help='Mod domain',
+            choices=[k.name for k in MOD_GENERATION_TYPE],
+        )
+
+        self.add_default_parsers(
+            parser=parser,
+            cls=ModParser,
+            func=ModParser.filter,
             wiki_handler=wiki_handler,
         )
 
@@ -207,49 +228,79 @@ class ModParser(BaseParser):
                 value = '(%s to %s)' % tuple(value)
             mylist.append('* %s %s' % (stat_id, value))
 
-    def mod(self, args):
+    def modid(self, args):
         mods = []
 
-        if args.mod_selection_type == 'modid':
-            requested_mods = list(args.modid)
+        requested_mods = list(args.modid)
 
-            for mod in self.rr['Mods.dat']:
-                try:
-                    i = requested_mods.index(mod['Id'])
-                except ValueError:
-                    continue
+        for mod in self.rr['Mods.dat']:
+            try:
+                i = requested_mods.index(mod['Id'])
+            except ValueError:
+                continue
 
-                requested_mods.pop(i)
-                mods.append(mod)
-        elif args.mod_selection_type == 'rowid':
-            mods = list(self.rr['Mods.dat'])
-            l = len(mods)
+            requested_mods.pop(i)
+            mods.append(mod)
 
-            # Warnings only to make it a bit more user friendly
-            if abs(args.start) > len(mods):
+        return self.mod(self, args, mods)
+
+    def rowid(self, args):
+        mods = list(self.rr['Mods.dat'])
+        l = len(mods)
+
+        # Warnings only to make it a bit more user friendly
+        if abs(args.start) > len(mods):
+            warnings.warn(
+                'Specified minimum index "%s" is larger then the total '
+                'number of mods (%s).' % (args.start, l),
+                OutOfBoundsWarning,
+            )
+
+        if args.end is not None:
+            if abs(args.end) > len(mods):
                 warnings.warn(
-                    'Specified minimum index "%s" is larger then the total '
-                    'number of mods (%s).' % (args.start, l),
+                    'Specified maximum index "%s" is larger then the total '
+                    'number of mods (%s).' % (args.end, l),
                     OutOfBoundsWarning,
                 )
 
-            if args.end is not None:
-                if abs(args.end) > len(mods):
-                    warnings.warn(
-                        'Specified maximum index "%s" is larger then the total '
-                        'number of mods (%s).' % (args.end, l),
-                        OutOfBoundsWarning,
-                    )
+            if args.start >=0 and args.end >= 0 and args.start > args.end:
+                warnings.warn(
+                    'Specified maximum index "%s" is smaller then the '
+                    'specified minimum index "%s"' % (args.end, args.start),
+                    OutOfBoundsWarning,
+                )
 
-                if args.start >=0 and args.end >= 0 and args.start > args.end:
-                    warnings.warn(
-                        'Specified maximum index "%s" is smaller then the '
-                        'specified minimum index "%s"' % (args.end, args.start),
-                        OutOfBoundsWarning,
-                    )
+        mods = mods[args.start:args.end]
 
-            mods = mods[args.start:args.end]
+        return self.mod(args, mods)
 
+    def filter(self, args):
+        mods = []
+
+        filters = []
+        if args.domain:
+            filters.append({
+                'column': 'Domain',
+                'comp': getattr(MOD_DOMAIN, args.domain),
+            })
+
+        if args.generation_type:
+            filters.append({
+                'column': 'GenerationType',
+                'comp': getattr(MOD_GENERATION_TYPE, args.generation_type),
+            })
+
+        for mod in self.rr['Mods.dat']:
+            for filter in filters:
+                if mod[filter['column']] != filter['comp']:
+                    break
+            else:
+                mods.append(mod)
+
+        return self.mod(args, mods)
+
+    def mod(self, args, mods):
         r = ExporterResult()
 
         if mods:

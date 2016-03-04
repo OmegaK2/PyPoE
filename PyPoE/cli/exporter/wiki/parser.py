@@ -34,6 +34,7 @@ import warnings
 import re
 
 # self
+from PyPoE.poe.constants import MOD_DOMAIN
 from PyPoE.poe.file.dat import RelationalReader
 from PyPoE.poe.file.translations import (
     TranslationFileCache,
@@ -64,9 +65,11 @@ _inter_wiki_map = (
     ('Cast Speed', {}),
     ('Critical Strike Chance', {}),
     ('Critical Strike Multiplier', {}),
+    ('Critical Strike', {}),
     ('Movement Speed', {}),
     ('Leech', {}), # Life Leech, Mana Leech
     ('Life', {}),
+    ('Mana Reservation', {}),
     ('Mana', {}),
     #
     # Damage
@@ -117,10 +120,269 @@ _inter_wiki_map = (
     # Hostile
     ('Corrupted Blood', {}),
     #
+    # Items
+    #
+
+
+    #
     # Skills
     #
+    ('Abyssal Cry', {}),
+    ('Ancestral Protector', {}),
+    ('Anger', {}),
+    ('Animate(?:|d) Guardian', {'link': 'Animate Guardian'}),
+    ('Animate(?:|d) Weapon', {'link': 'Animate Weapon'}),
+    ('Arc ', {'link': 'Arc'}),
+    ('Arctic Armour', {}),
+    ('Arctic Breath', {}),
+    ('Assassin\'s Mark', {}),
+    ('Ball Lightning', {}),
+    ('Barrage', {}),
+    ('Bear Trap', {}),
+    ('Blade Trap', {}),
+    ('Blade Vortex', {}),
+    ('Bladefall', {}),
+    ('Blast Rain', {}),
+    ('Blight', {}),
+    ('Blink Arrow', {}),
+    ('Blood Rage', {}),
+    ('Bone Offering', {}),
+    ('Burning Arrow', {}),
+    ('Caustic Arrow', {}),
+    ('Clarity', {}),
+    ('Cleave', {}),
+    ('Cold Snap', {}),
+    ('Conductivity', {}),
+    ('Contagion', {}),
+    ('Conversion Trap', {}),
+    ('Convocation', {}),
+    ('Cyclone', {}),
+    ('Damage Infusion', {}),
+    ('Decoy Totem', {}),
+    ('Desecrate', {}),
+    ('Determination', {}),
+    ('Detonate Dead', {}),
+    ('Detonate Mines', {}),
+    ('Devouring Totem', {}),
+    ('Discharge', {}),
+    ('Discipline', {}),
+    ('Dominating Blow', {}),
+    ('Doom Arrow', {}),
+    ('Double Strike', {}),
+    ('Dual Strike', {}),
+    ('Earthquake', {}),
+    ('Elemental Hit', {}),
+    ('Elemental Weakness', {}),
+    ('Enduring Cry', {}),
+    ('Energy Beam', {}),
+    ('Enfeeble', {}),
+    ('Essence Drain', {}),
+    ('Ethereal Knives', {}),
     ('Explosive Arrow', {}),
+    ('Fire Nova Mine', {}),
+    ('Fire Trap', {}),
+    ('Fire Weapon', {}),
+    ('Fireball', {}),
+    ('Firestorm', {}),
+    ('Flame Dash', {}),
+    ('Flame Surge', {}),
+    ('Flame Totem', {}),
+    ('Flameblast', {}),
+    ('Flammability', {}),
+    ('Flesh Offering', {}),
+    ('Flicker Strike', {}),
+    ('Freeze Mine', {}),
+    ('Freezing Pulse', {}),
+    ('Frenzy', {}),
+    ('Frost Blades', {}),
+    ('Frost Bomb', {}),
+    ('Frost Wall', {}),
+    ('Frostbite', {}),
+    ('Glacial Cascade', {}),
+    ('Glacial Hammer', {}),
+    ('Grace', {}),
+    ('Ground Slam', {}),
+    ('Haste', {}),
+    ('Hatred', {}),
+    ('Heavy Strike', {}),
+    ('Herald of Ash', {}),
+    ('Herald of Blood', {}),
+    ('Herald of Ice', {}),
+    ('Herald of Thunder', {}),
+    ('Ice Crash', {}),
+    ('Ice Nova', {}),
+    ('Ice Shot', {}),
+    ('Ice Spear', {}),
+    ('Ice Trap', {}),
+    ('Ignite', {}),
+    ('Immortal Call', {}),
+    ('Incinerate', {}),
+    ('Infernal Blow', {}),
+    ('Kinetic Blast', {}),
+    ('Leap Slam', {}),
+    ('Lightning Arrow', {}),
+    ('Lightning Channel', {}),
+    ('Lightning Circle', {}),
+    ('Lightning Strike', {}),
+    ('Lightning Tendrils', {}),
+    ('Lightning Trap', {}),
+    ('Lightning Warp', {}),
+    ('Magma Orb', {}),
+    ('Mirror Arrow', {}),
+    ('Molten Shell', {}),
+    ('Molten Strike', {}),
+    ('Orb of Storms', {}),
+    ('Phase Run', {}),
+    ('Poacher\'s Mark', {}),
+    ('Portal', {}),
+    ('Power Siphon', {}),
+    ('Projectile Weakness', {}),
+    ('Puncture', {}),
+    ('Punishment', {}),
+    ('Purity of Elements', {}),
+    ('Purity of Fire', {}),
+    ('Purity of Ice', {}),
+    ('Purity of Lightning', {}),
+    ('Rain of Arrows', {}),
+    ('Raise Spectre', {}),
+    ('Raise Zombie', {}),
+    ('Rallying Cry', {}),
+    ('Reave', {}),
+    ('Reckoning', {}),
+    ('Rejuvenation Totem', {}),
+    ('Righteous Fire', {}),
+    ('Righteous Lightning', {}),
+    ('Riposte', {}),
+    ('Searing Bond', {}),
+    ('Shadow Blades', {}),
+    ('Shield Charge', {}),
+    ('Shock Nova', {}),
+    ('Shockwave Totem', {}),
+    ('Shrapnel Shot', {}),
+    ('Siege Ballista', {}),
+    ('Smoke Mine', {}),
+    ('Spark', {}),
+    ('Spectral Throw', {}),
+    ('Split Arrow', {}),
+    ('Static Strike', {}),
+    ('Static Tether', {}),
+    ('Storm Call', {}),
+    ('Summon Chaos Golem', {}),
+    ('Summon Flame Golem', {}),
+    ('Summon Ice Golem', {}),
+    ('Summon Lightning Golem', {}),
+    ('Summon Raging Spirit', {}),
+    ('Summon Skeletons', {}),
+    ('Summon Stone Golem', {}),
+    ('Sunder', {}),
+    ('Sweep', {}),
+    ('Tempest Shield', {}),
+    ('Temporal Chains', {}),
+    ('Tornado Shot', {}),
+    ('Vaal Arc', {}),
+    ('Vaal Burning Arrow', {}),
+    ('Vaal Clarity', {}),
+    ('Vaal Cold Snap', {}),
+    ('Vaal Cyclone', {}),
+    ('Vaal Detonate Dead', {}),
+    ('Vaal Discipline', {}),
+    ('Vaal Double Strike', {}),
+    ('Vaal FireTrap', {}),
+    ('Vaal Fireball', {}),
+    ('Vaal Flameblast', {}),
+    ('Vaal Glacial Hammer', {}),
+    ('Vaal Grace', {}),
+    ('Vaal Ground Slam', {}),
+    ('Vaal Haste', {}),
+    ('Vaal Heavy Strike', {}),
+    ('Vaal Ice Nova', {}),
+    ('Vaal Immortal Call', {}),
+    ('Vaal Lightning Strike', {}),
+    ('Vaal Lightning Trap', {}),
+    ('Vaal Lightning Warp', {}),
+    ('Vaal Molten Shell', {}),
+    ('Vaal Power Siphon', {}),
+    ('Vaal Rain of Arrows', {}),
+    ('Vaal Reave', {}),
+    ('Vaal Righteous Fire', {}),
+    ('Vaal Spark', {}),
+    ('Vaal Spectral Throw', {}),
+    ('Vaal Storm Call', {}),
+    ('Vaal Summon Skeletons', {}),
+    ('Vaal Sweep', {}),
+    ('Vengeance', {}),
+    ('Vigilant Strike', {}),
     ('Viper Strike', {}),
+    ('Vitality', {}),
+    ('Vulnerability', {}),
+    ('Warlord\'s Mark', {}),
+    ('Whirling Blades', {}),
+    ('Wild Strike', {}),
+    ('Wither', {}),
+    ('Wrath', {}),
+    #
+    # Enchantment skills
+    #
+    ('Commandment of Blades', {}),
+    ('Commandment of Flames', {}),
+    ('Commandment of Force', {}),
+    ('Commandment of Frost', {}),
+    ('Commandment of Fury', {}),
+    ('Commandment of Inferno', {}),
+    ('Commandment of Ire', {}),
+    ('Commandment of Light', {}),
+    ('Commandment of Reflection', {}),
+    ('Commandment of Spite', {}),
+    ('Commandment of Thunder', {}),
+    ('Commandment of War', {}),
+    ('Commandment of Winter', {}),
+    ('Commandment of the Grave', {}),
+    ('Commandment of the Tempest', {}),
+    ('Decree of Blades', {}),
+    ('Decree of Flames', {}),
+    ('Decree of Force', {}),
+    ('Decree of Frost', {}),
+    ('Decree of Fury', {}),
+    ('Decree of Inferno', {}),
+    ('Decree of Ire', {}),
+    ('Decree of Light', {}),
+    ('Decree of Reflection', {}),
+    ('Decree of Spite', {}),
+    ('Decree of Thunder', {}),
+    ('Decree of War', {}),
+    ('Decree of Winter', {}),
+    ('Decree of the Grave', {}),
+    ('Decree of the Tempest', {}),
+    ('Edict of Blades', {}),
+    ('Edict of Flames', {}),
+    ('Edict of Force', {}),
+    ('Edict of Frost', {}),
+    ('Edict of Fury', {}),
+    ('Edict of Inferno', {}),
+    ('Edict of Ire', {}),
+    ('Edict of Light', {}),
+    ('Edict of Reflection', {}),
+    ('Edict of Spite', {}),
+    ('Edict of Thunder', {}),
+    ('Edict of War', {}),
+    ('Edict of Winter', {}),
+    ('Edict of the Grave', {}),
+    ('Edict of the Tempest', {}),
+    ('Word of Blades', {}),
+    ('Word of Flames', {}),
+    ('Word of Force', {}),
+    ('Word of Frost', {}),
+    ('Word of Fury', {}),
+    ('Word of Inferno', {}),
+    ('Word of Ire', {}),
+    ('Word of Light', {}),
+    ('Word of Reflection', {}),
+    ('Word of Spite', {}),
+    ('Word of Thunder', {}),
+    ('Word of War', {}),
+    ('Word of Winter', {}),
+    ('Word of the Grave', {}),
+    ('Word of the Tempest', {}),
 
     #
     # Misc
@@ -132,10 +394,13 @@ _inter_wiki_map = (
     ('Dual Wield', {}),
     ('Level', {}),
     ('PvP', {}),
+    ('Hit', {}),
+    ('Kill', {}),
+    ('Charge', {}),
 )
 
 _inter_wiki_re = re.compile(
-    '|'.join([r'(%s)(?:[\w]*)' % item[0] for item in _inter_wiki_map]),
+    r'(?P<short>%s)(?:[\w]*)' % '|'.join([item[0] for item in _inter_wiki_map]),
     re.UNICODE | re.MULTILINE | re.IGNORECASE
 )
 
@@ -193,7 +458,7 @@ class BaseParser(object):
     def _get_stats(self, mod, translation_file=None):
         result = get_translation(mod, self.tc, translation_file)
 
-        if mod['Domain'] == 3:
+        if mod['Domain'] == MOD_DOMAIN.MONSTER:
             default = self.tc['stat_descriptions.txt'].get_translation(
                 result.source_ids, result.source_values, full_result=True
             )
@@ -206,12 +471,12 @@ class BaseParser(object):
                     if tr.ids != tr2.ids:
                         continue
 
-                    r1 = tr.get_language().get_string(default.values[i], default.indexes[i])[0]
-                    r2 = tr2.get_language().get_string(result.values[j], result.indexes[j])[0]
-                    if r1 != r2:
-                        temp_trans.append(self._format_detailed(r1, r2))
-                    elif r2:
-                        temp_trans.append(self._format_hidden(r2))
+                    r1 = tr.get_language().get_string(default.values[i], default.indexes[i])
+                    r2 = tr2.get_language().get_string(result.values[j], result.indexes[j])
+                    if r1 and r2 and r1[0] != r2[0]:
+                        temp_trans.append(self._format_detailed(r1[0], r2[0]))
+                    elif r2 and r2[0]:
+                        temp_trans.append(self._format_hidden(r2[0]))
                     temp_ids.append(tr.ids)
 
                 is_missing = True
@@ -221,9 +486,9 @@ class BaseParser(object):
                 if not is_missing:
                     continue
 
-                r1 = tr.get_language().get_string(default.values[i], default.indexes[i])[0]
-                if r1:
-                    temp_trans.append(self._HIDDEN_FORMAT % r1)
+                r1 = tr.get_language().get_string(default.values[i], default.indexes[i])
+                if r1 and r1[0]:
+                    temp_trans.append(self._HIDDEN_FORMAT % r1[0])
                     temp_ids.append(tr.ids)
 
                 for tid in tr.ids:
@@ -286,11 +551,15 @@ def make_inter_wiki_links(string):
     Formats the given string according to the predefined inter wiki formatting
     rules and returns it.
 
-    :param string: String to format
-    :type string: str
+    Parameters
+    ----------
+    string : str
+        String to format
 
-    :return: String formatted with inter wiki links
-    :rtype: str
+    Returns
+    -------
+    str
+        String formatted with inter wiki links
     """
     out = []
 
@@ -299,7 +568,7 @@ def make_inter_wiki_links(string):
     for match in _inter_wiki_re.finditer(string):
         index = match.lastindex
         full = match.group(0)
-        short = match.group(index)
+        short = match.group('short')
         index -= 1
 
         out.append(string[last_index:match.start()])
