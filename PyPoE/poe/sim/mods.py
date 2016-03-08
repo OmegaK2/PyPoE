@@ -67,14 +67,10 @@ __all__ = [
     'get_translation',
 ]
 
-_translation_map_to_domain = {
+_translation_map = {
     MOD_DOMAIN.MONSTER: 'monster_stat_descriptions.txt',
     MOD_DOMAIN.CHEST: 'chest_stat_descriptions.txt',
     MOD_DOMAIN.AREA: 'map_stat_descriptions.txt',
-}
-
-_translation_map_to_generation_type = {
-    MOD_GENERATION_TYPE.ENCHANTMENT: 'skill_stat_descriptions.txt',
 }
 
 # =============================================================================
@@ -264,12 +260,9 @@ def get_translation(mod, translation_cache, translation_file=None, **kwargs):
         ids.append(stat['Id'])
 
     if translation_file is None:
-        tf_name = _translation_map_to_domain.get(mod['Domain'])
-        if tf_name is None:
-            tf_name = _translation_map_to_generation_type.get(
-                mod['GenerationType']
-            )
-        if tf_name is None:
+        try:
+            tf_name = _translation_map[mod['Domain']]
+        except KeyError:
             tf_name = 'stat_descriptions.txt'
     else:
         tf_name = translation_file
