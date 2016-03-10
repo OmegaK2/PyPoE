@@ -104,7 +104,7 @@ def get_test(size, unid, nresults, values):
 # =============================================================================
 
 
-class TestTranslation:
+class TestTranslationResults:
     def build_get_translation_data(self=None):
         test_data = []
         for size, unique_id, values in data['base']:
@@ -152,6 +152,30 @@ class TestTranslation:
         tr = dbase.get_translation(tags, values, full_result=True)
 
         assert tr.lines == [], 'Not in range value returned a result'
+
+    def test_plus(self, dbase):
+        tags = ['test_plus', ]
+        values = [20, ]
+        result = ['Plus: +20']
+
+        assert dbase.get_translation(tags, values) == result, 'Incorrect handling of $+d'
+
+        trr = dbase.reverse_translation(result[0])
+
+        assert trr.translations[0].ids == tags, '$+d reverse failed: incorrect tags'
+        assert trr.values[0] == values, '%+d failed reverse: incorrect values'
+
+    def test_multiple_values(self, dbase):
+        tags = ['test_multiple_values', 'test_multiple_values2']
+        values = [42, 1337]
+        result = ['Multiple: 42 1337 42 1337']
+
+        assert dbase.get_translation(tags, values) == result, 'Incorrect handling of multiple values'
+
+        trr = dbase.reverse_translation(result[0])
+
+        assert trr.translations[0].ids == tags, 'Multivalue reverse failed: incorrect tags'
+        assert trr.values[0] == values, 'Multivalue failed reverse: incorrect values'
 
 
 class TestTranslationFileCache:

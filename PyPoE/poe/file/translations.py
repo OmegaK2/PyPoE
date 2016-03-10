@@ -430,18 +430,24 @@ class TranslationString(TranslationReprMixin):
         index
     strings : list[str]
         translation string broken down into segments
-    tags : list[str]
+    tags : list[int]
         tags for value replacement between segments
+    tags_types : list[str]
+        list of tag types
     """
 
-    __slots__ = ['parent', 'quantifier', 'range', 'strings', 'tags']
+    __slots__ = ['parent', 'quantifier', 'range', 'strings', 'tags',
+                 'tags_types']
     
     _REPR_EXTRA_ATTRIBUTES = OrderedDict((
         ('string', None),
     ))
 
     # replacement tags used in translations
-    _re_split = re.compile(r'(?:%(?P<id>[0-9]+)(?:%|\$\+d))', re.UNICODE)
+    _re_split = re.compile(
+        r'(?:%(?P<id>[0-9]+)(?P<type>%|\$\+d))',
+        re.UNICODE
+    )
 
     def __init__(self, parent):
         parent.strings.append(self)
@@ -449,6 +455,7 @@ class TranslationString(TranslationReprMixin):
         self.quantifier = TranslationQuantifier()
         self.range = []
         self.tags = []
+        self.tags_types = []
         self.strings = []
 
     @property
@@ -462,7 +469,9 @@ class TranslationString(TranslationReprMixin):
         s = []
         for i, tag in enumerate(self.tags):
             s.append(self.strings[i])
-            s.append(str(tag))
+            s.append('%')
+            s.append(str(tag+1))
+            s.append(self.tags_types[i])
         s.append(self.strings[-1])
         return ''.join(s)
 
@@ -492,6 +501,7 @@ class TranslationString(TranslationReprMixin):
             self.strings.append(string[start:match.start()])
             # Py indexes start at 0, not at 1
             self.tags.append(int(match.group('id'))-1)
+            self.tags_types.append(match.group('type'))
             start = match.end()
         self.strings.append(string[start:])
 
@@ -556,6 +566,9 @@ class TranslationString(TranslationReprMixin):
         for i, tagid in enumerate(self.tags):
             if not only_values:
                 string.append(self.strings[i])
+                # The case % is normal substitution
+                if self.tags_types[i] == '$+d':
+                    string.append('+')
             string.append(replace[tagid])
             used.add(tagid)
 
