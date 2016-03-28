@@ -52,21 +52,6 @@ data_dir = os.path.join(cur_dir, '_data')
 dbase_path = os.path.join(data_dir, 'Metadata', 'descriptions_base.txt')
 dextended_path = os.path.join(data_dir, 'Metadata', 'descriptions_extended.txt')
 
-data = {
-    'base': (
-        # Size, Unique ID,  values
-        (1, 1, ((1, ), )),
-        (1, 2, ((40, ), (1, ))),
-        (1, 3, ((1, ), )),
-        (1, 4, ((1, ), )),
-        (2, 1, ((1, 99), (99, 1), (99, 99))),
-        (3, 1, ((50, 1, 1), (100, 1, 1))),
-    ),
-    'quantifier': (
-
-    ),
-}
-
 # =============================================================================
 # Fixtures
 # =============================================================================
@@ -105,14 +90,91 @@ def get_test(size, unid, nresults, values):
 
 
 class TestTranslationResults:
-    def build_get_translation_data(self=None):
-        test_data = []
-        for size, unique_id, values in data['base']:
-            tags, results = get_test(size, unique_id, len(values), values)
-            for i, v in enumerate(values):
-                test_data.append((tags, v, results[i]))
+    #
+    # Data for this section
+    #
+    data = {
+        'base': (
+            # Size, Unique ID,  values
+            (1, 1, ((1, ), )),
+            (1, 2, ((40, ), (1, ))),
+            (1, 3, ((1, ), )),
+            (1, 4, ((1, ), )),
+            (2, 1, ((1, 99), (99, 1), (99, 99))),
+            (3, 1, ((50, 1, 1), (100, 1, 1))),
+        ),
+        'quantifier': (
 
-        return test_data
+        ),
+    }
+
+    functionality_tests = (
+        # Tags, values, result, message, trr,
+        (
+            ['tag_skip_size2_uq1_no1', 'tag_skip_size2_uq1_no2'],
+            [1, 50],
+            ['tag_skip_size2_uq1_v1: 50'],
+            'Value skip',
+            {},
+            {},
+        ),
+        (
+            ['test_plus', ],
+            [20, ],
+            ['Plus: +20'],
+            '$+d format',
+            {},
+            {},
+        ),
+        (
+            ['test_multiple_values', 'test_multiple_values2'],
+            [42, 1337],
+            ['Multiple: 42 1337 42 1337'],
+            'multiple values',
+            {},
+            {},
+        ),
+        (
+            ['test_value_not_in_range', ],
+            [0, ],
+            [],
+            'value not in range',
+            {},
+            None,
+        ),
+        (
+            ['test_placeholder1', 'test_placeholder2', 'test_placeholder3',
+             'test_placeholder4'],
+            [50, 100, 150, 200],
+            ['Placeholder: x y z A'],
+            'placeholder',
+            {
+                'use_placeholder': True,
+            },
+            None,
+        ),
+        (
+            ['test_placeholder1', 'test_placeholder2', 'test_placeholder3',
+             'test_placeholder4'],
+            [50, 100, 150, 200],
+            ['Placeholder: 2 4 6 8'],
+            'placeholder',
+            {
+                'use_placeholder': lambda i: str(i*2+2),
+            },
+            None,
+        ),
+    )
+
+    test_data = []
+    for size, unique_id, values in data['base']:
+        tags, results = get_test(size, unique_id, len(values), values)
+        for i, v in enumerate(values):
+            test_data.append((tags, v, results[i]))
+
+    #
+    # Actual tests
+    #
 
     def test_read(self, dbase):
         pass
@@ -120,11 +182,11 @@ class TestTranslationResults:
     def test_read_with_include(self, dextended):
         pass
 
-    @pytest.mark.parametrize('tags,values,result', build_get_translation_data())
+    @pytest.mark.parametrize('tags,values,result', test_data)
     def test_get_translation_simple(self, dbase, tags, values, result):
         assert dbase.get_translation(tags, values)[0] == result
 
-    @pytest.mark.parametrize('tags,values,string', build_get_translation_data())
+    @pytest.mark.parametrize('tags,values,string', test_data)
     def test_reverse_translation_simple(self, dbase, string, values, tags):
         trr = dbase.reverse_translation(string)
         # Returns a list of matching translations/values, but our test data
@@ -132,50 +194,17 @@ class TestTranslationResults:
         assert trr.values[0] == list(values)
         assert trr.translations[0].ids == tags
 
-    def test_skip(self, dbase):
-        tags = ['tag_skip_size2_uq1_no1', 'tag_skip_size2_uq1_no2']
-        values = [1, 50]
-        result = 'tag_skip_size2_uq1_v1: 50'
+    @pytest.mark.parametrize('tags,values,result,message,kwargs,rkwargs',
+                             functionality_tests)
+    def test_functionality(self, dbase, tags, values, result, message, kwargs,
+                           rkwargs):
 
-        assert dbase.get_translation(tags, values)[0] == result, 'Value skip normal failed'
+        assert dbase.get_translation(tags, values, **kwargs) == result, "%s: normal failed" % message
 
-        trr = dbase.reverse_translation(result)
-
-        assert trr.translations[0].ids == tags, 'Value skip reverse failed: incorrect tags'
-        assert trr.values[0] == values, 'Value skip failed reverse: incorrect values'
-
-    def test_value_not_in_range(self, dbase):
-        tags = ['test_value_not_in_range', ]
-        values = [0, ]
-        result = []
-
-        tr = dbase.get_translation(tags, values, full_result=True)
-
-        assert tr.lines == [], 'Not in range value returned a result'
-
-    def test_plus(self, dbase):
-        tags = ['test_plus', ]
-        values = [20, ]
-        result = ['Plus: +20']
-
-        assert dbase.get_translation(tags, values) == result, 'Incorrect handling of $+d'
-
-        trr = dbase.reverse_translation(result[0])
-
-        assert trr.translations[0].ids == tags, '$+d reverse failed: incorrect tags'
-        assert trr.values[0] == values, '%+d failed reverse: incorrect values'
-
-    def test_multiple_values(self, dbase):
-        tags = ['test_multiple_values', 'test_multiple_values2']
-        values = [42, 1337]
-        result = ['Multiple: 42 1337 42 1337']
-
-        assert dbase.get_translation(tags, values) == result, 'Incorrect handling of multiple values'
-
-        trr = dbase.reverse_translation(result[0])
-
-        assert trr.translations[0].ids == tags, 'Multivalue reverse failed: incorrect tags'
-        assert trr.values[0] == values, 'Multivalue failed reverse: incorrect values'
+        if rkwargs is not None:
+            trr = dbase.reverse_translation(result[0], **rkwargs)
+            assert trr.translations[0].ids == tags, '%s: reverse failed incorrect tags' % message
+            assert trr.values[0] == values, '%s: failed reverse incorrect values' % message
 
 
 class TestTranslationFileCache:

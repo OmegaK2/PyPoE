@@ -325,8 +325,7 @@ class TranslationLanguage(TranslationReprMixin):
         returns the string and any left over (unused) values.
 
         If use_placeholder is specified, the values will be replaced with
-        a placeholder instead of the actual value, however in order to determine
-        the correct string within the range, values are still required.
+        a placeholder instead of the actual value.
 
         If only_values is specified, the instead of the string the formatted
         values will be returned.
@@ -339,8 +338,13 @@ class TranslationLanguage(TranslationReprMixin):
         indexes : list[int]
             A list of relevant indexes corresponding to the values for this
             string.
-        use_placeholder : bool
-            Whether to use placeholders instead of the actual values.
+        use_placeholder : bool or callable
+            If true, Instead of values in the translations a placeholder (i.e.
+            x, y, z) will be used. Values are still required however to find
+            the "correct" wording of the translation.
+            If a callable is specified, it will call the function with
+            the index as first parameter. The callable should return a
+            string to use as placeholder.
         only_values : bool
             Whether to return formatted values instead of the formatted string.
 
@@ -536,8 +540,13 @@ class TranslationString(TranslationReprMixin):
         is_range : list[bool]
             List of bools representing whether the values at the list index is
             a range or not
-        use_placeholder : bool
-            Use a placeholder instead of replacing the values
+        use_placeholder : bool or callable
+            If true, Instead of values in the translations a placeholder (i.e.
+            x, y, z) will be used. Values are still required however to find
+            the "correct" wording of the translation.
+            If a callable is specified, it will call the function with
+            the index as first parameter. The callable should return a
+            string to use as placeholder.
         only_values : bool
             Only return the values and not
 
@@ -553,12 +562,15 @@ class TranslationString(TranslationReprMixin):
 
         replace = []
         for i, val in enumerate(values):
-            if use_placeholder:
+            if not use_placeholder:
+                if is_range[i]:
+                    val = '(%s to %s)' % tuple(val)
+                else:
+                    val = str(val)
+            elif use_placeholder is True:
                 val = ascii_letters[23+i]
-            elif is_range[i]:
-                val = '(%s to %s)' % tuple(val)
-            else:
-                val = str(val)
+            elif callable(use_placeholder):
+                val = use_placeholder(i)
             replace.append(val)
 
         string = []
@@ -1273,12 +1285,8 @@ class TranslationFile(AbstractFileReadOnly):
 
         Generally the list of values should be the size of the number of tags.
 
-        If instead of the real value a placeholder (i.e. x, y, z) is desired
-        use_placeholder should be set to True. However, the according values
-        still need to be specified; this is done so that the appropriate
-        translation can be selected - i.e. the translation changes depending
-        on the values.
-
+        If instead of the real value a placeholder is desired use_placeholder
+        can be used.
 
         Parameters
         ----------
@@ -1294,10 +1302,13 @@ class TranslationFile(AbstractFileReadOnly):
             fallback.
         full_result : bool
             If true, a :class:`TranslationResult` object will  be returned
-        use_placeholder : bool
+        use_placeholder : bool or callable
             If true, Instead of values in the translations a placeholder (i.e.
             x, y, z) will be used. Values are still required however to find
             the "correct" wording of the translation.
+            If a callable is specified, it will call the function with
+            the index as first parameter. The callable should return a
+            string to use as placeholder.
         only_values : bool
             If true, only the handled values instead of the string are returned
 
