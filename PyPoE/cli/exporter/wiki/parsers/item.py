@@ -45,27 +45,16 @@ from PyPoE.cli.exporter.wiki.parser import BaseParser
 # Data
 # =============================================================================
 
-# =============================================================================
-# Warnings & Exceptions
-# =============================================================================
+_LINE_FORMAT = '|{0: <33}= {1}\n'
 
 # =============================================================================
 # Classes
 # =============================================================================
 
 class ItemsWikiHandler(WikiHandler):
-    regex_search = re.compile(
-        '==gem level progression==',
-        re.UNICODE | re.IGNORECASE | re.MULTILINE)
-
-    regex_progression_replace = re.compile(
-        '==gem level progression=='
-        '.*?(?===[\w ]*==)',
-        re.UNICODE | re.IGNORECASE | re.MULTILINE | re.DOTALL)
-
     # This only works as long there aren't nested templates inside the infobox
-    regex_infobox_search = re.compile(
-        '\{\{Gem[ _]Infobox\n'
+    regex_search = re.compile(
+        '\{\{Item\n'
         '(?P<data>[^\}]*)'
         '\n\}\}',
         re.UNICODE | re.IGNORECASE | re.MULTILINE | re.DOTALL
@@ -76,48 +65,44 @@ class ItemsWikiHandler(WikiHandler):
         re.UNICODE | re.IGNORECASE | re.MULTILINE | re.DOTALL,
     )
 
+    COPY_KEYS = (
+        'radius', 'has_percentage_mana_cost', 'has_reservation_mana_cost'
+    )
+
     def _find_page(self, page_name):
         page = self.pws.pywikibot.Page(self.site, page_name)
+        itembox = self.regex_search.search(page.text)
 
-        if self.regex_search.search(page.text):
-            return page
+        if itembox:
+            return page, itembox
         else:
-            console('Failed to find the progression on wiki page "%s"' % page_name, msg=Msg.warning)
-            return None
+            console('Failed to find the item page on wiki page "%s"' % page_name, msg=Msg.warning)
+            return None, None
 
     def handle_page(self, *a, row):
         page_name = row['wiki_page']
         console('Editing gem "%s"...' % page_name)
-        page = self._find_page(page_name)
+        page, itembox = self._find_page(page_name)
         if page is None:
-            page = self._find_page('%s (support gem)' % page_name)
+            if row['infobox'] == 'Support Skill Gems':
+                page, itembox = self._find_page('%s (support gem)' % page_name)
 
         if page is None:
             console('Can\'t find working wikipage. Skipping.', Msg.error)
             return
 
-        infobox = self.regex_infobox_search.search(page.text)
-        if not infobox:
-            console('Can\'t find gem infobox on wikipage "%s"' % page_name,
-                    msg=Msg.error)
-            return
-
-        for match in self.regex_infobox_split.finditer(infobox.group('data')):
+        for match in self.regex_infobox_split.finditer(itembox.group('data')):
             k = match.group('key')
-            if k not in row['infobox'] and k != 'quality':
-                row['infobox'][k] = match.group('value').strip('\n')
+            if k in self.COPY_KEYS:
+                row['infobox'][k] = match.group('value').strip('\n\r ')
 
-        infobox_text = ['{{Gem Infobox\n', ]
+        infobox_text = ['{{Item\n', ]
         for k, v in row['infobox'].items():
-            infobox_text.append('|%s=%s\n' % (k, v))
-        infobox_text.append('}}\n')
+            infobox_text.append(_LINE_FORMAT.format(k, v))
+        infobox_text.append('}}')
 
-        new_text = page.text[:infobox.start()] + ''.join(infobox_text) + \
-                   page.text[infobox.end():]
-
-        row['lines'].insert(0, '==Gem level progression==\n\n')
-
-        new_text = self.regex_progression_replace.sub(''.join(row['lines']), new_text)
+        new_text = page.text[:itembox.start()] + ''.join(infobox_text) + \
+                   page.text[itembox.end():]
 
         self.save_page(
             page=page,
@@ -141,6 +126,13 @@ class ItemsHandler(ExporterHandler):
             cls=ItemsParser,
             func=ItemsParser.export,
             wiki_handler=ItemsWikiHandler(name='Item Export'),
+        )
+
+        parser.add_argument(
+            '--format',
+            help='Output format',
+            choices=['template', 'module'],
+            default='template',
         )
 
         parser.add_argument(
@@ -595,23 +587,24 @@ class ItemsParser(BaseParser):
             tags = [t['Tag'] for t in base_item_type['TagsKeys']]
             infobox['tags'] = ', '.join(list(ot['Base']['tag']) + tags)
 
+            infobox['metadata_id'] = base_item_type['Id']
+
             f = self._cls_map.get(cls)
             if f and not f(self, infobox, base_item_type):
                 console('Required extra info for item "%s" with class "%s" not'
                         'found. Skipping.' % (name, cls), msg=Msg.error)
                 continue
 
-            out = ['{{Item\n']
-            for k, v in infobox.items():
-                out.append('|{0: <33}= {1}\n'.format(k, v))
-            out.append('}}\n')
-
-            '''
-            out = ['{']
-            for k, v in infobox.items():
-                out.append('{0} = "{1}", '.format(k, v))
-            out.append('}')
-            '''
+            if parsed_args.format == 'template':
+                out = ['{{Item\n']
+                for k, v in infobox.items():
+                    out.append(_LINE_FORMAT.format(k, v))
+                out.append('}}\n')
+            elif parsed_args.format == 'module':
+                out = ['{']
+                for k, v in infobox.items():
+                    out.append('{0} = "{1}", '.format(k, v))
+                out.append('}')
 
             r.add_result(
                 lines=out,
