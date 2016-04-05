@@ -159,7 +159,7 @@ class TypedFilter(AbstractFilter):
             'name': '==',
             'tooltip': QT_TR_NOOP('equal to'),
         }),
-        ('nq', {
+        ('ne', {
             'name': '!=',
             'tooltip': QT_TR_NOOP('not equal to'),
         }),
