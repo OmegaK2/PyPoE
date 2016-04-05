@@ -33,9 +33,11 @@ See PyPoE/LICENSE
 import re
 import sys
 import warnings
+import os
 from collections import defaultdict, OrderedDict
 
 # Self
+from PyPoE.poe.file.stat_filters import StatFilterFile
 from PyPoE.poe.sim.formula import gem_stat_requirement, GemTypes
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter.wiki.handler import *
@@ -223,12 +225,30 @@ class ItemsParser(BaseParser):
         'Int': 'Intelligence',
     }
 
+    def __init__(self, *args, **kwargs):
+        super(ItemsParser, self).__init__(*args, **kwargs)
+
+        self._skill_stat_filters = None
+
+    @property
+    def skill_stat_filter(self):
+        """
+
+        Returns
+        -------
+        StatFilterFile
+        """
+        if self._skill_stat_filters is None:
+            self._skill_stat_filters = StatFilterFile()
+            self._skill_stat_filters.read(os.path.join(
+                self.base_path, 'Metadata', 'skillpopup_stat_filters.txt'
+            ))
+        return self._skill_stat_filters
+
     def _skill_gem(self, infobox, base_item_type):
         try:
             skill_gem = self.rr['SkillGems.dat'].index['BaseItemTypesKey'][base_item_type.rowid]
         except KeyError:
-            console('No skill gem entry for item "%s" with class "%s" '
-                    'found. Skipping.' % (base_item_type[''], cls), msg=Msg.error)
             return False
 
         # TODO: Maybe catch empty stuff here?
@@ -259,18 +279,14 @@ class ItemsParser(BaseParser):
 
         gepl.sort(key=lambda x:x['Level'])
 
+        ae = gepl[0]['ActiveSkillsKey']
+
         max_level = len(exp_total)-1
-        tf = self.tc['skill_stat_descriptions.txt']
-        for tag in skill_gem['GemTagsKeys']:
-            if tag['Id'] == 'aura':
-                tf = self.tc['aura_skill_stat_descriptions.txt']
-            elif tag['Id'] == 'minion':
-                #TODO one of?
-                #tf = self.tc['minion_skill_stat_descriptions.txt']
-                tf = self.tc['minion_attack_skill_stat_descriptions.txt']
-                tf = self.tc['minion_spell_skill_stat_descriptions.txt']
-            elif tag['Id'] == 'curse':
-                tf = self.tc['curse_skill_stat_descriptions.txt']
+        if ae:
+            tf = self.tc[self.skill_stat_filter.skills[
+                ae['Id']].translation_file_path]
+        else:
+            tf = self.tc['gem_stat_descriptions.txt']
 
         stat_ids = []
         stat_indexes = []
@@ -405,7 +421,6 @@ class ItemsParser(BaseParser):
         )
 
         # From ActiveSkills.dat
-        ae = gepl[0]['ActiveSkillsKey']
         if ae:
             infobox['cast_time'] = ae['CastTime'] / 1000
             infobox['gem_description'] = ae['Description']
@@ -558,7 +573,7 @@ class ItemsParser(BaseParser):
             console('No items found. Exiting...')
             sys.exit(-1)
         else:
-            console('Found %s items with matchning names' % len(items))
+            console('Found %s items with matching names' % len(items))
 
         console('Additional files may be loaded. Processing information - this may take a while...')
 
