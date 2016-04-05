@@ -38,7 +38,7 @@ from collections import defaultdict
 # 3rd-party
 from tqdm import tqdm
 import sqlalchemy
-from sqlalchemy.types import Boolean, Text, String
+from sqlalchemy.types import Boolean, Text, String, Float
 from sqlalchemy.dialects.mysql import TINYINT, SMALLINT, INTEGER, BIGINT
 
 # self
@@ -70,6 +70,8 @@ class SQLExportHandler(DatExportHandler):
         'ulong': BIGINT(unsigned=True),
         'string': Text(),
         'varchar': String(255),
+        'float': Float(),
+        'double': Float(),
     }
 
     _data_suffix = ''
