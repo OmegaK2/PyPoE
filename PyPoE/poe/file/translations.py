@@ -802,7 +802,7 @@ class TranslationQuantifier(TranslationReprMixin):
     handlers = {
         'deciseconds_to_seconds': lambda v: v*10,
         'divide_by_one_hundred': lambda v: v/100,
-        'per_minute_to_per_second': lambda v: v/60,
+        'per_minute_to_per_second': lambda v: round(v/60, 1),
         'milliseconds_to_seconds': lambda v: v/1000,
         'negate': lambda v: v*-1,
         'divide_by_one_hundred_and_negate': lambda v: -v/100,
