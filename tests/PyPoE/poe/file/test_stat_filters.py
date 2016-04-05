@@ -1,9 +1,11 @@
 """
+Tests for PyPoE.poe.file.psg
+
 Overview
 ===============================================================================
 
 +----------+------------------------------------------------------------------+
-| Path     | PyPoE/poe/file/__init__.py                                       |
+| Path     | tests/PyPoE/poe/file/test_stat_filters.py                        |
 +----------+------------------------------------------------------------------+
 | Version  | 1.0.0a0                                                          |
 +----------+------------------------------------------------------------------+
@@ -28,29 +30,26 @@ See PyPoE/LICENSE
 # =============================================================================
 
 # Python
+from PyPoE.poe.file import stat_filters
 
 # 3rd-party
+import pytest
 
 # self
-from PyPoE.poe.file.dat import DatFile, RelationalReader
-from PyPoE.poe.file.ggpk import GGPKFile
-from PyPoE.poe.file.idl import IDLFile
-from PyPoE.poe.file.idt import IDTFile
-from PyPoE.poe.file.ot import OTFile, OTFileCache
-from PyPoE.poe.file.psg import PSGFile
-from PyPoE.poe.file.stat_filters import StatFilterFile
-from PyPoE.poe.file.translations import TranslationFile, TranslationFileCache
 
 # =============================================================================
-# Globals
-# =============================================================================
-
-#__all__ = []
-
-# =============================================================================
-# Classes
+# Setup
 # =============================================================================
 
 # =============================================================================
-# Functions
+# Fixtures
 # =============================================================================
+
+# =============================================================================
+# Tests
+# =============================================================================
+
+
+def test_stat_filter_file(ggpkfile):
+    f = stat_filters.StatFilterFile()
+    f.read(ggpkfile['Metadata/skillpopup_stat_filters.txt'].record.extract())
