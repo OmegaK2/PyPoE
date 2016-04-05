@@ -20,7 +20,6 @@ So for example:
 :command:`pypoe_exporter -h`
 
 
-Each of the scripts comes with their own :ref:`CLI/config`. In order to use the scripts
-the config variables need to be set first, then the setup needs to be performed.
-
-
+Each of the scripts comes with their own :ref:`CLI/config`. In order to use the
+scripts the config variables need to be set first, then the setup needs to be
+performed.

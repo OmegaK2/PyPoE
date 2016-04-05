@@ -33,6 +33,11 @@ Getting Started
 GUI
 ==============================================================================
 
+.. toctree::
+
+    GUI/overview
+    GUI/ggpk_viewer
+
 CLI
 ==============================================================================
 
@@ -49,6 +54,7 @@ Developer Overview
 
 .. toctree::
 
+    API/overview
     API/structure
 
 Indices and tables
