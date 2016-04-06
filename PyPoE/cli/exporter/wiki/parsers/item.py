@@ -247,7 +247,8 @@ class ItemsParser(BaseParser):
 
     def _skill_gem(self, infobox, base_item_type):
         try:
-            skill_gem = self.rr['SkillGems.dat'].index['BaseItemTypesKey'][base_item_type.rowid]
+            skill_gem = self.rr['SkillGems.dat'].index['BaseItemTypesKey'][
+                base_item_type.rowid]
         except KeyError:
             return False
 
@@ -263,7 +264,8 @@ class ItemsParser(BaseParser):
                 exp = exp_new
 
         if not exp_level:
-            console('No experience progression found for "%s". Skipping.' % item, msg=Msg.error)
+            console('No experience progression found for "%s". Skipping.' %
+                    base_item_type['Name'], msg=Msg.error)
             return False
 
         ge = skill_gem['GrantedEffectsKey']
@@ -274,7 +276,8 @@ class ItemsParser(BaseParser):
                 gepl.append(row)
 
         if not gepl:
-            console('No level progression found for "%s". Skipping.' % item, msg=Msg.error)
+            console('No level progression found for "%s". Skipping.' %
+                    base_item_type['Name'], msg=Msg.error)
             return False
 
         gepl.sort(key=lambda x:x['Level'])
@@ -283,8 +286,12 @@ class ItemsParser(BaseParser):
 
         max_level = len(exp_total)-1
         if ae:
-            tf = self.tc[self.skill_stat_filter.skills[
-                ae['Id']].translation_file_path]
+            try:
+                tf = self.tc[self.skill_stat_filter.skills[
+                    ae['Id']].translation_file_path]
+            except KeyError as e:
+                warnings.warn('Missing active skill: %s' % e.args[0])
+                tf = self.tc['skill_stat_descriptions.txt']
         else:
             tf = self.tc['gem_stat_descriptions.txt']
 
@@ -393,7 +400,8 @@ class ItemsParser(BaseParser):
                     if key not in data[stat_key]:
                         continue
 
-                    if last[stat_key][key]['values'] != data[stat_key][key]['values']:
+                    if last[stat_key][key]['values'] != data[stat_key][key][
+                            'values']:
                         del static[stat_key][key]
                         dynamic[stat_key][key] = None
             last = data
@@ -403,7 +411,7 @@ class ItemsParser(BaseParser):
             if level_data[0][key] == 0:
                 static['columns'].remove(key)
 
-         #
+        #
         # Output handling for gem infobox
         #
 
@@ -442,7 +450,8 @@ class ItemsParser(BaseParser):
                 continue
             if gepl[0][column] == column_data['default']:
                 continue
-            infobox['static_' + column_data['template']] = column_data['format'](gepl[0][column])
+            infobox['static_' + column_data['template']] = \
+                column_data['format'](gepl[0][column])
 
         # Normal stats
         # TODO: Loop properly - some stats not available at level 0
@@ -484,9 +493,6 @@ class ItemsParser(BaseParser):
         infobox['quality_stat_text'] = '<br>'.join(lines)
         self._write_stats(infobox, zip(stats, values), 'static_quality_')
 
-
-        #print([(c, gepl[0][c]) for c in self.rr['GrantedEffectsPerLevel.dat'].columns_data if c.startswith('Un')])
-
         #
         # Output handling for progression
         #
@@ -518,19 +524,23 @@ class ItemsParser(BaseParser):
                 # +1 for gem levels starting at 1
                 # +1 for being able to corrupt gems to +1 level
                 if row['Level'] <= (max_level+2) and skill_gem[attr]:
-                    infobox[prefix + map2[attr]] = gem_stat_requirement(
-                        level=row['LevelRequirement'],
-                        gtype=gtype,
-                        multi=skill_gem[attr],
-                    )
+                    try:
+                        infobox[prefix + map2[attr]] = gem_stat_requirement(
+                            level=row['LevelRequirement'],
+                            gtype=gtype,
+                            multi=skill_gem[attr],
+                        )
+                    except ValueError as e:
+                        warnings.warn(str(e))
 
             # Column handling
             for column, column_data in self._column_map.items():
                 if column not in dynamic['columns']:
                     continue
-                if row[column] == column_data['default']:
-                    continue
-                infobox[prefix + column_data['template']] = column_data['format'](row[column])
+                # Removed the check of defaults on purpose, makes sense
+                # to add the info since it is dynamically changed
+                infobox[prefix + column_data['template']] = \
+                    column_data['format'](row[column])
 
             # Stat handling
             for stat_key, stat_prefix in (
@@ -545,13 +555,18 @@ class ItemsParser(BaseParser):
                         continue
 
                     stat_dict = row[stat_key][key]
-                    lines.append(stat_dict['line'])
+                    # Don't add empty lines
+                    if stat_dict['line']:
+                        lines.append(stat_dict['line'])
                     stats.extend(stat_dict['stats'])
                     values.extend(stat_dict['values'])
 
                 if lines:
-                    infobox[prefix + stat_prefix + 'stat_text'] = '<br>'.join(lines)
-                self._write_stats(infobox, zip(stats, values), prefix + stat_prefix)
+                    infobox[prefix + stat_prefix + 'stat_text'] = \
+                        '<br>'.join(lines)
+                self._write_stats(
+                    infobox, zip(stats, values), prefix + stat_prefix
+                )
 
             try:
                 infobox[prefix + 'experience'] = exp_total[i]
@@ -575,7 +590,8 @@ class ItemsParser(BaseParser):
         else:
             console('Found %s items with matching names' % len(items))
 
-        console('Additional files may be loaded. Processing information - this may take a while...')
+        console('Additional files may be loaded. Processing information - this '
+                'may take a while...')
 
         r = ExporterResult()
 
@@ -599,7 +615,7 @@ class ItemsParser(BaseParser):
 
             ot = self.ot[base_item_type['InheritsFrom'] + '.ot']
 
-            tags = [t['Tag'] for t in base_item_type['TagsKeys']]
+            tags = [t['Id'] for t in base_item_type['TagsKeys']]
             infobox['tags'] = ', '.join(list(ot['Base']['tag']) + tags)
 
             infobox['metadata_id'] = base_item_type['Id']

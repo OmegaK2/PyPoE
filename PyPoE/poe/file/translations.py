@@ -361,7 +361,7 @@ class TranslationLanguage(TranslationReprMixin):
         for item in values:
             # faster then isinstance(item, Iterable)
             if hasattr(item, '__iter__'):
-                test_values.append(item[0])
+                test_values.append(item[1])
                 if item[0] == item[1]:
                     short_values.append(item[0])
                     is_range.append(False)
@@ -449,7 +449,7 @@ class TranslationString(TranslationReprMixin):
 
     # replacement tags used in translations
     _re_split = re.compile(
-        r'(?:%(?P<id>[0-9]+)(?P<type>%|\$\+d))',
+        r'(?:%(?P<id>[0-9]*)(?P<type>d%|%|\$\+d))',
         re.UNICODE
     )
 
@@ -504,7 +504,8 @@ class TranslationString(TranslationReprMixin):
         for match in self._re_split.finditer(string):
             self.strings.append(string[start:match.start()])
             # Py indexes start at 0, not at 1
-            self.tags.append(int(match.group('id'))-1)
+            self.tags.append(int(match.group('id') or 1)-1)
+            # Can be none for %d% tag
             self.tags_types.append(match.group('type'))
             start = match.end()
         self.strings.append(string[start:])
@@ -576,16 +577,35 @@ class TranslationString(TranslationReprMixin):
         string = []
         used = set()
         for i, tagid in enumerate(self.tags):
+            value = values[tagid]
             if not only_values:
                 string.append(self.strings[i])
                 # The case % is normal substitution
                 if self.tags_types[i] == '$+d':
                     string.append('+')
-            string.append(replace[tagid])
+
+                if not use_placeholder:
+                    if self.tags_types[i] == 'd%':
+                        fmt = '%d'
+                    else:
+                        fmt = '%s'
+
+                    if is_range[tagid]:
+                        value = '({0} to {0})'.format(fmt) % tuple(value)
+                    else:
+                        value = fmt % value
+                elif use_placeholder is True:
+                    value = ascii_letters[23+i]
+                elif callable(use_placeholder):
+                    value = use_placeholder(i)
+            string.append(value)
             used.add(tagid)
 
+            if self.tags_types[i] == 'd%':
+                string.append('%')
+
         unused = []
-        for i, val in enumerate(replace):
+        for i, val in enumerate(values):
             if i in used:
                 continue
             unused.append(val)
