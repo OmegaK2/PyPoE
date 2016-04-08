@@ -70,7 +70,7 @@ class SharedMainWindow(QMainWindow):
         self.APP_ROOT_DIR = os.path.split(self.settings.fileName())[0]
         self.APP_DIR = os.path.join(self.APP_ROOT_DIR, self.NAME)
         if not os.path.exists(self.APP_DIR):
-            os.mkdir(self.APP_DIR)
+            os.makedirs(self.APP_DIR)
 
         # Setup logging
         self.sig_log_message.connect(self._write_log)
