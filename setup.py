@@ -20,7 +20,7 @@ with open(path.join(here, 'DESCRIPTION.rst'), encoding='utf-8') as f:
 extras_require = {
     'dev': ['sphinx', 'pytest'],
     'cli': ['colorama', 'graphviz', 'tqdm'],
-    'cli-wikibot': ['pywikibot'],
+    'cli-wikibot': ['pywikibot>=rc2.0'],
     'cli-sql': ['sqlalchemy', 'pymysql'],
     'ui': ['PySide', 'PyOpenGL'],
     'opt': ['mmh3'],

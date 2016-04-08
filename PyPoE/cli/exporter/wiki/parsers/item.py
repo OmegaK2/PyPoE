@@ -68,7 +68,10 @@ class ItemsWikiHandler(WikiHandler):
     )
 
     COPY_KEYS = (
-        'radius', 'has_percentage_mana_cost', 'has_reservation_mana_cost'
+        'radius',
+        'has_percentage_mana_cost',
+        'has_reservation_mana_cost',
+        'drop_enabled',
     )
 
     def _find_page(self, page_name):
@@ -86,7 +89,7 @@ class ItemsWikiHandler(WikiHandler):
         console('Editing gem "%s"...' % page_name)
         page, itembox = self._find_page(page_name)
         if page is None:
-            if row['infobox'] == 'Support Skill Gems':
+            if row['infobox']['class'] == 'Support Skill Gems':
                 page, itembox = self._find_page('%s (support gem)' % page_name)
 
         if page is None:
@@ -179,7 +182,7 @@ class ItemsParser(BaseParser):
         }),
         ('ManaMultiplier', {
             'template': 'mana_multiplier',
-            'default': 100,
+            'default': None,
             'format': lambda v: '{0:n}'.format(v),
         }),
         ('StoredUses', {
