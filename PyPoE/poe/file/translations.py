@@ -449,7 +449,7 @@ class TranslationString(TranslationReprMixin):
 
     # replacement tags used in translations
     _re_split = re.compile(
-        r'(?:%(?P<id>[0-9]*)(?P<type>d%|%|\$\+d))',
+        r'(?:%(?P<id>[0-9]*)(?P<type>(?:|\$)d%|%|\$\+d))',
         re.UNICODE
     )
 
@@ -587,7 +587,7 @@ class TranslationString(TranslationReprMixin):
                     string.append('+')
 
                 if not use_placeholder:
-                    if self.tags_types[i] == 'd%':
+                    if self.tags_types[i].endswith('d%'):
                         fmt = '%d'
                     else:
                         fmt = '%s'
@@ -603,7 +603,7 @@ class TranslationString(TranslationReprMixin):
             string.append(value)
             used.add(tagid)
 
-            if self.tags_types[i] == 'd%':
+            if self.tags_types[i].endswith('d%'):
                 string.append('%')
 
         unused = []
@@ -980,8 +980,8 @@ class TranslationResult(TranslationReprMixin):
         List of missing identifier values
     values : list[int]
         List of processed values (in order)
-    invalid : list[str]
-        List of invalid values (in order)
+    partial: list[Translation]
+        List of partial matches of Translation tags (in order)
     source_ids : list[str]
         List of the original tags passed before the translation occurred
     source_values : list[int] or list[int, int]
@@ -995,14 +995,14 @@ class TranslationResult(TranslationReprMixin):
         'missing_ids',
         'missing_values',
         'values',
-        'invalid',
+        'partial',
         'values_unused',
         'source_ids',
         'source_values',
     ]
 
     def __init__(self, found, found_lines, lines, indexes, missing,
-                 missing_values, values, invalid, unused, source_ids,
+                 missing_values, values, partial, unused, source_ids,
                  source_values):
         self.found = found
         self.found_lines = found_lines
@@ -1011,7 +1011,7 @@ class TranslationResult(TranslationReprMixin):
         self.missing_ids = missing
         self.missing_values = missing_values
         self.values = values
-        self.invalid = invalid
+        self.partial = partial
         self.values_unused = unused
         self.source_ids = source_ids
         self.source_values = source_values
@@ -1374,19 +1374,25 @@ class TranslationFile(AbstractFileReadOnly):
                     v[index] = values[i]
                     trans_found_values.append(v)
 
-        # Remove invalid translations
-        invalid = []
+        # It seems that partial matches for the tags are indeed allowed and not
+        # invalid.
+        # Cases are base_chance_to_freeze_% and always_freeze for example
+        partial = []
         for i, found_values in enumerate(trans_found_values):
-            for value in found_values:
+            for j, value in enumerate(found_values):
                 if value == 0xFFFFFFFF:
-                    invalid.append(trans_found[i])
+                    # Assume 0 as default.
+                    found_values[j] = 0
+                    partial.append(trans_found[i])
                     break
 
-        for tr in invalid:
-            index = trans_found.index(tr)
-            del trans_found[index]
-            del trans_found_indexes[index]
-            del trans_found_values[index]
+        if partial:
+            warnings.warn(
+                'Partial tag match for %s' % ', '.join([
+                   str(p) for p in partial
+                ]),
+                TranslationWarning
+            )
 
         trans_lines = []
         trans_found_lines = []
@@ -1412,7 +1418,7 @@ class TranslationFile(AbstractFileReadOnly):
                 missing=trans_missing,
                 missing_values=trans_missing_values,
                 values=trans_found_values,
-                invalid=invalid,
+                partial=partial,
                 unused=unused,
                 source_ids=tags,
                 source_values=values,
