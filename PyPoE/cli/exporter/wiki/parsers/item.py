@@ -345,6 +345,7 @@ class ItemsParser(BaseParser):
                         'line': result.found_lines[j],
                         'stats': stats,
                         'values': result.values[j],
+                        'values_parsed': result.values_parsed[j],
                     }
                 for stat, value in result.missing:
                     warnings.warn('Missing translation for %s' % stat)
@@ -356,15 +357,16 @@ class ItemsParser(BaseParser):
                     }
 
             for stat_dict in data['qstats'].values():
-                new = []
-                for v in stat_dict['values']:
-                    v /= 20
-                    if v.is_integer():
-                        v = int(v)
-                    new.append(v)
-                stat_dict['values'] = new
+                for k in ('values', 'values_parsed'):
+                    new = []
+                    for v in stat_dict[k]:
+                        v /= 20
+                        if v.is_integer():
+                            v = int(v)
+                        new.append(v)
+                    stat_dict[k] = new
                 stat_dict['line'] = stat_dict['line'].format(
-                    *stat_dict['values']
+                    *stat_dict['values_parsed']
                 )
 
 

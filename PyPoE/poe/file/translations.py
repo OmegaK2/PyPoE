@@ -351,7 +351,7 @@ class TranslationLanguage(TranslationReprMixin):
 
         Returns
         -------
-        str, list[int] or list[int], list[int]
+        str, list[int], list[int] or list[int], list[int], list[int]
             Returns the formatted string
         """
         # Support for ranges
@@ -554,7 +554,7 @@ class TranslationString(TranslationReprMixin):
 
         Returns
         -------
-        str, list[int] or list[int], list[int]
+        str, list[int], list[int] or list[int], list[int], list[int]
             Returns the formatted string and a list of unused values. If only
             placeholder is specified, instead of the string a list of parsed
             values is returned.
@@ -617,7 +617,7 @@ class TranslationString(TranslationReprMixin):
         else:
             string = ''.join(string + [self.strings[-1]])
 
-        return string, unused
+        return string, unused, values
 
     def match_range(self, values, indexes):
         """
@@ -694,7 +694,8 @@ class TranslationString(TranslationReprMixin):
         values = list(range(0, len(self.range)))
         for i in values:
             if i in tags:
-                values[i] = tags[i]
+                # Fix for %1$+d
+                values[i] = tags[i].strip('%')
             else:
                 # The only definitive case
                 r = self.range[i]
@@ -978,10 +979,14 @@ class TranslationResult(TranslationReprMixin):
         List of missing identifier tags
     missing_values : list[int]
         List of missing identifier values
-    values : list[int]
-        List of processed values (in order)
     partial: list[Translation]
         List of partial matches of Translation tags (in order)
+    values : list[int]
+        List of values (in order)
+    values_unused : list[int]
+        List of unused values
+    values_parsed : list[str]
+        List of parsed values (i.e. with quantifier applied)
     source_ids : list[str]
         List of the original tags passed before the translation occurred
     source_values : list[int] or list[int, int]
@@ -994,25 +999,27 @@ class TranslationResult(TranslationReprMixin):
         'indexes',
         'missing_ids',
         'missing_values',
-        'values',
         'partial',
+        'values',
         'values_unused',
+        'values_parsed',
         'source_ids',
         'source_values',
     ]
 
     def __init__(self, found, found_lines, lines, indexes, missing,
-                 missing_values, values, partial, unused, source_ids,
-                 source_values):
+                 missing_values, partial, values, unused, values_parsed,
+                 source_ids, source_values):
         self.found = found
         self.found_lines = found_lines
         self.lines = lines
         self.indexes = indexes
         self.missing_ids = missing
         self.missing_values = missing_values
-        self.values = values
         self.partial = partial
+        self.values = values
         self.values_unused = unused
+        self.values_parsed = values_parsed
         self.source_ids = source_ids
         self.source_values = source_values
 
@@ -1397,6 +1404,7 @@ class TranslationFile(AbstractFileReadOnly):
         trans_lines = []
         trans_found_lines = []
         unused = []
+        values_parsed = []
         for i, tr in enumerate(trans_found):
 
             tl = tr.get_language(lang)
@@ -1404,10 +1412,13 @@ class TranslationFile(AbstractFileReadOnly):
             if result:
                 trans_lines.append(result[0])
                 trans_found_lines.append(result[0])
+                values_parsed.append(result[2])
                 if full_result:
                     unused.append(result[1])
+
             else:
                 trans_found_lines.append('')
+                values_parsed.append([])
 
         if full_result:
             return TranslationResult(
@@ -1418,12 +1429,16 @@ class TranslationFile(AbstractFileReadOnly):
                 missing=trans_missing,
                 missing_values=trans_missing_values,
                 values=trans_found_values,
+                values_parsed=values_parsed,
                 partial=partial,
                 unused=unused,
                 source_ids=tags,
                 source_values=values,
             )
-        return trans_lines
+        if only_values:
+            return values_parsed
+        else:
+            return trans_lines
 
     def reverse_translation(self, string, lang='English'):
         """
