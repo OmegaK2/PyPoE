@@ -581,7 +581,9 @@ class TranslationString(TranslationReprMixin):
             if not only_values:
                 string.append(self.strings[i])
                 # The case % is normal substitution
-                if self.tags_types[i] == '$+d':
+                if self.tags_types[i] == '$+d' and (
+                        is_range[tagid] and value[1] > 0 or
+                        value > 0):
                     string.append('+')
 
                 if not use_placeholder:

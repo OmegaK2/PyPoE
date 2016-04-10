@@ -34,7 +34,8 @@ you may need to upgrade python or install from a custom upstream repo if it
 isn't available.
 
 Commands for some distributions:
-* Ubuntu/Debian: apt-get install python3
+
+* Ubuntu/Debian: apt-get install python3 python3-pip
 
 Git
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -54,11 +55,18 @@ Qt4 (UI only, Linux only)
 
 **Windows**
 
-This step can be skipped on windows as QT is available in binary forum from pip.
+This step can be skipped on windows as QT is available in binary form from pip.
 
 **Linux**
 
 See http://pyside.readthedocs.org/en/latest/building/linux.html for details.
+
+It's possible that for some reason some sphinx dependencies fail to install
+causing the compiling of pyside to fail.
+In that case you can try running:
+
+* :command:`pip install docutils jinja2 babel imagesize alabaster pygments`
+
 
 Downloading & Installing PyPoE
 ------------------------------------------------------------------------------

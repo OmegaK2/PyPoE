@@ -182,8 +182,9 @@ class ItemsParser(BaseParser):
         }),
         ('ManaMultiplier', {
             'template': 'mana_multiplier',
-            'default': None,
+            'default': 100,
             'format': lambda v: '{0:n}'.format(v),
+            'default_cls': ('Active Skill Gems', ),
         }),
         ('StoredUses', {
             'template': 'stored_uses',
@@ -207,7 +208,7 @@ class ItemsParser(BaseParser):
         }),
         ('CriticalStrikeChance', {
             'template': 'critical_strike_chance',
-            'default': None,
+            'default': 0,
             'format': lambda v: '{0:n}'.format(v/100),
         }),
         ('DamageEffectiveness', {
@@ -222,11 +223,11 @@ class ItemsParser(BaseParser):
         }),
     ))
 
-    _attribute_map = {
-        'Str': 'Strength',
-        'Dex': 'Dexterity',
-        'Int': 'Intelligence',
-    }
+    _attribute_map = OrderedDict((
+        ('Str', 'Strength'),
+        ('Dex', 'Dexterity'),
+        ('Int', 'Intelligence'),
+    ))
 
     def __init__(self, *args, **kwargs):
         super(ItemsParser, self).__init__(*args, **kwargs)
@@ -409,15 +410,11 @@ class ItemsParser(BaseParser):
                         dynamic[stat_key][key] = None
             last = data
 
-        # Remove columns that are zero/default
-        for key in list(static['columns']):
-            if level_data[0][key] == 0:
-                static['columns'].remove(key)
+
 
         #
         # Output handling for gem infobox
         #
-
 
         #TODO: Implicit_ModsKeys
 
@@ -436,6 +433,12 @@ class ItemsParser(BaseParser):
             infobox['cast_time'] = ae['CastTime'] / 1000
             infobox['gem_description'] = ae['Description']
             infobox['active_skill_name'] = ae['DisplayedName']
+            if ae['WeaponRestriction_ItemClassesKeys']:
+                # The class name may be empty for reason, causing issues
+                infobox['item_class_restriction'] = ', '.join([
+                    c['Name'] for c in ae['WeaponRestriction_ItemClassesKeys']
+                    if c['Name']
+                ])
 
         # From GrantedEffects.dat
 
@@ -447,12 +450,17 @@ class ItemsParser(BaseParser):
         # GrantedEffectsPerLevel.dat
         infobox['required_level'] = level_data[0]['LevelRequirement']
 
-
+        # Remove columns that are zero/default
         for column, column_data in self._column_map.items():
             if column not in static['columns']:
                 continue
+
             if gepl[0][column] == column_data['default']:
-                continue
+                df = column_data.get('default_cls')
+                if df is None:
+                    continue
+                elif infobox['class'] in df:
+                    continue
             infobox['static_' + column_data['template']] = \
                 column_data['format'](gepl[0][column])
 

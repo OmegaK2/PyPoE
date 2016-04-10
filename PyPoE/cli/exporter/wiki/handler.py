@@ -70,7 +70,7 @@ class WikiHandler(object):
             help='Maximum number of threads to spawn when editing wiki',
             action='store',
             type=int,
-            default=16,
+            default=1,
         )
         parser.add_argument(
             '--dry-run',

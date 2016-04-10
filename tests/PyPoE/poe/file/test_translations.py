@@ -127,6 +127,14 @@ class TestTranslationResults:
             {},
         ),
         (
+            ['test_plus', ],
+            [-20, ],
+            ['Plus: -20'],
+            '$+d format with negative value',
+            {},
+            {},
+        ),
+        (
             ['test_multiple_values', 'test_multiple_values2'],
             [42, 1337],
             ['Multiple: 42 1337 42 1337'],
