@@ -174,7 +174,7 @@ class ItemsParser(BaseParser):
         'Cooldown', 'StoredUses', 'DamageEffectiveness'
     )
 
-    _column_map = OrderedDict((
+    _skill_column_map = OrderedDict((
         ('ManaCost', {
             'template': 'mana_cost',
             'default': 0,
@@ -223,11 +223,120 @@ class ItemsParser(BaseParser):
         }),
     ))
 
+    _currency_column_map = OrderedDict((
+        ('Stacks', {
+            'template': 'stack_size',
+            'condition': None,
+        }),
+        ('Description', {
+            'template': 'description',
+            'condition': lambda v: v,
+        }),
+        ('Directions', {
+            'template': 'help_text',
+            'condition': lambda v: v,
+        }),
+        ('CurrencyTab_StackSize', {
+            'template': 'stack_size_currency_tab',
+            'condition': lambda v: v > 0,
+        }),
+        ('CosmeticTypeName', {
+            'template': 'cosmetic_type',
+            'condition': lambda v: v,
+        }),
+    ))
+
+    _flask_charges_column_map = OrderedDict((
+        ('MaxCharges', {
+            'template': 'charges_max',
+        }),
+        ('PerCharge', {
+            'template': 'charges_per_use',
+        }),
+    ))
+
+    _flask_column_map = OrderedDict((
+        ('LifePerUse', {
+            'template': 'flask_life',
+            'condition': lambda v: v > 0,
+        }),
+        ('ManaPerUse', {
+            'template': 'flask_mana',
+            'condition': lambda v: v > 0,
+        }),
+        ('RecoveryTime', {
+            'template': 'flask_duration',
+            'condition': lambda v: v > 0,
+            'format': lambda v: '{0:n}'.format(v / 10),
+        }),
+    ))
+
+    _attribute_requirements_column_map = OrderedDict((
+        ('ReqStr', {
+            'template': 'required_strength',
+            'condition': lambda v: v > 0,
+        }),
+        ('ReqDex', {
+            'template': 'required_dexterity',
+            'condition': lambda v: v > 0,
+        }),
+        ('ReqInt', {
+            'template': 'required_intelligence',
+            'condition': lambda v: v > 0,
+        }),
+    ))
+
+    _armour_column_map = OrderedDict((
+        ('Armour', {
+            'template': 'armour',
+            'condition': lambda v: v > 0,
+        }),
+        ('Evasion', {
+            'template': 'evasion',
+            'condition': lambda v: v > 0,
+        }),
+        ('EnergyShield', {
+            'template': 'enery_shield',
+            'condition': lambda v: v > 0,
+        }),
+    ))
+
+    _shield_column_map = OrderedDict((
+        ('Block', {
+            'template': 'block',
+        }),
+    ))
+
+    _weapon_column_map = OrderedDict((
+        ('Critical', {
+            'template': 'critical_strike_chance',
+            'format': lambda v: '{0:n}'.format(v / 100),
+        }),
+        ('Speed', {
+            'template': 'attack_speed',
+            'format': lambda v: '{0:n}'.format(round(1000 / v, 2)),
+        }),
+        ('DamageMin', {
+            'template': 'damage_min',
+        }),
+        ('DamageMax', {
+            'template': 'damage_max',
+        }),
+        ('RangeMax', {
+            'template': 'range',
+        }),
+    ))
+
     _attribute_map = OrderedDict((
         ('Str', 'Strength'),
         ('Dex', 'Dexterity'),
         ('Int', 'Intelligence'),
     ))
+
+    _skill_gem_stat_remove = {
+        'Molten Shell': [{'id': 'base_resist_all_elements_%', 'value': 0}],
+        'Vaal Molten Shell': [{'id': 'base_resist_all_elements_%', 'value': 0}],
+    }
 
     def __init__(self, *args, **kwargs):
         super(ItemsParser, self).__init__(*args, **kwargs)
@@ -248,6 +357,16 @@ class ItemsParser(BaseParser):
                 self.base_path, 'Metadata', 'skillpopup_stat_filters.txt'
             ))
         return self._skill_stat_filters
+
+    def _apply_column_map(self, infobox, column_map, list_object):
+        for k, data in column_map.items():
+            value = list_object[k]
+            if data.get('condition') and not data['condition'](value):
+                continue
+
+            if data.get('format'):
+                value = data['format'](value)
+            infobox[data['template']] = value
 
     def _skill_gem(self, infobox, base_item_type):
         try:
@@ -315,9 +434,21 @@ class ItemsParser(BaseParser):
         for i, row in enumerate(gepl):
             data = defaultdict()
 
+            stats = [r['Id'] for r in row['StatsKeys']] + \
+                    [r['Id'] for r in row['StatsKeys2']]
+            values = row['StatValues'] + [1, ]
+
+            rminfos = self._skill_gem_stat_remove.get(base_item_type['Name'])
+            if rminfos:
+                for rminfo in rminfos:
+                    index = stats.index(rminfo['id'])
+                    if values[index] == rminfo['value']:
+                        del stats[index]
+                        del values[index]
+
             tr = tf.get_translation(
-                tags=[r['Id'] for r in row['StatsKeys']],
-                values=row['StatValues'],
+                tags=stats,
+                values=values,
                 full_result=True,
             )
             data['_tr'] = tr
@@ -418,8 +549,6 @@ class ItemsParser(BaseParser):
         # Output handling for gem infobox
         #
 
-        #TODO: Implicit_ModsKeys
-
         # SkillGems.dat
         for attr_short, attr_long in self._attribute_map.items():
             if not skill_gem[attr_short]:
@@ -453,7 +582,7 @@ class ItemsParser(BaseParser):
         infobox['required_level'] = level_data[0]['LevelRequirement']
 
         # Remove columns that are zero/default
-        for column, column_data in self._column_map.items():
+        for column, column_data in self._skill_column_map.items():
             if column not in static['columns']:
                 continue
 
@@ -547,7 +676,7 @@ class ItemsParser(BaseParser):
                         warnings.warn(str(e))
 
             # Column handling
-            for column, column_data in self._column_map.items():
+            for column, column_data in self._skill_column_map.items():
                 if column not in dynamic['columns']:
                     continue
                 # Removed the check of defaults on purpose, makes sense
@@ -588,9 +717,143 @@ class ItemsParser(BaseParser):
 
         return True
 
+    def _type_attribute(self, infobox, base_item_type):
+        try:
+            requirements = self.rr['ComponentAttributeRequirements.dat'].index[
+                'BaseItemTypesKey'][base_item_type['Id']]
+        except KeyError:
+            warnings.warn('Missing attribute for "%s"' % base_item_type['Name'])
+            return False
+
+        self._apply_column_map(
+            infobox, self._attribute_requirements_column_map, requirements
+        )
+
+        return True
+
+    def _type_armour(self, infobox, base_item_type):
+        try:
+            armour = self.rr['ComponentArmour.dat'].index[
+                'BaseItemTypesKey'][base_item_type['Id']]
+        except KeyError:
+            warnings.warn(
+                'Missing armor info for "%s"' % base_item_type['Name']
+            )
+            return False
+
+        self._apply_column_map(infobox, self._armour_column_map, armour)
+
+        return True
+
+    def _type_shield(self, infobox, base_item_type):
+        try:
+            shields = self.rr['ShieldTypes.dat'].index[
+                'BaseItemTypesKey'][base_item_type.rowid]
+        except KeyError:
+            warnings.warn(
+                'Missing shield info for "%s"' % base_item_type['Name']
+            )
+            return False
+
+        self._apply_column_map(infobox, self._shield_column_map, shields)
+
+        return True
+
+    def _type_flask(self, infobox, base_item_type):
+        try:
+            flask_charges = self.rr['ComponentCharges.dat'].index[
+                'BaseItemTypesKey'][base_item_type['Id']]
+            flasks = self.rr['Flasks.dat'].index['BaseItemTypesKey'][
+                base_item_type.rowid]
+        except KeyError:
+            warnings.warn(
+                'Missing flask info for "%s"' % base_item_type['Name']
+            )
+            return False
+
+        self._apply_column_map(
+            infobox, self._flask_charges_column_map, flask_charges
+        )
+        self._apply_column_map(infobox, self._flask_column_map, flasks)
+
+        #TODO: BuffDefinitionsKey, BuffStatValues
+
+        return True
+
+    def _type_weapon(self, infobox, base_item_type):
+        try:
+            weapons = self.rr['WeaponTypes.dat'].index[
+                'BaseItemTypesKey'][base_item_type.rowid]
+        except KeyError:
+            warnings.warn(
+                'Missing weapon info for "%s"' % base_item_type['Name']
+            )
+            return False
+
+        self._apply_column_map(infobox, self._weapon_column_map, weapons)
+
+        return True
+
+    def _type_currency(self, infobox, base_item_type):
+        try:
+            currency = self.rr['CurrencyItems.dat'].index('BaseItemTypesKey')[
+                base_item_type.rowid]
+        except KeyError:
+            warnings.warn(
+                'Missing currency info for "%s"' % base_item_type['Name']
+            )
+            return False
+
+        self._apply_column_map(infobox, self._currency_column_map, currency)
+
+        return True
+
+    def _type_level(self, infobox, base_item_type):
+        infobox['required_level'] = base_item_type['DropLevel']
+
+        return True
+
     _cls_map = {
-        'Active Skill Gems': _skill_gem,
-        'Support Skill Gems': _skill_gem,
+        # Armour types
+        'Gloves': (_type_level, _type_attribute, _type_armour, ),
+        'Boots': (_type_level, _type_attribute, _type_armour, ),
+        'Body Armours': (_type_level, _type_attribute, _type_armour, ),
+        'Helments': (_type_level, _type_attribute, _type_armour, ),
+        'Shields': (_type_level, _type_attribute, _type_armour, _type_shield),
+        # Weapons
+        'Claws': (_type_level, _type_attribute, _type_weapon, ),
+        'Daggers': (_type_level, _type_attribute, _type_weapon, ),
+        'Wands': (_type_level, _type_attribute, _type_weapon, ),
+        'One Hand Swords': (_type_level, _type_attribute, _type_weapon, ),
+        'Thrusting One Hand Swords': (
+            _type_level, _type_attribute, _type_weapon,
+        ),
+        'One Hand Axes': (_type_level, _type_attribute, _type_weapon, ),
+        'One Hand Maces': (_type_level, _type_attribute, _type_weapon, ),
+        'Bows': (_type_level, _type_attribute, _type_weapon, ),
+        'Staves': (_type_level, _type_attribute, _type_weapon, ),
+        'Two Hand Swords': (_type_level, _type_attribute, _type_weapon, ),
+        'Two Hand Axes': (_type_level, _type_attribute, _type_weapon, ),
+        'Two Hand Maces': (_type_level, _type_attribute, _type_weapon, ),
+        'Sceptres': (_type_level, _type_attribute, _type_weapon, ),
+        'Fishing Rods': (_type_level, _type_attribute, _type_weapon, ),
+        # Flasks
+        'Life Flasks': (_type_level, _type_flask, ),
+        'Mana Flasks': (_type_level, _type_flask, ),
+        'Hybrid Flasks': (_type_level, _type_flask, ),
+        'Utility Flasks': (_type_level, _type_flask, ),
+        'Critical Utility Flasks': (_type_level, _type_flask, ),
+        # Gems
+        'Active Skill Gems': (_skill_gem, ),
+        'Support Skill Gems': (_skill_gem, ),
+        # Currency-like items
+        'Currency': (_type_currency, ),
+        'Stackable Currency': (_type_currency, ),
+        'Hideout Doodads': (_type_currency, ),
+        'Microtransactions': (_type_currency, ),
+        # Misc
+        #'Maps': (_type_,),
+        #'Map Fragments': (_type_,),
     }
 
     def export(self, parsed_args):
@@ -633,11 +896,22 @@ class ItemsParser(BaseParser):
 
             infobox['metadata_id'] = base_item_type['Id']
 
-            f = self._cls_map.get(cls)
-            if f and not f(self, infobox, base_item_type):
-                console('Required extra info for item "%s" with class "%s" not'
-                        'found. Skipping.' % (name, cls), msg=Msg.error)
-                continue
+            for i, mod in enumerate(base_item_type['Implicit_ModsKeys']):
+                infobox['mod%s' % (i+1)] = mod['Id']
+
+            funcs = self._cls_map.get(cls)
+            if funcs:
+                fail = False
+                for f in funcs:
+                    if not f(self, infobox, base_item_type):
+                        fail = True
+                        console(
+                            'Required extra info for item "%s" with class "%s"'
+                            ' not found. Skipping.' % (name, cls),
+                            msg=Msg.error)
+                        break
+                if fail:
+                    continue
 
             if parsed_args.format == 'template':
                 out = ['{{Item\n']
