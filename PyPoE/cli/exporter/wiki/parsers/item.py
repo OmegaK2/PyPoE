@@ -567,8 +567,8 @@ class ItemsParser(BaseParser):
             if ae['WeaponRestriction_ItemClassesKeys']:
                 # The class name may be empty for reason, causing issues
                 infobox['item_class_restriction'] = ', '.join([
-                    c['Name'] for c in ae['WeaponRestriction_ItemClassesKeys']
-                    if c['Name']
+                    c['Name'] if c['Name'] else c['Id'] for c in
+                    ae['WeaponRestriction_ItemClassesKeys']
                 ])
 
         # From GrantedEffects.dat

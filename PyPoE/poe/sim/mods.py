@@ -177,7 +177,7 @@ class SpawnChanceCalculator(object):
         Returns
         -------
         float
-            The calcuated spawn chance for the mod
+            The calculated spawn chance for the mod
 
 
         Raises
@@ -212,7 +212,7 @@ class SpawnChanceCalculator(object):
 
             self.mod_list = mods
 
-            for tag in mod['Tags']:
+            for tag in mod['TagsKeys']:
                 self.tags.append(tag['Id'])
 
             self.total_spawn_weight = self.get_total_spawn_weight()
