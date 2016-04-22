@@ -56,7 +56,7 @@ class RecordListOverride(RecordList):
         'Domain': 0,
         'GenerationType': 0,
         'CorrectGroup': '',
-        'Tags': [],
+        'TagsKeys': [],
         'SpawnWeight_TagsKeys': [{'Id': 'default'}],
         'SpawnWeight_Values': [1000],
     }
