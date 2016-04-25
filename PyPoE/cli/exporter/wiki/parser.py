@@ -743,7 +743,7 @@ def make_inter_wiki_links(string):
         for match in regex.finditer(string):
             text = match.group('text')
             # Offset by 1 to account for text group
-            index = match.groups().index(text, 2)-1
+            index = match.groups().index(text, 1)-1
             data = _inter_wiki_map[i*_MAX_RE+index][1]
 
             out.append(string[last_index:match.start('text')])
