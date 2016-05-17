@@ -152,7 +152,7 @@ class GraphGroupNode(ReprMixin):
     .. warning::
         If the parent PSGFile was instantiated with a valid 'PassiveSkills.dat'
         DatFile instance, the passive_skill and connections variables contain 
-        references to the respective row (i.e. a RecordList instance) instead 
+        references to the respective row (i.e. a DatRecord instance) instead
         of the integer id.
 
     Parameters
@@ -160,12 +160,12 @@ class GraphGroupNode(ReprMixin):
     parent :  GraphGroup
         parent GraphGroup this node belongs to
 
-    passive_skill :  int or RecordList
+    passive_skill :  int or DatRecord
         passive skill node of this node
 
         If the parent PSGFile was instantiated with a valid 'PassiveSkills.dat'
         DatFile instance, this will contain a reference to the respective
-        row (i.e. a RecordList instance) instead of the integer id.
+        row (i.e. a DatRecord instance) instead of the integer id.
 
     radius :  int
         radius from the parent's x,y-position
@@ -174,12 +174,12 @@ class GraphGroupNode(ReprMixin):
         position of the node in the group; together with the radius this creates
         a clockwise rotation from 0 to 11
 
-    connections : list[int] or list[RecordList]
+    connections : list[int] or list[DatRecord]
         list of passive skill nodes this node is connected to
 
         If the parent PSGFile was instantiated with a valid 'PassiveSkills.dat'
         DatFile instance, this will contain a reference to the respective
-        row (i.e. a RecordList instance) instead of the integer id.
+        row (i.e. a DatRecord instance) instead of the integer id.
     """
 
     __slots__ = ['parent', 'passive_skill', 'radius', 'position', 'connections']
@@ -232,7 +232,7 @@ class PSGFile(AbstractFileReadOnly):
     ----------
     _passive_skills : None or DatReader
         reference to the DatReader if specified
-    root_passives : list[int] or list[RecordList]
+    root_passives : list[int] or list[DatRecord]
         list of root (starting class) passive nodes
     groups : list[GraphGroup]
         list of GraphGroup instances

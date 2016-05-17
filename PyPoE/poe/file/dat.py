@@ -375,14 +375,14 @@ class DatValue(object):
             return self.value
 
 
-class RecordList(list):
+class DatRecord(list):
     """
     Attributes
     ----------
     parent :  DatReader
-        The parent DatReader instance this RecordList instance belongs to
+        The parent DatReader instance this DatRecord instance belongs to
     rowid :  int
-        The rowid of this RecordList instance
+        The rowid of this DatRecord instance
     """
 
     __slots__ = ['parent', 'rowid']
@@ -392,9 +392,9 @@ class RecordList(list):
         Parameters
         ----------
         parent :  DatReader
-            The parent DatReader instance this RecordList instance belongs to
+            The parent DatReader instance this DatRecord instance belongs to
         rowid :  int
-            The rowid of this RecordList instance
+            The rowid of this DatRecord instance
         """
         list.__init__(self)
         self.parent = parent
@@ -430,7 +430,7 @@ class RecordList(list):
 
     def iter(self):
         """
-        Iterates over the RecordList and returns key, value and index
+        Iterates over the DatRecord and returns key, value and index
 
         Yields
         ------
@@ -472,8 +472,8 @@ class DatReader(ReprMixin):
         File name
     file_length :  int
         File length in bytes
-    table_data : list[RecordList[object]]
-        List of rows containing RecordList entries.
+    table_data : list[DatRecord[object]]
+        List of rows containing DatRecord entries.
     table_length :  int
         Length of table in bytes
     table_record_length :  int
@@ -743,7 +743,7 @@ class DatReader(ReprMixin):
 
     def _process_row(self, rowid):
         offset = 4 + rowid * self.table_record_length
-        row_data = RecordList(self, rowid)
+        row_data = DatRecord(self, rowid)
         data_raw = self._file_raw[offset:offset+self.table_record_length]
 
         # We don't have any data, return early
@@ -864,7 +864,7 @@ class DatReader(ReprMixin):
                     outstr.append('<td>')
                     if self.use_dat_value:
                         outstr.append(str(dv.get_value()))
-                    elif isinstance(dv, RecordList):
+                    elif isinstance(dv, DatRecord):
                         outstr.append(str(dv.rowid))
                     else:
                         outstr.append(str(dv))

@@ -51,7 +51,7 @@ Documentation
 # 3rd-party
 
 # self
-from PyPoE.poe.file.dat import RecordList
+from PyPoE.poe.file.dat import DatRecord
 from PyPoE.poe.file.translations import TranslationFileCache
 from PyPoE.poe.constants import MOD_DOMAIN, MOD_GENERATION_TYPE
 
@@ -86,7 +86,7 @@ class SpawnChanceCalculator(object):
         """
         Parameters
         ----------
-        mod_list : list[RecordList]
+        mod_list : list[DatRecord]
             The mod list to base the calculations on
         tags : list[str]
             List of tag identifiers
@@ -122,7 +122,7 @@ class SpawnChanceCalculator(object):
 
         Returns
         -------
-        RecordList or None
+        DatRecord or None
             Returns the mod if found, None otherwise
 
         See Also
@@ -138,7 +138,7 @@ class SpawnChanceCalculator(object):
 
         Parameters
         ----------
-        mod : RecordList
+        mod : DatRecord
             The mod to calculate the spawn weight for.
         tags : list[str]
             List of applicable tag identifiers.
@@ -168,7 +168,7 @@ class SpawnChanceCalculator(object):
 
         Parameters
         ----------
-        mod_or_id : str | RecordList
+        mod_or_id : str | DatRecord
             Id of the mod or the instance of the mod row
         remove : bool
             Remove the mod from the list once the chance has been calculated
@@ -191,7 +191,7 @@ class SpawnChanceCalculator(object):
             mod = self.get_mod(mod_or_id)
             if mod is None:
                 return 0
-        elif isinstance(mod_or_id, RecordList):
+        elif isinstance(mod_or_id, DatRecord):
             mod = mod_or_id
         else:
             raise TypeError(
@@ -231,7 +231,7 @@ def get_translation(mod, translation_cache, translation_file=None, **kwargs):
 
     Parameters
     ----------
-    mod : RecordList
+    mod : DatRecord
 
     translation_cache : TranslationFileCache
         :class:`PyPoE.poe.file.TranslationCache` instance to retrieve the
@@ -280,13 +280,13 @@ def get_mod_from_id(mod_id, mod_list):
     ----------
     mod_id : str
         The mod identifier to look for
-    mod_list : list[RecordList]
+    mod_list : list[DatRecord]
         List of mods to search in (or dat file)
 
 
     Returns
     -------
-    RecordList or None
+    DatRecord or None
         Returns the mod if found, None otherwise
     """
     for mod in mod_list:
@@ -301,7 +301,7 @@ def get_spawn_weight(mod, tags):
 
     Parameters
     ----------
-    mod : RecordList
+    mod : DatRecord
         The mod to calculate the spawn weight for.
     tags : list[str]
         List of applicable tag identifiers.
@@ -351,7 +351,7 @@ def generate_spawnable_mod_list(
 
     Returns
     -------
-    list[RecordList]
+    list[DatRecord]
         Returns a list of applicable mod rows that have a spawn weighting
         above 0.
 

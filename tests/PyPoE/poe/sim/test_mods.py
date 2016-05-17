@@ -41,7 +41,7 @@ import pytest
 
 # self
 from PyPoE.poe.constants import MOD_DOMAIN, MOD_GENERATION_TYPE
-from PyPoE.poe.file.dat import RecordList
+from PyPoE.poe.file.dat import DatRecord
 from PyPoE.poe.sim import mods
 
 # =============================================================================
@@ -49,7 +49,7 @@ from PyPoE.poe.sim import mods
 # =============================================================================
 
 
-class RecordListOverride(RecordList):
+class DatRecordOverride(DatRecord):
     keys = {
         'Id': '',
         'Level': 1,
@@ -82,7 +82,7 @@ class RecordListOverride(RecordList):
 
 class TestGetModFromId:
     mod_list = [
-        RecordListOverride(
+        DatRecordOverride(
             Id='0',
         ),
     ]
@@ -93,31 +93,31 @@ class TestGetModFromId:
 
 class TestGetSpawnChanceCalculator(object):
     mod_list = [
-        RecordListOverride(
+        DatRecordOverride(
             Id='0',
             CorrectGroup='A',
             Domain=MOD_DOMAIN.ITEM.value,
             GenerationTYpe=MOD_GENERATION_TYPE.PREFIX.value,
         ),
-        RecordListOverride(
+        DatRecordOverride(
             Id='1',
             CorrectGroup='A',
             Domain=MOD_DOMAIN.ITEM.value,
             GenerationTYpe=MOD_GENERATION_TYPE.PREFIX.value,
         ),
-        RecordListOverride(
+        DatRecordOverride(
             Id='2',
             CorrectGroup='A',
             Domain=MOD_DOMAIN.ITEM.value,
             GenerationTYpe=MOD_GENERATION_TYPE.PREFIX.value,
         ),
-        RecordListOverride(
+        DatRecordOverride(
             Id='3',
             CorrectGroup='B',
             Domain=MOD_DOMAIN.ITEM.value,
             GenerationTYpe=MOD_GENERATION_TYPE.PREFIX.value,
         ),
-        RecordListOverride(
+        DatRecordOverride(
             Id='4',
             CorrectGroup='B',
             Domain=MOD_DOMAIN.ITEM.value,
@@ -160,7 +160,7 @@ class TestGetSpawnChanceCalculator(object):
 
 
 class TestGetSpawnWeight(object):
-    data = RecordListOverride(
+    data = DatRecordOverride(
         SpawnWeight_TagsKeys=[
             {'Id': 'a'},
             {'Id': 'b'},
@@ -187,19 +187,19 @@ class TestGetSpawnWeight(object):
 
 class TestGenerateSpawnableModList(object):
     mod_list = [
-        RecordListOverride(
+        DatRecordOverride(
             Id='0',
             CorrectGroup='0',
             Domain=MOD_DOMAIN.ITEM.value,
             GenerationTYpe=MOD_GENERATION_TYPE.PREFIX.value,
         ),
-        RecordListOverride(
+        DatRecordOverride(
             Id='1',
             CorrectGroup='1',
             Domain=MOD_DOMAIN.ITEM.value,
             GenerationTYpe=MOD_GENERATION_TYPE.SUFFIX.value,
         ),
-        RecordListOverride(
+        DatRecordOverride(
             Id='2',
             CorrectGroup='2',
             Level=50,
@@ -207,7 +207,7 @@ class TestGenerateSpawnableModList(object):
             GenerationTYpe=MOD_GENERATION_TYPE.PREFIX.value,
         ),
         # should never appear in any of the lists
-        RecordListOverride(
+        DatRecordOverride(
             Id='3',
             CorrectGroup='3',
             Domain=MOD_DOMAIN.ITEM.value,
@@ -215,7 +215,7 @@ class TestGenerateSpawnableModList(object):
             SpawnWeight_Values=[0],
         ),
         # Should not appear unless specifically asked for
-        RecordListOverride(
+        DatRecordOverride(
             Id='4',
             CorrectGroup='4',
             Domain=MOD_DOMAIN.ITEM.value,

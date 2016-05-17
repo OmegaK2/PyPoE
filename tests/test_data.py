@@ -105,7 +105,7 @@ def test_uniqueness(file_name, field_name, rr):
 
     data = []
     for row in df:
-        value = row[index] if not isinstance(row[index], dat.RecordList) else row[index].rowid
+        value = row[index] if not isinstance(row[index], dat.DatRecord) else row[index].rowid
         # Duplicate "None" values are acceptable.
         if value is None:
             continue

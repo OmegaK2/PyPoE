@@ -74,7 +74,7 @@ if __name__ == '__main__':
     #profiler.add_function(dat.DatValue.__init__)
     #profiler.add_function(dat.DatReader._cast_from_spec)
     #profiler.add_function(dat.DatReader._process_row)
-    #profiler.add_function(dat.RecordList.__getitem__)
+    #profiler.add_function(dat.DatRecord.__getitem__)
 
     #profiler.run("d = read_dat()")
     #profiler.run("for i in range(0, 10000): d.reader[0]['Data1']")
