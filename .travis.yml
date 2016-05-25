@@ -12,5 +12,6 @@ before_install:
   - sudo apt-get install -y python3-pyside
 install:
   - "pip install -r test_requirements.txt"
+  - "pip install ."
 script:
   - "py.test"
