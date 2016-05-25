@@ -6,6 +6,5 @@ tqdm
 pywikibot>=rc2.0
 sqlalchemy
 pymysql
-PySide
 PyOpenGL
 mmh3
