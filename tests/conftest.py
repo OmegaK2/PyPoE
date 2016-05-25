@@ -58,10 +58,15 @@ __all__ = []
 
 @pytest.fixture(scope='session')
 def poe_path():
-    return PoEPath(
+    paths = PoEPath(
         version=VERSION.STABLE,
         distributor=DISTRIBUTOR.INTERNATIONAL
-    ).get_installation_paths(only_existing=True)[0]
+    ).get_installation_paths(only_existing=True)
+
+    if paths:
+        return paths[0]
+    else:
+        pytest.skip('Path of Exile installation not found.')
 
 
 @pytest.fixture(scope='session')
