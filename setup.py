@@ -97,7 +97,7 @@ setup(
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
     package_data={
-        #'sample': ['package_data.dat'],
+        'PyPoE': ['_data/*'],
     },
 
     # Although 'package_data' is the preferred approach, in some case you may
@@ -105,7 +105,9 @@ setup(
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files # noqa
     # In this case, 'data_file' will be installed into '<sys.prefix>/my_data'
     #data_files=[('my_data', ['data/data_file'])],
-    data_files = [],
+    data_files=[
+        #('', ['PyPoE/_data/*'])
+    ],
 
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
