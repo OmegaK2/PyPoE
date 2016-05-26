@@ -6,6 +6,8 @@ More detailed docs: [http://omegak2.net/poe/PyPoE/](http://omegak2.net/poe/PyPoE
 
 The docs are occasionally updated until I get a build bot up - however docs can also be manually built with sphinx.
 
+[![Build Status](https://travis-ci.org/OmegaK2/PyPoE.svg?branch=dev)](https://travis-ci.org/OmegaK2/PyPoE)
+
 Overview
 --------
 Parts:
