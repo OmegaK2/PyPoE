@@ -132,8 +132,8 @@ class TestIDLFile:
             tmp_path = os.path.join(d, 'test_write.idl')
             idl_file.write(tmp_path)
 
-            with open(tmp_path) as f1:
-                with open(idl_path_result) as f2:
+            with open(tmp_path, 'rb') as f1:
+                with open(idl_path_result, 'rb') as f2:
                     assert f1.read() == f2.read(), 'Written file should be equal to the write test file.'
 
 

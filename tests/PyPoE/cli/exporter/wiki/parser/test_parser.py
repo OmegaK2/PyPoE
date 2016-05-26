@@ -37,15 +37,7 @@ import pytest
 
 # self
 from PyPoE.cli.exporter.wiki import parser
-
-# =============================================================================
-# Setup
-# =============================================================================
-
-# TODO extract files
-path = 'C:/Temp'
-data_path = os.path.join(path, 'Data')
-desc_path = os.path.join(path, 'Metadata')
+from PyPoE.cli.exporter import config
 
 # =============================================================================
 # Fixtures
@@ -54,6 +46,13 @@ desc_path = os.path.join(path, 'Metadata')
 
 @pytest.fixture(scope='module')
 def parserobj():
+    try:
+        path = config.option['temp_dir']
+        fail = os.path.exists(path)
+    except KeyError:
+        fail = True
+    if fail:
+        pytest.skip('temp dir from pypoe_exporter not found')
     return parser.BaseParser(base_path=path)
 
 # =============================================================================
