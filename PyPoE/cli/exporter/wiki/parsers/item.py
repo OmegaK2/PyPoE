@@ -72,6 +72,7 @@ class ItemsWikiHandler(WikiHandler):
         'has_percentage_mana_cost',
         'has_reservation_mana_cost',
         'drop_enabled',
+        'name_list',
     )
 
     def _find_page(self, page_name):
