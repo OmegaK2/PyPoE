@@ -56,28 +56,37 @@ dextended_path = os.path.join(data_dir, 'Metadata', 'descriptions_extended.txt')
 # Fixtures
 # =============================================================================
 
-@pytest.fixture
+@pytest.fixture(scope='module')
 def dbase():
     tf = translations.TranslationFile()
     tf.read(dbase_path)
     return tf
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')
 def dextended():
     tf = translations.TranslationFile(base_dir=data_dir)
     tf.read(dextended_path)
     return tf
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')
 def tcache():
     return translations.TranslationFileCache(path_or_ggpk=data_dir)
 
 
+@pytest.fixture(scope='module')
+def tf_data(rr):
+    translations.install_data_dependant_quantifiers(rr)
+    tf = translations.TranslationFile()
+    tf.read(dbase_path)
+    return tf
+
+
 def get_test(size, unid, nresults, values):
     tags = ['tag_size%s_uq%s_no%s' % (size, unid, i) for i in range(1, size+1)]
-    results = ['tag_size%s_uq%s_v%s:%s' % (size, unid, i, ' %s'*size) for i in range(1, nresults+1)]
+    results = ['tag_size%s_uq%s_v%s:%s' % (size, unid, i, ' %s'*size)
+               for i in range(1, nresults+1)]
 
     for i, v in enumerate(results):
         results[i] = v % values[i]
@@ -216,12 +225,45 @@ class TestTranslationResults:
     def test_functionality(self, dbase, tags, values, result, message, kwargs,
                            rkwargs):
 
-        assert dbase.get_translation(tags, values, **kwargs) == result, "%s: normal failed" % message
+        assert dbase.get_translation(tags, values, **kwargs) == result, \
+            "%s: 'normal failed" % message
 
         if rkwargs is not None:
             trr = dbase.reverse_translation(result[0], **rkwargs)
-            assert trr.translations[0].ids == tags, '%s: reverse failed incorrect tags' % message
-            assert trr.values[0] == values, '%s: failed reverse incorrect values' % message
+            assert trr.translations[0].ids == tags, \
+                '%s: reverse failed incorrect tags' % message
+            assert trr.values[0] == values, \
+                '%s: failed reverse incorrect values' % message
+
+    def test_quantifier_mod_value_to_item_class(self, tf_data, rr):
+        rr['ItemClasses.dat'].build_index('Id')
+        row = rr['ItemClasses.dat'].index['Id']['Bow']
+        tags = ['test_quantifier_mod_value_to_item_class', ]
+        values = [row.rowid, ]
+        result = ['Item class: %s' % row['Name'], ]
+
+        assert tf_data.get_translation(tags, values) == result, "normal failed"
+
+        trr = tf_data.reverse_translation(result[0])
+        assert trr.translations[0].ids == tags, \
+            'reverse failed incorrect tags'
+        assert trr.values[0] == values, \
+            'failed reverse incorrect values'
+
+    def test_quantifier_tempest_mod_text(self, tf_data, rr):
+        rr['Mods.dat'].build_index('Id')
+        row = rr['Mods.dat'].index['Id']['MapEclipseItemsDropCorrupted']
+        tags = ['test_quantifier_tempest_mod_text', ]
+        values = [row.rowid, ]
+        result = ['Mod: %s' % row['Name'], ]
+
+        assert tf_data.get_translation(tags, values) == result, "normal failed"
+
+        trr = tf_data.reverse_translation(result[0])
+        assert trr.translations[0].ids == tags, \
+            'reverse failed incorrect tags'
+        assert trr.values[0] == values, \
+            'failed reverse incorrect values'
 
 
 class TestTranslationFileCache:
@@ -229,19 +271,24 @@ class TestTranslationFileCache:
         pass
 
     def test_get_file(self, tcache, dbase, dextended):
-        assert tcache.get_file('Metadata/descriptions_base.txt') == dbase, 'Files should be identical'
-        assert tcache.get_file('Metadata/descriptions_extended.txt') == dextended, 'Files should be identical'
+        assert tcache.get_file('Metadata/descriptions_base.txt') == dbase, \
+            'Files should be identical'
+        assert tcache.get_file('Metadata/descriptions_extended.txt') == \
+               dextended, 'Files should be identical'
 
     def test_getitem(self, tcache, dbase, dextended):
-        assert tcache['descriptions_base.txt'] == dbase, 'Files should be identical'
-        assert tcache['descriptions_extended.txt'] == dextended, 'Files should be identical'
+        assert tcache['descriptions_base.txt'] == dbase, \
+            'Files should be identical'
+        assert tcache['descriptions_extended.txt'] == dextended, \
+            'Files should be identical'
 
     def test_is_cache_working(self, tcache):
         a = tcache['descriptions_extended.txt']
         # Should have cached the included file
         tcache.files['Metadata/descriptions_base.txt']
 
-        assert tcache['descriptions_extended.txt'] is a, 'Cache should return identical object'
+        assert tcache['descriptions_extended.txt'] is a, \
+            'Cache should return identical object'
 
 
 '''def test_tag1_value1():

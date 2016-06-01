@@ -953,7 +953,10 @@ class RelationalReader(AbstractFileCache):
             try:
                 obj = other.index[key][obj]
             except KeyError:
-                raise SpecificationError('Did not find proper value for foreign key %s' % key)
+                raise SpecificationError(
+                    'Did not find proper value for foreign key "%s" with value '
+                    '"%s"' % (key, obj)
+                )
         else:
             obj = other[obj]
         return obj

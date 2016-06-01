@@ -40,6 +40,7 @@ from PyPoE.poe.file.translations import (
     TranslationFileCache,
     MissingIdentifierWarning,
     get_custom_translation_file,
+    install_data_dependant_quantifiers,
 )
 from PyPoE.poe.file.ot import OTFileCache
 from PyPoE.poe.sim.mods import get_translation
@@ -612,7 +613,12 @@ class BaseParser(object):
 
         # Load rr and translations which will be undoubtedly be needed for
         # parsing
-        self.rr = RelationalReader(path_or_ggpk=base_path, files=self._files, read_options=opt)
+        self.rr = RelationalReader(
+            path_or_ggpk=base_path,
+            files=self._files,
+            read_options=opt
+        )
+        install_data_dependant_quantifiers(self.rr)
         self.tc = TranslationFileCache(path_or_ggpk=base_path)
         for file_name in self._translations:
             self.tc[file_name]

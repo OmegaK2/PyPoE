@@ -62,6 +62,12 @@ results that contain extra information and utility methods.
 
 .. autoclass:: TranslationReverseResult
 
+.. autofunc:: get_custom_translation_file
+
+.. autofunc:: set_custom_translation_file
+
+.. autofunc:: install_data_dependant_quantifiers
+
 Internal API
 -------------------------------------------------------------------------------
 
@@ -111,6 +117,7 @@ from collections import Iterable, OrderedDict
 from PyPoE import CUSTOM_TRANSLATION_FILE
 from PyPoE.shared.decorators import doc
 from PyPoE.shared.mixins import ReprMixin
+from PyPoE.poe.constants import MOD_GENERATION_TYPE
 from PyPoE.poe.file.shared import AbstractFileReadOnly, ParserError, ParserWarning
 from PyPoE.poe.file.shared.cache import AbstractFileCache
 
@@ -131,7 +138,7 @@ regex_translation_string = re.compile(
     r'[\s]*'
     r'(?P<minmax>(?:[0-9\-\|#]+[ \t]+)+)'
     r'"(?P<description>.*)"'
-    r'(?P<quantifier>(?:[ \t]*[\w]+[ \t]+[0-9]+)*)'
+    r'(?P<quantifier>(?:[ \t]*[\w%]+[ \t]+[0-9]+)*)'
     r'[ \t]*[\r\n]*'
     r'$',
     re.UNICODE | re.MULTILINE
@@ -823,41 +830,44 @@ class TranslationQuantifier(TranslationReprMixin):
     ))
 
     handlers = {
+        # TODO dp = precision?
+        '60%_of_value': lambda v: v*0.6,
         'deciseconds_to_seconds': lambda v: v*10,
         'divide_by_one_hundred': lambda v: v/100,
-        'per_minute_to_per_second': lambda v: round(v/60, 1),
-        'milliseconds_to_seconds': lambda v: v/1000,
-        'negate': lambda v: v*-1,
         'divide_by_one_hundred_and_negate': lambda v: -v/100,
-        'old_leech_percent': lambda v: v/5,
-        'old_leech_permyriad': lambda v: v/50,
-        # TODO dp = precision?
-        'per_minute_to_per_second_0dp': lambda v: int(round(v/60, 0)),
-        'per_minute_to_per_second_2dp': lambda v: round(v/60, 2),
+        'divide_by_one_hundred_2dp': lambda v: round(v/100, 2),
+        'milliseconds_to_seconds': lambda v: v/1000,
         'milliseconds_to_seconds_0dp': lambda v: int(round(v/1000, 0)),
         'milliseconds_to_seconds_2dp': lambda v: round(v/1000, 2),
-        # Only once TODO
-        #'multiplicative_damage_modifier': lambda v: v,
-        #'mod_value_to_item_class': lambda v: v,
+        'multiplicative_damage_modifier': lambda v: v+100,
+        'negate': lambda v: v*-1,
+        'old_leech_percent': lambda v: v/5,
+        'old_leech_permyriad': lambda v: v/50,
+        'per_minute_to_per_second': lambda v: round(v/60, 1),
+        'per_minute_to_per_second_0dp': lambda v: int(round(v/60, 0)),
+        'per_minute_to_per_second_2dp': lambda v: round(v/60, 2),
     }
 
+    # TODO hardly possible to accurately reverse rounding
     reverse_handlers = {
+        '60%_of_value': lambda v: v/0.6,
         'deciseconds_to_seconds': lambda v: float(v)/10,
         'divide_by_one_hundred': lambda v: float(v)*100,
-        'per_minute_to_per_second': lambda v: float(v)*60,
-        'milliseconds_to_seconds': lambda v: float(v)*1000,
-        'negate': lambda v: int(v)*-1,
         'divide_by_one_hundred_and_negate': lambda v: -v*100,
-        'old_leech_percent': lambda v: float(v)*5,
-        'old_leech_permyriad': lambda v: float(v)*50,
-        # TODO hardly possible to accurately reverse rounding
-        'per_minute_to_per_second_0dp': lambda v: int(v)*60,
-        'per_minute_to_per_second_2dp': lambda v: float(v)*60,
+        'divide_by_one_hundred_2dp': lambda v: float(v)*100,
+        'milliseconds_to_seconds': lambda v: float(v)*1000,
         'milliseconds_to_seconds_0dp': lambda v: int(v)*1000,
         'milliseconds_to_seconds_2dp': lambda v: float(v)*1000,
+        'multiplicative_damage_modifier': lambda v: v-100,
+        'negate': lambda v: int(v)*-1,
+        'old_leech_percent': lambda v: float(v)*5,
+        'old_leech_permyriad': lambda v: float(v)*50,
+        'per_minute_to_per_second': lambda v: float(v)*60,
+        'per_minute_to_per_second_0dp': lambda v: int(v)*60,
+        'per_minute_to_per_second_2dp': lambda v: float(v)*60,
     }
 
-    __slots__ = ['registered_handlers']
+    __slots__ = ['registered_handler']
 
     def __init__(self):
         self.registered_handlers = {}
@@ -874,6 +884,64 @@ class TranslationQuantifier(TranslationReprMixin):
     def __hash__(self):
         #return hash((tuple(self.registered_handlers.keys()), tuple(self.registered_handlers.values())))
         return hash(tuple(self.registered_handlers.keys()))
+
+    def _warn_uncaptured(self, name):
+        warnings.warn(
+            'Warning uncaptured quantifier %s' % name, UnknownIdentifierWarning
+        )
+
+    #TODO: Index?
+    @staticmethod
+    def _mod_value_to_item_class_reverse(relational_reader, value):
+        for row in relational_reader['ItemClasses.dat']:
+            if row['Name'] == value:
+                return row.rowid
+        return None
+
+    # TODO: I dont think its very clean to return either a list or a single value
+    @staticmethod
+    def _tempest_mod_text_reverse(relational_reader, value):
+        results = []
+        for row in relational_reader['Mods.dat']:
+            if row['GenerationType'] != MOD_GENERATION_TYPE.TEMPEST:
+                continue
+            if row['Name'] == value:
+                results.append(row.rowid)
+
+        if len(results) == 1:
+            return results[0]
+        elif len(results) == 0:
+            return None
+        else:
+            return results
+
+    @classmethod
+    def install_data_dependant_quantifiers(cls, relational_reader):
+        """
+        Install data dependant quantifiers into this class.
+
+        Parameters
+        ----------
+        relational_reader : RelationalReader
+            RelationalReader instance to read the required game data files from.
+        """
+        cls.handlers.update({
+            'mod_value_to_item_class': lambda value:
+                relational_reader['ItemClasses.dat'][value]['Name'],
+            'tempest_mod_text': lambda value:
+                relational_reader['Mods.dat'][value]['Name'],
+        })
+
+        cls.reverse_handlers.update({
+            'mod_value_to_item_class': lambda value:
+                TranslationQuantifier._mod_value_to_item_class_reverse(
+                    relational_reader, value
+                ),
+            'tempest_mod_text': lambda value:
+                TranslationQuantifier._tempest_mod_text_reverse(
+                    relational_reader, value
+                ),
+        })
 
     def diff(self, other):
         if not isinstance(other, TranslationQuantifier):
@@ -897,10 +965,10 @@ class TranslationQuantifier(TranslationReprMixin):
 
         if handler in self.registered_handlers:
             self.registered_handlers[handler].append(index)
-        elif handler in self.handlers:
-            self.registered_handlers[handler] = [index, ]
         else:
-            warnings.warn('Warning, uncaptured! %s' % handler, UnknownIdentifierWarning)
+            if handler not in self.handlers:
+                self._warn_uncaptured(handler)
+            self.registered_handlers[handler] = [index, ]
 
     def handle(self, values, is_range):
         """
@@ -921,7 +989,11 @@ class TranslationQuantifier(TranslationReprMixin):
         """
         values = list(values)
         for handler_name in self.registered_handlers:
-            f = self.handlers[handler_name]
+            try:
+                f = self.handlers[handler_name]
+            except KeyError:
+                self._warn_uncaptured(handler_name)
+                break
             for index in self.registered_handlers[handler_name]:
                 index -= 1
                 if is_range[index]:
@@ -948,7 +1020,11 @@ class TranslationQuantifier(TranslationReprMixin):
         """
         indexes = set(range(0, len(values)))
         for handler_name in self.registered_handlers:
-            f = self.reverse_handlers[handler_name]
+            try:
+                f = self.reverse_handlers[handler_name]
+            except KeyError:
+                self._warn_uncaptured(handler_name)
+                break
             for index in self.registered_handlers[handler_name]:
                 index -= 1
                 indexes.remove(index)
@@ -1634,6 +1710,11 @@ def get_custom_translation_file():
     Returns the currently loaded custom translation file.
 
     Loads the default file if none is loaded.
+
+    Returns
+    -------
+    TranslationFile
+        the currently loaded custom translation file
     """
     global _custom_translation_file
     if _custom_translation_file is None:
@@ -1645,9 +1726,11 @@ def set_custom_translation_file(file=None):
     """
     Sets the custom translation file.
 
-    :param file: Path where the custom translation file is located. If None,
-    the default file will be loaded
-    :type file: str
+    Parameters
+    ----------
+    file : str
+        Path where the custom translation file is located. If None,
+        the default file will be loaded
     """
     global _custom_translation_file
     _custom_translation_file = TranslationFile(
@@ -1658,3 +1741,8 @@ custom_translation_file = property(
     fget=get_custom_translation_file,
     fset=set_custom_translation_file,
 )
+
+
+@doc(doc=TranslationQuantifier.install_data_dependant_quantifiers)
+def install_data_dependant_quantifiers(relational_reader):
+    TranslationQuantifier.install_data_dependant_quantifiers(relational_reader)
