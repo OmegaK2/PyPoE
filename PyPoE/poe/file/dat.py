@@ -81,6 +81,7 @@ Exceptions & Warnings
 
 # Python
 import struct
+import warnings
 from io import BytesIO
 from collections import OrderedDict, Iterable
 
@@ -114,6 +115,10 @@ __all__ = [
 
 
 class SpecificationError(ValueError):
+    pass
+
+
+class SpecificationWarning(UserWarning):
     pass
 
 
@@ -926,6 +931,12 @@ class DatFile(AbstractFileReadOnly):
 class RelationalReader(AbstractFileCache):
     FILE_TYPE = DatFile
 
+    #TODO append doc
+    @doc(doc=AbstractFileCache.__init__)
+    def __init__(self, raise_error_on_missing_relation=True, *args, **kwargs):
+        super(RelationalReader, self).__init__(*args, **kwargs)
+        self.raise_error_on_missing_relation = raise_error_on_missing_relation
+
     def __getitem__(self, item):
         """
         Shortcut that also appends Data/ if missing
@@ -947,16 +958,23 @@ class RelationalReader(AbstractFileCache):
             try:
                 obj = other[obj-offset]
             except IndexError:
-                #todo warning
-                obj = None
+                msg = 'Did not find proper value at index %s' % (obj-offset, )
+                if self.raise_error_on_missing_relation:
+                    raise SpecificationError(msg)
+                else:
+                    warnings.warn(msg, SpecificationWarning)
+                    obj = None
         elif key:
             try:
                 obj = other.index[key][obj]
             except KeyError:
-                raise SpecificationError(
-                    'Did not find proper value for foreign key "%s" with value '
-                    '"%s"' % (key, obj)
-                )
+                msg = 'Did not find proper value for foreign key "%s" with ' \
+                      'value "%s"' % (key, obj)
+                if self.raise_error_on_missing_relation:
+                    raise SpecificationError(msg)
+                else:
+                    warnings.warn(msg, SpecificationWarning)
+                    obj = None
         else:
             obj = other[obj]
         return obj
