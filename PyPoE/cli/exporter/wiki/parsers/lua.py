@@ -202,7 +202,7 @@ class QuestRewardReader(BaseParser):
             # Format the data
             data = {}
 
-            data['quest'] = quest['Title']
+            data['quest'] = quest['Name']
             data['quest_id'] = quest['Id']
             # Quest not implemented or buggy or master stuff
             if not data['quest']:
@@ -325,7 +325,7 @@ class QuestRewardReader(BaseParser):
                     for item in items:
                         data = {}
 
-                        data['quest'] = quest['Title']
+                        data['quest'] = quest['Name']
                         data['quest_id'] = quest['Id']
                         data['act'] = quest['Act']
                         data['reward'] = item['Name']

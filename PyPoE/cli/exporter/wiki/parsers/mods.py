@@ -43,7 +43,7 @@ from collections import OrderedDict
 from PyPoE.poe.constants import MOD_DOMAIN, MOD_GENERATION_TYPE
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter.wiki.handler import *
-from PyPoE.cli.exporter.wiki.parser import BaseParser
+from PyPoE.cli.exporter.wiki.parser import *
 from PyPoE.shared.decorators import deprecated
 
 # =============================================================================
@@ -68,6 +68,8 @@ class ModWikiHandler(WikiHandler):
 
     def _find_page(self, row, page_name):
         page = self.pws.pywikibot.Page(self.site, page_name)
+        if not page.text:
+            return page, page.text
         match = self._regex.search(page.text)
 
         if match:
@@ -140,6 +142,8 @@ class ModsHandler(ExporterHandler):
             nargs='+',
         )
 
+        add_format_argument(parser)
+
         self.add_default_parsers(
             parser=parser,
             cls=ModParser,
@@ -163,6 +167,8 @@ class ModsHandler(ExporterHandler):
             type=int,
         )
 
+        add_format_argument(parser)
+
         self.add_default_parsers(
             parser=parser,
             cls=ModParser,
@@ -184,6 +190,8 @@ class ModsHandler(ExporterHandler):
             help='Mod domain',
             choices=[k.name for k in MOD_GENERATION_TYPE],
         )
+
+        add_format_argument(parser)
 
         self.add_default_parsers(
             parser=parser,
@@ -345,19 +353,24 @@ class ModParser(BaseParser):
 
             for i, tag in enumerate(mod['SpawnWeight_TagsKeys']):
                 j = i + 1
-                data['spawn_tag%s' % j] = tag['Id']
-                data['spawn_value%s' % j] = mod['SpawnWeight_Values'][i]
+                data['spawn_weight%s_tag' % j] = tag['Id']
+                data['spawn_weight%s_value' % j] = mod['SpawnWeight_Values'][i]
+
+            for i, tag in enumerate(mod['GenerationWeight_TagsKeys']):
+                j = i + 1
+                data['generation_weight%s_tag' % j] = tag['Id']
+                data['generation_weight%s_value' % j] = \
+                    mod['GenerationWeight_Values'][i]
 
             if mod['TagsKeys']:
                 data['tags'] = ', '.join([t['Id'] for t in mod['TagsKeys']])
 
-            out = ['{{Mod\n']
-            for key, value in data.items():
-                out.append('|{0: <16}= {1}\n'.format(key, value))
-            out.append('}}\n')
-
             r.add_result(
-                lines=out,
+                lines=format_result_rows(
+                    parsed_args=args,
+                    template_name='Mod',
+                    ordered_dict=data,
+                ),
                 out_file='mod_%s.txt' % mod['Id'],
                 wiki_page=mod['Id'].replace('_', '~'),
             )

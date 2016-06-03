@@ -65,8 +65,8 @@ class BaseHandler(object):
     """
     Other handlers should inherit this one.
     """
-    def __init__(self, sub_parser):
-        raise NotImplemented
+    def __init__(self, sub_parser, *args, **kwargs):
+        pass
 
     def _help(self, *args):
         self.parser.print_help()

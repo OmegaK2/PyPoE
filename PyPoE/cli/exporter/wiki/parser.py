@@ -49,7 +49,9 @@ from PyPoE.poe.sim.mods import get_translation
 # Globals
 # =============================================================================
 
-__all__ = ['BaseParser']
+__all__ = ['BaseParser', 'format_result_rows', 'make_inter_wiki_links']
+
+DEFAULT_INDENT = 32
 
 _inter_wiki_map = (
     #
@@ -119,13 +121,14 @@ _inter_wiki_map = (
     #
     ('Abyssal Cry', {'link': 'Abyssal Cry'}),
     ('Ancestral Protector', {'link': 'Ancestral Protector'}),
+    ('Ancestral Warchief', {'link': 'Ancestral Warchief'}),
     ('Anger', {'link': 'Anger'}),
     ('Animate(?:|d) Guardian', {'link': 'Animate Guardian'}),
     ('Animate(?:|d) Weapon', {'link': 'Animate Weapon'}),
     ('Arc ', {'link': 'Arc'}),
     ('Arctic Armour', {'link': 'Arctic Armour'}),
     ('Arctic Breath', {'link': 'Arctic Breath'}),
-    ('Assassin\'s Mark', {}),
+    ('Assassin\'s Mark', {'link': 'Assassin\'s Mark'}),
     ('Ball Lightning', {'link': 'Ball Lightning'}),
     ('Barrage', {'link': 'Barrage'}),
     ('Bear Trap', {'link': 'Bear Trap'}),
@@ -184,6 +187,7 @@ _inter_wiki_map = (
     ('Freeze Mine', {'link': 'Freeze Mine'}),
     ('Freezing Pulse', {'link': 'Freezing Pulse'}),
     ('Frenzy', {'link': 'Frenzy'}),
+    ('Frostbolt', {'link': 'Frostbolt'}),
     ('Frost Blades', {'link': 'Frost Blades'}),
     ('Frost Bomb', {'link': 'Frost Bomb'}),
     ('Frost Wall', {'link': 'Frost Wall'}),
@@ -208,6 +212,7 @@ _inter_wiki_map = (
     ('Incinerate', {'link': 'Incinerate'}),
     ('Infernal Blow', {'link': 'Infernal Blow'}),
     ('Kinetic Blast', {'link': 'Kinetic Blast'}),
+    ('Lacerate', {'link': 'Lacerate'}),
     ('Leap Slam', {'link': 'Leap Slam'}),
     ('Lightning Arrow', {'link': 'Lightning Arrow'}),
     ('Lightning Channel', {'link': 'Lightning Channel'}),
@@ -252,6 +257,7 @@ _inter_wiki_map = (
     ('Smoke Mine', {'link': 'Smoke Mine'}),
     ('Spark', {'link': 'Spark'}),
     ('Spectral Throw', {'link': 'Spectral Throw'}),
+    ('Spirit Offering', {'link': 'Spirit Offering'}),
     ('Split Arrow', {'link': 'Split Arrow'}),
     ('Static Strike', {'link': 'Static Strike'}),
     ('Static Tether', {'link': 'Static Tether'}),
@@ -303,6 +309,7 @@ _inter_wiki_map = (
     ('Vigilant Strike', {'link': 'Vigilant Strike'}),
     ('Viper Strike', {'link': 'Viper Strike'}),
     ('Vitality', {'link': 'Vitality'}),
+    ('Vortex', {'link': 'Vortex'}),
     ('Vulnerability', {'link': 'Vulnerability'}),
     ('Warlord\'s Mark', {'link': 'Warlord\'s Mark'}),
     ('Whirling Blades', {'link': 'Whirling Blades'}),
@@ -375,113 +382,130 @@ _inter_wiki_map = (
     #
     # Support gems
     #
-    ('(?:level [0-9]+) Added Chaos Damage', {'link': 'Added Chaos Damage'}),
-    ('(?:level [0-9]+) Added Cold Damage', {'link': 'Added Cold Damage'}),
-    ('(?:level [0-9]+) Added Fire Damage', {'link': 'Added Fire Damage'}),
+    ('(?:level [0-9]+) Added Chaos Damage', {
+        'link': 'Added Chaos Damage Support'}),
+    ('(?:level [0-9]+) Added Cold Damage', {
+        'link': 'Added Cold Damage Support'}),
+    ('(?:level [0-9]+) Added Fire Damage', {
+        'link': 'Added Fire Damage Support'}),
     ('(?:level [0-9]+) Added Lightning Damage', {
-        'link': 'Added Lightning Damage'}),
-    ('(?:level [0-9]+) Additional Accuracy', {'link': 'Additional Accuracy'}),
-    ('(?:level [0-9]+) Blasphemy', {'link': 'Blasphemy'}),
-    ('(?:level [0-9]+) Blind', {'link': 'Blind (support gem)'}),
+        'link': 'Added Lightning Damage Support'}),
+    ('(?:level [0-9]+) Additional Accuracy', {
+        'link': 'Additional Accuracy Support'}),
+    ('(?:level [0-9]+) Blasphemy', {'link': 'Blasphemy Support'}),
+    ('(?:level [0-9]+) Blind', {'link': 'Blind Support'}),
     ('(?:level [0-9]+) Block Chance Reduction', {
-        'link': 'Block Chance Reduction'}),
-    ('(?:level [0-9]+) Blood Magic', {'link': 'Blood Magic'}),
-    ('(?:level [0-9]+) Bloodlust', {'link': 'Bloodlust'}),
+        'link': 'Block Chance Reduction Support'}),
+    ('(?:level [0-9]+) Blood Magic', {'link': 'Blood Magic Support'}),
+    ('(?:level [0-9]+) Bloodlust', {'link': 'Bloodlust Support'}),
     ('(?:level [0-9]+) Cast On Critical Strike', {
-        'link': 'Cast On Critical Strike'}),
-    ('(?:level [0-9]+) Cast on Death', {'link': 'Cast on Death'}),
-    ('(?:level [0-9]+) Cast on Melee Kill', {'link': 'Cast on Melee Kill'}),
+        'link': 'Cast On Critical Strike Support'}),
+    ('(?:level [0-9]+) Cast on Death', {'link': 'Cast on Death Support'}),
+    ('(?:level [0-9]+) Cast on Melee Kill', {
+        'link': 'Cast on Melee Kill Support'}),
     ('(?:level [0-9]+) Cast when Damage Taken', {
-        'link': 'Cast when Damage Taken'}),
-    ('(?:level [0-9]+) Cast when Stunned', {'link': 'Cast when Stunned'}),
-    ('(?:level [0-9]+) Chain', {'link': 'Chain'}),
-    ('(?:level [0-9]+) Chance to Flee', {'link': 'Chance to Flee'}),
-    ('(?:level [0-9]+) Chance to Ignite', {'link': 'Chance to Ignite'}),
-    ('(?:level [0-9]+) Cluster Traps', {'link': 'Cluster Traps'}),
-    ('(?:level [0-9]+) Cold Penetration', {'link': 'Cold Penetration'}),
-    ('(?:level [0-9]+) Cold to Fire', {'link': 'Cold to Fire'}),
-    ('(?:level [0-9]+) Concentrated Effect', {'link': 'Concentrated Effect'}),
+        'link': 'Cast when Damage Taken Support'}),
+    ('(?:level [0-9]+) Cast when Stunned', {'link': 'Cast when Stunned Support'}),
+    ('(?:level [0-9]+) Chain', {'link': 'Chain Support'}),
+    ('(?:level [0-9]+) Chance to Flee', {'link': 'Chance to Flee Support'}),
+    ('(?:level [0-9]+) Chance to Ignite', {'link': 'Chance to Ignite Support'}),
+    ('(?:level [0-9]+) Cluster Traps', {'link': 'Cluster Traps Support'}),
+    ('(?:level [0-9]+) Cold Penetration', {'link': 'Cold Penetration Support'}),
+    ('(?:level [0-9]+) Cold to Fire', {'link': 'Cold to Fire Support'}),
+    ('(?:level [0-9]+) Concentrated Effect', {
+        'link': 'Concentrated Effect Support'}),
     ('(?:level [0-9]+) Controlled Destruction', {
-        'link': 'Controlled Destruction'}),
-    ('(?:level [0-9]+) Culling Strike', {'link': 'Culling Strike'}),
-    ('(?:level [0-9]+) Curse On Hit', {'link': 'Curse On Hit'}),
-    ('(?:level [0-9]+) Elemental Focus', {'link': 'Elemental Focus'}),
+        'link': 'Controlled Destruction Support'}),
+    ('(?:level [0-9]+) Culling Strike', {'link': 'Culling Strike Support'}),
+    ('(?:level [0-9]+) Curse On Hit', {'link': 'Curse On Hit Support'}),
+    ('(?:level [0-9]+) Elemental Focus', {'link': 'Elemental Focus Support'}),
     ('(?:level [0-9]+) Elemental Proliferation', {
-        'link': 'Elemental Proliferation'}),
-    ('(?:level [0-9]+) Empower', {'link': 'Empower'}),
+        'link': 'Elemental Proliferation Support'}),
+    ('(?:level [0-9]+) Empower', {'link': 'Empower Support'}),
     ('(?:level [0-9]+) Endurance Charge on Melee Stun', {
-        'link': 'Endurance Charge on Melee Stun'}),
-    ('(?:level [0-9]+) Enhance', {'link': 'Enhance'}),
-    ('(?:level [0-9]+) Enlighten', {'link': 'Enlighten'}),
-    ('(?:level [0-9]+) Faster Attacks', {'link': 'Faster Attacks'}),
-    ('(?:level [0-9]+) Faster Casting', {'link': 'Faster Casting'}),
-    ('(?:level [0-9]+) Faster Projectiles', {'link': 'Faster Projectiles'}),
-    ('(?:level [0-9]+) Fire Penetration', {'link': 'Fire Penetration'}),
-    ('(?:level [0-9]+) Fork', {'link': 'Fork'}),
-    ('(?:level [0-9]+) Fortify', {'link': 'Fortify'}),
-    ('(?:level [0-9]+) Generosity', {'link': 'Generosity'}),
+        'link': 'Endurance Charge on Melee Stun Support'}),
+    ('(?:level [0-9]+) Enhance', {'link': 'Enhance Support'}),
+    ('(?:level [0-9]+) Enlighten', {'link': 'Enlighten Support'}),
+    ('(?:level [0-9]+) Faster Attacks', {'link': 'Faster Attacks Support'}),
+    ('(?:level [0-9]+) Faster Casting', {'link': 'Faster Casting Support'}),
+    ('(?:level [0-9]+) Faster Projectiles', {
+        'link': 'Faster Projectiles Support'}),
+    ('(?:level [0-9]+) Fire Penetration', {'link': 'Fire Penetration Support'}),
+    ('(?:level [0-9]+) Fork', {'link': 'Fork Support'}),
+    ('(?:level [0-9]+) Fortify', {'link': 'Fortify Support'}),
+    ('(?:level [0-9]+) Generosity', {'link': 'Generosity Support'}),
     ('(?:level [0-9]+) Greater Multiple Projectiles', {
-        'link': 'Greater Multiple Projectiles'}),
-    ('(?:level [0-9]+) Hypothermia', {'link': 'Hypothermia'}),
-    ('(?:level [0-9]+) Ice Bite', {'link': 'Ice Bite'}),
+        'link': 'Greater Multiple Projectiles Support'}),
+    ('(?:level [0-9]+) Hypothermia', {'link': 'Hypothermia Support'}),
+    ('(?:level [0-9]+) Ice Bite', {'link': 'Ice Bite Support'}),
     ('(?:level [0-9]+) Increased Area of Effect', {
-        'link': 'Increased Area of Effect'}),
+        'link': 'Increased Area of Effect Support'}),
     ('(?:level [0-9]+) Increased Burning Damage', {
-        'link': 'Increased Burning Damage'}),
+        'link': 'Increased Burning Damage Support'}),
     ('(?:level [0-9]+) Increased Critical Damage', {
-        'link': 'Increased Critical Damage'}),
+        'link': 'Increased Critical Damage Support'}),
     ('(?:level [0-9]+) Increased Critical Strikes', {
-        'link': 'Increased Critical Strikes'}),
-    ('(?:level [0-9]+) Increased Duration', {'link': 'Increased Duration'}),
-    ('(?:level [0-9]+) Innervate', {'link': 'Innervate'}),
-    ('(?:level [0-9]+) Iron Grip', {'link': 'Iron Grip'}),
-    ('(?:level [0-9]+) Iron Will', {'link': 'Iron Will'}),
-    ('(?:level [0-9]+) Item Quantity', {'link': 'Item Quantity'}),
-    ('(?:level [0-9]+) Item Rarity', {'link': 'Item Rarity'}),
-    ('(?:level [0-9]+) Knockback', {'link': 'Knockback'}),
-    ('(?:level [0-9]+) Less Duration', {'link': 'Less Duration'}),
+        'link': 'Increased Critical Strikes Support'}),
+    ('(?:level [0-9]+) Increased Duration', {
+        'link': 'Increased Duration Support'}),
+    ('(?:level [0-9]+) Innervate', {'link': 'Innervate Support'}),
+    ('(?:level [0-9]+) Iron Grip', {'link': 'Iron Grip Support'}),
+    ('(?:level [0-9]+) Iron Will', {'link': 'Iron Will Support'}),
+    ('(?:level [0-9]+) Item Quantity', {'link': 'Item Quantity Support'}),
+    ('(?:level [0-9]+) Item Rarity', {'link': 'Item Rarity Support'}),
+    ('(?:level [0-9]+) Knockback', {'link': 'Knockback Support'}),
+    ('(?:level [0-9]+) Less Duration', {'link': 'Less Duration Support'}),
     ('(?:level [0-9]+) Lesser Multiple Projectiles', {
-        'link': 'Lesser Multiple Projectiles'}),
-    ('(?:level [0-9]+) Life Gain on Hit', {'link': 'Life Gain on Hit'}),
-    ('(?:level [0-9]+) Life Leech', {'link': 'Life Leech'}),
-    ('(?:level [0-9]+) Lightning Penetration', {'link': 'Lightning Penetration'}),
-    ('(?:level [0-9]+) Mana Leech', {'link': 'Mana Leech'}),
+        'link': 'Lesser Multiple Projectiles Support'}),
+    ('(?:level [0-9]+) Life Gain on Hit', {'link': 'Life Gain on Hit Support'}),
+    ('(?:level [0-9]+) Life Leech', {'link': 'Life Leech Support'}),
+    ('(?:level [0-9]+) Lightning Penetration', {
+        'link': 'Lightning Penetration Support'}),
+    ('(?:level [0-9]+) Mana Leech', {'link': 'Mana Leech Support'}),
     ('(?:level [0-9]+) Melee Damage on Full Life', {
-        'link': 'Melee Damage on Full Life'}),
-    ('(?:level [0-9]+) Melee Physical Damage', {'link': 'Melee Physical Damage'}),
-    ('(?:level [0-9]+) Melee Splash', {'link': 'Melee Splash'}),
-    ('(?:level [0-9]+) Minefield', {'link': 'Minefield'}),
-    ('(?:level [0-9]+) Minion Damage', {'link': 'Minion Damage'}),
-    ('(?:level [0-9]+) Minion Life', {'link': 'Minion Life'}),
-    ('(?:level [0-9]+) Minion Speed', {'link': 'Minion Speed'}),
+        'link': 'Melee Damage on Full Life Support'}),
+    ('(?:level [0-9]+) Melee Physical Damage', {
+        'link': 'Melee Physical Damage Support'}),
+    ('(?:level [0-9]+) Melee Splash', {'link': 'Melee Splash Support'}),
+    ('(?:level [0-9]+) Minefield', {'link': 'Minefield Support'}),
+    ('(?:level [0-9]+) Minion Damage', {'link': 'Minion Damage Support'}),
+    ('(?:level [0-9]+) Minion Life', {'link': 'Minion Life Support'}),
+    ('(?:level [0-9]+) Minion Speed', {'link': 'Minion Speed Support'}),
     ('(?:level [0-9]+) Minion and Totem Elemental Resistance', {
-        'link': 'Minion and Totem Elemental Resistance'}),
-    ('(?:level [0-9]+) Multiple Traps', {'link': 'Multiple Traps'}),
-    ('(?:level [0-9]+) Multistrike', {'link': 'Multistrike'}),
+        'link': 'Minion and Totem Elemental Resistance Support'}),
+    ('(?:level [0-9]+) Multiple Traps', {'link': 'Multiple Traps Support'}),
+    ('(?:level [0-9]+) Multistrike', {'link': 'Multistrike Support'}),
     ('(?:level [0-9]+) Physical Projectile Attack Damage', {
-        'link': 'Physical Projectile Attack Damage'}),
-    ('(?:level [0-9]+) Physical to Lightning', {'link': 'Physical to Lightning'}),
-    ('(?:level [0-9]+) Pierce', {'link': 'Pierce (support gem)'}),
-    ('(?:level [0-9]+) Point Blank', {'link': 'Point Blank'}),
-    ('(?:level [0-9]+) Poison', {'link': 'Poison (support gem)'}),
+        'link': 'Physical Projectile Attack Damage Support'}),
+    ('(?:level [0-9]+) Physical to Lightning', {
+        'link': 'Physical to Lightning Support'}),
+    ('(?:level [0-9]+) Pierce', {'link': 'Pierce Support'}),
+    ('(?:level [0-9]+) Point Blank', {'link': 'Point Blank Support'}),
+    ('(?:level [0-9]+) Poison', {'link': 'Poison Support'}),
     ('(?:level [0-9]+) Power Charge On Critical', {
-        'link': 'Power Charge On Critical'}),
-    ('(?:level [0-9]+) Ranged Attack Totem', {'link': 'Ranged Attack Totem'}),
-    ('(?:level [0-9]+) Rapid Decay', {'link': 'Rapid Decay'}),
-    ('(?:level [0-9]+) Reduced Mana', {'link': 'Reduced Mana'}),
-    ('(?:level [0-9]+) Remote Mine', {'link': 'Remote Mine'}),
-    ('(?:level [0-9]+) Return Projectiles', {'link': 'Return Projectiles'}),
-    ('(?:level [0-9]+) Slower Projectiles', {'link': 'Slower Projectiles'}),
-    ('(?:level [0-9]+) Spell Echo', {'link': 'Spell Echo'}),
-    ('(?:level [0-9]+) Spell Totem', {'link': 'Spell Totem'}),
-    ('(?:level [0-9]+) Split Projectiles', {'link': 'Split Projectiles'}),
-    ('(?:level [0-9]+) Stun', {'link': 'Stun (support gem)'}),
-    ('(?:level [0-9]+) Trap', {'link': 'Trap (support gem)'}),
-    ('(?:level [0-9]+) Trap Cooldown', {'link': 'Trap Cooldown'}),
-    ('(?:level [0-9]+) Trap and Mine Damage', {'link': 'Trap and Mine Damage'}),
-    ('(?:level [0-9]+) Void Manipulation', {'link': 'Void Manipulation'}),
+        'link': 'Power Charge On Critical Support'}),
+    ('(?:level [0-9]+) Ranged Attack Totem', {
+        'link': 'Ranged Attack Totem Support'}),
+    ('(?:level [0-9]+) Rapid Decay', {'link': 'Rapid Decay Support'}),
+    ('(?:level [0-9]+) Reduced Mana', {'link': 'Reduced Mana Support'}),
+    ('(?:level [0-9]+) Remote Mine', {'link': 'Remote Mine Support'}),
+    ('(?:level [0-9]+) Return Projectiles', {
+        'link': 'Return Projectiles Support'}),
+    ('(?:level [0-9]+) Slower Projectiles', {
+        'link': 'Slower Projectiles Support'}),
+    ('(?:level [0-9]+) Spell Echo', {'link': 'Spell Echo Support'}),
+    ('(?:level [0-9]+) Spell Totem', {'link': 'Spell Totem Support'}),
+    ('(?:level [0-9]+) Split Projectiles', {
+        'link': 'Split Projectiles Support'}),
+    ('(?:level [0-9]+) Stun', {'link': 'Stun Support'}),
+    ('(?:level [0-9]+) Trap', {'link': 'Trap Support'}),
+    ('(?:level [0-9]+) Trap Cooldown', {'link': 'Trap Cooldown Support'}),
+    ('(?:level [0-9]+) Trap and Mine Damage', {
+        'link': 'Trap and Mine Damage Support'}),
+    ('(?:level [0-9]+) Void Manipulation', {
+        'link': 'Void Manipulation Support'}),
     ('(?:level [0-9]+) Weapon Elemental Damage', {
-        'link': 'Weapon Elemental Damage'}),
+        'link': 'Weapon Elemental Damage Support'}),
     #
     # Groups
     #
@@ -616,7 +640,8 @@ class BaseParser(object):
         self.rr = RelationalReader(
             path_or_ggpk=base_path,
             files=self._files,
-            read_options=opt
+            read_options=opt,
+            raise_error_on_missing_relation=False,
         )
         install_data_dependant_quantifiers(self.rr)
         self.tc = TranslationFileCache(path_or_ggpk=base_path)
@@ -725,6 +750,41 @@ class BaseParser(object):
 # =============================================================================
 # Functions
 # =============================================================================
+
+
+def format_result_rows(parsed_args, ordered_dict, template_name,
+                       indent=DEFAULT_INDENT):
+    """
+    Formats the given result rows as mediawiki template or module.
+
+    Parameters
+    ----------
+    parsed_args
+        argument parser argument containing the format argument
+    ordered_dict : OrderedDict
+        OrderedDict instance of the rows to format
+    template_name : str
+        name of the template
+    indent : int
+        number of spaces to use for indentation/padding up to the given size
+
+    Returns
+    -------
+    out : list[str]
+        formatted string
+    """
+    if parsed_args.format == 'template':
+        out = ['{{%s\n' % template_name]
+        for k, v in ordered_dict.items():
+            out.append(('|{0: <%s}= {1}\n' % indent).format(k, v))
+        out.append('}}\n')
+    elif parsed_args.format == 'module':
+        out = ['{']
+        for k, v in ordered_dict.items():
+            out.append('{0} = "{1}", '.format(k, v))
+        out[-1] = out[-1].strip(', ')
+        out.append('}')
+    return out
 
 
 def make_inter_wiki_links(string):

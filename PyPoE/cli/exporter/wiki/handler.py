@@ -49,11 +49,13 @@ from PyPoE.cli.exporter.util import check_hash
 # Globals
 # =============================================================================
 
-__all__ = ['ExporterHandler', 'ExporterResult', 'WikiHandler']
+__all__ = ['ExporterHandler', 'ExporterResult', 'WikiHandler',
+           'add_format_argument']
 
 # =============================================================================
 # Classes
 # =============================================================================
+
 
 class WikiHandler(object):
     regex_search = None
@@ -88,7 +90,7 @@ class WikiHandler(object):
             print(text)
         else:
             page.text = text
-            page.save(pws.get_edit_message(message))
+            page.save(summary=pws.get_edit_message(message), botflag=True)
 
     def handle_page(self, *a, row):
         page_name = row['wiki_page']
@@ -102,13 +104,14 @@ class WikiHandler(object):
             message=self.name,
         )
 
-    def handle(self, *a, pws, result, cmdargs):
+    def handle(self, *a, pws, result, cmdargs, parser):
         site = pws.get_site()
 
         # First row is handled separately to prompt the user for his password
         self.site = site
         self.pws = pws
         self.cmdargs = cmdargs
+        self.parser = parser
         self.handle_page(row=result[0])
 
         tp = ThreadPoolExecutor(max_workers=cmdargs.wiki_threads)
@@ -123,6 +126,9 @@ class WikiHandler(object):
 
 
 class ExporterHandler(BaseHandler):
+    def __init__(self, *args, **kwargs):
+        super(ExporterHandler, self).__init__(*args, **kwargs)
+
     def get_wrap(self, cls, func, handler, wiki_handler):
         def wrapper(pargs, *args, **kwargs):
             # Check Hash
@@ -168,12 +174,14 @@ class ExporterHandler(BaseHandler):
                             raise
 
                     if wiki_handler is None:
-                        console('No wiki-handler defined for this function', msg=Msg.error)
+                        console('No wiki-handler defined for this function',
+                                msg=Msg.error)
                         return 0
 
                     console('Running wikibot...')
                     console('-'*80)
-                    wiki_handler.handle(pws=pws, result=result, cmdargs=pargs)
+                    wiki_handler.handle(pws=pws, result=result, cmdargs=pargs,
+                                        parser=parser)
                     console('-'*80)
                     console('Completed wikibot execution.')
 
@@ -226,3 +234,17 @@ class ExporterResult(list):
         data.update(extra)
 
         self.append(data)
+
+
+# =============================================================================
+# Functions
+# =============================================================================
+
+
+def add_format_argument(parser):
+    parser.add_argument(
+        '--format',
+        help='Output format',
+        choices=['template', 'module'],
+        default='template',
+    )

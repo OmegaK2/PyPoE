@@ -37,17 +37,11 @@ import os
 from collections import defaultdict, OrderedDict
 
 # Self
-from PyPoE.poe.file.stat_filters import StatFilterFile
+from PyPoE.poe.file.stat_filters import StatFilterFile, SkillEntry
 from PyPoE.poe.sim.formula import gem_stat_requirement, GemTypes
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter.wiki.handler import *
-from PyPoE.cli.exporter.wiki.parser import BaseParser
-
-# =============================================================================
-# Data
-# =============================================================================
-
-_LINE_FORMAT = '|{0: <33}= {1}\n'
+from PyPoE.cli.exporter.wiki.parser import *
 
 # =============================================================================
 # Classes
@@ -102,10 +96,12 @@ class ItemsWikiHandler(WikiHandler):
             if k in self.COPY_KEYS:
                 row['infobox'][k] = match.group('value').strip('\n\r ')
 
-        infobox_text = ['{{Item\n', ]
-        for k, v in row['infobox'].items():
-            infobox_text.append(_LINE_FORMAT.format(k, v))
-        infobox_text.append('}}')
+        infobox_text = format_result_rows(
+            parsed_args=self.cmdargs,
+            template_name='Item',
+            indent=33,
+            ordered_dict=row['infobox'],
+        )
 
         new_text = page.text[:itembox.start()] + ''.join(infobox_text) + \
                    page.text[itembox.end():]
@@ -118,7 +114,8 @@ class ItemsWikiHandler(WikiHandler):
 
 
 class ItemsHandler(ExporterHandler):
-    def __init__(self, sub_parser):
+    def __init__(self, sub_parser, *args, **kwargs):
+        super(ItemsHandler, self).__init__(self, sub_parser, *args, **kwargs)
         self.parser = sub_parser.add_parser('items', help='Items Exporter')
         self.parser.set_defaults(func=lambda args: self.parser.print_help())
         sub = self.parser.add_subparsers()
@@ -134,12 +131,7 @@ class ItemsHandler(ExporterHandler):
             wiki_handler=ItemsWikiHandler(name='Item Export'),
         )
 
-        parser.add_argument(
-            '--format',
-            help='Output format',
-            choices=['template', 'module'],
-            default='template',
-        )
+        add_format_argument(parser)
 
         parser.add_argument(
             'item',
@@ -357,6 +349,9 @@ class ItemsParser(BaseParser):
             self._skill_stat_filters.read(os.path.join(
                 self.base_path, 'Metadata', 'skillpopup_stat_filters.txt'
             ))
+            #TODO remove once fixed
+            self._skill_stat_filters.skills['spirit_offering'] = SkillEntry(skill_id='spirit_offering', translation_file_path='Metadata/offering_skill_stat_descriptions.txt', stats=[])
+
         return self._skill_stat_filters
 
     def _apply_column_map(self, infobox, column_map, list_object):
@@ -414,7 +409,7 @@ class ItemsParser(BaseParser):
                 tf = self.tc[self.skill_stat_filter.skills[
                     ae['Id']].translation_file_path]
             except KeyError as e:
-                warnings.warn('Missing active skill: %s' % e.args[0])
+                warnings.warn('Missing active skill in stat filers: %s' % e.args[0])
                 tf = self.tc['skill_stat_descriptions.txt']
         else:
             tf = self.tc['gem_stat_descriptions.txt']
@@ -437,7 +432,7 @@ class ItemsParser(BaseParser):
 
             stats = [r['Id'] for r in row['StatsKeys']] + \
                     [r['Id'] for r in row['StatsKeys2']]
-            values = row['StatValues'] + [1, ]
+            values = row['StatValues'] + ([1, ] * len(row['StatsKeys2']))
 
             rminfos = self._skill_gem_stat_remove.get(base_item_type['Name'])
             if rminfos:
@@ -620,6 +615,17 @@ class ItemsParser(BaseParser):
 
             if line:
                 lines.append(line)
+
+        # Add the attack damage stat from the game data
+        if ae and 'Attack' in infobox['gem_tags']:
+            lines.insert(0, tf.get_translation(
+                tags=['active_skill_attack_damage_final_permyriad', ],
+                values=[(
+                    level_data[0]['DamageMultiplier'],
+                    level_data[max_level]['DamageMultiplier'])
+                    , ]
+            )[0])
+
         infobox['stat_text'] = '<br>'.join(lines)
         self._write_stats(infobox, zip(stats, values), 'static_')
 
@@ -914,19 +920,20 @@ class ItemsParser(BaseParser):
                 if fail:
                     continue
 
-            if parsed_args.format == 'template':
-                out = ['{{Item\n']
-                for k, v in infobox.items():
-                    out.append(_LINE_FORMAT.format(k, v))
-                out.append('}}\n')
-            elif parsed_args.format == 'module':
-                out = ['{']
-                for k, v in infobox.items():
-                    out.append('{0} = "{1}", '.format(k, v))
-                out.append('}')
+            format_result_rows(
+                parsed_args=parsed_args,
+                template_name='Item',
+                indent=33,
+                ordered_dict=infobox,
+            )
 
             r.add_result(
-                lines=out,
+                lines=format_result_rows(
+                    parsed_args=parsed_args,
+                    template_name='Item',
+                    indent=33,
+                    ordered_dict=infobox,
+                ),
                 out_file='item_%s.txt' % name,
                 wiki_page=name,
                 infobox=infobox,

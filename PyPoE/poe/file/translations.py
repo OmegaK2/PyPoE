@@ -589,8 +589,8 @@ class TranslationString(TranslationReprMixin):
                 string.append(self.strings[i])
                 # The case % is normal substitution
                 if self.tags_types[i] == '$+d' and (
-                        is_range[tagid] and value[1] > 0 or
-                        value > 0):
+                        is_range[tagid] and value[1] > 0 or not is_range[tagid]
+                        and value > 0):
                     string.append('+')
 
                 if not use_placeholder:
