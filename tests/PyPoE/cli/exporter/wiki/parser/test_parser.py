@@ -87,14 +87,14 @@ iwdata = (
         'Socketed Gems are supported by level 6 Stun',
 
         '[[Item socket|Socketed]] Gems are supported by '
-        '[[Stun (support gem)|level 6 Stun]]',
+        '[[Stun Support|level 6 Stun]]',
     ),
     #
     (
         'Socketed Gems are Supported by level 10 Faster Casting',
 
         '[[Item socket|Socketed]] Gems are Supported by '
-        '[[Faster Casting|level 10 Faster Casting]]',
+        '[[Faster Casting Support|level 10 Faster Casting]]',
     ),
 )
 
