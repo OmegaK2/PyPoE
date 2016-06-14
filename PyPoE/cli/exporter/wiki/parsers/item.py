@@ -544,8 +544,6 @@ class ItemsParser(BaseParser):
                         dynamic[stat_key][key] = None
             last = data
 
-
-
         #
         # Output handling for gem infobox
         #
@@ -623,6 +621,8 @@ class ItemsParser(BaseParser):
             if line:
                 lines.append(line)
 
+        self._write_stats(infobox, zip(stats, values), 'static_')
+
         # Add the attack damage stat from the game data
         if ae and 'Attack' in infobox['gem_tags']:
             values = (
@@ -637,7 +637,6 @@ class ItemsParser(BaseParser):
                 )[0])
 
         infobox['stat_text'] = '<br>'.join(lines)
-        self._write_stats(infobox, zip(stats, values), 'static_')
 
         # Quality stats
         lines = []
