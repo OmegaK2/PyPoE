@@ -131,6 +131,7 @@ __all__ = [
     'get_custom_translation_file',
     'set_custom_translation_file',
     'custom_translation_file',
+    'install_data_dependant_quantifiers',
 ]
 
 regex_translation_string = re.compile(

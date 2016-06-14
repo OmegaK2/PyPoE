@@ -103,8 +103,9 @@ class ItemsWikiHandler(WikiHandler):
             ordered_dict=row['infobox'],
         )
 
+        # I need the +1 offset or it adds a space everytime for some reason.
         new_text = page.text[:itembox.start()] + ''.join(infobox_text) + \
-                   page.text[itembox.end():]
+                   page.text[itembox.end()+1:]
 
         self.save_page(
             page=page,
@@ -132,6 +133,13 @@ class ItemsHandler(ExporterHandler):
         )
 
         add_format_argument(parser)
+
+        parser.add_argument(
+            '-ft-c', '--filter-class',
+            help='Filter by item class(es). Case sensitive.',
+            nargs='*',
+            dest='item_class',
+        )
 
         parser.add_argument(
             'item',
@@ -175,7 +183,6 @@ class ItemsParser(BaseParser):
         }),
         ('ManaMultiplier', {
             'template': 'mana_multiplier',
-            'default': 100,
             'format': lambda v: '{0:n}'.format(v),
             'default_cls': ('Active Skill Gems', ),
         }),
@@ -206,12 +213,10 @@ class ItemsParser(BaseParser):
         }),
         ('DamageEffectiveness', {
             'template': 'damage_effectiveness',
-            'default': 0,
             'format': lambda v: '{0:n}'.format(v+100),
         }),
         ('DamageMultiplier', {
             'template': 'damage_multiplier',
-            'default': 0,
             'format': lambda v: '{0:n}'.format(v/100+100),
         }),
     ))
@@ -577,17 +582,19 @@ class ItemsParser(BaseParser):
         # GrantedEffectsPerLevel.dat
         infobox['required_level'] = level_data[0]['LevelRequirement']
 
-        # Remove columns that are zero/default
+        # Don't add columns that are zero/default
         for column, column_data in self._skill_column_map.items():
             if column not in static['columns']:
                 continue
 
-            if gepl[0][column] == column_data['default']:
-                df = column_data.get('default_cls')
-                if df is None:
-                    continue
-                elif infobox['class'] in df:
-                    continue
+            default = column_data.get('default')
+            if default is not None and gepl[0][column] == \
+                    column_data['default']:
+                continue
+
+            df = column_data.get('default_cls')
+            if df is not None and infobox['class'] in df:
+                continue
             infobox['static_' + column_data['template']] = \
                 column_data['format'](gepl[0][column])
 
@@ -618,13 +625,16 @@ class ItemsParser(BaseParser):
 
         # Add the attack damage stat from the game data
         if ae and 'Attack' in infobox['gem_tags']:
-            lines.insert(0, tf.get_translation(
-                tags=['active_skill_attack_damage_final_permyriad', ],
-                values=[(
-                    level_data[0]['DamageMultiplier'],
-                    level_data[max_level]['DamageMultiplier'])
-                    , ]
-            )[0])
+            values = (
+                level_data[0]['DamageMultiplier'],
+                level_data[max_level]['DamageMultiplier'],
+            )
+            # Account for default (0 = 100%)
+            if values[0] != 0 or values[1] != 0:
+                lines.insert(0, tf.get_translation(
+                    tags=['active_skill_attack_damage_final_permyriad', ],
+                    values=[values, ]
+                )[0])
 
         infobox['stat_text'] = '<br>'.join(lines)
         self._write_stats(infobox, zip(stats, values), 'static_')
@@ -864,8 +874,32 @@ class ItemsParser(BaseParser):
     }
 
     def export(self, parsed_args):
-        items = [r for r in self.rr['BaseItemTypes.dat'] if r['Name']
-                 in parsed_args.item]
+        # Pre processing filters
+        valid_classes = [row['Name'] for row in self.rr['ItemClasses.dat']]
+
+        invalid = False
+        if parsed_args.item_class:
+            for cls in list(parsed_args.item_class):
+                if cls not in valid_classes:
+                    invalid = True
+                    parsed_args.item_class.remove(cls)
+                    console('Invalid filter item class: %s' % cls, Msg.error)
+        if invalid:
+            console('Invalid filters were specified. Search may yield '
+                    'unintended results.', Msg.warning)
+
+        # Create item lsit
+        items = []
+        for row in self.rr['BaseItemTypes.dat']:
+            # catch exception in case item class was not specified
+            try:
+                if row['ItemClassesKey']['Name'] not in parsed_args.item_class:
+                    continue
+            except TypeError:
+                pass
+
+            if row['Name'] in parsed_args.item:
+                items.append(row)
 
         if not items:
             console('No items found. Exiting...')
