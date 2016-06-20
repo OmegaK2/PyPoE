@@ -27,6 +27,15 @@ See PyPoE/LICENSE
 Todo
 ===============================================================================
 ValueError -> ParserError?
+
+Documentation
+===============================================================================
+
+.. autoclass:: ItemParser
+
+.. autoclass:: ItemSocket
+
+.. autoclass:: ITEM_TYPES
 """
 
 # =============================================================================
@@ -47,7 +56,7 @@ from PyPoE.poe.file.dat import RelationalReader
 # Globals
 # =============================================================================
 
-__all__ = []
+__all__ = ['ItemParser']
 
 # =============================================================================
 # Functions
@@ -87,11 +96,12 @@ class ITEM_TYPES(Enum):
 class ItemSocket(object):
     """
 
-    :ivar index:
-    :type index: int
-
-    :ivar colour:
-    :type colour: SOCKET_COLOUR
+    Attributes
+    ----------
+    index : int
+        Index (position) of the socket
+    colour : SOCKET_COLOUR
+        Colour of the socket
     """
 
     __slots__ = ('index', 'colour')
@@ -114,6 +124,137 @@ class ItemParser(object):
     """
     Class to parse/handle the string provided by items when using CTRL-C on
     items in game.
+
+    .. warning::
+        The available attributes may vary depending on what was given on the
+        string.
+
+    It is recommended to use this together with the game data to get accurate
+    representation of items.
+    The stat texts can be reversed into stats with the Translation class.
+
+    Attributes
+    ----------
+    base_item_name : str
+        Name of the base item
+    name : str
+        Name of the item. This may equal the base item name (i.e white items)
+        or be different (e.x. unique items)
+    description : str
+        Description of the item if any
+    flavour_text : str
+        Flavour text (orange text) if any
+    help_text : str
+        Help text (grey text, "tooltip") if any
+    implicit_stats : list[str]
+        List of implicit stat text lines
+    stats : list[str]
+        List of explicit stat text lines
+    prefix : str
+        Prefix name of this item if any
+    suffix : str
+        Suffix name of this item if any
+    rarity : RARITY
+        rarity of the item
+    sockets : list[ItemSocket]
+        list of item sockets
+    links : list[ItemSocket]
+        list of linked sockets
+    is_corrupted : bool
+        Whether the item is corrupted
+
+    required_level : int
+        Required level to use the item
+    required_str : int
+        Required strength to use the item
+    required_int : int
+        Required intelligence to use the item
+    required_dex : int
+        Required dexterity to use the item
+
+    map_tier : int
+        Map tier
+        (found on maps)
+    item_quantity : int
+        How much item quantity the item grants
+        (found on maps)
+    item_rarity : int
+        How much item rarity the item grants
+        (found on maps)
+    pack_size : int
+        How much pack size the item grants
+        (found on maps)
+
+    quality : int
+        Quality of the item.
+        (found on all kinds of equipment and maps)
+    armour : int
+        Armour rating of the item
+        (found on armour)
+    evasion : int
+        Evasion rating of the item
+        (found on armour)
+    energy_shield : int
+        Energy shield of the item
+        (found on armour)
+    physical_damage : list[int, int]
+        2 element list containing the minimum/maximum physical damage of the
+        item
+        (found on weapons)
+    elemental_damage: list[[int, int], [int, int], [int, int]]
+        A 3 element list containing lists with 2 elements each.
+        The top level list with 3 elements represents the elemental damage
+        types as provided in the description.
+        The bottom level list with 2 elements represents the minimum and
+        maximum damage.
+        (found on weapons)
+    chaos_damage : list[int, int]
+        2 element list containing the minimum/maximum chaos damage of the
+        item
+        (found on weapons)
+    critical_strike_chance : float
+        Critical strike chance of the item
+        (found on weapons)
+    attacks_per_second : float
+        Attacks per second of the item
+        (found on weapons)
+    item_class : str
+        The item class of the item.
+        .. warning:
+            even though all items have an item class, this is only present on
+            weapons
+
+    gem_level : int
+        Current skill gem level
+    mana_cost : int
+        Mana cost of the skill gem
+    mana_reserved : int
+        Mana reservation cost of the skill gem
+    mana_multiplier : int
+        mana multiplier of the skill gem
+    souls_per_use : int
+        Souls used when he skill gem is triggered
+        (found on vaal skill gems)
+    stored_uses : int
+        Number of stored uses
+        (found on vaal skills, traps, mines, etc)
+    cooldown_time : float
+        Cooldown in seconds of the skill gem
+        (found on traps, mines, etc)
+    cast_time : float
+        Cast time in second of the skill gem
+    critical_stike_chance: float
+        Critical strike chance in percent of the skill gem
+    damage_effectiveness : int
+        Damage effectiveness in percent of the skill gem
+    experience : list[int, int]
+        2 Elemental list containing the current gem experience and the required
+        experience for the next level respectively
+
+    stack_size : int
+        Current stack size of the item
+        (found on currency and other stackables)
+
     """
     _re_split = re.compile(
         r'^\-{8}$',
@@ -360,11 +501,13 @@ class ItemParser(object):
 
     def __init__(self, item_info_string):
         """
-        :param item_info_string:
-        :type item_info_string: str
+        Creates a new ItemParser instance and attempts to parse the given
+        item string from the CTRL-C command in game.
 
-        :param relational_reader:
-        :type relational_reader: RelationalReader
+        Parameters
+        ----------
+        item_info_string : str
+            The complete string to parse
         """
         self._type = None
 

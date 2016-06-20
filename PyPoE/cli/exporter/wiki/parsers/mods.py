@@ -69,7 +69,7 @@ class ModWikiHandler(WikiHandler):
     def _find_page(self, row, page_name):
         page = self.pws.pywikibot.Page(self.site, page_name)
         if not page.text:
-            return page, page.text
+            return page, ''.join(row['lines'])
         match = self._regex.search(page.text)
 
         if match:
