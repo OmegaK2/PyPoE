@@ -63,6 +63,11 @@ class ItemsWikiHandler(WikiHandler):
 
     COPY_KEYS = (
         'radius',
+        'radius_description',
+        'radius_secondary',
+        'radius_secondary_description',
+        'radius_tertiary',
+        'radius_tertiary_description',
         'has_percentage_mana_cost',
         'has_reservation_mana_cost',
         'drop_enabled',
