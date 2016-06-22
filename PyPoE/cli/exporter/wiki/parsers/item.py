@@ -364,6 +364,9 @@ class ItemsParser(BaseParser):
 
         return self._skill_stat_filters
 
+    def _format_lines(self, lines):
+        return '<br>'.join(lines).replace('\n', '<br>')
+
     def _apply_column_map(self, infobox, column_map, list_object):
         for k, data in column_map.items():
             value = list_object[k]
@@ -641,7 +644,7 @@ class ItemsParser(BaseParser):
                     values=[values, ]
                 )[0])
 
-        infobox['stat_text'] = '<br>'.join(lines)
+        infobox['stat_text'] = self._format_lines(lines)
 
         # Quality stats
         lines = []
@@ -653,7 +656,7 @@ class ItemsParser(BaseParser):
             stats.extend(stat_dict['stats'])
             values.extend(stat_dict['values'])
 
-        infobox['quality_stat_text'] = '<br>'.join(lines)
+        infobox['quality_stat_text'] = self._format_lines(lines)
         self._write_stats(infobox, zip(stats, values), 'static_quality_')
 
         #
@@ -726,7 +729,7 @@ class ItemsParser(BaseParser):
 
                 if lines:
                     infobox[prefix + stat_prefix + 'stat_text'] = \
-                        '<br>'.join(lines)
+                        self._format_lines(lines)
                 self._write_stats(
                     infobox, zip(stats, values), prefix + stat_prefix
                 )

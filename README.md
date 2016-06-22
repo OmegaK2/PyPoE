@@ -62,3 +62,7 @@ Credits - Libraries
 * sphinx ([pypi](https://pypi.python.org/pypi/sphinx))
 * pytest ([pypi](https://pypi.python.org/pypi/pytest))
 * PyOpenGL ([pypi](https://pypi.python.org/pypi/PyOpenGL))
+* sqlalchemey ([pypi](https://pypi.python.org/pypi/SQLAlchemy))
+* pymysql ([pypi](https://pypi.python.org/pypi/PyMySQL))
+* tqdm ([pypi](https://pypi.python.org/pypi/tqdm))
+* graphviz ([pypi](https://pypi.python.org/pypi/graphviz))
