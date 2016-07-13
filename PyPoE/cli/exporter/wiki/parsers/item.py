@@ -174,6 +174,38 @@ class ItemsParser(BaseParser):
         'active_skill_gem_stat_descriptions.txt',
     ]
 
+    # Values without the Metadata/Projectiles/ prefix
+    _skill_gem_to_projectile_map = {
+        'Fireball': 'Fireball',
+        'Spark': 'Spark',
+        'Ice Spear': 'IceSpear',
+        'Freezing Pulse': 'FreezingPulse',
+        'Ethereal Knives': 'ShadowProjectile',
+        'Arctic Breath': 'ArcticBreath',
+        'Flame Totem': 'TotemFireSpray',
+        'Caustic Arrow': 'CausticArrow',
+        'Burning Arrow': 'BurningArrow',
+        'Vaal Burning Arrow': 'VaalBurningArrow',
+        'Explosive Arrow': 'FuseArrow',
+        'Lightning Arrow': 'LightningArrow',
+        'Ice Shot': 'IceArrow',
+        'Incinerate': 'Flamethrower1',
+        'Lightning Trap': 'LightningTrap',
+        'Spectral Throw': 'ThrownWeapon',
+        'Ball Lightning': 'BallLightningPlayer',
+        'Tornado Shot': 'TornadoShotArrow',
+        # TornadoShotSecondaryArrow,
+        'Frost Blades': 'IceStrikeProjectile',
+        'Molten Strike': 'FireMortar',
+        'Wild Strike': 'ElementalStrikeColdProjectile',
+        'Shrapnel Shot': 'ShrapnelShot',
+        'Power Siphon': 'Siphon',
+        'Siege Ballista': 'CrossbowSnipeProjectile',
+        #'Ethereal Knives': 'ShadowBlades',
+        'Frostbolt': 'FrostBolt',
+        'Split Arrow': 'SplitArrowDefault',
+    }
+
     _cp_columns = (
         'Level', 'LevelRequirement', 'ManaMultiplier', 'CriticalStrikeChance',
         'ManaCost', 'DamageMultiplier', 'VaalSouls', 'VaalStoredUses',
@@ -577,6 +609,12 @@ class ItemsParser(BaseParser):
                     c['Name'] if c['Name'] else c['Id'] for c in
                     ae['WeaponRestriction_ItemClassesKeys']
                 ])
+
+        # From Projectile.dat if available
+        key = self._skill_gem_to_projectile_map.get(base_item_type['Name'])
+        if key:
+            infobox['projectile_speed'] = self.rr['Projectiles.dat'].index[
+                'Id']['Metadata/Projectiles/' + key]['ProjectileSpeed']
 
         # From GrantedEffects.dat
 
