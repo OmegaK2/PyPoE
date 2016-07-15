@@ -50,9 +50,9 @@ from PyPoE.cli.exporter.wiki.parser import *
 class ItemsWikiHandler(WikiHandler):
     # This only works as long there aren't nested templates inside the infobox
     regex_search = re.compile(
-        '\{\{Item\n'
+        '(<onlyinclude>|)\{\{(Item|#invoke:item\|item)\n'
         '(?P<data>[^\}]*)'
-        '\n\}\}',
+        '\n\}\}(</onlyinclude>|)',
         re.UNICODE | re.IGNORECASE | re.MULTILINE | re.DOTALL
     )
 
@@ -62,6 +62,7 @@ class ItemsWikiHandler(WikiHandler):
     )
 
     COPY_KEYS = (
+        # for skills
         'radius',
         'radius_description',
         'radius_secondary',
@@ -70,8 +71,11 @@ class ItemsWikiHandler(WikiHandler):
         'radius_tertiary_description',
         'has_percentage_mana_cost',
         'has_reservation_mana_cost',
+        # all items
         'drop_enabled',
         'name_list',
+        'inventory_icon',
+        'alternate_art_inventory_icons',
     )
 
     def _find_page(self, page_name):
@@ -144,6 +148,13 @@ class ItemsHandler(ExporterHandler):
             help='Filter by item class(es). Case sensitive.',
             nargs='*',
             dest='item_class',
+        )
+
+        parser.add_argument(
+            '-mid', '--is-metadata-id',
+            help='Whether the given item names are metadata ids instead',
+            action='store_true',
+            dest='is_metadata_id',
         )
 
         parser.add_argument(
@@ -331,7 +342,7 @@ class ItemsParser(BaseParser):
             'condition': lambda v: v > 0,
         }),
         ('EnergyShield', {
-            'template': 'enery_shield',
+            'template': 'energy_shield',
             'condition': lambda v: v > 0,
         }),
     ))
@@ -880,7 +891,7 @@ class ItemsParser(BaseParser):
         'Gloves': (_type_level, _type_attribute, _type_armour, ),
         'Boots': (_type_level, _type_attribute, _type_armour, ),
         'Body Armours': (_type_level, _type_attribute, _type_armour, ),
-        'Helments': (_type_level, _type_attribute, _type_armour, ),
+        'Helmets': (_type_level, _type_attribute, _type_armour, ),
         'Shields': (_type_level, _type_attribute, _type_armour, _type_shield),
         # Weapons
         'Claws': (_type_level, _type_attribute, _type_weapon, ),
@@ -933,17 +944,19 @@ class ItemsParser(BaseParser):
             console('Invalid filters were specified. Search may yield '
                     'unintended results.', Msg.warning)
 
-        # Create item lsit
+        itemkey = 'Id' if parsed_args.is_metadata_id else 'Name'
+
+        # Create item list
         items = []
         for row in self.rr['BaseItemTypes.dat']:
             # catch exception in case item class was not specified
             try:
-                if row['ItemClassesKey']['Name'] not in parsed_args.item_class:
+                if row['ItemClassesKey'][itemkey] not in parsed_args.item_class:
                     continue
             except TypeError:
                 pass
 
-            if row['Name'] in parsed_args.item:
+            if row[itemkey] in parsed_args.item:
                 items.append(row)
 
         if not items:
@@ -973,7 +986,7 @@ class ItemsParser(BaseParser):
             infobox['drop_level'] = base_item_type['DropLevel']
             if base_item_type['FlavourTextKey']:
                 infobox['flavour_text'] = base_item_type['FlavourTextKey'][
-                    'Text'].replace('\n', '<br>')
+                    'Text'].replace('\n', '<br>').replace('\r', '')
 
             ot = self.ot[base_item_type['InheritsFrom'] + '.ot']
 
@@ -983,7 +996,10 @@ class ItemsParser(BaseParser):
             infobox['metadata_id'] = base_item_type['Id']
 
             for i, mod in enumerate(base_item_type['Implicit_ModsKeys']):
-                infobox['mod%s' % (i+1)] = mod['Id']
+                infobox['implicit%s' % (i+1)] = mod['Id']
+
+            if base_item_type['IsTalisman']:
+                infobox['is_talisman'] = base_item_type['IsTalisman']
 
             funcs = self._cls_map.get(cls)
             if funcs:
@@ -998,6 +1014,10 @@ class ItemsParser(BaseParser):
                         break
                 if fail:
                     continue
+
+            # putting this last since it's usually manually added
+            if base_item_type['IsTalisman']:
+                infobox['drop_enabled'] = False
 
             format_result_rows(
                 parsed_args=parsed_args,
