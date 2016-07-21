@@ -770,7 +770,7 @@ def format_result_rows(parsed_args, ordered_dict, template_name,
 
     Returns
     -------
-    out : list[str]
+    out : str
         formatted string
     """
     if parsed_args.format == 'template':
@@ -784,7 +784,7 @@ def format_result_rows(parsed_args, ordered_dict, template_name,
             out.append('{0} = "{1}", '.format(k, v))
         out[-1] = out[-1].strip(', ')
         out.append('}')
-    return out
+    return ''.join(out)
 
 
 def make_inter_wiki_links(string):

@@ -52,14 +52,8 @@ CONFIG_PATH = os.path.join(APP_DIR, 'exporter.conf')
 config = ConfigHelper(infile=CONFIG_PATH)
 
 # =============================================================================
-# Bugfixes / Init
+# Init
 # =============================================================================
-# pywikibot hooks into the output and we really don't want that
-_orig_show_warning = warnings.showwarning
-try:
-    from . import pywikibot_setup
-except:
-    pass
 
 init()
-OutputHook(_orig_show_warning)
+OutputHook(warnings.showwarning)

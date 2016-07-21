@@ -91,14 +91,7 @@ class WikiHandler(BaseHandler):
 
         console('Extracting data files to "%s"...' % temp_dir)
         ggpk['Data'].extract_to(temp_dir)
-
-        meta_dir = os.path.join(temp_dir, 'Metadata')
-        console('Extracting description files to "%s"...' % meta_dir)
-        nodes = ggpk['Metadata'].search('.*descriptions.*\.txt$', search_directories=False)
-        if not os.path.exists(meta_dir):
-            os.mkdir(meta_dir)
-        for node in nodes:
-            node.extract_to(meta_dir)
+        ggpk['Metadata'].extract_to(temp_dir)
 
         console('Hashing...')
 

@@ -58,6 +58,7 @@ class WarbandsHandler(ExporterHandler):
             parser=parser,
             cls=WarbandsParser,
             func=WarbandsParser.warbands,
+            wiki=False,
         )
 
         parser = lua_sub.add_parser(
@@ -68,6 +69,7 @@ class WarbandsHandler(ExporterHandler):
             parser=parser,
             cls=WarbandsParser,
             handler=WarbandsParser.graph,
+            wiki=False,
         )
         parser.add_argument(
             'type',
@@ -120,7 +122,7 @@ class WarbandsParser(BaseParser):
             out.append('-' * 80 + '\n')
 
         r = ExporterResult()
-        r.add_result(lines=out, out_file='warbands.txt')
+        r.add_result(text=''.join(out), out_file='warbands.txt')
 
         return r
 
@@ -132,7 +134,7 @@ class WarbandsParser(BaseParser):
             dat_file = self.rr['WarbandsGraph.dat']
             out_file = 'warbands_graph.cv'
 
-        print('Creating Graph...')
+        console('Creating Graph...')
         dot = Digraph(comment='Warbands Graph', engine='dot', format=parsed_args.format)
         for row in dat_file:
             world_area = row['WorldAreasKey']
@@ -144,5 +146,5 @@ class WarbandsParser(BaseParser):
         console('Writing graph to "%s"...' % out_path)
         dot.render(out_path, view=parsed_args.print)
 
-        print ('Done.')
+        console('Done.')
         return 0

@@ -40,14 +40,16 @@ from collections import defaultdict, OrderedDict
 from PyPoE.poe.file.stat_filters import StatFilterFile, SkillEntry
 from PyPoE.poe.sim.formula import gem_stat_requirement, GemTypes
 from PyPoE.cli.core import console, Msg
-from PyPoE.cli.exporter.wiki.handler import *
-from PyPoE.cli.exporter.wiki.parser import *
+from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult, \
+    add_format_argument
+from PyPoE.cli.exporter.wiki.parser import BaseParser, format_result_rows
 
 # =============================================================================
 # Classes
 # =============================================================================
 
-class ItemsWikiHandler(WikiHandler):
+
+class WikiCondition(object):
     # This only works as long there aren't nested templates inside the infobox
     regex_search = re.compile(
         '(<onlyinclude>|)\{\{(Item|#invoke:item\|item)\n'
@@ -78,48 +80,43 @@ class ItemsWikiHandler(WikiHandler):
         'alternate_art_inventory_icons',
     )
 
-    def _find_page(self, page_name):
-        page = self.pws.pywikibot.Page(self.site, page_name)
-        itembox = self.regex_search.search(page.text)
+    def __init__(self, data, cmdargs):
+        self.data = data
+        self.cmdargs = cmdargs
+        self.itembox = None
 
-        if itembox:
-            return page, itembox
+    def __call__(self, *args, **kwargs):
+        page = kwargs.get('page')
+
+        if page:
+            # Abuse this so it can be called as "text" and "condition"
+            if self.itembox is None:
+                self.itembox = self.regex_search.search(page.text())
+                if self.itembox is None:
+                    return False
+
+                return True
+
+            for match in self.regex_infobox_split.finditer(
+                    self.itembox.group('data')):
+                k = match.group('key')
+                if k in self.COPY_KEYS:
+                    self.data[k] = match.group('value').strip('\n\r ')
+
+            infobox_text = self._get_text()
+
+            # I need the +1 offset or it adds a space everytime for some reason.
+            return page.text[:self.itembox.start()] + ''.join(infobox_text) + \
+                page.text[self.itembox.end()+1:]
         else:
-            console('Failed to find the item page on wiki page "%s"' % page_name, msg=Msg.warning)
-            return None, None
+            return self._get_text()
 
-    def handle_page(self, *a, row):
-        page_name = row['wiki_page']
-        console('Editing gem "%s"...' % page_name)
-        page, itembox = self._find_page(page_name)
-        if page is None:
-            if row['infobox']['class'] == 'Support Skill Gems':
-                page, itembox = self._find_page('%s (support gem)' % page_name)
-
-        if page is None:
-            console('Can\'t find working wikipage. Skipping.', Msg.error)
-            return
-
-        for match in self.regex_infobox_split.finditer(itembox.group('data')):
-            k = match.group('key')
-            if k in self.COPY_KEYS:
-                row['infobox'][k] = match.group('value').strip('\n\r ')
-
-        infobox_text = format_result_rows(
+    def _get_text(self):
+        return format_result_rows(
             parsed_args=self.cmdargs,
             template_name='Item',
             indent=33,
-            ordered_dict=row['infobox'],
-        )
-
-        # I need the +1 offset or it adds a space everytime for some reason.
-        new_text = page.text[:itembox.start()] + ''.join(infobox_text) + \
-                   page.text[itembox.end()+1:]
-
-        self.save_page(
-            page=page,
-            text=new_text,
-            message='Item export',
+            ordered_dict=self.data,
         )
 
 
@@ -138,7 +135,6 @@ class ItemsHandler(ExporterHandler):
             parser=parser,
             cls=ItemsParser,
             func=ItemsParser.export,
-            wiki_handler=ItemsWikiHandler(name='Item Export'),
         )
 
         add_format_argument(parser)
@@ -869,7 +865,7 @@ class ItemsParser(BaseParser):
 
     def _type_currency(self, infobox, base_item_type):
         try:
-            currency = self.rr['CurrencyItems.dat'].index('BaseItemTypesKey')[
+            currency = self.rr['CurrencyItems.dat'].index['BaseItemTypesKey'][
                 base_item_type.rowid]
         except KeyError:
             warnings.warn(
@@ -1019,23 +1015,21 @@ class ItemsParser(BaseParser):
             if base_item_type['IsTalisman']:
                 infobox['drop_enabled'] = False
 
-            format_result_rows(
-                parsed_args=parsed_args,
-                template_name='Item',
-                indent=33,
-                ordered_dict=infobox,
+            cond = WikiCondition(
+                data=infobox,
+                cmdargs=parsed_args,
             )
 
             r.add_result(
-                lines=format_result_rows(
-                    parsed_args=parsed_args,
-                    template_name='Item',
-                    indent=33,
-                    ordered_dict=infobox,
-                ),
+                text=cond,
                 out_file='item_%s.txt' % name,
-                wiki_page=name,
-                infobox=infobox,
+                wiki_page=[
+                    {
+                        'page': name,
+                        'condition': cond,
+                    }
+                ],
+                wiki_message='Item exporter',
             )
 
         return r

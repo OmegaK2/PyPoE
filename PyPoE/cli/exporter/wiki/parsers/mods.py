@@ -42,8 +42,9 @@ from collections import OrderedDict
 # Self
 from PyPoE.poe.constants import MOD_DOMAIN, MOD_GENERATION_TYPE
 from PyPoE.cli.core import console, Msg
-from PyPoE.cli.exporter.wiki.handler import *
-from PyPoE.cli.exporter.wiki.parser import *
+from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult, \
+    add_format_argument
+from PyPoE.cli.exporter.wiki.parser import BaseParser, format_result_rows
 from PyPoE.shared.decorators import deprecated
 
 # =============================================================================
@@ -56,64 +57,47 @@ __all__ = ['ModParser', 'ModsHandler']
 # Classes
 # =============================================================================
 
+
 class OutOfBoundsWarning(UserWarning):
     pass
 
 
-class ModWikiHandler(WikiHandler):
+class WikiCondition(object):
     _regex = re.compile(
         '{{Mod[^}]*}}',
         re.UNICODE | re.MULTILINE | re.DOTALL
     )
 
-    def _find_page(self, row, page_name):
-        page = self.pws.pywikibot.Page(self.site, page_name)
-        if not page.text:
-            return page, ''.join(row['lines'])
-        match = self._regex.search(page.text)
+    def __init__(self, data, cmdargs):
+        self.data = data
+        self.cmdargs = cmdargs
+        self.match = None
 
-        if match:
-            console('Found wiki page "%s"' % page_name)
-            return page, page.text[:match.start()] + ''.join(row['lines']) + page.text[match.end():]
+    def __call__(self, *args, **kwargs):
+        page = kwargs.get('page')
+
+        if page:
+            # Abuse this so it can be called as "text" and "condition"
+            if self.match is None:
+                self.match = self._regex.search(page.text())
+                if self.match is None:
+                    return False
+
+                return True
+
+            # I need the +1 offset or it adds a space everytime for some reason.
+            return page.text[:self.match.start()] + ''.join(self._get_text()) \
+                + page.text[self.match.end()+1:]
         else:
-            console('Failed to find the mod table on wiki page "%s"' % page_name, msg=Msg.warning)
-            return None, None
+            return self._get_text()
 
-    def handle_page(self, *a, row):
-        page_name = row['wiki_page']
-        console('Editing Mod "%s"...' % page_name)
-
-        if self.cmdargs.force:
-            text = ''.join(row['lines'])
-            page = self.pws.pywikibot.Page(self.site, page_name)
-        else:
-            kwargs = {
-                'row': row,
-                'page_name': page_name,
-            }
-
-            page, text = self._find_page(**kwargs)
-            if text is None:
-                kwargs['page_name'] = '%s (Mod)' % page_name
-                page, text = self._find_page(**kwargs)
-
-            if text is None:
-                console('Can\'t find working wikipage. Skipping.', Msg.error)
-                return
-
-        self.save_page(
-            page=page,
-            text=text,
-            message=self.name,
+    def _get_text(self):
+        return format_result_rows(
+            parsed_args=self.cmdargs,
+            template_name='Mod',
+            ordered_dict=self.data,
         )
 
-    def add_arguments(self, parser):
-        super(ModWikiHandler, self).add_arguments(parser)
-        parser.add_argument(
-            '--force',
-            action='store_true',
-            help='Ignores the validation check and force replacement of the entire page',
-        )
 
 
 class ModsHandler(ExporterHandler):
@@ -128,10 +112,6 @@ class ModsHandler(ExporterHandler):
             help='Extract all mods.'
         )
         mparser.set_defaults(func=lambda args: mparser.print_help())
-
-        wiki_handler = ModWikiHandler(
-            name='Mod updater',
-        )
 
         sub = mparser.add_subparsers(help='Method of extracting mods')
 
@@ -148,7 +128,6 @@ class ModsHandler(ExporterHandler):
             parser=parser,
             cls=ModParser,
             func=ModParser.modid,
-            wiki_handler=wiki_handler,
         )
 
         parser = sub.add_parser('rowid', help='Use the rowid')
@@ -173,7 +152,6 @@ class ModsHandler(ExporterHandler):
             parser=parser,
             cls=ModParser,
             func=ModParser.rowid,
-            wiki_handler=wiki_handler,
         )
 
         parser = sub.add_parser('filter', help='Filter mods')
@@ -197,7 +175,6 @@ class ModsHandler(ExporterHandler):
             parser=parser,
             cls=ModParser,
             func=ModParser.filter,
-            wiki_handler=wiki_handler,
         )
 
         # Tempest
@@ -210,6 +187,7 @@ class ModsHandler(ExporterHandler):
             parser=parser,
             cls=ModParser,
             func=ModParser.tempest,
+            wiki=False,
         )
 
 
@@ -365,19 +343,22 @@ class ModParser(BaseParser):
             if mod['TagsKeys']:
                 data['tags'] = ', '.join([t['Id'] for t in mod['TagsKeys']])
 
+            page_name = mod['Id'].replace('_', '~')
+            cond = WikiCondition(data, args)
+
             r.add_result(
-                lines=format_result_rows(
-                    parsed_args=args,
-                    template_name='Mod',
-                    ordered_dict=data,
-                ),
+                text=cond,
                 out_file='mod_%s.txt' % mod['Id'],
-                wiki_page=mod['Id'].replace('_', '~'),
+                wiki_page=[
+                    {'page': page_name, 'condition': cond},
+                    {'page': page_name + ' (Mod)', 'condition': cond},
+                ],
+                wiki_message='Mod updater',
             )
 
         return r
 
-    @deprecated(message='Will be done in-wiki in the future.')
+    @deprecated(message='Will be done in-wiki in the future - non functional')
     def tempest(self, parsed_args):
         tf = self.tc['map_stat_descriptions.txt']
         data = []

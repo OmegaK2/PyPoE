@@ -31,15 +31,17 @@ See PyPoE/LICENSE
 
 # Python
 import os
+from collections import Iterable
 from concurrent.futures import ThreadPoolExecutor
 
 # 3rd Party
 try:
-    from PyPoE.cli.exporter import pywikibot_setup as pws
+    import mwclient
 except Exception as e:
-    pws = None
+    mwclient = None
 
 # self
+from PyPoE import __version__
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.handler import BaseHandler
 from PyPoE.cli.exporter import config
@@ -58,14 +60,31 @@ __all__ = ['ExporterHandler', 'ExporterResult', 'WikiHandler',
 
 
 class WikiHandler(object):
-    regex_search = None
-    regex_replace = None
-
-    def __init__(self, *a, name=None, rowmsg='Editing page "{page_name}"...\n'):
-        self.name = name
-        self.rowmsg = rowmsg
-
     def add_arguments(self, parser):
+        parser.add_argument(
+            '-w', '--wiki',
+            help='Write to the gamepedia page (requires pywikibot)',
+            action='store_true',
+        )
+
+        parser.add_argument(
+            '-w-u', '--wiki-user',
+            dest='user',
+            help='Gamepedia user name to use to login into the wiki',
+            action='store',
+            type=str,
+            default='',
+        )
+
+        parser.add_argument(
+            '-w-p', '-w-pw', '--wiki-password',
+            dest='password',
+            help='Gamepedia password to use to login into the wiki',
+            action='store',
+            type=str,
+            default='',
+        )
+
         parser.add_argument(
             '-w-mt', '--wiki-max-threads',
             dest='wiki_threads',
@@ -74,49 +93,114 @@ class WikiHandler(object):
             type=int,
             default=1,
         )
+
         parser.add_argument(
-            '--dry-run',
+            '-w-dr', '--wiki-dry-run',
             dest='dry_run',
             help='Don\'t actually save the wiki page and print it instead',
             action='store_true',
         )
 
-    def save_page(self, page, text, message):
-        if text == page.text:
-            console('No update required. Skipping.')
-            return
-
-        if self.cmdargs.dry_run:
-            print(text)
-        else:
-            page.text = text
-            page.save(summary=pws.get_edit_message(message), botflag=True)
-
     def handle_page(self, *a, row):
-        page_name = row['wiki_page']
-        if self.rowmsg:
-            console(self.rowmsg.format(page_name=page_name))
-        page = self.pws.pywikibot.Page(self.site, page_name)
+        if isinstance(row['wiki_page'], str):
+            pages = [
+                {'page': row['wiki_page'], 'condition': None},
+            ]
+        else:
+            pages = row['wiki_page']
+        console('Scanning for wiki page candidates "%s"' %
+                ', '.join([p['page'] for p in pages]))
+        page_found = False
+        for pdata in pages:
+            page = self.site.pages[pdata['page']]
+            if page.exists:
+                condition = pdata.get('condition')
+                success = True
+                if condition is None:
+                    console(
+                        'No conditions given - page content on "%s" will be '
+                        'overriden' % pdata['page'],
+                        msg=Msg.warning,
+                    )
+                    success = True
+                elif callable(condition):
+                    success = condition(page=page)
+                elif isinstance(condition, Iterable):
+                    for cond in condition:
+                        success = cond(page=page)
+                        if not success:
+                            break
+                else:
+                    raise ValueError('Invalid condition type "%s"' %
+                                     type(condition))
+                if success:
+                    console('All conditions met on page "%s". Editing.' %
+                            pdata['page'])
+                    page_found = True
+                    break
+                else:
+                    console(
+                        'One or more conditions failed on page "%s". Skipping.'
+                        % pdata['page'], msg=Msg.warning
+                    )
+            else:
+                console('Page "%s" does not exist. It will be created.' %
+                        pdata['page'])
+                page_found = True
+                break
 
-        self.save_page(
-            page=page,
-            text=''.join(row['lines']),
-            message=self.name,
+        if page_found:
+            text = row['text']
+            if callable(text):
+                text = text(page)
+
+            if text == page.text():
+                console('No update required. Skipping.')
+                return
+
+            if self.cmdargs.dry_run:
+                console(text)
+            else:
+                response = page.save(
+                    text=text,
+                    summary='PyPoE/ExporterBot/%s: %s' %
+                            (__version__, row['wiki_message'])
+                )
+                if response['result'] == 'Success':
+                    console('Page was edited successfully (time: %s)' %
+                            response['newtimestamp'])
+                else:
+                    #TODO: what happens if it fails?
+                    console('Something went wrong, status code:', msg=Msg.error)
+                    console(response, msg=Msg.error)
+        else:
+            console(
+                'No wiki page candidates found, skipping this row.',
+                msg=Msg.error,
+            )
+
+    def handle(self, *a, mwclient, result, cmdargs, parser):
+        # First row is handled separately to prompt the user for his password
+        self.site = mwclient.Site(
+            ('http', 'pathofexile.gamepedia.com'),
+            path='/'
         )
 
-    def handle(self, *a, pws, result, cmdargs, parser):
-        site = pws.get_site()
-
-        # First row is handled separately to prompt the user for his password
-        self.site = site
-        self.pws = pws
+        self.site.login(
+            username=cmdargs.user or input('Enter your gamepedia user name:\n'),
+            password=cmdargs.password or input(
+                'Please enter your password for the specified user\n'
+                'WARNING: Password will be visible in console\n'
+            ),
+        )
+        self.mwclient = mwclient
         self.cmdargs = cmdargs
         self.parser = parser
-        self.handle_page(row=result[0])
 
+        console('Starting thread pool...')
         tp = ThreadPoolExecutor(max_workers=cmdargs.wiki_threads)
 
-        for row in result[1:]:
+        for row in result:
             tp.submit(
                 self.handle_page,
                 row=row,
@@ -154,20 +238,24 @@ class ExporterHandler(BaseHandler):
                 result = func(parser, pargs, *args, **kwargs)
 
                 for item in result:
+                    if callable(item['text']):
+                        text = item['text']()
+                    else:
+                        text = item['text']
                     if pargs.print:
-                        console(''.join(item['lines']))
+                        console(text)
 
                     if pargs.write:
                         out_path = os.path.join(out_dir, item['out_file'])
                         console('Writing data to "%s"...' % out_path)
                         with open(out_path, 'w') as f:
-                            f.writelines(item['lines'])
+                            f.write(text)
 
                 if pargs.wiki:
-                    if pws is None:
+                    if mwclient is None:
                         try:
                             # Will raise the exception appropriately
-                            __import__('PyPoE.cli.exporter.pywikibot_setup')
+                            __import__('')
                         except ImportError:
                             console('Run pip install -e cli', msg=Msg.error)
                         except Exception:
@@ -180,7 +268,7 @@ class ExporterHandler(BaseHandler):
 
                     console('Running wikibot...')
                     console('-'*80)
-                    wiki_handler.handle(pws=pws, result=result, cmdargs=pargs,
+                    wiki_handler.handle(mwclient=mwclient, result=result, cmdargs=pargs,
                                         parser=parser)
                     console('-'*80)
                     console('Completed wikibot execution.')
@@ -190,16 +278,20 @@ class ExporterHandler(BaseHandler):
                 return 0
         return wrapper
 
-    def add_default_parsers(self, parser, cls, func=None, handler=None, wiki_handler=None):
+    def add_default_parsers(self, parser, cls, func=None, handler=None,
+                            wiki=True, wiki_handler=None):
         if handler is None:
             for item in (func,):
                 if item is None:
                     raise ValueError('Must set either handler or func')
 
-        if wiki_handler is not None:
-            if not isinstance(wiki_handler, WikiHandler):
-                raise TypeError('wiki_handler must be a WikiHandler instance.')
-
+        if wiki:
+            if wiki_handler is not None:
+                if not isinstance(wiki_handler, WikiHandler):
+                    raise TypeError('wiki_handler must be a WikiHandler '
+                                    'instance.')
+            else:
+                wiki_handler = WikiHandler()
             wiki_handler.add_arguments(parser)
 
         parser.set_defaults(func=self.get_wrap(cls, func, handler, wiki_handler))
@@ -213,23 +305,20 @@ class ExporterHandler(BaseHandler):
             action='store_true',
         )
         parser.add_argument(
-            '--write',
+            '-wr', '--write',
             help='Write to file',
-            action='store_true',
-        )
-        parser.add_argument(
-            '--wiki',
-            help='Write to the gamepedia page (requires pywikibot)',
             action='store_true',
         )
 
 
 class ExporterResult(list):
-    def add_result(self, lines=None, out_file=None, wiki_page=None, **extra):
+    def add_result(self, text=None, out_file=None, wiki_page=None,
+                   wiki_message='', **extra):
         data = {
-            'lines': lines,
+            'text': text,
             'out_file': out_file,
             'wiki_page': wiki_page,
+            'wiki_message': wiki_message,
         }
         data.update(extra)
 

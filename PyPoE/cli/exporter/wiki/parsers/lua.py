@@ -37,7 +37,7 @@ from collections import namedtuple
 
 # Self
 from PyPoE.cli.core import console, Msg
-from PyPoE.cli.exporter.wiki.handler import *
+from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult
 from PyPoE.cli.exporter.wiki.parser import BaseParser
 
 # =============================================================================
@@ -184,7 +184,10 @@ class QuestRewardReader(BaseParser):
         r.add_result(
             lines=out,
             out_file='%s_rewards.txt' % data_type,
-            wiki_page='Module:QuestReward/%s' % subpage,
+            wiki_page=[{
+                'page': 'Module:QuestReward/%s' % subpage,
+                'condition': None,
+            }]
         )
 
         return r
