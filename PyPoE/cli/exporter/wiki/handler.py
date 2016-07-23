@@ -152,7 +152,7 @@ class WikiHandler(object):
         if page_found:
             text = row['text']
             if callable(text):
-                text = text(page)
+                text = text(page=page)
 
             if text == page.text():
                 console('No update required. Skipping.')

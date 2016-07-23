@@ -88,7 +88,7 @@ class WikiCondition(object):
     def __call__(self, *args, **kwargs):
         page = kwargs.get('page')
 
-        if page:
+        if page is not None:
             # Abuse this so it can be called as "text" and "condition"
             if self.itembox is None:
                 self.itembox = self.regex_search.search(page.text())
@@ -103,11 +103,9 @@ class WikiCondition(object):
                 if k in self.COPY_KEYS:
                     self.data[k] = match.group('value').strip('\n\r ')
 
-            infobox_text = self._get_text()
-
             # I need the +1 offset or it adds a space everytime for some reason.
-            return page.text[:self.itembox.start()] + ''.join(infobox_text) + \
-                page.text[self.itembox.end()+1:]
+            return page.text()[:self.itembox.start()] + self._get_text() + \
+                page.text()[self.itembox.end()+1:]
         else:
             return self._get_text()
 
