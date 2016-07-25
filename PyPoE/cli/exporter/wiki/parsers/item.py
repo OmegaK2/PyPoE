@@ -394,10 +394,11 @@ class ItemsParser(BaseParser):
         if self._skill_stat_filters is None:
             self._skill_stat_filters = StatFilterFile()
             self._skill_stat_filters.read(os.path.join(
-                self.base_path, 'Metadata', 'skillpopup_stat_filters.txt'
+                self.base_path, 'Metadata', 'StatDescriptions',
+                'skillpopup_stat_filters.txt'
             ))
             #TODO remove once fixed
-            self._skill_stat_filters.skills['spirit_offering'] = SkillEntry(skill_id='spirit_offering', translation_file_path='Metadata/offering_skill_stat_descriptions.txt', stats=[])
+            self._skill_stat_filters.skills['spirit_offering'] = SkillEntry(skill_id='spirit_offering', translation_file_path='Metadata/StatDescriptions/offering_skill_stat_descriptions.txt', stats=[])
 
         return self._skill_stat_filters
 

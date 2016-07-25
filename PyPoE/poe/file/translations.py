@@ -1609,12 +1609,12 @@ class TranslationFileCache(AbstractFileCache):
 
         That means the following is equivalent:
         obj['stat_descriptions.txt']
-        obj.get_file('Metadata/stat_descriptions.txt')
+        obj.get_file('Metadata/StatDescriptions/stat_descriptions.txt')
 
         Parameters
         ----------
         item :  str
-            file name/path relative to the Metadata/ directory
+            file name/path relative to the Metadata/StatDescriptions/ directory
 
 
         Returns
@@ -1622,8 +1622,8 @@ class TranslationFileCache(AbstractFileCache):
         TranslationFile
             the specified TranslationFile
         """
-        if not item.startswith('Metadata/'):
-            item = 'Metadata/' + item
+        if not item.startswith('Metadata/StatDescriptions/'):
+            item = 'Metadata/StatDescriptions/' + item
         return self.get_file(item)
 
     @doc(doc=AbstractFileCache._get_file_instance_args)

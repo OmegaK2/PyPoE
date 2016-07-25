@@ -49,8 +49,10 @@ from PyPoE.poe.file import translations
 
 cur_dir = os.path.split(os.path.realpath(__file__))[0]
 data_dir = os.path.join(cur_dir, '_data')
-dbase_path = os.path.join(data_dir, 'Metadata', 'descriptions_base.txt')
-dextended_path = os.path.join(data_dir, 'Metadata', 'descriptions_extended.txt')
+dbase_path = os.path.join(data_dir, 'Metadata', 'StatDescriptions',
+                          'descriptions_base.txt')
+dextended_path = os.path.join(data_dir, 'Metadata', 'StatDescriptions',
+                              'descriptions_extended.txt')
 
 # =============================================================================
 # Fixtures
@@ -271,10 +273,12 @@ class TestTranslationFileCache:
         pass
 
     def test_get_file(self, tcache, dbase, dextended):
-        assert tcache.get_file('Metadata/descriptions_base.txt') == dbase, \
+        assert tcache.get_file(
+            'Metadata/StatDescriptions/descriptions_base.txt') == dbase, \
             'Files should be identical'
-        assert tcache.get_file('Metadata/descriptions_extended.txt') == \
-               dextended, 'Files should be identical'
+        assert tcache.get_file(
+            'Metadata/StatDescriptions/descriptions_extended.txt') == \
+            dextended, 'Files should be identical'
 
     def test_getitem(self, tcache, dbase, dextended):
         assert tcache['descriptions_base.txt'] == dbase, \
@@ -285,7 +289,7 @@ class TestTranslationFileCache:
     def test_is_cache_working(self, tcache):
         a = tcache['descriptions_extended.txt']
         # Should have cached the included file
-        tcache.files['Metadata/descriptions_base.txt']
+        tcache.files['Metadata/StatDescriptions/descriptions_base.txt']
 
         assert tcache['descriptions_extended.txt'] is a, \
             'Cache should return identical object'
