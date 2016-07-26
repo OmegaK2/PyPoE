@@ -283,9 +283,9 @@ class PSGFile(AbstractFileReadOnly):
         root_length = struct.unpack_from('<I', data, offset=offset)[0]
         offset += 4
 
-        self.root_passives = struct.unpack_from(
+        self.root_passives = list(struct.unpack_from(
             '<' + 'I'*root_length, data, offset=offset
-        )
+        ))
         offset += 4*root_length
 
         group_length = struct.unpack_from('<I', data, offset=offset)[0]
@@ -326,7 +326,7 @@ class PSGFile(AbstractFileReadOnly):
         # Done parsing, finalize the connections if the dat file is specified
         if self._passive_skills is not None:
             for i, psg_id in enumerate(self.root_passives):
-                self.root_passives = self._passive_skills.index[PSG_COL][psg_id]
+                self.root_passives[i] = self._passive_skills.index[PSG_COL][psg_id]
 
             for group in self.groups:
                 group._update_connections(self._passive_skills)
