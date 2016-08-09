@@ -32,6 +32,12 @@ Documentation
 
 .. autoclass:: GemTypes
 
+.. autofunction:: armour_damage_reduction
+
+.. autofunction:: chance_to_hit
+
+.. autofunction:: chance_to_evade
+
 .. autofunction:: gem_stat_requirement
 """
 # =============================================================================
@@ -40,6 +46,9 @@ Documentation
 
 # Python
 from enum import Enum
+
+# self
+from PyPoE.shared.mixins import ReprMixin
 
 # =============================================================================
 # Globals
@@ -50,6 +59,7 @@ __all__ = ['GemTypes', 'gem_stat_requirement']
 # =============================================================================
 # Classes
 # =============================================================================
+
 
 class GemTypes(Enum):
     """
@@ -66,6 +76,69 @@ class GemTypes(Enum):
 # =============================================================================
 # Functions
 # =============================================================================
+
+
+def armour_damage_reduction(armour, damage):
+    """
+    Calculates the damage reduction from armour.
+
+    .. note::
+
+        The final damage reduction may differ; there are other stats that can
+        grant damage reduction and damage reduction is capped.
+
+    Parameters
+    ----------
+    armour : int
+        Armour value of the defender
+    damage : int
+        Physical damage of the attacker's hit before mitigation
+
+    Returns
+    -------
+    int
+        damage reduction factor
+    """
+    return armour / (armour + 10 * damage)
+
+
+def chance_to_hit(accuracy, evasion):
+    """
+    Calculates the chance to hit for the given accuracy and evasion.
+
+    Parameters
+    ----------
+    accuracy : int
+        Accuracy rating of the attacker
+    evasion : int
+        Evasion rating of the defender
+
+    Returns
+    -------
+    float
+        chance to hit
+    """
+    return accuracy / (accuracy + (evasion * 0.25) ** 0.8)
+
+
+def chance_to_evade(accuracy, evasion):
+    """
+    Calculates the chance to evade for the given accuracy and evasion.
+
+    Parameters
+    ----------
+    accuracy : int
+        Accuracy rating of the attacker
+    evasion : int
+        Evasion rating of the defender
+
+    Returns
+    -------
+    float
+        chance to evade
+    """
+    return 1 - chance_to_hit(accuracy, evasion)
+
 
 def gem_stat_requirement(level, gtype=GemTypes.support, multi=100):
     """
@@ -129,12 +202,12 @@ def gem_stat_requirement(level, gtype=GemTypes.support, multi=100):
             raise ValueError("Unsupported multi '%s'" % multi)
     elif gtype == GemTypes.support:
         b = 6 * multi / 100
-        if multi==100:
+        if multi == 100:
             a = 1.495
-        elif multi==60:
-            a = 0.945 # 1.575*0.6
-        elif multi==40:
-            a = 0.6575 # 1.64375 * 0.6
+        elif multi == 60:
+            a = 0.945  # 1.575*0.6
+        elif multi == 40:
+            a = 0.6575  # 1.64375 * 0.6
         else:
             raise ValueError("Unsupported multi '%s'" % multi)
     else:
