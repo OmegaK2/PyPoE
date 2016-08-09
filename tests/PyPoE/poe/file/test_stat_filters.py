@@ -1,5 +1,5 @@
 """
-Tests for PyPoE.poe.file.psg
+Tests for PyPoE.poe.file.stat_filters
 
 Overview
 ===============================================================================

@@ -20,7 +20,7 @@ Description
 Utilities for parsing and using GGG translations.
 
 The translation GGG provides are generally suffixed by _descriptions.txt and
-can be found in the MetaData/ folder.
+can be found in the MetaData/StatDescriptions/ folder.
 
 Agreement
 ===============================================================================
@@ -33,6 +33,7 @@ TODO
 - optimize __hash__ very slow atm; or remove, but it is needed for the diffs
   reverse for non-number values?
 - Fix empty translation strings
+- passive_skill_stat_descriptions: tolerance vs missing stuff.
 
 Documentation
 ===============================================================================
@@ -57,6 +58,7 @@ results that contain extra information and utility methods.
 
 .. autoclass:: TranslationFileCache
     :inherited-members:
+    :special-members: __getitem__
 
 .. autoclass:: TranslationResult
 
@@ -1165,6 +1167,11 @@ class TranslationFile(AbstractFileReadOnly):
         default that behaviour is ignored and a warning is raised.
         To enable the automatic include, specify either of the base_dir or
         parent variables.
+
+        .. note::
+            the inclusion paths for other translation files are relative to
+            root of the content.ggpk and if using a file system it is expected
+            to mirror this behaviour
 
         Parameters
         ----------
