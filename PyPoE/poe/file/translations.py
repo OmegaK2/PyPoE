@@ -489,6 +489,21 @@ class TranslationString(TranslationReprMixin):
         s.append(self.strings[-1])
         return ''.join(s)
 
+    @property
+    def as_format_string(self):
+        """
+        Returns
+        -------
+        str
+            The translation string as python str.format string
+        """
+        s = []
+        for i, tag in enumerate(self.tags):
+            s.append(self.strings[i])
+            s.append('{%s}' % tag)
+        s.append(self.strings[-1])
+        return ''.join(s)
+
     def __eq__(self, other):
         if not isinstance(other, TranslationString):
             return False
@@ -1151,8 +1166,24 @@ class TranslationReverseResult(TranslationReprMixin):
 
 
 class TranslationFile(AbstractFileReadOnly):
+    """
+    Translation file reader.
 
-    __slots__ = ['_translations', '_translations_hash', '_base_dir', '_parent']
+    Translation files can be found in the following folder in the content.ggpk:
+    Metadata/StatDescriptions/xxx_descriptions.txt
+
+    Attributes
+    ----------
+    translations : list[Translation]
+        List of parsed translations instances (in order)
+    translations_hash   : dict[str, list[Translation]]
+        Mapping of parsed translations instances with their id(s) as key.
+
+        Each value is a list of translation instances, even if there is only
+        one.
+    """
+
+    __slots__ = ['translations', 'translations_hash', '_base_dir', '_parent']
 
     def __init__(self, file_path=None, base_dir=None, parent=None):
         """
@@ -1192,8 +1223,8 @@ class TranslationFile(AbstractFileReadOnly):
         TypeError
             if parent is not a :class:`TranslationFileCache`
         """
-        self._translations = []
-        self._translations_hash = {}
+        self.translations = []
+        self.translations_hash = {}
         self._base_dir = base_dir
 
         if parent is not None:
@@ -1212,7 +1243,7 @@ class TranslationFile(AbstractFileReadOnly):
                 self.merge(TranslationFile(path))
 
     def _read(self, buffer, *args, **kwargs):
-        self._translations = []
+        self.translations = []
         data = buffer.read().decode('utf-16')
 
         # starts with bom?
@@ -1295,7 +1326,7 @@ class TranslationFile(AbstractFileReadOnly):
 
                     offset = offset_next_lang
 
-                self._translations.append(translation)
+                self.translations.append(translation)
                 for translation_id in translation.ids:
                     self._add_translation_hashed(translation_id, translation)
 
@@ -1319,25 +1350,25 @@ class TranslationFile(AbstractFileReadOnly):
         if not isinstance(other, TranslationFile):
             return False
 
-        for attr in ('_translations', '_translations_hash'):
+        for attr in ('translations', 'translations_hash'):
             if getattr(self, attr) != getattr(other, attr):
                 return False
 
         return True
 
     def _add_translation_hashed(self, translation_id, translation):
-        if translation_id in self._translations_hash:
-            for old_translation in self._translations_hash[translation_id]:
+        if translation_id in self.translations_hash:
+            for old_translation in self.translations_hash[translation_id]:
                 # Identical, ignore
                 if translation == old_translation:
                     return
 
                 # Identical ids, but more recent - update
                 if translation.ids == old_translation.ids:
-                    self._translations_hash[translation_id] = [translation, ]
+                    self.translations_hash[translation_id] = [translation, ]
                     # Attempt to remove the old one if it exists
                     try:
-                        self._translations.remove(old_translation)
+                        self.translations.remove(old_translation)
                     except ValueError as e:
                         pass
 
@@ -1348,9 +1379,9 @@ class TranslationFile(AbstractFileReadOnly):
                 print('')'''
 
                 warnings.warn('Duplicate id "%s"' % translation_id, DuplicateIdentifierWarning)
-                self._translations_hash[translation_id].append(translation)
+                self.translations_hash[translation_id].append(translation)
         else:
-            self._translations_hash[translation_id] = [translation, ]
+            self.translations_hash[translation_id] = [translation, ]
 
     def copy(self):
         """
@@ -1386,12 +1417,12 @@ class TranslationFile(AbstractFileReadOnly):
 
         if not isinstance(other, TranslationFile):
             TypeError('Wrong type: %s' % type(other))
-        self._translations += other._translations
-        for trans_id in other._translations_hash:
-            for trans in other._translations_hash[trans_id]:
+        self.translations += other.translations
+        for trans_id in other.translations_hash:
+            for trans in other.translations_hash[trans_id]:
                 self._add_translation_hashed(trans_id, trans)
 
-        #self._translations_hash.update(other._translations_hash)
+        #self.translations_hash.update(other.translations_hash)
 
     def get_translation(self, tags, values, lang='English', full_result=False, use_placeholder=False, only_values=False):
         """
@@ -1447,13 +1478,13 @@ class TranslationFile(AbstractFileReadOnly):
         trans_found_indexes = []
         trans_found_values = []
         for i, tag in enumerate(tags):
-            if tag not in self._translations_hash:
+            if tag not in self.translations_hash:
                 trans_missing.append(tag)
                 trans_missing_values.append(values[i])
                 continue
 
-            #tr = self._translations_hash[tag][-1]
-            for tr in self._translations_hash[tag]:
+            #tr = self.translations_hash[tag][-1]
+            for tr in self.translations_hash[tag]:
                 index = tr.ids.index(tag)
                 if tr in trans_found:
                     tf_index = trans_found.index(tr)
@@ -1556,7 +1587,7 @@ class TranslationFile(AbstractFileReadOnly):
         translations_found = []
         values_found = []
 
-        for tr in self._translations:
+        for tr in self.translations:
             tl = tr.get_language(lang)
             values = tl.reverse_string(string)
             if values is not None:

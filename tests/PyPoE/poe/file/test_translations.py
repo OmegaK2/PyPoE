@@ -58,6 +58,7 @@ dextended_path = os.path.join(data_dir, 'Metadata', 'StatDescriptions',
 # Fixtures
 # =============================================================================
 
+
 @pytest.fixture(scope='module')
 def dbase():
     tf = translations.TranslationFile()
@@ -83,6 +84,14 @@ def tf_data(rr):
     tf = translations.TranslationFile()
     tf.read(dbase_path)
     return tf
+
+
+@pytest.fixture(scope='module')
+def ts(dbase):
+    t = dbase.translations_hash['test_multiple_values'][0]
+    tl = t.get_language('English')
+    # This only has one entry
+    return tl.strings[0]
 
 
 def get_test(size, unid, nresults, values):
@@ -266,6 +275,22 @@ class TestTranslationResults:
             'reverse failed incorrect tags'
         assert trr.values[0] == values, \
             'failed reverse incorrect values'
+
+
+class TestTranslation:
+    pass
+
+
+class TestTranslationLanguage:
+    pass
+
+
+class TestTranslationString:
+    def test_original_string(self, ts):
+        assert ts.string == 'Multiple: %1% %2% %1% %2%'
+
+    def test_as_format_string(self, ts):
+        assert ts.as_format_string == 'Multiple: {0} {1} {0} {1}'
 
 
 class TestTranslationFileCache:
