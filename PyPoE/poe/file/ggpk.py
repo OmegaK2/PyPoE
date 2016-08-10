@@ -26,11 +26,6 @@ Agreement
 
 See PyPoE/LICENSE
 
-TODO
-===============================================================================
-
-- write functionality is not working
-
 Documentation
 ===============================================================================
 
@@ -175,8 +170,11 @@ class GGPKRecord(BaseRecord):
     """
     The GGPKRecord is the master record of the file; it always contains two
     entries. First is the root directory, 2nd is a FreeRecord.
-    
-    :ivar list[int] offsets: List of offsets for records.
+
+    Attributes
+    ----------
+    offsets : list[int]
+        List of offsets for records
     """
     tag = 'GGPK'
 
@@ -207,7 +205,7 @@ class DirectoryRecordEntry(ReprMixin):
     hash :  int
         murmur2 32bit hash
     offset :  int
-        offset in GGPKFile
+        offset in :class:`GGPKFile`
     """
     def __init__(self, hash, offset):
         """
@@ -225,7 +223,7 @@ class DirectoryRecordEntry(ReprMixin):
 @doc(append=BaseRecord)
 class DirectoryRecord(MixinRecord, BaseRecord):
     """
-    Represents a directory in the virtual GGPKFile file tree.
+    Represents a directory in the virtual :class:`GGPKFile` file tree.
 
     Attributes
     ----------
@@ -287,7 +285,7 @@ class DirectoryRecord(MixinRecord, BaseRecord):
 @doc(append=BaseRecord)
 class FileRecord(MixinRecord, BaseRecord):
     """
-    Represents a file in the virtual GGPKFile file tree.
+    Represents a file in the virtual :class:`GGPKFile` file tree.
 
     Attributes
     ----------
@@ -395,7 +393,7 @@ class FreeRecord(BaseRecord):
     Attributes
     ----------
     next_free : int
-        offset of next free record
+        offset of next :class:`FreeRecord`
     """
     tag = 'FREE'
 
@@ -418,10 +416,10 @@ class DirectoryNode(object):
     Attributes
     ----------
     children : list[DirectoryNode]
-        list of parent DirectoryNodes (i.e. files and directories)
+        list of parent :class:`DirectoryNode`s (i.e. files and directories)
     parent : DirectoryNode
-        parent DirectoryNode or None if this is the root node
-    record : DirectoryRecord or FileRecord
+        parent :class:`DirectoryNode` or None if this is the root node
+    record : :class:`DirectoryRecord` or :class:`FileRecord`
         associated record
     hash : str
         some kind of hash the game uses
@@ -445,10 +443,12 @@ class DirectoryNode(object):
 
         Since the each node supports the same syntax, all these calls are
         equivalent:
-        - self['directory1']['directory2']['file.ext']
-        - self['directory1']['directory2/file.ext']
-        - self['directory1/directory2']['file.ext']
-        - self['directory1/directory2/file.ext']
+
+        .. code-block::
+            self['directory1']['directory2']['file.ext']
+            self['directory1']['directory2/file.ext']
+            self['directory1/directory2']['file.ext']
+            self['directory1/directory2/file.ext']
 
         Parameters
         ----------
@@ -458,7 +458,7 @@ class DirectoryNode(object):
         Returns
         -------
         DirectoryNode
-            returns the DirectoryNode of the specified item
+            returns the :class:`DirectoryNode` of the specified item
 
         Raises
         ------
@@ -495,7 +495,8 @@ class DirectoryNode(object):
         Returns
         -------
         list[DirectoryNode]
-            list of DirectoryNodes which contain a DirectoryRecord
+            list of :class:`DirectoryNode` instances which contain a
+            :class:`DirectoryRecord`
         """
         return [node for node in self.children if isinstance(node.record, DirectoryRecord)]
 
@@ -507,7 +508,8 @@ class DirectoryNode(object):
         Returns
         -------
         list[DirectoryNode]
-            list of DirectoryNodes which contain a FileRecord
+            list of :class:`DirectoryNode` instances which contain a
+            :class:`FileRecord`
         """
         return [node for node in self.children if isinstance(node.record, FileRecord)]
 
@@ -531,15 +533,15 @@ class DirectoryNode(object):
         regex : re.compile()
             compiled regular expression to use
         search_files : bool
-            Whether FileRecords should be searched
+            Whether :class:`FileRecord` instances should be searched
         search_directories : bool
-            Whether DirectoryRecords should be searched
+            Whether :class:`DirectoryRecord` instances should be searched
 
 
         Returns
         -------
-        list containing DirectoryNode
-            List of matching nodes
+        list[DirectoryNode]
+            List of matching :class:`DirectoryNode`s
         """
         if isinstance(regex, str):
             regex = re.compile(regex)
@@ -582,6 +584,7 @@ class DirectoryNode(object):
 
         If the make_list keyword is set to True, a list of Nodes in the
         following form will be returned:
+
         [n-th parent, (n-1)-th parent, ..., self]
 
         Parameters
@@ -589,15 +592,15 @@ class DirectoryNode(object):
         n : int
             Up to which depth to go to.
         stop_at : DirectoryNode or None
-            DirectoryNode instance to stop the iteration at
+            :class:`DirectoryNode` instance to stop the iteration at
         make_list : bool
-            Return a list of nodes instead of parent
+            Return a list of :class:`DirectoryNode` instances instead of parent
 
 
         Returns
         -------
         DirectoryNode
-            Returns parent or root node
+            Returns parent or root :class:`DirectoryNode` instance
         """
         nodes = []
         node = self
@@ -617,14 +620,16 @@ class DirectoryNode(object):
 
     def walk(self, function):
         """
-        TODO: function = None -> generator like os.walk (dir, [dirs], [files])
+        .. todo::
+            function = None -> generator like os.walk (dir, [dirs], [files])
 
         Walks over the nodes and it's sub nodes and executes the specified
         function.
 
         The function will be called with the following dictionary arguments:
-        node - DirectoryNode
-        depth - Depth
+
+        * node - :class:`DirectoryNode`
+        * depth - Depth
 
         Parameters
         ----------
@@ -676,9 +681,9 @@ class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
     Attributes
     ----------
     directory : DirectoryNode
-
+        root :class:`DirectoryNode` instance
     records : dict[int, BaseRecord]
-        mapping of offset -> record
+        mapping of offset -> record instances
     """
 
     EXTENSION = '.ggpk'
@@ -700,7 +705,7 @@ class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
         Returns
         -------
         DirectoryNode
-            the node if found
+            the :class:`DirectoryNode` instance if found
 
         Raises
         ------
@@ -851,14 +856,14 @@ class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
 
     def directory_build(self, parent=None):
         """
-        Rebuilds the directory or directory node. 
+        Rebuilds the directory or the specified :class:`DirectoryNode`
         If the root directory is rebuild it will be stored in the directory
         object variable.
         
         Parameters
         ----------
-        parent : DirectorNode or None
-            parent DirectoryNode. If None generate the root directory
+        parent : :class:`DirectoryNode` or None
+            parent :class:`DirectoryNode`. If None generate the root directory
 
 
         Returns
@@ -871,8 +876,8 @@ class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
         ------
         ParserError
             if performed without calling .read() first
-            if offsets pointing to records types which are not FileRecord or
-            DirectoryRecord
+            if offsets pointing to records types which are not
+            :class:`FileRecord` or :class:`DirectoryRecord`
         """
         if not self.records:
             raise ParserError('No records - perform .read() first')

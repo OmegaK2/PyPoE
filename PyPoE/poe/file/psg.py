@@ -90,7 +90,7 @@ class GraphGroup(ReprMixin):
     id :  int
         id (index in list) of the this group
     nodes : list[GraphGroupNode]
-        list of child GraphGroupNodes
+        list of child :class:`GraphGroupNode` instances
     """
 
     __slots__ = ['x', 'y', 'id', 'nodes']
@@ -110,7 +110,7 @@ class GraphGroup(ReprMixin):
         id :  int
             id (index in list) of the this group
         nodes : list[GraphGroupNode]
-            list of child GraphGroupNodes
+            list of child :class:`GraphGroupNode` instances
         """
         self.x = x
         self.y = y
@@ -135,8 +135,8 @@ class GraphGroup(ReprMixin):
 
         Parameters
         ----------
-        dat_reader:  DatReader
-            DatReader instance
+        dat_reader: DatReader
+            :class:`PyPoE.poe.file.dat.DatReader` instance
         """
         for node in self.nodes:
             node._update_connections(dat_reader)
@@ -144,42 +144,35 @@ class GraphGroup(ReprMixin):
 
 class GraphGroupNode(ReprMixin):
     """
-    Representation of a single node in a GraphGroup.
+    Representation of a single node in a :class:`GraphGroup`.
 
     A node contains the actual information about the passive skill value it
     holds and the connection as well the as the position within the group.
     
     .. warning::
-        If the parent PSGFile was instantiated with a valid 'PassiveSkills.dat'
-        DatFile instance, the passive_skill and connections variables contain 
-        references to the respective row (i.e. a DatRecord instance) instead
+        If the parent :class:`PSGFile` was instantiated with a valid
+        'PassiveSkills.dat' :class:`PyPoE.poe.file.dat.DatFile` instance, the
+        passive_skill and connections variables contain references to the
+        respective row (i.e. a `PyPoE.poe.file.dat.DatRecord` instance) instead
         of the integer id.
 
     Parameters
     ----------
     parent :  GraphGroup
-        parent GraphGroup this node belongs to
+        parent :class:`GraphGroup` this node belongs to
 
-    passive_skill :  int or DatRecord
+    passive_skill : int or DatRecord
         passive skill node of this node
-
-        If the parent PSGFile was instantiated with a valid 'PassiveSkills.dat'
-        DatFile instance, this will contain a reference to the respective
-        row (i.e. a DatRecord instance) instead of the integer id.
 
     radius :  int
         radius from the parent's x,y-position
 
-    position :  int
+    position : int
         position of the node in the group; together with the radius this creates
         a clockwise rotation from 0 to 11
 
     connections : list[int] or list[DatRecord]
         list of passive skill nodes this node is connected to
-
-        If the parent PSGFile was instantiated with a valid 'PassiveSkills.dat'
-        DatFile instance, this will contain a reference to the respective
-        row (i.e. a DatRecord instance) instead of the integer id.
     """
 
     __slots__ = ['parent', 'passive_skill', 'radius', 'position', 'connections']
@@ -189,7 +182,7 @@ class GraphGroupNode(ReprMixin):
         Parameters
         ----------
         parent :  GraphGroup
-            parent GraphGroup this node belongs to
+            parent :class:`GraphGroup` this node belongs to
         passive_skill :  int
             passive skill node id of this node
         radius :  int
@@ -213,7 +206,7 @@ class GraphGroupNode(ReprMixin):
         Parameters
         ----------
         dat_reader:  DatReader
-            DatReader instance
+            :class:`PyPoE.poe.file.dat.DatReader` instance
         """
         self.passive_skill = dat_reader.index[PSG_COL][
             self.passive_skill
@@ -231,11 +224,11 @@ class PSGFile(AbstractFileReadOnly):
     Parameters
     ----------
     _passive_skills : None or DatReader
-        reference to the DatReader if specified
+        reference to the :class:`PyPoE.poe.file.dat.DatReader` if specified
     root_passives : list[int] or list[DatRecord]
         list of root (starting class) passive nodes
     groups : list[GraphGroup]
-        list of GraphGroup instances
+        list of :class:`GraphGroup` instances
     """
 
     EXTENSION = '.psg'

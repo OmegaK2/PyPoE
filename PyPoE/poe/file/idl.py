@@ -122,8 +122,8 @@ class IDLFile(AbstractFile, TypedList, metaclass=TypedContainerMeta):
     """
     Encapsulated in-memory representation of .idl files.
 
-    Since .idl files basically act as list of :class:`IDLRecord`s IDLFile also
-    acts as a list, i.e. it supports the regular list interface.
+    Since .idl files basically act as list of :class:`IDLRecord` instances
+    IDLFile also acts as a list, i.e. it supports the regular list interface.
     However, added items may only be a :class:`IDLRecord`
     """
 

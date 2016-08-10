@@ -34,10 +34,9 @@ Agreement
 
 See PyPoE/LICENSE
 
-TODO
-===============================================================================
+.. todo::
 
-The abstract classes should probably actually be using python abc api.
+    The abstract classes should probably actually be using python abc api.
 
 Documentation
 ===============================================================================

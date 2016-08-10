@@ -17,7 +17,7 @@ Overview
 Description
 ===============================================================================
 
-Parser for Metadata/skillpopup_stat_filters.txt
+Parser for Metadata/StatDescriptions/skillpopup_stat_filters.txt
 
 Agreement
 ===============================================================================
@@ -92,7 +92,7 @@ class StatFilterFile(AbstractFileReadOnly):
         stats as value
     skills : dict[str, SkillEntry]
         Dictionary mapping the active skill id (as key) to a the respective
-        SkillEntry instance as value.
+        :class:`SkillEntry` instance as value.
     """
     _re_find_sections = re.compile(
         # header

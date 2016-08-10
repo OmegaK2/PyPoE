@@ -37,13 +37,13 @@ Agreement
 
 See PyPoE/LICENSE
 
-TODO
-===============================================================================
 
-- DatValue.get_value might hit the python recursion limit, but is not a problem
-  for any of the actual dat file.
-- Update RR with the new indexing
-- Errors for invalid foreignkey indexing
+.. todo::
+
+    * DatValue.get_value might hit the python recursion limit, but is not a problem
+      for any of the actual dat file.
+    * Update RR with the new indexing
+    * Errors for invalid foreignkey indexing
 
 Documentation
 ===============================================================================
@@ -136,6 +136,7 @@ class DatValue(object):
     regarding the placement of the value in the respective DatFile intact.
 
 
+
     Support for built-ins:
 
     DatValue do support comparison, however is it performed on the dereferenced
@@ -143,12 +144,16 @@ class DatValue(object):
 
     This means generally DatValues can be compared to anything, the actual
     comparison is however performed depending on the data type.
+
     Example 1: dat_value < 0
-    - works if the dat_value holds an integer
-    - raises TypeError if it holds a list
+
+    * works if the dat_value holds an integer
+    * raises TypeError if it holds a list
+
     Example 2: dat_value1 < dat_value2
-    - works if both dat values have the same or comparable types
-    - raises TypeError if one holds a list, and the other an integer
+
+    * works if both dat values have the same or comparable types
+    * raises TypeError if one holds a list, and the other an integer
 
 
     Dev notes:

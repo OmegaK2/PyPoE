@@ -83,7 +83,7 @@ class AbstractFileCache(ReprMixin):
         ----------
         path_or_ggpk : str | GGPKFile
             The root path (i.e. relative to content.ggpk) where the files are
-            stored or a GGPKFile instance
+            stored or a :class:`PyPoE.poe.file.ggpk.GGPKFile` instance
         files : Iterable
             Iterable of files that will be loaded right away
         files_shortcut : bool
@@ -99,7 +99,8 @@ class AbstractFileCache(ReprMixin):
         TypeError
             if path_or_ggpk not specified or invalid type
         ValueError
-            if a :class:`GGPKFile` was passed, but it was not parsed
+            if a :class:`PyPoE.poe.file.ggpk.GGPKFile` was passed, but it was
+            not parsed
         """
         if isinstance(path_or_ggpk, GGPKFile):
             if not path_or_ggpk.is_parsed:
@@ -110,9 +111,12 @@ class AbstractFileCache(ReprMixin):
             self._ggpk = None
             self._path = path_or_ggpk
         else:
-            raise TypeError('path_or_ggpk must be a valid directory or GGPKFile')
+            raise TypeError(
+                'path_or_ggpk must be a valid directory or GGPKFile'
+            )
 
-        self.instance_options = {} if instance_options is None else instance_options
+        self.instance_options = {} if instance_options is None else \
+            instance_options
         self.read_options = {} if read_options is None else read_options
 
         self.files = {}
@@ -239,9 +243,7 @@ class AbstractFileCache(ReprMixin):
     @property
     def path_or_ggpk(self):
         """
-        Returns
-        -------
-        GGPKFile | str
-            The path or GGPKFile instance the cache was created with
+        The path or :class:`PyPoE.poe.file.ggpk.GGPKFile` instance the cache
+        was created with
         """
         return self._path or self._ggpk

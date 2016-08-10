@@ -22,10 +22,9 @@ Agreement
 
 See PyPoE/LICENSE
 
-TODO
-===============================================================================
 
-Find out the real function for calculating the stat requirement.
+.. todo::
+* Find out the real function for calculating the stat requirement.
 
 Documentation
 ===============================================================================

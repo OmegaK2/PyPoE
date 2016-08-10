@@ -24,9 +24,9 @@ Agreement
 
 See PyPoE/LICENSE
 
-Todo
-===============================================================================
-ValueError -> ParserError?
+.. todo::
+
+    * ValueError -> ParserError?
 
 Documentation
 ===============================================================================
@@ -220,7 +220,9 @@ class ItemParser(object):
         (found on weapons)
     item_class : str
         The item class of the item.
-        .. warning:
+
+        .. warning::
+
             even though all items have an item class, this is only present on
             weapons
 

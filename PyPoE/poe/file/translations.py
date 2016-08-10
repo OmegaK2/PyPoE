@@ -27,13 +27,14 @@ Agreement
 
 See PyPoE/LICENSE
 
-TODO
-===============================================================================
+.. todo::
 
-- optimize __hash__ very slow atm; or remove, but it is needed for the diffs
-  reverse for non-number values?
-- Fix empty translation strings
-- passive_skill_stat_descriptions: tolerance vs missing stuff.
+    optimize __hash__ very slow atm; or remove, but it is needed for the diffs
+    reverse for non-number values?
+
+    Fix empty translation strings
+
+    passive_skill_stat_descriptions: tolerance vs missing stuff.
 
 Documentation
 ===============================================================================
@@ -90,7 +91,7 @@ API for internal use, but still may be useful to work with more directly.
 .. autoclass:: TranslationQuantifier
     :special-members: __eq__
 
-Warnings
+Warning Classes
 ===============================================================================
 
 .. autoclass:: TranslationWarning
@@ -212,9 +213,10 @@ class Translation(TranslationReprMixin):
     Attributes
     ----------
     languages : list[TranslationLanguage]
-        List of TranslationLanguage instances for this Translation
+        List of :class:`TranslationLanguage` instances for this
+        :class:`Translation`
     ids : list[str]
-        List of ids associated with this Translation
+        List of ids associated with this translation
     """
 
     __slots__ = ['languages', 'ids']
@@ -254,10 +256,11 @@ class Translation(TranslationReprMixin):
 
     def get_language(self, language='English'):
         """
-        Returns the TranslationLanguage record for the specified language.
+        Returns the :class:`TranslationLanguage` record for the specified
+        language.
 
         As a fallback if the language is not found, the English
-        TranslationLanguage record will be returned.
+        :class:`TranslationLanguage` record will be returned.
 
         Parameters
         ----------
@@ -268,8 +271,8 @@ class Translation(TranslationReprMixin):
         Returns
         -------
         TranslationLanguage
-            Returns the TranslationLanguage record for the specified language
-            or the English one if not found
+            Returns the :class:`TranslationLanguage record for the specified
+            language or the English one if not found
         """
         etr = None
         for tr in self.languages:
@@ -289,11 +292,11 @@ class TranslationLanguage(TranslationReprMixin):
     Attributes
     ----------
     parent : Translation
-        The parent Translation instance
+        The parent :class:`Translation` instance
     language : str
         the language of this instance
     strings : list[TranslationString]
-        List of Translation String instances
+        List of :class:`TranslationString` instances for this language
     """
 
     __slots__ = ['parent', 'language', 'strings']
@@ -436,12 +439,13 @@ class TranslationString(TranslationReprMixin):
     Attributes
     ----------
     parent : TranslationLanguage
-        parent language
+        parent :class:`TranslationLanguage` instance
     quantifier : TranslationQuantifier
-        the quantifier for this translation string
+        the associated :class:`TranslationQuantifier` instance for this
+        translation string
     range : list[TranslationRange]
-        acceptable ranges for this translation as a list of instances for each
-        index
+        list of :class:`TranslationRange` instances containing the acceptable
+        ranges for this translation as a list of instances for each index
     strings : list[str]
         translation string broken down into segments
     tags : list[int]
@@ -471,38 +475,6 @@ class TranslationString(TranslationReprMixin):
         self.tags = []
         self.tags_types = []
         self.strings = []
-
-    @property
-    def string(self):
-        """
-        Returns
-        -------
-        str
-            Reconstructed original string that would be used for translation
-        """
-        s = []
-        for i, tag in enumerate(self.tags):
-            s.append(self.strings[i])
-            s.append('%')
-            s.append(str(tag+1))
-            s.append(self.tags_types[i])
-        s.append(self.strings[-1])
-        return ''.join(s)
-
-    @property
-    def as_format_string(self):
-        """
-        Returns
-        -------
-        str
-            The translation string as python str.format string
-        """
-        s = []
-        for i, tag in enumerate(self.tags):
-            s.append(self.strings[i])
-            s.append('{%s}' % tag)
-        s.append(self.strings[-1])
-        return ''.join(s)
 
     def __eq__(self, other):
         if not isinstance(other, TranslationString):
@@ -534,6 +506,42 @@ class TranslationString(TranslationReprMixin):
             self.tags_types.append(match.group('type'))
             start = match.end()
         self.strings.append(string[start:])
+
+    @property
+    def string(self):
+        """
+        Reconstructed original string that would be used for translation
+
+        Returns
+        -------
+        str
+            the original string
+        """
+        s = []
+        for i, tag in enumerate(self.tags):
+            s.append(self.strings[i])
+            s.append('%')
+            s.append(str(tag+1))
+            s.append(self.tags_types[i])
+        s.append(self.strings[-1])
+        return ''.join(s)
+
+    @property
+    def as_format_string(self):
+        """
+        The translation string as python str.format string
+
+        Returns
+        -------
+        str
+            str.format string
+        """
+        s = []
+        for i, tag in enumerate(self.tags):
+            s.append(self.strings[i])
+            s.append('{%s}' % tag)
+        s.append(self.strings[-1])
+        return ''.join(s)
 
     def diff(self, other):
         if not isinstance(other, TranslationString):
@@ -669,7 +677,8 @@ class TranslationString(TranslationReprMixin):
 
     def reverse_string(self, string):
         """
-        Attempts to match this TranslationString against the given string.
+        Attempts to match this :class:`TranslationString` against the given
+        string.
 
         If a match is found, it will attempt to cast and reverse all values
         found in the string itself.
@@ -762,7 +771,7 @@ class TranslationRange(TranslationReprMixin):
     Attributes
     ----------
     parent : TranslationString
-        parent
+        parent :class:`TranslationString` instance
     min : int
         minimum range
     max : int
@@ -918,7 +927,8 @@ class TranslationQuantifier(TranslationReprMixin):
                 return row.rowid
         return None
 
-    # TODO: I dont think its very clean to return either a list or a single value
+    # TODO: I dont think its very clean to return either a list or a single
+    # value
     @staticmethod
     def _tempest_mod_text_reverse(relational_reader, value):
         results = []
@@ -943,7 +953,8 @@ class TranslationQuantifier(TranslationReprMixin):
         Parameters
         ----------
         relational_reader : RelationalReader
-            RelationalReader instance to read the required game data files from.
+            :class:`RelationalReader` instance to read the required game data
+            files from.
         """
         cls.handlers.update({
             'mod_value_to_item_class': lambda value:
@@ -1032,7 +1043,6 @@ class TranslationQuantifier(TranslationReprMixin):
         values : list[int]
             list of values
 
-
         Returns
         -------
         list[int]
@@ -1064,19 +1074,20 @@ class TranslationResult(TranslationReprMixin):
     Attributes
     ----------
     found : list[Translation]
-        List of found Translations (in order)
+        List of found :class:`Translation` instances (in order)
     found_lines : list[str]:
         List of related translated strings (in order)L
     lines : list[str]
         List of translated strings (minus missing ones)
     indexes : list[int]
-        List of related indexes (i.e. for use with TranslationLanguage.get_string)
+        List of related indexes (i.e. for use with
+        :method:`TranslationLanguage.get_string`)
     missing_ids : list[str]
         List of missing identifier tags
     missing_values : list[int]
         List of missing identifier values
     partial: list[Translation]
-        List of partial matches of Translation tags (in order)
+        List of partial matches of translation tags (in order)
     values : list[int]
         List of values (in order)
     values_unused : list[int]
@@ -1151,7 +1162,7 @@ class TranslationReverseResult(TranslationReprMixin):
     Attributes
     ----------
     translations : list[Translation]
-        List of Translation instances
+        List of :class:`Translation` instances
     values : list[list[float]]
         List of values
     """
@@ -1170,17 +1181,19 @@ class TranslationFile(AbstractFileReadOnly):
     Translation file reader.
 
     Translation files can be found in the following folder in the content.ggpk:
+
     Metadata/StatDescriptions/xxx_descriptions.txt
 
     Attributes
     ----------
     translations : list[Translation]
-        List of parsed translations instances (in order)
+        List of parsed :class:`Translation` instances (in order)
     translations_hash   : dict[str, list[Translation]]
-        Mapping of parsed translations instances with their id(s) as key.
+        Mapping of parsed :class:`Translation` instances with their id(s) as
+        key.
 
-        Each value is a list of translation instances, even if there is only
-        one.
+        Each value is a list of :class:`Translation` instances, even if there
+        is only one.
     """
 
     __slots__ = ['translations', 'translations_hash', '_base_dir', '_parent']

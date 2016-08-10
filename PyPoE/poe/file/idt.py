@@ -96,7 +96,7 @@ class CoordinateRecord(Record):
 
 class CoordinateList(TypedList, metaclass=TypedContainerMeta):
     """
-    A list that only accepts CoordinateRecord instances.
+    A list that only accepts :class:`CoordinateRecord` instances.
     """
     ACCEPTED_TYPES = CoordinateRecord
 
@@ -110,7 +110,8 @@ class TextureRecord(Record):
     name :  str
         name (internal path) of the texture
     records : CoordinateList[CoordinateRecord]
-        CoordinateList of CoordinateRecords for this texture.
+        :class:`CoordinateList` of :class:`CoordinateRecord` instances for this
+        texture.
     """
 
     __slots__ = ['name', 'records']
@@ -122,8 +123,9 @@ class TextureRecord(Record):
         name :  str
             name (internal path) of the texture
         records : None or CoordinateList[CoordinateRecord]
-            CoordinateList of CoordinateRecords for this texture. If None, an
-            empty coordinate list will be created.
+            :class:`CoordinateList` of :class:`CoordinateRecord` instances for
+            this texture. If None, an empty :class:`CoordinateList` will be
+            created.
 
         Raises
         ------
@@ -192,7 +194,7 @@ class IDTFile(AbstractFile):
         Optionally data can be specified to initialize the object in memory
         with the given data. The same can be achieved by simply setting the
         relevant attributes.
-        Note that IDTFile.read will override any initial data.
+        Note that :method:`IDTFile.read` will override any initial data.
 
         Parameters
         ----------
@@ -235,7 +237,7 @@ class IDTFile(AbstractFile):
         Returns
         -------
         TextureList[TextureRecord]
-            List of stored TextureRecord
+            List of stored :class:`TextureRecord` instances
         """
         return self._records
 
