@@ -179,6 +179,10 @@ class ItemsParser(BaseParser):
         'active_skill_gem_stat_descriptions.txt',
     ]
 
+    _IGNORE_DROP_LEVEL_CLASSES = (
+        'Hideout Doodads',
+    )
+
     # Values without the Metadata/Projectiles/ prefix
     _skill_gem_to_projectile_map = {
         'Fireball': 'Fireball',
@@ -364,6 +368,53 @@ class ItemsParser(BaseParser):
         }),
         ('RangeMax', {
             'template': 'range',
+        }),
+    ))
+
+    _hideout_doodad_map = OrderedDict((
+        ('IsNonMasterDoodad', {
+            'template': 'is_master_doodad',
+            'format': lambda v: not v,
+        }),
+        ('Variation_AOFiles', {
+            'template': 'variation_count',
+            'format': lambda v: len(v),
+        }),
+    ))
+
+    _master_hideout_doodad_map = OrderedDict((
+        ('NPCMasterKey', {
+            'template': 'master',
+            'format': lambda v: v['NPCsKey']['Name'],
+            #'condition': lambda v: v is not None,
+        }),
+        ('MasterLevel', {
+            'template': 'master_level_requirement',
+        }),
+        ('FavourCost', {
+            'template': 'master_favour_cost',
+        }),
+    ))
+
+    _maps_map = OrderedDict((
+        ('Tier', {
+            'template': 'map_tier',
+        }),
+        ('Regular_WorldAreasKey', {
+            'template': 'map_area_id',
+            'format': lambda v: v['Id'],
+        }),
+        ('Regular_GuildCharacter', {
+            'template': 'map_guild_character',
+        }),
+        ('Unique_WorldAreasKey', {
+            'template': 'unique_map_area_id',
+            'format': lambda v: v['Id'],
+            'condition': lambda v: v is not None,
+        }),
+        ('Unique_GuildCharacter', {
+            'template': 'unique_map_guild_character',
+            'condition': lambda v: v != '',
         }),
     ))
 
@@ -881,6 +932,38 @@ class ItemsParser(BaseParser):
 
         return True
 
+    def _type_hideout_doodad(self, infobox, base_item_type):
+        try:
+            hideout = self.rr['HideoutDoodads.dat'].index['BaseItemTypesKey'][
+                base_item_type.rowid]
+        except KeyError:
+            warnings.warn(
+                'Missing hideout info for "%s"' % base_item_type['Name']
+            )
+            return False
+
+        self._apply_column_map(infobox, self._hideout_doodad_map, hideout)
+
+        if not hideout['IsNonMasterDoodad']:
+            self._apply_column_map(infobox, self._master_hideout_doodad_map,
+                                   hideout)
+
+        return True
+
+    def _type_map(self, infobox, base_item_type):
+        try:
+            hideout = self.rr['Maps.dat'].index['BaseItemTypesKey'][
+                base_item_type.rowid]
+        except KeyError:
+            warnings.warn(
+                'Missing map info for "%s"' % base_item_type['Name']
+            )
+            return False
+
+        self._apply_column_map(infobox, self._maps_map, hideout)
+
+        return True
+
     _cls_map = {
         # Armour types
         'Gloves': (_type_level, _type_attribute, _type_armour, ),
@@ -917,11 +1000,95 @@ class ItemsParser(BaseParser):
         # Currency-like items
         'Currency': (_type_currency, ),
         'Stackable Currency': (_type_currency, ),
-        'Hideout Doodads': (_type_currency, ),
+        'Hideout Doodads': (_type_currency, _type_hideout_doodad),
         'Microtransactions': (_type_currency, ),
         # Misc
-        #'Maps': (_type_,),
+        'Maps': (_type_map,),
         #'Map Fragments': (_type_,),
+    }
+
+    _conflict_amulet_id_map = {
+        'Metadata/Items/Amulets/Talismans/Talisman2_6_1':
+            ' (Fire Damage taken as Cold Damage)',
+        'Metadata/Items/Amulets/Talismans/Talisman2_6_2':
+            ' (Fire Damage taken as Lightning Damage)',
+        'Metadata/Items/Amulets/Talismans/Talisman2_6_3':
+            ' (Cold Damage taken as Fire Damage)',
+        'Metadata/Items/Amulets/Talismans/Talisman2_6_4':
+            ' (Cold Damage taken as Lightning Damage)',
+        'Metadata/Items/Amulets/Talismans/Talisman2_6_5':
+            ' (Lightning Damage taken as Cold Damage)',
+        'Metadata/Items/Amulets/Talismans/Talisman2_6_6':
+            ' (Lightning Damage taken as Fire Damage)',
+        'Metadata/Items/Amulets/Talismans/Talisman3_6_1':
+            '  (Power Charge on Kill)',
+        'Metadata/Items/Amulets/Talismans/Talisman3_6_2':
+            '  (Frenzy Charge on Kill)',
+        'Metadata/Items/Amulets/Talismans/Talisman3_6_3':
+            '  (Endurance Charge on Kill)',
+    }
+
+    def _conflict_amulets(self, infobox, base_item_type):
+        appendix = self._conflict_amulet_id_map.get(base_item_type['Id'])
+        if appendix is None:
+            return base_item_type['Name']
+        else:
+            return base_item_type['Name'] + appendix
+
+    def _conflict_hideout_doodad(self, infobox, base_item_type):
+        try:
+            ho = self.rr['HideoutDoodads.dat'].index[
+                'BaseItemTypesKey'][base_item_type.rowid]
+        except KeyError:
+            return
+
+        # This is not perfect, but works currently.
+        if ho['NPCMasterKey']:
+            if base_item_type['Id'].startswith('Metadata/Items/Hideout/Hideout'
+                                               'Wounded'):
+                return '%s (%s %s decoration, %s)' % (
+                    base_item_type['Name'],
+                    ho['NPCMasterKey']['NPCsKey']['ShortName'],
+                    ho['MasterLevel'],
+                    base_item_type['Id'].replace('Metadata/Items/Hideout/Hideout'
+                                                 'Wounded', '')
+                )
+
+            return '%s (%s %s decoration)' % (
+                base_item_type['Name'],
+                ho['NPCMasterKey']['NPCsKey']['ShortName'],
+                ho['MasterLevel']
+            )
+        elif base_item_type['Id'].startswith(
+                'Metadata/Items/Hideout/HideoutTotemPole'):
+            # Ingore the test doodads on purpose
+            if base_item_type['Id'].endswith('Test'):
+                return
+
+            match = re.search(
+                '(?<=in the )(.*)(?= Leagues)', infobox['help_text']
+            )
+
+            if match:
+                league = match.group(0)
+                if league.endswith('Challenge'):
+                    league = league.replace(' Challenge', '')
+
+                return '%s (%s)' % (base_item_type['Name'], league)
+
+    def _conflict_maps(self, infobox, base_item_type):
+        id = base_item_type['Id'].replace('Metadata/Items/Maps/Map', '')
+        # Legacy maps
+        if id.startswith('T'):
+            return '%s (pre 2.0)' % base_item_type['Name']
+        # 2.0 maps
+        elif id.startswith('2'):
+            return base_item_type['Name']
+
+    _conflict_resolver_map = {
+        'Amulets': _conflict_amulets,
+        'Hideout Doodads': _conflict_hideout_doodad,
+        'Maps': _conflict_maps,
     }
 
     def export(self, parsed_args):
@@ -943,7 +1110,9 @@ class ItemsParser(BaseParser):
 
         # Create item list
         items = []
+        names = defaultdict(list)
         for row in self.rr['BaseItemTypes.dat']:
+            names[row['Name']].append(row)
             # catch exception in case item class was not specified
             try:
                 if row['ItemClassesKey'][itemkey] not in parsed_args.item_class:
@@ -978,12 +1147,18 @@ class ItemsParser(BaseParser):
             infobox['class'] = cls
             infobox['size_x'] = base_item_type['Width']
             infobox['size_y'] = base_item_type['Height']
-            infobox['drop_level'] = base_item_type['DropLevel']
             if base_item_type['FlavourTextKey']:
                 infobox['flavour_text'] = base_item_type['FlavourTextKey'][
                     'Text'].replace('\n', '<br>').replace('\r', '')
 
+            if cls not in self._IGNORE_DROP_LEVEL_CLASSES:
+                infobox['drop_level'] = base_item_type['DropLevel']
             ot = self.ot[base_item_type['InheritsFrom'] + '.ot']
+
+            if 'enable_rarity' in ot['Mods']:
+                infobox['drop_rarities'] = ', '.join([
+                    n[0].upper() + n[1:] for n in ot['Mods']['enable_rarity']
+                ])
 
             tags = [t['Id'] for t in base_item_type['TagsKeys']]
             infobox['tags'] = ', '.join(list(ot['Base']['tag']) + tags)
@@ -1010,9 +1185,25 @@ class ItemsParser(BaseParser):
                 if fail:
                     continue
 
+            # handle items with duplicate name entries
+            if len(names[name]) > 1:
+                resolver = self._conflict_resolver_map.get(cls)
+
+                if resolver:
+                    name = resolver(self, infobox, base_item_type)
+                    if name is None:
+                        console('Unresolved ambiguous item name "%s". Skipping'
+                                % infobox['name'], msg=Msg.error)
+                        continue
+                else:
+                    console('No name conflict handler defined for item class '
+                            '"%s"' % cls, msg=Msg.error)
+                    continue
+
             # putting this last since it's usually manually added
-            if base_item_type['IsTalisman']:
+            if base_item_type['IsTalisman'] or 'old_map' in infobox['tags']:
                 infobox['drop_enabled'] = False
+
 
             cond = WikiCondition(
                 data=infobox,
