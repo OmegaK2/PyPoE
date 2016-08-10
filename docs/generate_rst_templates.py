@@ -29,6 +29,7 @@ See PyPoE/LICENSE
 
 # Python
 import os
+import re
 
 # 3rd-party
 
@@ -63,9 +64,9 @@ if __name__ == '__main__':
             if item.startswith('.') or not item.endswith('.py'):
                 filenames.remove(item)
 
-        pypoe_path = dirpath.replace(PyPoE.DIR.strip('\\'), 'PyPoE')
+        pypoe_path = dirpath.replace(PyPoE.DIR, 'PyPoE').strip('\\/')
         for filename in filenames:
-            path = os.path.join(pypoe_path, filename).split('\\')
+            path = re.split(r'\\|/', os.path.join(pypoe_path, filename))
             if path[-1] == '__init__.py':
                 del path[-1]
 
