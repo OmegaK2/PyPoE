@@ -52,4 +52,4 @@ import pytest
 
 def test_stat_filter_file(ggpkfile):
     f = stat_filters.StatFilterFile()
-    f.read(ggpkfile['Metadata/skillpopup_stat_filters.txt'].record.extract())
+    f.read(ggpkfile['Metadata/StatDescriptions/skillpopup_stat_filters.txt'].record.extract())
