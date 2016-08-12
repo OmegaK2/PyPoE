@@ -36,6 +36,8 @@ Public API
 
     .. automethod:: __getitem__
 
+.. autofunction:: extract_dds
+
 Internal API
 -------------------------------------------------------------------------------
 
@@ -76,6 +78,12 @@ import struct
 import os
 import re
 
+# 3rd Party
+try:
+    import brotli
+except ImportError:
+    brotli = None
+
 # self
 from PyPoE.shared import InheritedDocStringsMeta
 from PyPoE.shared.decorators import doc
@@ -87,6 +95,95 @@ from PyPoE.poe.file.shared import AbstractFileReadOnly, ParserError
 # =============================================================================
 
 __all__ = ['GGPKFile']
+
+
+# =============================================================================
+# Functions
+# =============================================================================
+
+
+def extract_dds(data, path_or_ggpk=None):
+    """
+    Attempts to extract a .dds from the given data bytes.
+
+    .dds files in the content.ggpk may be compressed with brotli or may be
+    a reference to another .dds file.
+
+    This function will take of those kind of files accordingly and try to return
+    a file instead.
+    If any problems arise an error will be raised instead.
+
+    .. warning::
+
+        For the decompression to work the brotli library must be installed.
+
+        Brotli is currently not available through PyPI and can be obtained as
+        wheel from https://github.com/google/brotli
+
+    Parameters
+    ----------
+    data : bytes
+        The raw data to extract the dds from.
+    path_or_ggpk : str or GGPKFile
+        A str containing the path where the extracted content.ggpk is located or
+        an :class:`GGPKFile` instance
+
+    Returns
+    -------
+    bytes
+        the uncompressed, dereferenced .dds file data
+
+    Raises
+    -------
+    NotImplementedError
+        If the brotli library is not installed
+    ValueError
+        If the file data contains a reference, but path_or_ggpk is not specified
+    TypeError
+        If the file data contains a reference, but path_or_ggpk is of invalid
+        type (i.e. not str or :class:`GGPKFile`
+    ParserError
+        If the file header is not recognized
+    """
+    if brotli is None:
+        raise NotImplementedError(
+            'brotli library must be installed for this function.\nVisit '
+            'https://github.com/google/brotli for python packages.'
+        )
+
+    # Already a DDS file, so return it
+    if data[:4] == b'DDS ':
+        return data
+    # Is this a reference?
+    elif data[:1] == b'*':
+        path = data[1:].decode()
+        if path_or_ggpk is None:
+            raise ValueError(
+                '.dds file is a reference, but path_or_ggpk is not specified.'
+            )
+        elif isinstance(path_or_ggpk, GGPKFile):
+            data = path_or_ggpk.directory[path].record.extract().read()
+        elif isinstance(path_or_ggpk, str):
+            with open(os.path.join(path_or_ggpk, path), 'rb') as f:
+                data = f.read()
+        else:
+            raise TypeError(
+                'path_or_ggpk has an invalid type "%s" %' % type(path_or_ggpk)
+            )
+        return extract_dds(
+            data,
+            path_or_ggpk=path_or_ggpk,
+        )
+    # Not sure what the first bytes actually do, there are 177 different ones
+    # over the bytes. Perhaps some file properties?
+    # The 4th byte always seems to be 0 however, suggesting it might be a null
+    # terminated string.
+    elif data[3] == 0:
+        return brotli.decompress(data[4:])
+    else:
+        raise ParserError(
+            'Unhandled file header; could not detect dds, reference or '
+            'compression header.')
 
 # =============================================================================
 # Classes
@@ -943,8 +1040,9 @@ class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
         super(GGPKFile, self).read(file_path_or_raw, *args, **kwargs)
         self._file_path_or_raw = file_path_or_raw
 
-
-
+    @doc(doc=extract_dds)
+    def extract_dds(self, data, path_or_ggpk=None):
+        return extract_dds(data, path_or_ggpk=path_or_ggpk or self)
 
 
 if __name__ == '__main__':
