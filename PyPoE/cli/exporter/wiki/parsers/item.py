@@ -181,7 +181,17 @@ class ItemsParser(BaseParser):
 
     _IGNORE_DROP_LEVEL_CLASSES = (
         'Hideout Doodads',
+        'Labyrinth Map Item',
     )
+
+    _IGNORE_DROP_LEVEL_ITEMS = {
+        'Alchemy Shard',
+        'Alteration Shard',
+        'Enchant',
+        'Imprint',
+        'Transmutation Shard',
+        'Scroll Fragment',
+    }
 
     # Values without the Metadata/Projectiles/ prefix
     _skill_gem_to_projectile_map = {
@@ -925,6 +935,16 @@ class ItemsParser(BaseParser):
 
         self._apply_column_map(infobox, self._currency_column_map, currency)
 
+        # Add the "shift click to unstack" stuff to currency-ish items
+        if currency['Stacks'] > 1:
+            if 'help_text' in infobox:
+                infobox['help_text'] += '<br>'
+            else:
+                infobox['help_text'] = ''
+
+            infobox['help_text'] += self.rr['ClientStrings.dat'].index[
+                'Id']['ItemDisplayStackDescription']['Text']
+
         return True
 
     def _type_level(self, infobox, base_item_type):
@@ -1151,7 +1171,8 @@ class ItemsParser(BaseParser):
                 infobox['flavour_text'] = base_item_type['FlavourTextKey'][
                     'Text'].replace('\n', '<br>').replace('\r', '')
 
-            if cls not in self._IGNORE_DROP_LEVEL_CLASSES:
+            if cls not in self._IGNORE_DROP_LEVEL_CLASSES and \
+                    name not in self._IGNORE_DROP_LEVEL_ITEMS:
                 infobox['drop_level'] = base_item_type['DropLevel']
             ot = self.ot[base_item_type['InheritsFrom'] + '.ot']
 
@@ -1164,6 +1185,11 @@ class ItemsParser(BaseParser):
             infobox['tags'] = ', '.join(list(ot['Base']['tag']) + tags)
 
             infobox['metadata_id'] = base_item_type['Id']
+
+            help_text = ot['Base'].get('description_text')
+            if help_text:
+                infobox['help_text'] = self.rr['ClientStrings.dat'].index['Id'][
+                    help_text]['Text']
 
             for i, mod in enumerate(base_item_type['Implicit_ModsKeys']):
                 infobox['implicit%s' % (i+1)] = mod['Id']
