@@ -6,6 +6,8 @@ More detailed docs: [http://omegak2.net/poe/PyPoE/](http://omegak2.net/poe/PyPoE
 
 The docs are occasionally updated until I get a build bot up - however docs can also be manually built with sphinx.
 
+**Please make sure to install Python 3.4 not 3.5 if you want to use the UI. Pyside (the UI library) currently does not support python 3.5**
+
 [![Build Status](https://travis-ci.org/OmegaK2/PyPoE.svg?branch=dev)](https://travis-ci.org/OmegaK2/PyPoE)
 
 Overview
