@@ -143,7 +143,9 @@ def extract_dds(data, path_or_ggpk=None):
         If the file data contains a reference, but path_or_ggpk is of invalid
         type (i.e. not str or :class:`GGPKFile`
     ParserError
-        If the file header is not recognized
+        If the uncompressed size does not match the size in the header
+    brotli.error
+        If whatever bytes were read were not brotli compressed
     """
     if brotli is None:
         raise NotImplementedError(
@@ -174,16 +176,14 @@ def extract_dds(data, path_or_ggpk=None):
             data,
             path_or_ggpk=path_or_ggpk,
         )
-    # Not sure what the first bytes actually do, there are 177 different ones
-    # over the bytes. Perhaps some file properties?
-    # The 4th byte always seems to be 0 however, suggesting it might be a null
-    # terminated string.
-    elif data[3] == 0:
-        return brotli.decompress(data[4:])
     else:
-        raise ParserError(
-            'Unhandled file header; could not detect dds, reference or '
-            'compression header.')
+        size = int.from_bytes(data[:4], 'little')
+        dec = brotli.decompress(data[4:])
+        if len(dec) != size:
+            raise ParserError(
+                'Decompressed size does not match size in the header'
+            )
+        return dec
 
 # =============================================================================
 # Classes
