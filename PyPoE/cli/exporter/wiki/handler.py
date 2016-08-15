@@ -111,6 +111,7 @@ class WikiHandler(object):
         console('Scanning for wiki page candidates "%s"' %
                 ', '.join([p['page'] for p in pages]))
         page_found = False
+        new = False
         for pdata in pages:
             page = self.site.pages[pdata['page']]
             if page.exists:
@@ -147,12 +148,16 @@ class WikiHandler(object):
                 console('Page "%s" does not exist. It will be created.' %
                         pdata['page'])
                 page_found = True
+                new = True
                 break
 
         if page_found:
             text = row['text']
             if callable(text):
-                text = text(page=page)
+                kwargs = {}
+                if not new:
+                    kwargs['page'] = page
+                text = text(**kwargs)
 
             if text == page.text():
                 console('No update required. Skipping.')

@@ -78,6 +78,7 @@ class WikiCondition(object):
         'name_list',
         'inventory_icon',
         'alternate_art_inventory_icons',
+        'release_version',
     )
 
     def __init__(self, data, cmdargs):
@@ -181,6 +182,7 @@ class ItemsParser(BaseParser):
 
     _IGNORE_DROP_LEVEL_CLASSES = (
         'Hideout Doodads',
+        'Microtransactions',
         'Labyrinth Map Item',
     )
 
@@ -191,6 +193,11 @@ class ItemsParser(BaseParser):
         'Imprint',
         'Transmutation Shard',
         'Scroll Fragment',
+    }
+
+    _DROP_DISABLED_ITEMS = {
+        'Perandus Coin',
+        'Eternal Orb'
     }
 
     # Values without the Metadata/Projectiles/ prefix
@@ -936,7 +943,8 @@ class ItemsParser(BaseParser):
         self._apply_column_map(infobox, self._currency_column_map, currency)
 
         # Add the "shift click to unstack" stuff to currency-ish items
-        if currency['Stacks'] > 1:
+        if currency['Stacks'] > 1 and infobox['class'] not in \
+                ('Microtransactions', ):
             if 'help_text' in infobox:
                 infobox['help_text'] += '<br>'
             else:
@@ -1227,7 +1235,8 @@ class ItemsParser(BaseParser):
                     continue
 
             # putting this last since it's usually manually added
-            if base_item_type['IsTalisman'] or 'old_map' in infobox['tags']:
+            if base_item_type['IsTalisman'] or 'old_map' in infobox['tags'] or \
+                    base_item_type['Name'] in self._DROP_DISABLED_ITEMS:
                 infobox['drop_enabled'] = False
 
 
