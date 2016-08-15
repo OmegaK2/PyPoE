@@ -46,6 +46,7 @@ except ImportError:
 
 # self
 from PyPoE.poe.file.dat import DatFile, DatValue
+from PyPoE.poe.file.ggpk import extract_dds
 from PyPoE.ui.shared.proxy_filter_model import FilterMenu
 from PyPoE.ui.shared.table_context_menus import TableContextReadOnlyMenu
 from PyPoE.ui.shared.file.model import (
@@ -101,7 +102,8 @@ class DatStyle(QStyledItemDelegate):
         return dat_value.value
 
     def _show_value(self, outstr, dat_value, format='{0}'):
-        if self.data_style or self.parent().option_dereference_pointer.isChecked():
+        if self.data_style or \
+                self.parent().option_dereference_pointer.isChecked():
             if dat_value.is_pointer:
                 self._show_value(outstr, dat_value.child)
                 if self.parent().option_show_pointer.isChecked():
@@ -143,7 +145,8 @@ class DatStyle(QStyledItemDelegate):
 
         return text
 
-    def paint(self, painter=QPainter(), option=QStyleOptionViewItem(), index=QModelIndex()):
+    def paint(self, painter=QPainter(), option=QStyleOptionViewItem(),
+              index=QModelIndex()):
         painter.save()
 
         QStyledItemDelegate.paint(self, painter, option, QModelIndex())
@@ -194,22 +197,40 @@ class DatFrame(QFrame):
         self.frame_info_layout.setColumnStretch(5, 1)
         self.frame_info.setLayout(self.frame_info_layout)
 
-        self.row_label = QLabel(self.tr('Rows:'), parent=self.frame_info)
+        self.row_label = QLabel(
+            self.tr('Rows:'),
+            parent=self.frame_info
+        )
         self.frame_info_layout.addWidget(self.row_label, 0, 0)
 
-        self.row_value = QLabel(str(dat_file.reader.table_rows), parent=self.frame_info)
+        self.row_value = QLabel(
+            str(dat_file.reader.table_rows),
+            parent=self.frame_info
+        )
         self.frame_info_layout.addWidget(self.row_value, 0, 1)
 
-        self.length_label = QLabel(self.tr('Record Length:'), parent=self.frame_info)
+        self.length_label = QLabel(
+            self.tr('Record Length:'),
+            parent=self.frame_info
+        )
         self.frame_info_layout.addWidget(self.length_label, 0, 2)
 
-        self.length_value = QLabel(str(dat_file.reader.table_record_length), parent=self.frame_info)
+        self.length_value = QLabel(
+            str(dat_file.reader.table_record_length),
+            parent=self.frame_info,
+        )
         self.frame_info_layout.addWidget(self.length_value, 0, 3)
 
-        self.data_length_label = QLabel(self.tr('Data Length:'), parent=self.frame_info)
+        self.data_length_label = QLabel(
+            self.tr('Data Length:'),
+            parent=self.frame_info,
+        )
         self.frame_info_layout.addWidget(self.data_length_label, 0, 4)
 
-        self.data_length_value = QLabel(str(dat_file.reader.file_length-dat_file.reader.data_offset), parent=self.frame_info)
+        self.data_length_value = QLabel(
+            str(dat_file.reader.file_length-dat_file.reader.data_offset),
+            parent=self.frame_info,
+        )
         self.frame_info_layout.addWidget(self.data_length_value, 0, 5)
 
         #
@@ -221,12 +242,19 @@ class DatFrame(QFrame):
         self.option_group_box_layout = QHBoxLayout()
         self.option_group_box.setLayout(self.option_group_box_layout)
 
-        self.option_dereference_pointer = QCheckBox(self.tr('Dereference Pointer', parent=self.option_group_box))
+        self.option_dereference_pointer = QCheckBox(
+            self.tr('Dereference Pointer'),
+            parent=self.option_group_box
+        )
         self.option_dereference_pointer.setChecked(True)
-        self.option_dereference_pointer.stateChanged.connect(self._on_option_deref_change)
+        self.option_dereference_pointer.stateChanged.connect(
+            self._on_option_deref_change
+        )
         self.option_group_box_layout.addWidget(self.option_dereference_pointer)
 
-        self.option_show_pointer = QCheckBox(self.tr('Always Show Pointer', parent=self.option_group_box))
+        self.option_show_pointer = QCheckBox(
+            self.tr('Always Show Pointer'), parent=self.option_group_box
+        )
         self.option_show_pointer.setChecked(False)
         self.option_show_pointer.stateChanged.connect(self._refresh)
         self.option_group_box_layout.addWidget(self.option_show_pointer)
@@ -236,7 +264,9 @@ class DatFrame(QFrame):
         #
 
         self.table_main = QTableView(parent=self)
-        self.table_main_context = DatTableViewContextMenu(parent=self.table_main)
+        self.table_main_context = DatTableViewContextMenu(
+            parent=self.table_main
+        )
         self.table_main_model = DatTableModel(dat_file)
         self.table_main_proxy_model = DatValueProxyModel(parent=self)
         self.table_main_proxy_model.setSourceModel(self.table_main_model)
@@ -254,7 +284,9 @@ class DatFrame(QFrame):
         )
 
         self.table_data = QTableView(parent=self)
-        self.table_data_context = DatTableViewContextMenu(parent=self.table_data)
+        self.table_data_context = DatTableViewContextMenu(
+            parent=self.table_data
+        )
         self.table_data_model = DatDataModel(dat_file)
         self.table_data_proxy_model = DatValueProxyModel(self)
         self.table_data_proxy_model.setSourceModel(self.table_data_model)
@@ -302,6 +334,10 @@ class DDSDataHandler(FileDataHandler):
     see: https://msdn.microsoft.com/en-us/library/bb943982.aspx
 
     """
+
+    class DDSException(Exception):
+        pass
+
     @staticmethod
     def dds_file_to_qimage(path):
         q = QGLWidget()
@@ -311,8 +347,12 @@ class DDSDataHandler(FileDataHandler):
             return
 
         GL.glBindTexture(GL.GL_TEXTURE_2D, texture)
-        w = GL.glGetTexLevelParameteriv(GL.GL_TEXTURE_2D, 0, GL.GL_TEXTURE_WIDTH)
-        h = GL.glGetTexLevelParameteriv(GL.GL_TEXTURE_2D, 0, GL.GL_TEXTURE_HEIGHT)
+        w = GL.glGetTexLevelParameteriv(
+            GL.GL_TEXTURE_2D, 0, GL.GL_TEXTURE_WIDTH
+        )
+        h = GL.glGetTexLevelParameteriv(
+            GL.GL_TEXTURE_2D, 0, GL.GL_TEXTURE_HEIGHT
+        )
 
         if w == 0 or h == 0:
             return
@@ -334,6 +374,17 @@ class DDSDataHandler(FileDataHandler):
         :param file_data:
         :return:
         """
+        file_bytes = file_data.read()
+        try:
+            file_data = io.BytesIO(extract_dds(file_bytes))
+        except NotImplementedError as e:
+            raise DDSDataHandler.DDSException(e.args)
+        except ValueError as e:
+            raise DDSDataHandler.DDSException(
+                'This file is a reference to "%s"' %
+                file_bytes[1:].decode('utf-8')
+            )
+
         with TemporaryDirectory() as tmp_dir:
             tmp_file_path = os.path.join(tmp_dir, 'file.dds')
             with open(tmp_file_path, 'b+w') as tmp_file:
@@ -341,7 +392,8 @@ class DDSDataHandler(FileDataHandler):
                 # ddsHeader->dwLinearSize fix ... fuck you QT
                 tmp_file.write(struct.pack('<I', 1))
                 file_data.seek(24)
-                # Write all data entries until DDS_HEADER.DDS_PIXELFORMAT.dwFourCC
+                # Write all data entries until
+                # DDS_HEADER.DDS_PIXELFORMAT.dwFourCC
                 tmp_file.write(file_data.read(15*4))
                 dxt_type = file_data.read(4).decode('ascii')
                 # Fix for displaying those. They have alpha precomputed, but it
@@ -353,7 +405,6 @@ class DDSDataHandler(FileDataHandler):
                 tmp_file.write(dxt_type.encode('ascii'))
                 tmp_file.write(file_data.read())
             return DDSDataHandler.dds_file_to_qimage(tmp_file_path)
-        return None
 
     def get_widget(self, file_data, file_name, *args, **kwargs):
         label = QLabel(*args, **kwargs)
@@ -361,9 +412,13 @@ class DDSDataHandler(FileDataHandler):
         if GL is None:
             label.setText(label.tr('Install PyOpenGL to view DDS files.'))
 
-        img = DDSDataHandler.get_image(file_data)
+        try:
+            img = DDSDataHandler.get_image(file_data)
+        except DDSDataHandler.DDSException as e:
+            label.setText(label.tr(e.args[0]))
+
         if img is None:
-            label.setText(label.tr('Unsupported DDS Format.'))
+            label.setText(label.tr('Unsupported DDS Format'))
         else:
             label.setPixmap(QPixmap.fromImage(img))
 

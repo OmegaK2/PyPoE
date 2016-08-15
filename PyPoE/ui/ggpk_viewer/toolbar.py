@@ -29,6 +29,9 @@ See PyPoE/LICENSE
 # Imports
 # =============================================================================
 
+# Python
+import os
+
 # 3rd Party
 from PySide.QtCore import *
 from PySide.QtGui import *
@@ -47,6 +50,7 @@ __all__ = ['ContextToolbar']
 # Classes
 # =============================================================================
 
+
 class ContextToolbar(QToolBar):
     """
     Context-related toolbar
@@ -54,19 +58,31 @@ class ContextToolbar(QToolBar):
     def __init__(self, *args, **kwargs):
         QToolBar.__init__(self, *args, **kwargs)
 
-
         #self.setAllowedAreas(Qt.LeftToolBarArea | Qt.RightToolBarArea)
         self.action_extract = QAction(self, text=self.tr('Extract'))
-        self.action_extract.setStatusTip(self.tr('Extract currently selected file or folder'))
+        self.action_extract.setStatusTip(self.tr(
+            'Extract currently selected file or folder'
+        ))
         self.action_extract.triggered.connect(self._toolbar_extract)
         self.action_extract.setDisabled(True)
         self.addAction(self.action_extract)
 
         self.action_search = QAction(self, text=self.tr('Search'))
-        self.action_search.setStatusTip(self.tr('Search currently selected folder'))
+        self.action_search.setStatusTip(self.tr(
+            'Search currently selected folder'
+        ))
         self.action_search.triggered.connect(self._toolbar_search)
         self.action_search.setDisabled(True)
         self.addAction(self.action_search)
+
+        self.action_copy_path = QAction(self, text=self.tr('Copy path'))
+        self.action_copy_path.setStatusTip(self.tr(
+            'Copy the file path relative to content.ggpk root for the '
+            'currently selected file or folder')
+        )
+        self.action_copy_path.triggered.connect(self._toolbar_copy_path)
+        self.action_copy_path.setDisabled(True)
+        #self.addAction(self.action_copy_path)
 
         self.setWindowTitle(self.tr('File Viewer Toolbar'))
         self.setOrientation(Qt.Horizontal)
@@ -78,29 +94,57 @@ class ContextToolbar(QToolBar):
     def _adjust_view(self, visibility):
         self.parent().menu_view.action_toggle_toolbar.setChecked(visibility)
 
-    def _toolbar_extract(self):
+    def _get_node(self):
+        """
+        Returns
+        -------
+        DirectoryNode
+        """
         # returns list of columns
         indexes = self.parent().ggpk_view.selectedIndexes()
         # Shouldn't happen... TODO log
         if not indexes:
+            return
+        return indexes[0].internalPointer()
+
+    def _toolbar_extract(self):
+        node = self._get_node()
+        if node is None:
             return
 
         p = self.parent()
-        target_dir = QFileDialog.getExistingDirectory(self, self.tr('Select directory to extract to'))
+        target_dir = QFileDialog.getExistingDirectory(
+            self,
+            self.tr('Select directory to extract to')
+        )
         p._write_log(self.tr('Extracting file(s) to "%s"...' % target_dir))
-        node = indexes[0].internalPointer()
         node.extract_to(target_dir)
+
+        if self.parent().s_general.uncompress_dds and \
+                isinstance(node.record, ggpk.DirectoryRecord):
+            p._write_log(self.tr('Uncompressing DDS Files...'))
+            for root, dirs, files in \
+                    os.walk(os.path.join(target_dir, node.name)):
+                for file_name in files:
+                    if file_name.endswith('.dds'):
+                        path = os.path.join(root, file_name)
+                        p._write_log(path)
+                        with open(path, 'rb') as f:
+                            data = f.read()
+                        if data[:4] == b'DDS ':
+                            continue
+                        data = ggpk.extract_dds(
+                            data, path_or_ggpk=node.record._container
+                        )
+                        with open(path, 'wb') as f:
+                            f.write(data)
+
         p._write_log(self.tr('Done.'))
 
     def _toolbar_search(self):
-        # returns list of columns
-        indexes = self.parent().ggpk_view.selectedIndexes()
-        # Shouldn't happen... TODO log
-        if not indexes:
+        node = self._get_node()
+        if node is None:
             return
-
-        # Option should be greyed out, but make sure in case it is selected anyway
-        node = indexes[0].internalPointer()
 
         if not isinstance(node.record, ggpk.DirectoryRecord):
             return
@@ -132,6 +176,13 @@ class ContextToolbar(QToolBar):
 
         self.parent().file_textbox.setText(outtext)
 
+    def _toolbar_copy_path(self):
+        node = self._get_node()
+        if node is None:
+            return
+
+        QApplication.clipboard().setText(node.get_path())
+
     def enable_file_actions(self, node):
         """
         :param DirectoryNode node:
@@ -142,3 +193,4 @@ class ContextToolbar(QToolBar):
         else:
             self.action_search.setEnabled(False)
         self.action_extract.setEnabled(True)
+        self.action_copy_path.setEnabled(True)

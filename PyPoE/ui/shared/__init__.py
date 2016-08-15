@@ -39,6 +39,7 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 
 # self
+from PyPoE.ui.shared.settings import SettingsWindow
 
 # =============================================================================
 # Globals
@@ -57,18 +58,18 @@ class SharedMainWindow(QMainWindow):
     Launchpad.
     """
 
-    NAME = None
-
     sig_log_message = Signal(str)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, app_name=NotImplemented, **kwargs):
         super(SharedMainWindow, self).__init__(*args, **kwargs)
 
-        QCoreApplication.setApplicationName(self.NAME)
+        self.NAME = app_name
+
+        QCoreApplication.setApplicationName(app_name)
         QSettings.setDefaultFormat(QSettings.IniFormat)
         self.settings = QSettings()
         self.APP_ROOT_DIR = os.path.split(self.settings.fileName())[0]
-        self.APP_DIR = os.path.join(self.APP_ROOT_DIR, self.NAME)
+        self.APP_DIR = os.path.join(self.APP_ROOT_DIR, app_name)
         if not os.path.exists(self.APP_DIR):
             os.makedirs(self.APP_DIR)
 
@@ -78,6 +79,8 @@ class SharedMainWindow(QMainWindow):
         # Still needs to be setup
         self.notification = QTextEdit(readOnly=True)
         self.notification.setFixedHeight(100)
+
+        self.settings_window = SettingsWindow(parent=self)
 
     def _write_log(self, msg, notification=None):
         timef = time.strftime("%H:%M:%S - ")
@@ -93,6 +96,7 @@ class SharedMainWindow(QMainWindow):
             return
 
         p.child_closed.emit(self)
+
 
 # =============================================================================
 # Functions
