@@ -51,9 +51,11 @@ from PyPoE.ui.ggpk_viewer.menu import *
 
 
 class GGPKViewerMainWindow(SharedMainWindow):
+    NAME = 'GGPK Viewer'
+
     def __init__(self, *args, **kwargs):
         super(GGPKViewerMainWindow, self).__init__(
-            *args, app_name='GGPK Viewer', **kwargs
+            *args, app_name=self.NAME, **kwargs
         )
 
         self.s_general = GeneralSettingsFrame(parent=self)
