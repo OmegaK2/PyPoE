@@ -131,6 +131,14 @@ class TestTranslationResults:
     functionality_tests = (
         # Tags, values, result, message, trr,
         (
+            ['tag_size1_uq1_no1', ],
+            [1.0, ],
+            ['tag_size1_uq1_v1: 1'],
+            'Test whole float: 1.0 -> 1',
+            {},
+            {},
+        ),
+        (
             ['tag_skip_size2_uq1_no1', 'tag_skip_size2_uq1_no2'],
             [1, 50],
             ['tag_skip_size2_uq1_v1: 50'],

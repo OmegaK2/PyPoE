@@ -919,6 +919,11 @@ class TranslationQuantifier(TranslationReprMixin):
             'Warning uncaptured quantifier %s' % name, UnknownIdentifierWarning
         )
 
+    def _whole_float_to_int(self, value):
+        if isinstance(value, float) and value.is_integer():
+            return int(value)
+        return value
+
     #TODO: Index?
     @staticmethod
     def _mod_value_to_item_class_reverse(relational_reader, value):
@@ -1031,6 +1036,12 @@ class TranslationQuantifier(TranslationReprMixin):
                     values[index] = (f(values[index][0]), f(values[index][1]))
                 else:
                     values[index] = f(values[index])
+
+        for i, value in enumerate(values):
+            if is_range[i]:
+                 values[i] = tuple([self._whole_float_to_int(v) for v in value])
+            else:
+                 values[i] = self._whole_float_to_int(value)
 
         return values
 
