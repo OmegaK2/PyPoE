@@ -120,24 +120,37 @@ class ContextToolbar(QToolBar):
         p._write_log(self.tr('Extracting file(s) to "%s"...' % target_dir))
         node.extract_to(target_dir)
 
-        if self.parent().s_general.uncompress_dds and \
-                isinstance(node.record, ggpk.DirectoryRecord):
-            p._write_log(self.tr('Uncompressing DDS Files...'))
-            for root, dirs, files in \
-                    os.walk(os.path.join(target_dir, node.name)):
-                for file_name in files:
-                    if file_name.endswith('.dds'):
-                        path = os.path.join(root, file_name)
-                        p._write_log(path)
-                        with open(path, 'rb') as f:
-                            data = f.read()
-                        if data[:4] == b'DDS ':
-                            continue
-                        data = ggpk.extract_dds(
-                            data, path_or_ggpk=node.record._container
-                        )
-                        with open(path, 'wb') as f:
-                            f.write(data)
+        #TODO Fix double writing
+        if self.parent().s_general.uncompress_dds:
+            if isinstance(node.record, ggpk.DirectoryRecord):
+                p._write_log(self.tr('Uncompressing DDS Files...'))
+                for root, dirs, files in \
+                        os.walk(os.path.join(target_dir, node.name)):
+                    for file_name in files:
+                        if file_name.endswith('.dds'):
+                            path = os.path.join(root, file_name)
+                            p._write_log(path)
+                            with open(path, 'rb') as f:
+                                data = f.read()
+                            if data[:4] == b'DDS ':
+                                continue
+                            data = ggpk.extract_dds(
+                                data, path_or_ggpk=node.record._container
+                            )
+                            with open(path, 'wb') as f:
+                                f.write(data)
+            elif isinstance(node.record, ggpk.FileRecord) and \
+                    node.name.endswith('.dds'):
+                p._write_log(self.tr('Uncompressing DDS File...'))
+                path = os.path.join(target_dir, node.name)
+                with open(path, 'rb') as f:
+                    data = f.read()
+                if data[:4] != b'DDS ':
+                    data = ggpk.extract_dds(
+                        data, path_or_ggpk=node.record._container
+                    )
+                    with open(path, 'wb') as f:
+                        f.write(data)
 
         p._write_log(self.tr('Done.'))
 
