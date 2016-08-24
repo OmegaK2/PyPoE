@@ -52,7 +52,7 @@ from PyPoE.cli.exporter.wiki.parser import BaseParser, format_result_rows
 class WikiCondition(object):
     # This only works as long there aren't nested templates inside the infobox
     regex_search = re.compile(
-        '(<onlyinclude>|)\{\{(Item|#invoke:item\|item)\n'
+        '(<onlyinclude>|<onlyinclude></onlyinclude>|)\{\{(Item|#invoke:item\|item)\n'
         '(?P<data>[^\}]*)'
         '\n\}\}(</onlyinclude>|)',
         re.UNICODE | re.IGNORECASE | re.MULTILINE | re.DOTALL
@@ -104,8 +104,13 @@ class WikiCondition(object):
                 if k in self.COPY_KEYS:
                     self.data[k] = match.group('value').strip('\n\r ')
 
+            text = self._get_text()
+            if self.data['class'] not in ('Support Skill Gems',
+                                          'Active Skill Gems'):
+                text = '<onlyinclude></onlyinclude>' + self._get_text()
+
             # I need the +1 offset or it adds a space everytime for some reason.
-            return page.text()[:self.itembox.start()] + self._get_text() + \
+            return page.text()[:self.itembox.start()] + text + \
                 page.text()[self.itembox.end()+1:]
         else:
             return self._get_text()
@@ -126,6 +131,9 @@ class ItemsHandler(ExporterHandler):
         self.parser.set_defaults(func=lambda args: self.parser.print_help())
         sub = self.parser.add_subparsers()
 
+        #
+        # Generic base item export
+        #
         parser = sub.add_parser(
             'export',
             help='Extracts the item information'
@@ -157,6 +165,34 @@ class ItemsHandler(ExporterHandler):
             help='Name of the item; can be specified multiple times',
             nargs='+',
         )
+        #
+        # Prophecies
+        #
+        parser = sub.add_parser(
+            'prophecy',
+            help='Extracts the prophecy information'
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=ItemsParser,
+            func=ItemsParser.prophecy,
+        )
+
+        parser.add_argument(
+            '--allow-disabled',
+            help='Allows disabled prophecies to be exported',
+            action='store_true',
+            dest='allow_disabled',
+            default=False,
+        )
+
+        parser.add_argument(
+            'name',
+            help='Name of the prophecy; can be specified multiple times',
+            nargs='+',
+        )
+
+        add_format_argument(parser)
 
 
 class ItemsParser(BaseParser):
@@ -901,7 +937,7 @@ class ItemsParser(BaseParser):
                 'BaseItemTypesKey'][base_item_type['Id']]
             flasks = self.rr['Flasks.dat'].index['BaseItemTypesKey'][
                 base_item_type.rowid]
-        except KeyError:
+        except KeyError as e:
             warnings.warn(
                 'Missing flask info for "%s"' % base_item_type['Name']
             )
@@ -1033,6 +1069,7 @@ class ItemsParser(BaseParser):
         # Misc
         'Maps': (_type_map,),
         #'Map Fragments': (_type_,),
+        'Quest Items': (),
     }
 
     _conflict_amulet_id_map = {
@@ -1061,6 +1098,60 @@ class ItemsParser(BaseParser):
         if appendix is None:
             return base_item_type['Name']
         else:
+            return base_item_type['Name'] + appendix
+
+    _conflict_quest_item_id_map = {
+        'Metadata/Items/QuestItems/SkillBooks/Book-a1q6':
+            ' (The Marooned Mariner)',
+        'Metadata/Items/QuestItems/SkillBooks/Book-a1q7':
+            ' (The Dweller of the Deep)',
+        'Metadata/Items/QuestItems/SkillBooks/Book-a1q8':
+            ' (A Dirty Job)',
+        'Metadata/Items/QuestItems/SkillBooks/Book-a2q5':
+            ' (Through Sacred Ground)',
+        'Metadata/Items/QuestItems/SkillBooks/Book-a3q9':
+            ' (Piety\'s Pets)',
+        #'Metadata/Items/QuestItems/SkillBooks/Book-a3q11v0':
+        #    ' (6)',
+        #'Metadata/Items/QuestItems/SkillBooks/Book-a3q11v1':
+        #    ' (7)',
+        'Metadata/Items/QuestItems/SkillBooks/Book-a3q11v2':
+            ' (Victario\'s Secrets)',
+        'Metadata/Items/QuestItems/Act4/Book-a4q6':
+            ' (An Indomitable Spirit)',
+        'Metadata/Items/QuestItems/SkillBooks/Descent2_1':
+            ' (Descent 1)',
+        'Metadata/Items/QuestItems/SkillBooks/Descent2_2':
+            ' (Descent 2)',
+        'Metadata/Items/QuestItems/SkillBooks/Descent2_3':
+            ' (Descent 3)',
+        'Metadata/Items/QuestItems/SkillBooks/Descent2_4':
+            ' (Descent 4)',
+        'Metadata/Items/QuestItems/SkillBooks/BanditRespecEramir':
+            ' (Eramir)',
+        'Metadata/Items/QuestItems/SkillBooks/BanditRespecAlira':
+            ' (Alira)',
+        'Metadata/Items/QuestItems/SkillBooks/BanditRespecOak':
+            ' (Oak)',
+        'Metadata/Items/QuestItems/SkillBooks/BanditRespecKraityn':
+            ' (Kraityn)',
+        'Metadata/Items/QuestItems/GoldenPages/Page1':
+            ' (1 of 4)',
+        'Metadata/Items/QuestItems/GoldenPages/Page2':
+            ' (2 of 4)',
+        'Metadata/Items/QuestItems/GoldenPages/Page3':
+            ' (3 of 4)',
+        'Metadata/Items/QuestItems/GoldenPages/Page4':
+            ' (4 of 4)',
+    }
+
+    def _conflict_quest_items(self, infobox, base_item_type):
+        appendix = self._conflict_quest_item_id_map.get(base_item_type['Id'])
+        if appendix is None:
+            return
+        else:
+            infobox['inventory_icon'] = base_item_type['Name'] + \
+                                        ' inventory icon.png'
             return base_item_type['Name'] + appendix
 
     def _conflict_hideout_doodad(self, infobox, base_item_type):
@@ -1115,9 +1206,16 @@ class ItemsParser(BaseParser):
 
     _conflict_resolver_map = {
         'Amulets': _conflict_amulets,
+        'Quest Items': _conflict_quest_items,
         'Hideout Doodads': _conflict_hideout_doodad,
         'Maps': _conflict_maps,
     }
+
+    def _write_stats(self, infobox, stats_and_values, global_prefix):
+        for i, val in enumerate(stats_and_values):
+            prefix = '%sstat%s_' % (global_prefix, (i + 1))
+            infobox[prefix + 'id'] = val[0]
+            infobox[prefix + 'value'] = val[1]
 
     def export(self, parsed_args):
         # Pre processing filters
@@ -1182,7 +1280,10 @@ class ItemsParser(BaseParser):
             if cls not in self._IGNORE_DROP_LEVEL_CLASSES and \
                     name not in self._IGNORE_DROP_LEVEL_ITEMS:
                 infobox['drop_level'] = base_item_type['DropLevel']
-            ot = self.ot[base_item_type['InheritsFrom'] + '.ot']
+            try:
+                ot = self.ot[base_item_type['Id'] + '.ot']
+            except FileNotFoundError:
+                ot = self.ot[base_item_type['InheritsFrom'] + '.ot']
 
             if 'enable_rarity' in ot['Mods']:
                 infobox['drop_rarities'] = ', '.join([
@@ -1259,8 +1360,83 @@ class ItemsParser(BaseParser):
 
         return r
 
-    def _write_stats(self, infobox, stats_and_values, global_prefix):
-        for i, val in enumerate(stats_and_values):
-            prefix = '%sstat%s_' % (global_prefix, (i + 1))
-            infobox[prefix + 'id'] = val[0]
-            infobox[prefix + 'value'] = val[1]
+    _conflict_resolver_prophecy_map = {
+        'MapExtraHaku': ' (Haku)',
+        'MapExtraTora': ' (Tora)',
+        'MapExtraCatarina': ' (Catarina)',
+        'MapExtraVagan': ' (Vagan)',
+        'MapExtraElreon': ' (Elreon)',
+        'MapExtraVorici': ' (Vorici)',
+        'MapExtraZana': ' (Zana)',
+        # The other one is disabled, should be fine
+        'MapSpawnRogueExiles': '',
+        'MysteriousInvadersFire': ' (Fire)',
+        'MysteriousInvadersCold': ' (Cold)',
+        'MysteriousInvadersLightning': ' (Lightning)',
+        'MysteriousInvadersPhysical': ' (Physical)',
+        'MysteriousInvadersChaos': ' (Chaos)',
+    }
+
+    def prophecy(self, parsed_args):
+        prophecies = []
+        names = defaultdict(list)
+        for prophecy in self.rr['Prophecies.dat']:
+            name = prophecy['Name']
+            names[name].append(prophecy)
+            if name not in parsed_args.name:
+                continue
+
+            if not prophecy['IsEnabled'] and not parsed_args.allow_disabled:
+                console(
+                    'Propehcy "%s" is disabled - skipping.' % name,
+                    msg=Msg.error
+                )
+                continue
+
+            prophecies.append(prophecy)
+
+        r = ExporterResult()
+        for prophecy in prophecies:
+            name = prophecy['Name']
+
+            infobox = OrderedDict()
+
+            infobox['rarity'] = 'Normal'
+            infobox['name'] = name
+            infobox['class'] = 'Stackable Currency'
+            infobox['base_item'] = 'Prophecy'
+            infobox['flavour_text'] = prophecy['FlavourText']
+            infobox['prophecy_id'] = prophecy['Id']
+            infobox['prediction_text'] = prophecy['PredictionText']
+            infobox['seal_cost_normal'] = prophecy['SealCost_Normal']
+            infobox['seal_cost_cruel'] = prophecy['SealCost_Cruel']
+            infobox['seal_cost_merciless'] = prophecy['SealCost_Merciless']
+
+            if not prophecy['IsEnabled']:
+                infobox['drop_enabled'] = False
+
+            # handle items with duplicate name entries
+            if len(names[name]) > 1:
+                extra = self._conflict_resolver_prophecy_map.get(prophecy['Id'])
+                if extra is None:
+                    console('Unresolved ambiguous item name "%s" / id "%s". '
+                            'Skipping' % (prophecy['Name'], prophecy['Id']),
+                            msg=Msg.error)
+                    continue
+                name += extra
+            cond = WikiCondition(
+                data=infobox,
+                cmdargs=parsed_args,
+            )
+
+            r.add_result(
+                text=cond,
+                out_file='item_%s.txt' % name,
+                wiki_page=[
+                    {'page': name, 'condition': cond},
+                    {'page': name + ' (prophecy)', 'condition': cond},
+                ],
+                wiki_message='Prophecy exporter',
+            )
+
+        return r
