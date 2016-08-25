@@ -1107,6 +1107,8 @@ class ItemsParser(BaseParser):
             ' (The Dweller of the Deep)',
         'Metadata/Items/QuestItems/SkillBooks/Book-a1q8':
             ' (A Dirty Job)',
+        'Metadata/Items/QuestItems/SkillBooks/Book-a1q9':
+            ' (The Way Forward)',
         'Metadata/Items/QuestItems/SkillBooks/Book-a2q5':
             ' (Through Sacred Ground)',
         'Metadata/Items/QuestItems/SkillBooks/Book-a3q9':
@@ -1150,8 +1152,7 @@ class ItemsParser(BaseParser):
         if appendix is None:
             return
         else:
-            infobox['inventory_icon'] = base_item_type['Name'] + \
-                                        ' inventory icon.png'
+            infobox['inventory_icon'] = base_item_type['Name'] + appendix
             return base_item_type['Name'] + appendix
 
     def _conflict_hideout_doodad(self, infobox, base_item_type):
