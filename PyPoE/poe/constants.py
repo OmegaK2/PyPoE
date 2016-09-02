@@ -305,6 +305,8 @@ class MOD_GENERATION_TYPE(IntEnum):
         For 'talisman' mods that can appear on monsters
     ENCHANTMENT
         For the ascendancy/labyrinth enchantment mods that can appear on items
+    ESSENCE
+        For 'essence' mods that can appear on monsters
 
     """
     PREFIX = 1
@@ -317,6 +319,7 @@ class MOD_GENERATION_TYPE(IntEnum):
     TEMPEST = 8
     TALISMAN = 9
     ENCHANTMENT = 10
+    ESSENCE = 11
 
 # =============================================================================
 # Functions

@@ -62,7 +62,8 @@ def _apply_column_map(infobox, column_map, list_object):
         infobox[data['template']] = value
 
 
-def _type_factory(data_file, data_mapping, row_index=True, function=None):
+def _type_factory(data_file, data_mapping, row_index=True, function=None,
+                  fail_condition=False):
     def func(self, infobox, base_item_type):
         try:
             data = self.rr[data_file].index['BaseItemTypesKey'][
@@ -72,7 +73,7 @@ def _type_factory(data_file, data_mapping, row_index=True, function=None):
             warnings.warn(
                 'Missing %s info for "%s"' % (data_file, base_item_type['Name'])
             )
-            return False
+            return fail_condition
 
         _apply_column_map(infobox, data_mapping, data)
 
@@ -1046,6 +1047,7 @@ class ItemsParser(BaseParser):
         ),
         row_index=True,
         function=_essence_extra,
+        fail_condition=True,
     )
 
     _type_labyrinth_trinket = _type_factory(
