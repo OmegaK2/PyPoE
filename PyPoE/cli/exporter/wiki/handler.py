@@ -202,16 +202,22 @@ class WikiHandler(object):
         self.cmdargs = cmdargs
         self.parser = parser
 
-        console('Starting thread pool...')
-        tp = ThreadPoolExecutor(max_workers=cmdargs.wiki_threads)
 
-        for row in result:
-            tp.submit(
-                self.handle_page,
-                row=row,
-            )
+        if cmdargs.wiki_threads > 1:
+            console('Starting thread pool...')
+            tp = ThreadPoolExecutor(max_workers=cmdargs.wiki_threads)
 
-        tp.shutdown(wait=True)
+            for row in result:
+                tp.submit(
+                    self.handle_page,
+                    row=row,
+                )
+
+            tp.shutdown(wait=True)
+        else:
+            console('Editing pages...')
+            for row in result:
+                self.handle_page(row=row)
 
 
 class ExporterHandler(BaseHandler):

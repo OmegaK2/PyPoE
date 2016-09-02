@@ -37,7 +37,7 @@ FIX the jewel generator (corrupted)
 # Python
 import re
 import warnings
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 # Self
 from PyPoE.poe.constants import MOD_DOMAIN, MOD_GENERATION_TYPE
@@ -86,8 +86,9 @@ class WikiCondition(object):
                 return True
 
             # I need the +1 offset or it adds a space everytime for some reason.
-            return page.text[:self.match.start()] + ''.join(self._get_text()) \
-                + page.text[self.match.end()+1:]
+            return (page.text()[:self.match.start()] +
+                    ''.join(self._get_text()) + page.text()[self.match.end():]
+                    ).strip('\n')
         else:
             return self._get_text()
 
@@ -319,7 +320,14 @@ class ModParser(BaseParser):
                 data['granted_skill'] = mod['GrantedEffectsPerLevelKey']['GrantedEffectsKey']['Id']
             data['mod_type'] = mod['ModTypeKey']['Name']
 
-            data['stat_text'] = '<br>'.join(self._get_stats(mod))
+            if mod['Domain'] == MOD_DOMAIN.ATLAS:
+                stat_file = 'atlas_stat_descriptions.txt'
+            else:
+                stat_file = None
+
+            data['stat_text'] = '<br>'.join(self._get_stats(
+                mod, translation_file=stat_file
+            ))
 
             for i in range(1, 6):
                 k = mod['StatsKey%s' % i]
@@ -343,7 +351,22 @@ class ModParser(BaseParser):
             if mod['TagsKeys']:
                 data['tags'] = ', '.join([t['Id'] for t in mod['TagsKeys']])
 
-            page_name = mod['Id'].replace('_', '~')
+            if mod['ModTypeKey']:
+                sell_price = defaultdict(int)
+                for msp in mod['ModTypeKey']['ModSellPricesKeys']:
+                    for bt in msp['BaseItemTypesKeys']:
+                        sell_price[bt['Name']] += 1
+
+                # Make sure this is always the same order
+                sell_price = sorted(sell_price.items(), key=lambda x:x[0])
+
+                for i, (item_name, amount) in enumerate(sell_price, start=1):
+                    data['sell_price%s_name' % i] = item_name
+                    data['sell_price%s_amount' % i] = amount
+
+            # 3+ tildes not allowed
+            page_name = 'Modifier:' + mod['Id'].replace('_', '~').replace(
+                '~~~', '_~~_~~_')
             cond = WikiCondition(data, args)
 
             r.add_result(
@@ -351,7 +374,6 @@ class ModParser(BaseParser):
                 out_file='mod_%s.txt' % mod['Id'],
                 wiki_page=[
                     {'page': page_name, 'condition': cond},
-                    {'page': page_name + ' (Mod)', 'condition': cond},
                 ],
                 wiki_message='Mod updater',
             )

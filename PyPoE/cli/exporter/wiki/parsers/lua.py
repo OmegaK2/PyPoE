@@ -182,7 +182,7 @@ class QuestRewardReader(BaseParser):
 
         r = ExporterResult()
         r.add_result(
-            lines=out,
+            text=''.join(out),
             out_file='%s_rewards.txt' % data_type,
             wiki_page=[{
                 'page': 'Module:QuestReward/%s' % subpage,

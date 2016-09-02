@@ -598,7 +598,7 @@ class TranslationString(TranslationReprMixin):
         for i, val in enumerate(values):
             if not use_placeholder:
                 if is_range[i]:
-                    val = '(%s to %s)' % tuple(val)
+                    val = '(%s-%s)' % tuple(val)
                 else:
                     val = str(val)
             elif use_placeholder is True:
@@ -626,7 +626,7 @@ class TranslationString(TranslationReprMixin):
                         fmt = '%s'
 
                     if is_range[tagid]:
-                        value = '({0} to {0})'.format(fmt) % tuple(value)
+                        value = '({0}-{0})'.format(fmt) % tuple(value)
                     else:
                         value = fmt % value
                 elif use_placeholder is True:

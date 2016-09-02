@@ -37,12 +37,50 @@ import os
 from collections import defaultdict, OrderedDict
 
 # Self
+from PyPoE.poe.file.ggpk import GGPKFile, extract_dds
 from PyPoE.poe.file.stat_filters import StatFilterFile, SkillEntry
 from PyPoE.poe.sim.formula import gem_stat_requirement, GemTypes
 from PyPoE.cli.core import console, Msg
+from PyPoE.cli.exporter.util import get_content_ggpk_path
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult, \
     add_format_argument
 from PyPoE.cli.exporter.wiki.parser import BaseParser, format_result_rows
+
+# =============================================================================
+# Functions
+# =============================================================================
+
+
+def _apply_column_map(infobox, column_map, list_object):
+    for k, data in column_map:
+        value = list_object[k]
+        if data.get('condition') and not data['condition'](value):
+            continue
+
+        if data.get('format'):
+            value = data['format'](value)
+        infobox[data['template']] = value
+
+
+def _type_factory(data_file, data_mapping, row_index=True, function=None):
+    def func(self, infobox, base_item_type):
+        try:
+            data = self.rr[data_file].index['BaseItemTypesKey'][
+                base_item_type.rowid if row_index else base_item_type['Id']
+            ]
+        except KeyError:
+            warnings.warn(
+                'Missing %s info for "%s"' % (data_file, base_item_type['Name'])
+            )
+            return False
+
+        _apply_column_map(infobox, data_mapping, data)
+
+        if function:
+            function(self, infobox, base_item_type, data)
+
+        return True
+    return func
 
 # =============================================================================
 # Classes
@@ -79,6 +117,7 @@ class WikiCondition(object):
         'inventory_icon',
         'alternate_art_inventory_icons',
         'release_version',
+        'removal_version',
     )
 
     def __init__(self, data, cmdargs):
@@ -161,6 +200,22 @@ class ItemsHandler(ExporterHandler):
         )
 
         parser.add_argument(
+            '-im', '--store-images',
+            help='If specified item 2d art images will be extracted. '
+                 'Requires brotli to be installed.',
+            action='store_true',
+            dest='store_images',
+        )
+
+        parser.add_argument(
+            '-im-c', '--convert-images',
+            help='Convert extracted images to png using ImageMagick '
+                 '(requires "magick" command to be executeable)',
+            action='store_true',
+            dest='convert_images',
+        )
+
+        parser.add_argument(
             'item',
             help='Name of the item; can be specified multiple times',
             nargs='+',
@@ -219,6 +274,8 @@ class ItemsParser(BaseParser):
     _IGNORE_DROP_LEVEL_CLASSES = (
         'Hideout Doodads',
         'Microtransactions',
+        'Labyrinth Item',
+        'Labyrinth Trinket',
         'Labyrinth Map Item',
     )
 
@@ -274,7 +331,45 @@ class ItemsParser(BaseParser):
         'Cooldown', 'StoredUses', 'DamageEffectiveness'
     )
 
-    _skill_column_map = OrderedDict((
+    _attribute_map = OrderedDict((
+        ('Str', 'Strength'),
+        ('Dex', 'Dexterity'),
+        ('Int', 'Intelligence'),
+    ))
+
+    _skill_gem_stat_remove = {
+        'Molten Shell': [{'id': 'base_resist_all_elements_%', 'value': 0}],
+        'Vaal Molten Shell': [{'id': 'base_resist_all_elements_%', 'value': 0}],
+    }
+
+    def __init__(self, *args, **kwargs):
+        super(ItemsParser, self).__init__(*args, **kwargs)
+
+        self._skill_stat_filters = None
+
+    @property
+    def skill_stat_filter(self):
+        """
+
+        Returns
+        -------
+        StatFilterFile
+        """
+        if self._skill_stat_filters is None:
+            self._skill_stat_filters = StatFilterFile()
+            self._skill_stat_filters.read(os.path.join(
+                self.base_path, 'Metadata', 'StatDescriptions',
+                'skillpopup_stat_filters.txt'
+            ))
+            #TODO remove once fixed
+            #self._skill_stat_filters.skills['spirit_offering'] = SkillEntry(skill_id='spirit_offering', translation_file_path='Metadata/StatDescriptions/offering_skill_stat_descriptions.txt', stats=[])
+
+        return self._skill_stat_filters
+
+    def _format_lines(self, lines):
+        return '<br>'.join(lines).replace('\n', '<br>')
+
+    _skill_column_map = (
         ('ManaCost', {
             'template': 'mana_cost',
             'default': 0,
@@ -318,206 +413,7 @@ class ItemsParser(BaseParser):
             'template': 'damage_multiplier',
             'format': lambda v: '{0:n}'.format(v/100+100),
         }),
-    ))
-
-    _currency_column_map = OrderedDict((
-        ('Stacks', {
-            'template': 'stack_size',
-            'condition': None,
-        }),
-        ('Description', {
-            'template': 'description',
-            'condition': lambda v: v,
-        }),
-        ('Directions', {
-            'template': 'help_text',
-            'condition': lambda v: v,
-        }),
-        ('CurrencyTab_StackSize', {
-            'template': 'stack_size_currency_tab',
-            'condition': lambda v: v > 0,
-        }),
-        ('CosmeticTypeName', {
-            'template': 'cosmetic_type',
-            'condition': lambda v: v,
-        }),
-    ))
-
-    _flask_charges_column_map = OrderedDict((
-        ('MaxCharges', {
-            'template': 'charges_max',
-        }),
-        ('PerCharge', {
-            'template': 'charges_per_use',
-        }),
-    ))
-
-    _flask_column_map = OrderedDict((
-        ('LifePerUse', {
-            'template': 'flask_life',
-            'condition': lambda v: v > 0,
-        }),
-        ('ManaPerUse', {
-            'template': 'flask_mana',
-            'condition': lambda v: v > 0,
-        }),
-        ('RecoveryTime', {
-            'template': 'flask_duration',
-            'condition': lambda v: v > 0,
-            'format': lambda v: '{0:n}'.format(v / 10),
-        }),
-    ))
-
-    _attribute_requirements_column_map = OrderedDict((
-        ('ReqStr', {
-            'template': 'required_strength',
-            'condition': lambda v: v > 0,
-        }),
-        ('ReqDex', {
-            'template': 'required_dexterity',
-            'condition': lambda v: v > 0,
-        }),
-        ('ReqInt', {
-            'template': 'required_intelligence',
-            'condition': lambda v: v > 0,
-        }),
-    ))
-
-    _armour_column_map = OrderedDict((
-        ('Armour', {
-            'template': 'armour',
-            'condition': lambda v: v > 0,
-        }),
-        ('Evasion', {
-            'template': 'evasion',
-            'condition': lambda v: v > 0,
-        }),
-        ('EnergyShield', {
-            'template': 'energy_shield',
-            'condition': lambda v: v > 0,
-        }),
-    ))
-
-    _shield_column_map = OrderedDict((
-        ('Block', {
-            'template': 'block',
-        }),
-    ))
-
-    _weapon_column_map = OrderedDict((
-        ('Critical', {
-            'template': 'critical_strike_chance',
-            'format': lambda v: '{0:n}'.format(v / 100),
-        }),
-        ('Speed', {
-            'template': 'attack_speed',
-            'format': lambda v: '{0:n}'.format(round(1000 / v, 2)),
-        }),
-        ('DamageMin', {
-            'template': 'damage_min',
-        }),
-        ('DamageMax', {
-            'template': 'damage_max',
-        }),
-        ('RangeMax', {
-            'template': 'range',
-        }),
-    ))
-
-    _hideout_doodad_map = OrderedDict((
-        ('IsNonMasterDoodad', {
-            'template': 'is_master_doodad',
-            'format': lambda v: not v,
-        }),
-        ('Variation_AOFiles', {
-            'template': 'variation_count',
-            'format': lambda v: len(v),
-        }),
-    ))
-
-    _master_hideout_doodad_map = OrderedDict((
-        ('NPCMasterKey', {
-            'template': 'master',
-            'format': lambda v: v['NPCsKey']['Name'],
-            #'condition': lambda v: v is not None,
-        }),
-        ('MasterLevel', {
-            'template': 'master_level_requirement',
-        }),
-        ('FavourCost', {
-            'template': 'master_favour_cost',
-        }),
-    ))
-
-    _maps_map = OrderedDict((
-        ('Tier', {
-            'template': 'map_tier',
-        }),
-        ('Regular_WorldAreasKey', {
-            'template': 'map_area_id',
-            'format': lambda v: v['Id'],
-        }),
-        ('Regular_GuildCharacter', {
-            'template': 'map_guild_character',
-        }),
-        ('Unique_WorldAreasKey', {
-            'template': 'unique_map_area_id',
-            'format': lambda v: v['Id'],
-            'condition': lambda v: v is not None,
-        }),
-        ('Unique_GuildCharacter', {
-            'template': 'unique_map_guild_character',
-            'condition': lambda v: v != '',
-        }),
-    ))
-
-    _attribute_map = OrderedDict((
-        ('Str', 'Strength'),
-        ('Dex', 'Dexterity'),
-        ('Int', 'Intelligence'),
-    ))
-
-    _skill_gem_stat_remove = {
-        'Molten Shell': [{'id': 'base_resist_all_elements_%', 'value': 0}],
-        'Vaal Molten Shell': [{'id': 'base_resist_all_elements_%', 'value': 0}],
-    }
-
-    def __init__(self, *args, **kwargs):
-        super(ItemsParser, self).__init__(*args, **kwargs)
-
-        self._skill_stat_filters = None
-
-    @property
-    def skill_stat_filter(self):
-        """
-
-        Returns
-        -------
-        StatFilterFile
-        """
-        if self._skill_stat_filters is None:
-            self._skill_stat_filters = StatFilterFile()
-            self._skill_stat_filters.read(os.path.join(
-                self.base_path, 'Metadata', 'StatDescriptions',
-                'skillpopup_stat_filters.txt'
-            ))
-            #TODO remove once fixed
-            self._skill_stat_filters.skills['spirit_offering'] = SkillEntry(skill_id='spirit_offering', translation_file_path='Metadata/StatDescriptions/offering_skill_stat_descriptions.txt', stats=[])
-
-        return self._skill_stat_filters
-
-    def _format_lines(self, lines):
-        return '<br>'.join(lines).replace('\n', '<br>')
-
-    def _apply_column_map(self, infobox, column_map, list_object):
-        for k, data in column_map.items():
-            value = list_object[k]
-            if data.get('condition') and not data['condition'](value):
-                continue
-
-            if data.get('format'):
-                value = data['format'](value)
-            infobox[data['template']] = value
+    )
 
     def _skill_gem(self, infobox, base_item_type):
         try:
@@ -556,7 +452,7 @@ class ItemsParser(BaseParser):
 
         gepl.sort(key=lambda x:x['Level'])
 
-        ae = gepl[0]['ActiveSkillsKey']
+        ae = ge['ActiveSkillsKey']
 
         max_level = len(exp_total)-1
         if ae:
@@ -708,9 +604,11 @@ class ItemsParser(BaseParser):
             [gt['Tag'] for gt in skill_gem['GemTagsKeys'] if gt['Tag']]
         )
 
+        if not ge['IsSupport']:
+            infobox['cast_time'] = ge['CastTime'] / 1000
+
         # From ActiveSkills.dat
         if ae:
-            infobox['cast_time'] = ae['CastTime'] / 1000
             infobox['gem_description'] = ae['Description']
             infobox['active_skill_name'] = ae['DisplayedName']
             if ae['WeaponRestriction_ItemClassesKeys']:
@@ -737,7 +635,7 @@ class ItemsParser(BaseParser):
         infobox['required_level'] = level_data[0]['LevelRequirement']
 
         # Don't add columns that are zero/default
-        for column, column_data in self._skill_column_map.items():
+        for column, column_data in self._skill_column_map:
             if column not in static['columns']:
                 continue
 
@@ -848,7 +746,7 @@ class ItemsParser(BaseParser):
                         warnings.warn(str(e))
 
             # Column handling
-            for column, column_data in self._skill_column_map.items():
+            for column, column_data in self._skill_column_map:
                 if column not in dynamic['columns']:
                     continue
                 # Removed the check of defaults on purpose, makes sense
@@ -889,95 +787,118 @@ class ItemsParser(BaseParser):
 
         return True
 
-    def _type_attribute(self, infobox, base_item_type):
-        try:
-            requirements = self.rr['ComponentAttributeRequirements.dat'].index[
-                'BaseItemTypesKey'][base_item_type['Id']]
-        except KeyError:
-            warnings.warn('Missing attribute for "%s"' % base_item_type['Name'])
-            return False
-
-        self._apply_column_map(
-            infobox, self._attribute_requirements_column_map, requirements
-        )
+    def _type_level(self, infobox, base_item_type):
+        infobox['required_level'] = base_item_type['DropLevel']
 
         return True
 
-    def _type_armour(self, infobox, base_item_type):
-        try:
-            armour = self.rr['ComponentArmour.dat'].index[
-                'BaseItemTypesKey'][base_item_type['Id']]
-        except KeyError:
-            warnings.warn(
-                'Missing armor info for "%s"' % base_item_type['Name']
-            )
-            return False
+    _type_attribute = _type_factory(
+        data_file='ComponentAttributeRequirements.dat',
+        data_mapping=(
+            ('ReqStr', {
+                'template': 'required_strength',
+                'condition': lambda v: v > 0,
+            }),
+            ('ReqDex', {
+                'template': 'required_dexterity',
+                'condition': lambda v: v > 0,
+            }),
+            ('ReqInt', {
+                'template': 'required_intelligence',
+                'condition': lambda v: v > 0,
+            }),
+        ),
+        row_index=False,
+    )
 
-        self._apply_column_map(infobox, self._armour_column_map, armour)
+    _type_armour = _type_factory(
+        data_file='ComponentArmour.dat',
+        data_mapping=(
+            ('Armour', {
+                'template': 'armour',
+                'condition': lambda v: v > 0,
+            }),
+            ('Evasion', {
+                'template': 'evasion',
+                'condition': lambda v: v > 0,
+            }),
+            ('EnergyShield', {
+                'template': 'energy_shield',
+                'condition': lambda v: v > 0,
+            }),
+        ),
+        row_index=False,
+    )
 
-        return True
+    _type_shield = _type_factory(
+        data_file='ShieldTypes.dat',
+        data_mapping=(
+            ('Block', {
+                'template': 'block',
+            }),
+        ),
+        row_index=True,
+    )
 
-    def _type_shield(self, infobox, base_item_type):
-        try:
-            shields = self.rr['ShieldTypes.dat'].index[
-                'BaseItemTypesKey'][base_item_type.rowid]
-        except KeyError:
-            warnings.warn(
-                'Missing shield info for "%s"' % base_item_type['Name']
-            )
-            return False
+    #TODO: BuffDefinitionsKey, BuffStatValues
+    _type_flask = _type_factory(
+        data_file='Flasks.dat',
+        data_mapping=(
+            ('LifePerUse', {
+                'template': 'flask_life',
+                'condition': lambda v: v > 0,
+            }),
+            ('ManaPerUse', {
+                'template': 'flask_mana',
+                'condition': lambda v: v > 0,
+            }),
+            ('RecoveryTime', {
+                'template': 'flask_duration',
+                'condition': lambda v: v > 0,
+                'format': lambda v: '{0:n}'.format(v / 10),
+            }),
+        ),
+        row_index=True,
+    )
 
-        self._apply_column_map(infobox, self._shield_column_map, shields)
+    _type_flask_charges = _type_factory(
+        data_file='ComponentCharges.dat',
+        data_mapping=(
+            ('MaxCharges', {
+                'template': 'charges_max',
+            }),
+            ('PerCharge', {
+                'template': 'charges_per_use',
+            }),
+        ),
+        row_index=False,
+    )
 
-        return True
+    _type_weapon = _type_factory(
+        data_file='WeaponTypes.dat',
+        data_mapping=(
+            ('Critical', {
+                'template': 'critical_strike_chance',
+                'format': lambda v: '{0:n}'.format(v / 100),
+            }),
+            ('Speed', {
+                'template': 'attack_speed',
+                'format': lambda v: '{0:n}'.format(round(1000 / v, 2)),
+            }),
+            ('DamageMin', {
+                'template': 'damage_min',
+            }),
+            ('DamageMax', {
+                'template': 'damage_max',
+            }),
+            ('RangeMax', {
+                'template': 'range',
+            }),
+        ),
+        row_index=True,
+    )
 
-    def _type_flask(self, infobox, base_item_type):
-        try:
-            flask_charges = self.rr['ComponentCharges.dat'].index[
-                'BaseItemTypesKey'][base_item_type['Id']]
-            flasks = self.rr['Flasks.dat'].index['BaseItemTypesKey'][
-                base_item_type.rowid]
-        except KeyError as e:
-            warnings.warn(
-                'Missing flask info for "%s"' % base_item_type['Name']
-            )
-            return False
-
-        self._apply_column_map(
-            infobox, self._flask_charges_column_map, flask_charges
-        )
-        self._apply_column_map(infobox, self._flask_column_map, flasks)
-
-        #TODO: BuffDefinitionsKey, BuffStatValues
-
-        return True
-
-    def _type_weapon(self, infobox, base_item_type):
-        try:
-            weapons = self.rr['WeaponTypes.dat'].index[
-                'BaseItemTypesKey'][base_item_type.rowid]
-        except KeyError:
-            warnings.warn(
-                'Missing weapon info for "%s"' % base_item_type['Name']
-            )
-            return False
-
-        self._apply_column_map(infobox, self._weapon_column_map, weapons)
-
-        return True
-
-    def _type_currency(self, infobox, base_item_type):
-        try:
-            currency = self.rr['CurrencyItems.dat'].index['BaseItemTypesKey'][
-                base_item_type.rowid]
-        except KeyError:
-            warnings.warn(
-                'Missing currency info for "%s"' % base_item_type['Name']
-            )
-            return False
-
-        self._apply_column_map(infobox, self._currency_column_map, currency)
-
+    def _currency_extra(self, infobox, base_item_type, currency):
         # Add the "shift click to unstack" stuff to currency-ish items
         if currency['Stacks'] > 1 and infobox['class'] not in \
                 ('Microtransactions', ):
@@ -991,42 +912,152 @@ class ItemsParser(BaseParser):
 
         return True
 
-    def _type_level(self, infobox, base_item_type):
-        infobox['required_level'] = base_item_type['DropLevel']
+    _type_currency = _type_factory(
+        data_file='CurrencyItems.dat',
+        data_mapping=(
+            ('Stacks', {
+                'template': 'stack_size',
+                'condition': None,
+            }),
+            ('Description', {
+                'template': 'description',
+                'condition': lambda v: v,
+            }),
+            ('Directions', {
+                'template': 'help_text',
+                'condition': lambda v: v,
+            }),
+            ('CurrencyTab_StackSize', {
+                'template': 'stack_size_currency_tab',
+                'condition': lambda v: v > 0,
+            }),
+            ('CosmeticTypeName', {
+                'template': 'cosmetic_type',
+                'condition': lambda v: v,
+            }),
+        ),
+        row_index=True,
+        function=_currency_extra,
+    )
 
-        return True
+    _master_hideout_doodad_map = (
+        ('NPCMasterKey', {
+            'template': 'master',
+            'format': lambda v: v['NPCsKey']['Name'],
+            #'condition': lambda v: v is not None,
+        }),
+        ('MasterLevel', {
+            'template': 'master_level_requirement',
+        }),
+        ('FavourCost', {
+            'template': 'master_favour_cost',
+        }),
+    )
 
-    def _type_hideout_doodad(self, infobox, base_item_type):
-        try:
-            hideout = self.rr['HideoutDoodads.dat'].index['BaseItemTypesKey'][
-                base_item_type.rowid]
-        except KeyError:
-            warnings.warn(
-                'Missing hideout info for "%s"' % base_item_type['Name']
-            )
-            return False
-
-        self._apply_column_map(infobox, self._hideout_doodad_map, hideout)
-
+    def _apply_master_map(self, infobox, base_item_type, hideout):
         if not hideout['IsNonMasterDoodad']:
-            self._apply_column_map(infobox, self._master_hideout_doodad_map,
+            _apply_column_map(infobox, self._master_hideout_doodad_map,
                                    hideout)
 
+    _type_hideout_doodad = _type_factory(
+        data_file='HideoutDoodads.dat',
+        data_mapping=(
+            ('IsNonMasterDoodad', {
+                'template': 'is_master_doodad',
+                'format': lambda v: not v,
+            }),
+            ('Variation_AOFiles', {
+                'template': 'variation_count',
+                'format': lambda v: len(v),
+            }),
+        ),
+        row_index=True,
+        function=_apply_master_map,
+    )
+
+    _type_map = _type_factory(
+        data_file='Maps.dat',
+        data_mapping=(
+            ('Tier', {
+                'template': 'map_tier',
+            }),
+            ('Regular_GuildCharacter', {
+                'template': 'map_guild_character',
+                'condition': lambda v: v,
+            }),
+            ('Regular_WorldAreasKey', {
+                'template': 'map_area_id',
+                'format': lambda v: v['Id'],
+            }),
+            ('Regular_WorldAreasKey', {
+                'template': 'map_area_level',
+                'format': lambda v: v['MonsterLevel'],
+            }),
+            ('Unique_GuildCharacter', {
+                'template': 'unique_map_guild_character',
+                'condition': lambda v: v != '',
+            }),
+            ('Unique_WorldAreasKey', {
+                'template': 'unique_map_area_id',
+                'format': lambda v: v['Id'],
+                'condition': lambda v: v is not None,
+            }),
+            ('Unique_WorldAreasKey', {
+                'template': 'unique_map_area_level',
+                'format': lambda v: v['MonsterLevel'],
+                'condition': lambda v: v is not None,
+            }),
+        ),
+        row_index=True,
+    )
+
+    def _essence_extra(self, infobox, base_item_type, essence):
+        infobox['is_essence'] = True
+
+        if essence['ClientStringsKey']:
+            infobox['description'] += '<br />' + essence['ClientStringsKey'][
+                'Text'].replace('\n', '<br />').replace('\r', '')
+
         return True
 
-    def _type_map(self, infobox, base_item_type):
-        try:
-            hideout = self.rr['Maps.dat'].index['BaseItemTypesKey'][
-                base_item_type.rowid]
-        except KeyError:
-            warnings.warn(
-                'Missing map info for "%s"' % base_item_type['Name']
-            )
-            return False
+    _type_essence = _type_factory(
+        data_file='Essences.dat',
+        data_mapping=(
+            ('DropLevelMinimum', {
+                'template': 'drop_level',
+            }),
+            ('DropLevelMaximum', {
+                'template': 'drop_level_maximum',
+                'condition': lambda v: v > 0,
+            }),
+            ('ItemLevelRestriction', {
+                'template': 'essence_level_restriction',
+                'condition': lambda v: v > 0,
+            }),
+            ('Tier', {
+                'template': 'essence_tier',
+                'condition': lambda v: v > 0,
+            }),
+            ('Monster_ModsKeys', {
+                'template': 'essence_monster_modifier_ids',
+                'format': lambda v: ', '.join([m['Id'] for m in v]),
+                'condition': lambda v: v,
+            }),
+        ),
+        row_index=True,
+        function=_essence_extra,
+    )
 
-        self._apply_column_map(infobox, self._maps_map, hideout)
-
-        return True
+    _type_labyrinth_trinket = _type_factory(
+        data_file='LabyrinthTrinkets.dat',
+        data_mapping=(
+            ('Buff_BuffDefinitionsKey', {
+                'template': 'description',
+                'format': lambda v: v['Description'],
+            }),
+        ),
+        row_index=True
+    )
 
     _cls_map = {
         # Armour types
@@ -1053,24 +1084,47 @@ class ItemsParser(BaseParser):
         'Sceptres': (_type_level, _type_attribute, _type_weapon, ),
         'Fishing Rods': (_type_level, _type_attribute, _type_weapon, ),
         # Flasks
-        'Life Flasks': (_type_level, _type_flask, ),
-        'Mana Flasks': (_type_level, _type_flask, ),
-        'Hybrid Flasks': (_type_level, _type_flask, ),
-        'Utility Flasks': (_type_level, _type_flask, ),
-        'Critical Utility Flasks': (_type_level, _type_flask, ),
+        'Life Flasks': (_type_level, _type_flask, _type_flask_charges),
+        'Mana Flasks': (_type_level, _type_flask, _type_flask_charges),
+        'Hybrid Flasks': (_type_level, _type_flask, _type_flask_charges),
+        'Utility Flasks': (_type_level, _type_flask, _type_flask_charges),
+        'Critical Utility Flasks': (_type_level, _type_flask,
+                                    _type_flask_charges),
         # Gems
         'Active Skill Gems': (_skill_gem, ),
         'Support Skill Gems': (_skill_gem, ),
         # Currency-like items
         'Currency': (_type_currency, ),
-        'Stackable Currency': (_type_currency, ),
+        'Stackable Currency': (_type_currency, _type_essence),
         'Hideout Doodads': (_type_currency, _type_hideout_doodad),
         'Microtransactions': (_type_currency, ),
+        # Labyrinth stuff
+        #'Labyrinth Item': (),
+        'Labyrinth Trinket': (_type_labyrinth_trinket, ),
+        #'Labyrinth Map Item': (),
         # Misc
         'Maps': (_type_map,),
         #'Map Fragments': (_type_,),
         'Quest Items': (),
     }
+
+    _conflict_boots_map = {
+        'Metadata/Items/Armours/Boots/BootsAtlas1':
+            ' (Cold and Lightning Resistance)',
+        'Metadata/Items/Armours/Boots/BootsAtlas2':
+            ' (Fire and Cold Resistance)',
+        'Metadata/Items/Armours/Boots/BootsAtlas3':
+            ' (Fire and Lightning Resistance)',
+    }
+
+    def _conflict_boots(self, infobox, base_item_type):
+        appendix = self._conflict_boots_map.get(
+            base_item_type['Id'])
+        if appendix is None:
+            return
+        else:
+            infobox['inventory_icon'] = base_item_type['Name'] + appendix
+            return base_item_type['Name'] + appendix
 
     _conflict_amulet_id_map = {
         'Metadata/Items/Amulets/Talismans/Talisman2_6_1':
@@ -1099,6 +1153,19 @@ class ItemsParser(BaseParser):
             return base_item_type['Name']
         else:
             return base_item_type['Name'] + appendix
+
+    _conflict_active_skill_gems_map = {
+        'Metadata/Items/Gems/SkillGemArcticArmour': True,
+        'Metadata/Items/Gems/SkillGemPhaseRun': True,
+    }
+
+    def _conflict_active_skill_gems(self, infobox, base_item_type):
+        appendix = self._conflict_active_skill_gems_map.get(
+            base_item_type['Id'])
+        if appendix is None:
+            return
+        else:
+            return base_item_type['Name']
 
     _conflict_quest_item_id_map = {
         'Metadata/Items/QuestItems/SkillBooks/Book-a1q6':
@@ -1145,6 +1212,22 @@ class ItemsParser(BaseParser):
             ' (3 of 4)',
         'Metadata/Items/QuestItems/GoldenPages/Page4':
             ' (4 of 4)',
+        'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_1':
+            ' (1 of 2)',
+        'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_2':
+            ' (2 of 2)',
+        'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_1':
+            ' (1 of 3)',
+        'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_2':
+            ' (2 of 3)',
+        'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_3':
+            ' (3 of 3)',
+        'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_1':
+            ' (1 of 3)',
+        'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_2':
+            ' (2 of 3)',
+        'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_3':
+            ' (3 of 3)',
     }
 
     def _conflict_quest_items(self, infobox, base_item_type):
@@ -1152,7 +1235,9 @@ class ItemsParser(BaseParser):
         if appendix is None:
             return
         else:
-            infobox['inventory_icon'] = base_item_type['Name'] + appendix
+            if not base_item_type['Id'].startswith('Metadata/Items/QuestItems/'
+                                                   'MapUpgrades/'):
+                infobox['inventory_icon'] = base_item_type['Name'] + appendix
             return base_item_type['Name'] + appendix
 
     def _conflict_hideout_doodad(self, infobox, base_item_type):
@@ -1198,18 +1283,62 @@ class ItemsParser(BaseParser):
 
     def _conflict_maps(self, infobox, base_item_type):
         id = base_item_type['Id'].replace('Metadata/Items/Maps/Map', '')
+        name = None
         # Legacy maps
         if id.startswith('T'):
-            return '%s (pre 2.0)' % base_item_type['Name']
+            name = '%s (pre 2.0)' % base_item_type['Name']
         # 2.0 maps
         elif id.startswith('2'):
+            name = '%s (pre 2.4)' % base_item_type['Name']
+        elif id.startswith('Atlas'):
             return base_item_type['Name']
 
+        # Each iteration of maps has it's own art
+        if name is not None:
+            infobox['inventory_icon'] = name
+            infobox['drop_enabled'] = False
+            return name
+
+    _conflict_microtransactions_map = {
+        'Metadata/Items/MicrotransactionCurrency/MysteryBox1x1':
+            ' 1x1',
+        'Metadata/Items/MicrotransactionCurrency/MysteryBox1x2':
+            ' 1x2',
+        'Metadata/Items/MicrotransactionCurrency/MysteryBox1x3':
+            ' 1x3',
+        'Metadata/Items/MicrotransactionCurrency/MysteryBox1x4':
+            ' 1x4',
+        'Metadata/Items/MicrotransactionCurrency/MysteryBox2x1':
+            ' 2x1',
+        'Metadata/Items/MicrotransactionCurrency/MysteryBox2x2':
+            ' 2x2',
+        'Metadata/Items/MicrotransactionCurrency/MysteryBox2x3':
+            ' 2x3',
+        'Metadata/Items/MicrotransactionCurrency/MysteryBox2x4':
+            ' 2x4',
+        'Metadata/Items/MicrotransactionCurrency/MysteryBox3x2':
+            ' 3x2',
+        'Metadata/Items/MicrotransactionCurrency/MysteryBox3x3':
+            ' 3x3',
+    }
+
+    def _conflict_microtransactions(self, infobox, base_item_type):
+        appendix = self._conflict_microtransactions_map.get(
+            base_item_type['Id'])
+        if appendix is None:
+            return
+        else:
+            infobox['inventory_icon'] = base_item_type['Name'] + appendix
+            return base_item_type['Name'] + appendix
+
     _conflict_resolver_map = {
+        'Boots': _conflict_boots,
         'Amulets': _conflict_amulets,
+        'Active Skill Gems': _conflict_active_skill_gems,
         'Quest Items': _conflict_quest_items,
         'Hideout Doodads': _conflict_hideout_doodad,
         'Maps': _conflict_maps,
+        'Microtransactions': _conflict_microtransactions,
     }
 
     def _write_stats(self, infobox, stats_and_values, global_prefix):
@@ -1258,6 +1387,26 @@ class ItemsParser(BaseParser):
 
         console('Additional files may be loaded. Processing information - this '
                 'may take a while...')
+
+        ggpk = None
+        if parsed_args.store_images:
+            try:
+                import brotli
+            except ImportError:
+                console(
+                    'Brotli was not found. Image extraction will be skipped!',
+                    msg=Msg.error,
+                )
+                parsed_args.store_images = False
+            else:
+                console(
+                    'Images are flagged for extraction. Loading content.ggpk '
+                    '...'
+                )
+                ggpk = GGPKFile()
+                ggpk.read(get_content_ggpk_path())
+                ggpk.directory_build()
+                console('content.ggpk has been loaded.')
 
         r = ExporterResult()
 
@@ -1328,8 +1477,12 @@ class ItemsParser(BaseParser):
                 if resolver:
                     name = resolver(self, infobox, base_item_type)
                     if name is None:
-                        console('Unresolved ambiguous item name "%s". Skipping'
-                                % infobox['name'], msg=Msg.error)
+                        console(
+                            'Unresolved ambiguous item "%s" with name "%s". '
+                            'Skipping' %
+                            (base_item_type['Id'], infobox['name']),
+                            msg=Msg.error
+                        )
                         continue
                 else:
                     console('No name conflict handler defined for item class '
@@ -1337,7 +1490,7 @@ class ItemsParser(BaseParser):
                     continue
 
             # putting this last since it's usually manually added
-            if base_item_type['IsTalisman'] or 'old_map' in infobox['tags'] or \
+            if base_item_type['IsTalisman'] or \
                     base_item_type['Name'] in self._DROP_DISABLED_ITEMS:
                 infobox['drop_enabled'] = False
 
@@ -1358,6 +1511,42 @@ class ItemsParser(BaseParser):
                 ],
                 wiki_message='Item exporter',
             )
+
+            if parsed_args.store_images and ggpk:
+                if not base_item_type['ItemVisualIdentityKey']['DDSFile']:
+                    warnings.warn(
+                        'Missing 2d art inventory icon for item "%s"' %
+                        base_item_type['Name']
+                    )
+                    continue
+
+                filepath = os.path.join(self.base_path, 'img')
+                if not os.path.exists(filepath):
+                    os.makedirs(filepath)
+
+                filepath = os.path.join(filepath, (
+                    infobox.get('inventory_icon') or name) +
+                    ' inventory icon.dds'
+                )
+
+                with open(filepath, 'wb') as f:
+                    f.write(extract_dds(
+                        ggpk[base_item_type['ItemVisualIdentityKey'][
+                            'DDSFile']].record.extract().read(),
+                        path_or_ggpk=ggpk,
+                    ))
+
+                console('Wrote "%s"' % filepath)
+
+                if not parsed_args.convert_images:
+                    continue
+
+                os.system('magick convert "%s" "%s"' % (
+                    filepath, filepath.replace('.dds', '.png'),
+                ))
+                os.remove(filepath)
+
+                console('Converted "%s" to png' % filepath)
 
         return r
 

@@ -258,6 +258,9 @@ class MOD_DOMAIN(IntEnum):
         master crafting mods
     JEWEL
         Jewel domain for things that appear on jewel items
+    ATLAS
+        Atlas domain for things that appear when using a sextant orb on the
+        atlas
     """
     ITEM = 1
     FLASK = 2
@@ -270,6 +273,7 @@ class MOD_DOMAIN(IntEnum):
     STANCE = 9
     MASTER = 10
     JEWEL = 11
+    ATLAS = 12
 
 
 class MOD_GENERATION_TYPE(IntEnum):
