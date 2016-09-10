@@ -139,6 +139,14 @@ class TestTranslationResults:
             {},
         ),
         (
+            ['tag_size1_uq1_no1', ],
+            [0, ],
+            [],
+            'Zero stat values',
+            {},
+            None,
+        ),
+        (
             ['tag_skip_size2_uq1_no1', 'tag_skip_size2_uq1_no2'],
             [1, 50],
             ['tag_skip_size2_uq1_v1: 50'],

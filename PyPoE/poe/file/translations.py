@@ -1464,7 +1464,7 @@ class TranslationFile(AbstractFileReadOnly):
             A list of identifiers for the tags
         values : list[int] or list[int, int]
             A list of integer values to use for the translations. It is also
-            possible to use a list of size 2 for each elemented, which then
+            possible to use a list of size 2 for each element, which then
             will be treated as range of acceptable value and formatted
             accordingly (i.e. (x to y) instead of just x).
         lang : str
@@ -1502,6 +1502,14 @@ class TranslationFile(AbstractFileReadOnly):
         trans_found_indexes = []
         trans_found_values = []
         for i, tag in enumerate(tags):
+            # stats that are zero are not displayed
+            try:
+                if values[i][0] == 0 and values[i][1] == 0:
+                    continue
+            except TypeError:
+                if values[i] == 0:
+                    continue
+
             if tag not in self.translations_hash:
                 trans_missing.append(tag)
                 trans_missing_values.append(values[i])
