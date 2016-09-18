@@ -21,11 +21,13 @@ extras_require = {
     'dev': ['sphinx', 'pytest'],
     'cli': ['colorama', 'graphviz', 'tqdm', 'mwclient'],
     'cli-sql': ['sqlalchemy', 'pymysql'],
-    'ui': ['PySide', 'PyOpenGL'],
+    'ui': ['PySide'],
+    'ui-extra': ['PyOpenGL'],
     'opt': ['mmh3'],
 }
 extras_require['full'] = [v for v in extras_require.values()]
 extras_require['cli-full'] = [v for k, v in extras_require.items() if k.startswith('cli')]
+extras_require['ui-full'] = [v for k, v in extras_require.items() if k.startswith('ui')]
 
 setup(
     name='PyPoE',
