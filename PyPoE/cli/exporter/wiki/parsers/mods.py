@@ -320,14 +320,7 @@ class ModParser(BaseParser):
                 data['granted_skill'] = mod['GrantedEffectsPerLevelKey']['GrantedEffectsKey']['Id']
             data['mod_type'] = mod['ModTypeKey']['Name']
 
-            if mod['Domain'] == MOD_DOMAIN.ATLAS:
-                stat_file = 'atlas_stat_descriptions.txt'
-            else:
-                stat_file = None
-
-            data['stat_text'] = '<br>'.join(self._get_stats(
-                mod, translation_file=stat_file
-            ))
+            data['stat_text'] = '<br>'.join(self._get_stats(mod))
 
             for i in range(1, 6):
                 k = mod['StatsKey%s' % i]

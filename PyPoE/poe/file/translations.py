@@ -374,7 +374,8 @@ class TranslationLanguage(TranslationReprMixin):
         for item in values:
             # faster then isinstance(item, Iterable)
             if hasattr(item, '__iter__'):
-                test_values.append(item[1])
+                # Use the greater value unless it is zero
+                test_values.append(item[1] or item[0])
                 if item[0] == item[1]:
                     short_values.append(item[0])
                     is_range.append(False)

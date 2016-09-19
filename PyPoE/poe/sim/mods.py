@@ -71,6 +71,7 @@ _translation_map = {
     MOD_DOMAIN.MONSTER: 'monster_stat_descriptions.txt',
     MOD_DOMAIN.CHEST: 'chest_stat_descriptions.txt',
     MOD_DOMAIN.AREA: 'map_stat_descriptions.txt',
+    MOD_DOMAIN.ATLAS: 'atlas_stat_descriptions.txt',
 }
 
 # =============================================================================
@@ -266,6 +267,10 @@ def get_translation(mod, translation_cache, translation_file=None, **kwargs):
             tf_name = 'stat_descriptions.txt'
     else:
         tf_name = translation_file
+
+    print(translation_cache[tf_name].get_translation(
+        ids, values, **kwargs
+    ))
 
     return translation_cache[tf_name].get_translation(
         ids, values, full_result=True, **kwargs
