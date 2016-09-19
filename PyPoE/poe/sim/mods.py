@@ -268,10 +268,6 @@ def get_translation(mod, translation_cache, translation_file=None, **kwargs):
     else:
         tf_name = translation_file
 
-    print(translation_cache[tf_name].get_translation(
-        ids, values, **kwargs
-    ))
-
     return translation_cache[tf_name].get_translation(
         ids, values, full_result=True, **kwargs
     )
