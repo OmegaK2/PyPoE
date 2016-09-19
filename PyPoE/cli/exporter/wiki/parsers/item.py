@@ -44,7 +44,9 @@ from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter.util import get_content_ggpk_path
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult, \
     add_format_argument
-from PyPoE.cli.exporter.wiki.parser import BaseParser, format_result_rows
+from PyPoE.cli.exporter.wiki.parser import (
+    BaseParser, format_result_rows, make_inter_wiki_links
+)
 
 # =============================================================================
 # Functions
@@ -841,6 +843,20 @@ class ItemsParser(BaseParser):
         row_index=True,
     )
 
+    def _apply_flask_buffs(self, infobox, base_item_type, flasks):
+        for i, value in enumerate(flasks['BuffStatValues'], start=1):
+            infobox['buff_value%s' % i] = value
+
+        if flasks['BuffDefinitionsKey']:
+            stats = [s['Id'] for s in flasks['BuffDefinitionsKey']['StatsKeys']]
+            tr = self.tc['stat_descriptions.txt'].get_translation(
+                stats, flasks['BuffStatValues'], full_result=True
+            )
+            infobox['buff_stat_text'] = '<br>'.join([
+                make_inter_wiki_links(line) for line in tr.lines
+            ])
+
+
     #TODO: BuffDefinitionsKey, BuffStatValues
     _type_flask = _type_factory(
         data_file='Flasks.dat',
@@ -858,8 +874,14 @@ class ItemsParser(BaseParser):
                 'condition': lambda v: v > 0,
                 'format': lambda v: '{0:n}'.format(v / 10),
             }),
+            ('BuffDefinitionsKey', {
+                'template': 'buff_id',
+                'condition': lambda v: v is not None,
+                'format': lambda v: v['Id'],
+            }),
         ),
         row_index=True,
+        function=_apply_flask_buffs,
     )
 
     _type_flask_charges = _type_factory(
@@ -1014,6 +1036,9 @@ class ItemsParser(BaseParser):
 
     def _essence_extra(self, infobox, base_item_type, essence):
         infobox['is_essence'] = True
+
+        # ClientString is outdated. They're building the description from the
+        # mod keys it seems.
 
         if essence['ClientStringsKey']:
             infobox['description'] += '<br />' + essence['ClientStringsKey'][
