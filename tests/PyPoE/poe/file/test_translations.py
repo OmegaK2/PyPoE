@@ -147,6 +147,22 @@ class TestTranslationResults:
             None,
         ),
         (
+            ['tag_size1_uq1_no1', ],
+            [(0, 30), ],
+            ['tag_size1_uq1_v1: (0-30)'],
+            'Zero stat value as range minimum',
+            {},
+            None,
+        ),
+        (
+            ['tag_size1_uq1_no1', ],
+            [(-30, 0), ],
+            ['tag_size1_uq1_v1: (-30-0)'],
+            'Zero stat value as range maximum',
+            {},
+            None,
+        ),
+        (
             ['tag_skip_size2_uq1_no1', 'tag_skip_size2_uq1_no2'],
             [1, 50],
             ['tag_skip_size2_uq1_v1: 50'],
