@@ -31,6 +31,7 @@ See PyPoE/LICENSE
 
 # Python
 import os
+from collections import OrderedDict
 from tempfile import TemporaryDirectory
 
 # 3rd-party
@@ -64,21 +65,30 @@ data = {
         'key_%': 42,
         'key_inherited': 1337,
     },
+    'Hash': {
+        'key': OrderedDict(((1, True), (2, True), (3, True))),
+    }
 }
+
 
 class KeyValuesSectionAppend(keyvalues.AbstractKeyValueSection):
     NAME = 'Append'
-    APPEND_KEYS = ['key']
+    APPEND_KEYS = {'key'}
 
 
 class KeyValuesSectionOverride(keyvalues.AbstractKeyValueSection):
     NAME = 'Override'
-    OVERRIDE_KEYS = ['key']
+    OVERRIDE_KEYS = {'key'}
 
 
 class KeyValuesSectionOverrideGeneric(keyvalues.AbstractKeyValueSection):
     NAME = 'OverrideGeneric'
     OVERRIDE_WARNING = False
+
+
+class KeyValuesSectionHash(keyvalues.AbstractKeyValueSection):
+    NAME = 'Hash'
+    ORDERED_HASH_KEYS = {'key'}
 
 
 class KeyValuesFile(keyvalues.AbstractKeyValueFile):
@@ -89,6 +99,7 @@ class KeyValuesFile(keyvalues.AbstractKeyValueFile):
         KeyValuesSectionAppend,
         KeyValuesSectionOverride,
         KeyValuesSectionOverrideGeneric,
+        KeyValuesSectionHash,
     ])
 
 

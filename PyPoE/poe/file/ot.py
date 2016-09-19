@@ -90,18 +90,18 @@ class AnimatedKeyValueSection(AbstractKeyValueSection):
 
 class BaseKeyValueSection(AbstractKeyValueSection):
     NAME = 'Base'
-    APPEND_KEYS = ['tag']
-    OVERRIDE_KEYS = ['description_text']
+    ORDERED_HASH_KEYS = {'tag'}
+    OVERRIDE_KEYS = {'description_text'}
 
 
 class ModsKeyValueSection(AbstractKeyValueSection):
     NAME = 'Mods'
-    APPEND_KEYS = ['enable_rarity']
+    ORDERED_HASH_KEYS = {'enable_rarity'}
 
 
 class PathfindingKeyValueSection(AbstractKeyValueSection):
     NAME = 'Pathfinding'
-    #OVERRIDE_KEYS = ['base_speed']
+    #OVERRIDE_KEYS = {'base_speed'}
     OVERRIDE_WARNING = False
 
 
@@ -112,7 +112,7 @@ class PositionedKeyValueSection(AbstractKeyValueSection):
 
 class SocketsKeyValueSection(AbstractKeyValueSection):
     NAME = 'Sockets'
-    OVERRIDE_KEYS = ['socket_info']
+    OVERRIDE_KEYS = {'socket_info'}
 
 
 class StatsKeyValueSection(AbstractKeyValueSection):

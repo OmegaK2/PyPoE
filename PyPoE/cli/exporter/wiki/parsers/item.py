@@ -1457,10 +1457,16 @@ class ItemsParser(BaseParser):
             if cls not in self._IGNORE_DROP_LEVEL_CLASSES and \
                     name not in self._IGNORE_DROP_LEVEL_ITEMS:
                 infobox['drop_level'] = base_item_type['DropLevel']
+
+            base_ot = self.ot[base_item_type['InheritsFrom'] + '.ot']
             try:
                 ot = self.ot[base_item_type['Id'] + '.ot']
             except FileNotFoundError:
-                ot = self.ot[base_item_type['InheritsFrom'] + '.ot']
+                pass
+            else:
+                base_ot.merge(ot)
+            finally:
+                ot = base_ot
 
             if 'enable_rarity' in ot['Mods']:
                 infobox['drop_rarities'] = ', '.join([

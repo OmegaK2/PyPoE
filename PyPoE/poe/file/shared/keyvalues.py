@@ -73,6 +73,8 @@ Exceptions & Warnings
 -------------------------------------------------------------------------------
 
 .. autoclass:: DuplicateKeyWarning
+
+.. autoclass:: OverriddenKeyWarning
 """
 
 # =============================================================================
@@ -83,7 +85,7 @@ Exceptions & Warnings
 import re
 import warnings
 import os
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 # 3rd-party
 
@@ -97,7 +99,10 @@ from PyPoE.poe.file.ggpk import GGPKFile
 # Globals
 # =============================================================================
 
-__all__ = ['AbstractKeyValueFile', 'AbstractKeyValueFileCache', 'AbstractKeyValueSection']
+__all__ = [
+    'AbstractKeyValueFile', 'AbstractKeyValueFileCache',
+    'AbstractKeyValueSection'
+]
 
 # =============================================================================
 # Classes
@@ -111,9 +116,17 @@ class DuplicateKeyWarning(ParserWarning):
     pass
 
 
+class OverriddenKeyWarning(ParserWarning):
+    """
+    Warning for keys that are overridden during a merge.
+    """
+    pass
+
+
 class AbstractKeyValueSection(dict):
-    APPEND_KEYS = []
-    OVERRIDE_KEYS = []
+    APPEND_KEYS = set()
+    ORDERED_HASH_KEYS = set()
+    OVERRIDE_KEYS = set()
     OVERRIDE_WARNING = True
     NAME = ''
 
@@ -128,7 +141,21 @@ class AbstractKeyValueSection(dict):
             raise ParserError('Missing name for section')
 
     def __setitem__(self, key, value):
-        if key in self.APPEND_KEYS:
+        if key in self.ORDERED_HASH_KEYS:
+            if isinstance(value, OrderedDict):
+                for otherkey in value.keys():
+                    if key in self:
+                        self[key][otherkey] = True
+                        return
+                    else:
+                        value = OrderedDict(((otherkey, True), ))
+            else:
+                if key in self:
+                    self[key][value] = True
+                    return
+                else:
+                    value = OrderedDict(((value, True), ))
+        elif key in self.APPEND_KEYS:
             if isinstance(value, list):
                 if key in self:
                     value = self[key] + value
@@ -140,7 +167,8 @@ class AbstractKeyValueSection(dict):
                     return
                 else:
                     value = [value, ]
-        elif self.OVERRIDE_WARNING and key in self and self[key] != value and key not in self.OVERRIDE_KEYS:
+        elif self.OVERRIDE_WARNING and key in self and self[key] != value \
+                and key not in self.OVERRIDE_KEYS:
             warnings.warn('Override of %s[%s] to %s (was %s)' % (
                 self.name, repr(key), repr(value), repr(self[key])
             ), DuplicateKeyWarning)
@@ -149,12 +177,14 @@ class AbstractKeyValueSection(dict):
 
     def merge(self, other):
         if not isinstance(other, AbstractKeyValueSection):
-            raise TypeError('Other must be a AbstractKeyValuesSection instance, got "%s" instead.' % other.__class__.__name__)
+            raise TypeError(
+                'Other must be a AbstractKeyValuesSection instance, got "%s" '
+                'instead.' % other.__class__.__name__
+            )
 
         for k, v in other.items():
-            #print(k, v)
             if k in self:
-                warnings.warn("%s, %s" % (k, v))
+                warnings.warn("%s, %s" % (k, v), OverriddenKeyWarning)
             self[k] = v
 
 
@@ -210,7 +240,8 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
         re.UNICODE | re.MULTILINE,
     )
 
-    def __init__(self, parent_or_base_dir_or_ggpk=None, version=None, extends=None, keys=None):
+    def __init__(self, parent_or_base_dir_or_ggpk=None, version=None,
+                 extends=None, keys=None):
         AbstractFile.__init__(self)
         defaultdict.__init__(self, keys)
 
@@ -234,19 +265,6 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
     #
     # Properties
     #
-    def _get_name(self):
-        """
-        Name of the file
-
-        Returns
-        -------
-        str
-            Name
-        """
-        return self._name
-
-    name = property(fget=_get_name)
-
     @property
     def parent_or_base_dir_or_ggpk(self):
         return self._parent_file or self._parent_dir or self._parent_ggpk
@@ -266,12 +284,13 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
         raise NotImplementedError()
 
     def __repr__(self):
-        return '%(name)s(extends="%(extends)s", version="%(version)s", keys=%(keys)s' % {
-            'name': self.__class__.__name__,
-            'extends': self.extends,
-            'version': self.version,
-            'keys': defaultdict.__repr__(self),
-        }
+        return '%(name)s(extends="%(extends)s", version="%(version)s", ' \
+               'keys=%(keys)s' % {
+                    'name': self.__class__.__name__,
+                    'extends': self.extends,
+                    'version': self.version,
+                    'keys': defaultdict.__repr__(self),
+               }
 
     @doc(doc=AbstractFile._read)
     def _read(self, buffer, *args, **kwargs):
@@ -279,7 +298,9 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
 
         match = self._re_header.match(data)
         if match is None:
-            raise ParserError('File is not a valid %s file.' % self.__class__.__name__)
+            raise ParserError(
+                'File is not a valid %s file.' % self.__class__.__name__
+            )
 
         extend = match.group('extends')
 
@@ -311,12 +332,16 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
                 )
                 self.merge(obj)
             else:
-                raise ParserError('File extends "%s", but parent_or_base_dir_or_ggpk has not been specified on class creation.' % extend)
+                raise ParserError(
+                    'File extends "%s", but parent_or_base_dir_or_ggpk has not '
+                    'been specified on class creation.' % extend
+                )
             self.extends = extend
 
         self.version = int(match.group('version'))
 
-        for section_match in self._re_find_kv_sections.finditer(match.group('remainder')):
+        for section_match in self._re_find_kv_sections.finditer(
+                match.group('remainder')):
             key = section_match.group('key')
 
             try:
@@ -326,7 +351,8 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
                 section = AbstractKeyValueSection(parent=self, name=key)
                 self[key] = section
 
-            for kv_match in self._re_find_kv_pairs.finditer(section_match.group('contents')):
+            for kv_match in self._re_find_kv_pairs.finditer(
+                    section_match.group('contents')):
                 value = kv_match.group('value').strip('"')
                 if value == 'true':
                     value = True
@@ -393,7 +419,10 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
             if other has a different type then this instance
         """
         if not isinstance(other, self.__class__):
-            raise ValueError('Can\'t merge only with classes with the same base class, got "%s" instead' % other.__class__.__name__)
+            raise ValueError(
+                'Can\'t merge only with classes with the same base class, got '
+                '"%s" instead' % other.__class__.__name__
+            )
 
         for k, v in other.items():
             if k in self:
@@ -402,13 +431,13 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
                 self[k] = v
 
 
-
 class AbstractKeyValueFileCache(AbstractFileCache):
     FILE_TYPE = AbstractKeyValueFile
 
     @doc(doc=AbstractFileCache._get_file_instance_args)
     def _get_file_instance_args(self, file_name):
-        options = super(AbstractKeyValueFileCache, self)._get_file_instance_args(file_name)
+        options = super(AbstractKeyValueFileCache, self
+                        )._get_file_instance_args(file_name)
         options['parent_or_base_dir_or_ggpk'] = self._ggpk or self._path
 
         return options
