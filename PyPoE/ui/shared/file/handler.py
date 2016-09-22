@@ -378,7 +378,7 @@ class DDSDataHandler(FileDataHandler):
         try:
             file_data = io.BytesIO(extract_dds(file_bytes))
         except NotImplementedError as e:
-            raise DDSDataHandler.DDSException(e.args)
+            raise DDSDataHandler.DDSException(*e.args)
         except ValueError as e:
             raise DDSDataHandler.DDSException(
                 'This file is a reference to "%s"' %
