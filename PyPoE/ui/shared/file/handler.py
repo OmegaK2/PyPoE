@@ -416,11 +416,11 @@ class DDSDataHandler(FileDataHandler):
             img = DDSDataHandler.get_image(file_data)
         except DDSDataHandler.DDSException as e:
             label.setText(label.tr(e.args[0]))
-
-        if img is None:
-            label.setText(label.tr('Unsupported DDS Format'))
         else:
-            label.setPixmap(QPixmap.fromImage(img))
+            if img is None:
+                label.setText(label.tr('Unsupported DDS Format'))
+            else:
+                label.setPixmap(QPixmap.fromImage(img))
 
         scroll = QScrollArea()
         scroll.setWidget(label)
