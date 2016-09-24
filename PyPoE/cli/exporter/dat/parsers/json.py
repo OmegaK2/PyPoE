@@ -64,6 +64,14 @@ class JSONExportHandler(DatExportHandler):
             help='target to export to',
         )
 
+        self.json.add_argument(
+            '--use-object-format',
+            help='Export files as objects as row and header instead of lists. '
+                 'Will significantly increase the the size of the export',
+            dest='use_object_format',
+            action='store_true',
+        )
+
         self.add_default_arguments(self.json)
 
     def handle(self, args):
@@ -77,14 +85,28 @@ class JSONExportHandler(DatExportHandler):
 
             for file_name in args.files:
                 dat_file = dat_files[file_name]
-                out.append({
-                    'filename': file_name,
-                    'header': [
-                        dict([('name', k)] + f.items()) for k, f in
-                        dat_file.reader.specification['fields'].items()
-                    ],
-                    'data': dat_file.reader.table_data,
-                })
+                header = [
+                    dict([('name', k), ('rowid', i)] + f.items()) for i, (k, f)
+                    in enumerate(
+                        dat_file.reader.specification['fields'].items())
+                ]
+                if args.use_object_format:
+                    out.append({
+                        'filename': file_name,
+                        'header': {row['name']: row for row in header},
+                        'data': [{
+                                cid: row[i] for i, cid in enumerate(
+                                    dat_file.reader.columns_data
+                                )
+                            } for row in dat_file.reader.table_data
+                        ],
+                    })
+                else:
+                    out.append({
+                        'filename': file_name,
+                        'header': header,
+                        'data': dat_file.reader.table_data,
+                    })
 
             console('Dumping data to "%s"...' % args.target)
 
