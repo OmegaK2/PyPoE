@@ -909,10 +909,10 @@ class ItemsParser(BaseParser):
                 'format': lambda v: '{0:n}'.format(round(1000 / v, 2)),
             }),
             ('DamageMin', {
-                'template': 'damage_min',
+                'template': 'physical_damage_min',
             }),
             ('DamageMax', {
-                'template': 'damage_max',
+                'template': 'physical_damage_max',
             }),
             ('RangeMax', {
                 'template': 'range',

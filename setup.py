@@ -13,10 +13,6 @@ from os import path
 
 here = path.abspath(path.dirname(__file__))
 
-# Get the long description from the relevant file
-with open(path.join(here, 'DESCRIPTION.rst'), encoding='utf-8') as f:
-    long_description = f.read()
-
 extras_require = {
     'dev': ['sphinx', 'pytest'],
     'cli': ['colorama', 'graphviz', 'tqdm', 'mwclient'],
@@ -38,7 +34,7 @@ setup(
     version='1.0.0a0',
 
     description='Python Tools for Path of Exile',
-    long_description=long_description,
+    long_description="""""",
 
     # The project's main homepage.
     url='https://github.com/OmegaK2/PyPoE',
