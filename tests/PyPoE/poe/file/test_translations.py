@@ -163,6 +163,14 @@ class TestTranslationResults:
             None,
         ),
         (
+            ['tag_size1_uq1_no1', ],
+            [(-40, -30), ],
+            ['tag_size1_uq1_v1: -(40-30)'],
+            'Test double negative range fixup',
+            {},
+            None,
+        ),
+        (
             ['tag_skip_size2_uq1_no1', 'tag_skip_size2_uq1_no2'],
             [1, 50],
             ['tag_skip_size2_uq1_v1: 50'],

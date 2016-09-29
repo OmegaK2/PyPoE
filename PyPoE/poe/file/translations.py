@@ -468,6 +468,9 @@ class TranslationString(TranslationReprMixin):
         re.UNICODE
     )
 
+    _RANGE_FORMAT = '({0}-{0})'
+    _NEGATIVE_RANGE_FORMAT = '-({0}-{0})'
+
     def __init__(self, parent):
         parent.strings.append(self)
         self.parent = parent
@@ -595,19 +598,6 @@ class TranslationString(TranslationReprMixin):
         """
         values = self.quantifier.handle(values, is_range)
 
-        replace = []
-        for i, val in enumerate(values):
-            if not use_placeholder:
-                if is_range[i]:
-                    val = '(%s-%s)' % tuple(val)
-                else:
-                    val = str(val)
-            elif use_placeholder is True:
-                val = ascii_letters[23+i]
-            elif callable(use_placeholder):
-                val = use_placeholder(i)
-            replace.append(val)
-
         string = []
         used = set()
         for i, tagid in enumerate(self.tags):
@@ -627,7 +617,13 @@ class TranslationString(TranslationReprMixin):
                         fmt = '%s'
 
                     if is_range[tagid]:
-                        value = '({0}-{0})'.format(fmt) % tuple(value)
+                        # Move the minus outside if both values are negative
+                        if value[0] < 0 and value[1] < 0:
+                            value = [-v for v in value]
+                            range_fmt = self._NEGATIVE_RANGE_FORMAT
+                        else:
+                            range_fmt = self._RANGE_FORMAT
+                        value = range_fmt.format(fmt) % tuple(value)
                     else:
                         value = fmt % value
                 elif use_placeholder is True:
