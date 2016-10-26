@@ -19,7 +19,6 @@ extras_require = {
     'cli-sql': ['sqlalchemy', 'pymysql'],
     'ui': ['PySide'],
     'ui-extra': ['PyOpenGL'],
-    'opt': ['mmh3'],
 }
 extras_require['full'] = [v for v in extras_require.values()]
 extras_require['cli-full'] = [v for k, v in extras_require.items() if k.startswith('cli')]

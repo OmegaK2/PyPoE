@@ -1328,25 +1328,29 @@ class ItemsParser(BaseParser):
 
     _conflict_microtransactions_map = {
         'Metadata/Items/MicrotransactionCurrency/MysteryBox1x1':
-            ' 1x1',
+            ' (1x1)',
         'Metadata/Items/MicrotransactionCurrency/MysteryBox1x2':
-            ' 1x2',
+            ' (1x2)',
         'Metadata/Items/MicrotransactionCurrency/MysteryBox1x3':
-            ' 1x3',
+            ' (1x3)',
         'Metadata/Items/MicrotransactionCurrency/MysteryBox1x4':
-            ' 1x4',
+            ' (1x4)',
         'Metadata/Items/MicrotransactionCurrency/MysteryBox2x1':
-            ' 2x1',
+            ' (2x1)',
         'Metadata/Items/MicrotransactionCurrency/MysteryBox2x2':
-            ' 2x2',
+            ' (2x2)',
         'Metadata/Items/MicrotransactionCurrency/MysteryBox2x3':
-            ' 2x3',
+            ' (2x3)',
         'Metadata/Items/MicrotransactionCurrency/MysteryBox2x4':
-            ' 2x4',
+            ' (2x4)',
         'Metadata/Items/MicrotransactionCurrency/MysteryBox3x2':
-            ' 3x2',
+            ' (3x2)',
         'Metadata/Items/MicrotransactionCurrency/MysteryBox3x3':
-            ' 3x3',
+            ' (3x3)',
+        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionIronMaiden':
+        '',
+        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionInfernalAxe'
+        : ' (Weapon Skin)',
     }
 
     def _conflict_microtransactions(self, infobox, base_item_type):
