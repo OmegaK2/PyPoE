@@ -142,7 +142,7 @@ regex_translation_string = re.compile(
     r'[\s]*'
     r'(?P<minmax>(?:[0-9\-\|#]+[ \t]+)+)'
     r'"(?P<description>.*)"'
-    r'(?P<quantifier>(?:[ \t]*[\w%]+[ \t]+[0-9]+)*)'
+    r'(?P<quantifier>(?:[ \t]*[\w%]+[ \t]+[a-zA-Z0-9]+)*)'
     r'[ \t]*[\r\n]*'
     r'$',
     re.UNICODE | re.MULTILINE
@@ -845,12 +845,13 @@ class TranslationQuantifier(TranslationReprMixin):
     
     Attributes
     ----------
-    registered_handlers : dict[str, list[int]]
+    index_handlers : dict[str, list[int]]
         Mapping of the name of registered handlers to the ids they apply to
     """
 
     _REPR_EXTRA_ATTRIBUTES = OrderedDict((
-        ('registered_handlers', None),
+        ('index_handlers', None),
+        ('string_handlers', None),
     ))
 
     handlers = {
@@ -893,23 +894,24 @@ class TranslationQuantifier(TranslationReprMixin):
         'per_minute_to_per_second_2dp': lambda v: float(v)*60,
     }
 
-    __slots__ = ['registered_handler']
+    __slots__ = ['index_handlers', 'string_handlers']
 
     def __init__(self):
-        self.registered_handlers = {}
+        self.index_handlers = {}
+        self.string_handlers = {}
 
     def __eq__(self, other):
         if not isinstance(other, TranslationQuantifier):
             return False
 
-        if self.registered_handlers != other.registered_handlers:
+        if self.index_handlers != other.index_handlers:
             return False
 
         return True
 
     def __hash__(self):
         #return hash((tuple(self.registered_handlers.keys()), tuple(self.registered_handlers.values())))
-        return hash(tuple(self.registered_handlers.keys()))
+        return hash(tuple(self.index_handlers.keys()))
 
     def _warn_uncaptured(self, name):
         warnings.warn(
@@ -981,9 +983,9 @@ class TranslationQuantifier(TranslationReprMixin):
             raise TypeError
 
         #if self.registered_handlers != other.registered_handlers:
-        _diff_dict(self.registered_handlers, other.registered_handlers)
+        _diff_dict(self.index_handlers, other.index_handlers)
 
-    def register(self, handler, index):
+    def register(self, handler, value):
         """
         Registers that the specified handler should be used for the given
         index of the value.
@@ -992,16 +994,23 @@ class TranslationQuantifier(TranslationReprMixin):
         ----------
         handler : str
             id of the handler
-        index : int
-            index of the handler value
+        value : object
+            value associated with the handler; usually an index, but can also
+            be a string
         """
+        try:
+            value = int(value)
+        except ValueError:
+            data = self.string_handlers
+        else:
+            data = self.index_handlers
 
-        if handler in self.registered_handlers:
-            self.registered_handlers[handler].append(index)
+        if handler in self.index_handlers:
+            data[handler].append(value)
         else:
             if handler not in self.handlers:
                 self._warn_uncaptured(handler)
-            self.registered_handlers[handler] = [index, ]
+            data[handler] = [value, ]
 
     def handle(self, values, is_range):
         """
@@ -1021,13 +1030,13 @@ class TranslationQuantifier(TranslationReprMixin):
             handled list of values
         """
         values = list(values)
-        for handler_name in self.registered_handlers:
+        for handler_name in self.index_handlers:
             try:
                 f = self.handlers[handler_name]
             except KeyError:
                 self._warn_uncaptured(handler_name)
                 break
-            for index in self.registered_handlers[handler_name]:
+            for index in self.index_handlers[handler_name]:
                 index -= 1
                 if is_range[index]:
                     values[index] = (f(values[index][0]), f(values[index][1]))
@@ -1057,13 +1066,13 @@ class TranslationQuantifier(TranslationReprMixin):
             handled list of values
         """
         indexes = set(range(0, len(values)))
-        for handler_name in self.registered_handlers:
+        for handler_name in self.index_handlers:
             try:
                 f = self.reverse_handlers[handler_name]
             except KeyError:
                 self._warn_uncaptured(handler_name)
                 break
-            for index in self.registered_handlers[handler_name]:
+            for index in self.index_handlers[handler_name]:
                 index -= 1
                 indexes.remove(index)
                 # TODO: handle string values
@@ -1340,10 +1349,17 @@ class TranslationFile(AbstractFileReadOnly):
                         ts._set_string(ts_match.group('description'))
 
                         quant = ts_match.group('quantifier').strip().split()
-                        tmp = iter(range(0, len(quant)))
-                        for i in tmp:
-                            ts.quantifier.register(quant[i], int(quant[i+1]))
-                            tmp.__next__()
+                        if len(quant) % 2 == 1:
+                            warnings.warn(
+                                'Uneven number of quantifier handler/value '
+                                'paris. This indicates an issue with the GGG'
+                                ' file. Skipping.\nText found: %s' % quant,
+                                TranslationWarning)
+                        else:
+                            tmp = iter(range(0, len(quant)))
+                            for i in tmp:
+                                ts.quantifier.register(quant[i], quant[i+1])
+                                tmp.__next__()
 
                     offset = offset_next_lang
 
@@ -1360,7 +1376,9 @@ class TranslationFile(AbstractFileReadOnly):
                     real_path = os.path.join(self._base_dir, match.group('include'))
                     self.merge(TranslationFile(real_path, base_dir=self._base_dir))
                 else:
-                    warnings.warn('Translation file includes other file, but no base_dir or parent specified. Skipping.')
+                    warnings.warn(
+                        'Translation file includes other file, but no base_dir '
+                        'or parent specified. Skipping.', TranslationWarning)
             elif match.group('header'):
                 pass
 

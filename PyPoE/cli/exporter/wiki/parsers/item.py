@@ -665,8 +665,12 @@ class ItemsParser(BaseParser):
                 stats.extend(sdict['stats'])
                 values.extend(sdict['values'])
             elif key in dynamic['stats']:
-                stat_dict = level_data[0]['stats'][key]
                 stat_dict_max = level_data[max_level]['stats'][key]
+                try:
+                    stat_dict = level_data[0]['stats'][key]
+                # Stat was 0
+                except KeyError:
+                    stat_dict = {'values': [0]}
                 tr_values = []
                 for j, value in enumerate(stat_dict['values']):
                     tr_values.append((value, stat_dict_max['values'][j]))
@@ -769,7 +773,11 @@ class ItemsParser(BaseParser):
                     if key not in dynamic[stat_key]:
                         continue
 
-                    stat_dict = row[stat_key][key]
+                    try:
+                        stat_dict = row[stat_key][key]
+                    # No need to add stat that don't exist at specific levels
+                    except KeyError:
+                        continue
                     # Don't add empty lines
                     if stat_dict['line']:
                         lines.append(stat_dict['line'])
