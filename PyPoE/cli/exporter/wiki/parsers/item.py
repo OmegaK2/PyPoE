@@ -437,9 +437,11 @@ class ItemsParser(BaseParser):
                 exp = exp_new
 
         if not exp_level:
-            console('No experience progression found for "%s". Skipping.' %
+            console('No experience progression found for "%s" - assuming max '
+                    'level 1' %
                     base_item_type['Name'], msg=Msg.error)
-            return False
+            exp_level = [0]
+            exp_total = [0]
 
         ge = skill_gem['GrantedEffectsKey']
 
@@ -665,18 +667,40 @@ class ItemsParser(BaseParser):
                 stats.extend(sdict['stats'])
                 values.extend(sdict['values'])
             elif key in dynamic['stats']:
-                stat_dict_max = level_data[max_level]['stats'][key]
+                try:
+                    stat_dict_max = level_data[max_level]['stats'][key]
+                except KeyError:
+                    maxerr = True
+                else:
+                    maxerr = False
+
+                # Stat was 0
                 try:
                     stat_dict = level_data[0]['stats'][key]
-                # Stat was 0
                 except KeyError:
-                    stat_dict = {'values': [0]}
+                    minerr = True
+                else:
+                    minerr = False
+
+                if not maxerr and not minerr:
+                    stats = stat_dict['stats']
+                elif maxerr and not minerr:
+                    stats = stat_dict['stats']
+                    stat_dict_max = {'values': [0] * len(stats)}
+                elif not maxerr and minerr:
+                    stats = stat_dict_max['stats']
+                    stat_dict = {'values': [0] * len(stats)}
+                elif maxerr and minerr:
+                    console('Neither min or max skill available. Investigate.',
+                            msg=Msg.error)
+                    return
+
                 tr_values = []
                 for j, value in enumerate(stat_dict['values']):
                     tr_values.append((value, stat_dict_max['values'][j]))
 
                 # Should only be one
-                line = tf.get_translation(stat_dict_max['stats'], tr_values)
+                line = tf.get_translation(stats, tr_values)
                 line = line[0] if line else ''
 
             if line:

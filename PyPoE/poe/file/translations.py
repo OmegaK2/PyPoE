@@ -618,10 +618,14 @@ class TranslationString(TranslationReprMixin):
 
                     if is_range[tagid]:
                         # Move the minus outside if both values are negative
-                        if value[0] < 0 and value[1] < 0:
-                            value = [-v for v in value]
-                            range_fmt = self._NEGATIVE_RANGE_FORMAT
-                        else:
+                        try:
+                            if value[0] < 0 and value[1] < 0:
+                                value = [-v for v in value]
+                                range_fmt = self._NEGATIVE_RANGE_FORMAT
+                            else:
+                                range_fmt = self._RANGE_FORMAT
+                        #TODO: how to show ranges for text stuff?
+                        except TypeError:
                             range_fmt = self._RANGE_FORMAT
                         value = range_fmt.format(fmt) % tuple(value)
                     else:
