@@ -55,13 +55,13 @@ cur_dir = os.path.split(os.path.realpath(__file__))[0]
 test_data = data = [
     ('bool', '?', 1),
     ('byte', 'b', -2**7+1),
-    ('ubyte', 'B', 2**8-1),
+    ('ubyte', 'B', 2**8-2),
     ('short', 'h', -2**15+1),
-    ('ushort', 'H', 2**16-1),
+    ('ushort', 'H', 2**16-2),
     ('int', 'i', -2**31+1),
-    ('uint', 'I', 2**32-1),
+    ('uint', 'I', 2**32-2),
     ('long', 'q', -2**63+1),
-    ('ulong', 'Q', 2**64-1),
+    ('ulong', 'Q', 2**64-2),
 ]
 
 test_str = 'Hello world'

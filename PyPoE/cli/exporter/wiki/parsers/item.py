@@ -1030,6 +1030,13 @@ class ItemsParser(BaseParser):
         function=_apply_master_map,
     )
 
+    def _maps_extra(self, infobox, base_item_type, maps):
+        if maps['Fated_AreaLevel'] > 0:
+            infobox['map_area_level'] = maps['Fated_AreaLevel']
+        else:
+            infobox['map_area_level'] = maps['Regular_WorldAreasKey'][
+                'MonsterLevel']
+
     _type_map = _type_factory(
         data_file='Maps.dat',
         data_mapping=(
@@ -1043,10 +1050,6 @@ class ItemsParser(BaseParser):
             ('Regular_WorldAreasKey', {
                 'template': 'map_area_id',
                 'format': lambda v: v['Id'],
-            }),
-            ('Regular_WorldAreasKey', {
-                'template': 'map_area_level',
-                'format': lambda v: v['MonsterLevel'],
             }),
             ('Unique_GuildCharacter', {
                 'template': 'unique_map_guild_character',
@@ -1064,6 +1067,7 @@ class ItemsParser(BaseParser):
             }),
         ),
         row_index=True,
+        function=_maps_extra,
     )
 
     def _essence_extra(self, infobox, base_item_type, essence):

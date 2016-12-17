@@ -173,7 +173,7 @@ class WikiHandler(object):
                 )
                 if response['result'] == 'Success':
                     console('Page was edited successfully (time: %s)' %
-                            response['newtimestamp'])
+                            response.get('newtimestamp'))
                 else:
                     #TODO: what happens if it fails?
                     console('Something went wrong, status code:', msg=Msg.error)
