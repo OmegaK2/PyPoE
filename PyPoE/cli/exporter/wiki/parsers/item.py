@@ -340,11 +340,6 @@ class ItemsParser(BaseParser):
         ('Int', 'Intelligence'),
     ))
 
-    _skill_gem_stat_remove = {
-        'Molten Shell': [{'id': 'base_resist_all_elements_%', 'value': 0}],
-        'Vaal Molten Shell': [{'id': 'base_resist_all_elements_%', 'value': 0}],
-    }
-
     def __init__(self, *args, **kwargs):
         super(ItemsParser, self).__init__(*args, **kwargs)
 
@@ -470,12 +465,6 @@ class ItemsParser(BaseParser):
         else:
             tf = self.tc['gem_stat_descriptions.txt']
 
-        stat_ids = []
-        stat_indexes = []
-        for index, stat in enumerate(gepl[0]['StatsKeys']):
-            stat_ids.append(stat['Id'])
-            stat_indexes.append(index+1)
-
         # reformat the datas we need
         level_data = []
         stat_key_order = {
@@ -490,13 +479,15 @@ class ItemsParser(BaseParser):
                     [r['Id'] for r in row['StatsKeys2']]
             values = row['StatValues'] + ([1, ] * len(row['StatsKeys2']))
 
-            rminfos = self._skill_gem_stat_remove.get(base_item_type['Name'])
-            if rminfos:
-                for rminfo in rminfos:
-                    index = stats.index(rminfo['id'])
-                    if values[index] == rminfo['value']:
-                        del stats[index]
-                        del values[index]
+            # Remove 0 (unused) stats
+            remove_ids = [
+                stat for stat, value in zip(stats, values) if value == 0
+            ]
+            for stat_id in remove_ids:
+                index = stats.index(stat_id)
+                if values[index] == 0:
+                    del stats[index]
+                    del values[index]
 
             tr = tf.get_translation(
                 tags=stats,
@@ -683,12 +674,12 @@ class ItemsParser(BaseParser):
                     minerr = False
 
                 if not maxerr and not minerr:
-                    stats = stat_dict['stats']
+                    stat_ids = stat_dict['stats']
                 elif maxerr and not minerr:
-                    stats = stat_dict['stats']
+                    stat_ids = stat_dict['stats']
                     stat_dict_max = {'values': [0] * len(stats)}
                 elif not maxerr and minerr:
-                    stats = stat_dict_max['stats']
+                    stat_ids = stat_dict_max['stats']
                     stat_dict = {'values': [0] * len(stats)}
                 elif maxerr and minerr:
                     console('Neither min or max skill available. Investigate.',
@@ -700,7 +691,7 @@ class ItemsParser(BaseParser):
                     tr_values.append((value, stat_dict_max['values'][j]))
 
                 # Should only be one
-                line = tf.get_translation(stats, tr_values)
+                line = tf.get_translation(stat_ids, tr_values)
                 line = line[0] if line else ''
 
             if line:
@@ -807,7 +798,6 @@ class ItemsParser(BaseParser):
                         lines.append(stat_dict['line'])
                     stats.extend(stat_dict['stats'])
                     values.extend(stat_dict['values'])
-
                 if lines:
                     infobox[prefix + stat_prefix + 'stat_text'] = \
                         self._format_lines(lines)
