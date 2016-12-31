@@ -464,7 +464,7 @@ class TranslationString(TranslationReprMixin):
 
     # replacement tags used in translations
     _re_split = re.compile(
-        r'(?:%(?P<id>[0-9]*)(?P<type>(?:|\$)d%|%|\$\+d))',
+        r'(?:%(?P<id>[0-9]*)(?P<type>[\$]?[\+]?d[%]?|%))',
         re.UNICODE
     )
 
@@ -611,7 +611,7 @@ class TranslationString(TranslationReprMixin):
                     string.append('+')
 
                 if not use_placeholder:
-                    if self.tags_types[i].endswith('d%'):
+                    if 'd' in self.tags_types[i]:
                         fmt = '%d'
                     else:
                         fmt = '%s'

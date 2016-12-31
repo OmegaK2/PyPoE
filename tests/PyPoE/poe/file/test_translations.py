@@ -196,9 +196,17 @@ class TestTranslationResults:
         ),
         # Used in skills like hypothermia
         (
+            ['test_dollar_d', ],
+            [20, ],
+            ['Test d: 20'],
+            '%1$d format',
+            {},
+            {},
+        ),
+        (
             ['test_dollar_d_percent', ],
             [20, ],
-            ['Test: 20%'],
+            ['Test d percent: 20%'],
             '%1$d% format',
             {},
             {},
