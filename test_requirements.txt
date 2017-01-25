@@ -3,8 +3,8 @@ sphinx
 colorama
 graphviz
 tqdm
-pywikibot>=rc2.0
+mwclient
 sqlalchemy
 pymysql
 PyOpenGL
-mmh3
+pytest-cov
