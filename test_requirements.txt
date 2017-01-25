@@ -8,3 +8,4 @@ sqlalchemy
 pymysql
 PyOpenGL
 pytest-cov
+python-coveralls

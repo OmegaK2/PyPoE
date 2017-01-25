@@ -291,6 +291,7 @@ class TestBaseParser():
             'item_class': cls,
             'is_metadata_id': False,
             'item': [item_name, ],
+            'store_images': False,
         })
         item_parser.export(parsed_args=args)
 

@@ -5,6 +5,7 @@
 .cache
 __pycache__
 /PyPoE.egg-info
+/build
 /docs/build
 /docs/source/_autosummary
 /docs/source/autosummary.rst

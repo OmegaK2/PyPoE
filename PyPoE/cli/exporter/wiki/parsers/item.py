@@ -677,10 +677,10 @@ class ItemsParser(BaseParser):
                     stat_ids = stat_dict['stats']
                 elif maxerr and not minerr:
                     stat_ids = stat_dict['stats']
-                    stat_dict_max = {'values': [0] * len(stats)}
+                    stat_dict_max = {'values': [0] * len(stat_ids)}
                 elif not maxerr and minerr:
                     stat_ids = stat_dict_max['stats']
-                    stat_dict = {'values': [0] * len(stats)}
+                    stat_dict = {'values': [0] * len(stat_ids)}
                 elif maxerr and minerr:
                     console('Neither min or max skill available. Investigate.',
                             msg=Msg.error)
