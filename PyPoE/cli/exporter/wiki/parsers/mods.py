@@ -322,13 +322,23 @@ class ModParser(BaseParser):
 
             data['stat_text'] = '<br>'.join(self._get_stats(mod))
 
+            stats = []
             for i in range(1, 6):
                 k = mod['StatsKey%s' % i]
                 if k is None:
                     continue
-                data['stat%s_id' % i] = k['Id']
-                data['stat%s_min' % i] = mod['Stat%sMin' % i]
-                data['stat%s_max' % i] = mod['Stat%sMax' % i]
+
+                stat = k['Id'], mod['Stat%sMin' % i], mod['Stat%sMax' % i]
+
+                if stat[1] == 0 and stat[2] == 0:
+                    continue
+
+                stats.append(stat)
+
+            for i, (sid, vmin, vmax) in enumerate(stats, start=1):
+                data['stat%s_id' % i] = sid
+                data['stat%s_min' % i] = vmin
+                data['stat%s_max' % i] = vmax
 
             for i, tag in enumerate(mod['SpawnWeight_TagsKeys']):
                 j = i + 1

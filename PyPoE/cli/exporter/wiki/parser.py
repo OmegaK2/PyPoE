@@ -679,8 +679,8 @@ class BaseParser(object):
                     if tr.ids != tr2.ids:
                         continue
 
-                    r1 = tr.get_language().get_string(default.values[i], default.indexes[i])
-                    r2 = tr2.get_language().get_string(result.values[j], result.indexes[j])
+                    r1 = tr.get_language().get_string(default.values[i])
+                    r2 = tr2.get_language().get_string(result.values[j])
                     if r1 and r2 and r1[0] != r2[0]:
                         temp_trans.append(self._format_detailed(r1[0], r2[0]))
                     elif r2 and r2[0]:
@@ -694,7 +694,7 @@ class BaseParser(object):
                 if not is_missing:
                     continue
 
-                r1 = tr.get_language().get_string(default.values[i], default.indexes[i])
+                r1 = tr.get_language().get_string(default.values[i])
                 if r1 and r1[0]:
                     temp_trans.append(self._format_hidden(r1[0]))
                     temp_ids.append(tr.ids)
@@ -711,9 +711,7 @@ class BaseParser(object):
                 except ValueError:
                     temp_ids.insert(index, tr.ids)
                     temp_trans.insert(index, make_inter_wiki_links(
-                        tr.get_language().get_string(
-                            result.values[i], result.indexes[i]
-                        )[0]
+                        tr.get_language().get_string(result.values[i])[0]
                     ))
                 else:
                     pass

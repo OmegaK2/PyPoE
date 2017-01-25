@@ -332,9 +332,9 @@ class TranslationLanguage(TranslationReprMixin):
         if self.strings != other.strings:
             _diff_list(self.strings, other.strings)
 
-    def get_string(self, values, indexes, use_placeholder=False, only_values=False):
+    def get_string(self, values, use_placeholder=False, only_values=False):
         """
-        Formats the string according with the given values and indexes and
+        Formats the string according with the given values and
         returns the string and any left over (unused) values.
 
         If use_placeholder is specified, the values will be replaced with
@@ -348,9 +348,6 @@ class TranslationLanguage(TranslationReprMixin):
         ----------
         values : list[int]
             A list of values to be used for substitution
-        indexes : list[int]
-            A list of relevant indexes corresponding to the values for this
-            string.
         use_placeholder : bool or callable
             If true, Instead of values in the translations a placeholder (i.e.
             x, y, z) will be used. Values are still required however to find
@@ -393,7 +390,7 @@ class TranslationLanguage(TranslationReprMixin):
             #if len(values) != len(ts.range):
             #   raise Exception('mismatch %s' % ts.range)
 
-            match = ts.match_range(test_values, indexes)
+            match = ts.match_range(test_values)
             temp.append((match, ts))
 
         # Only the highest scoring/matching translation...
@@ -468,8 +465,8 @@ class TranslationString(TranslationReprMixin):
         re.UNICODE
     )
 
-    _RANGE_FORMAT = '({0}-{0})'
-    _NEGATIVE_RANGE_FORMAT = '-({0}-{0})'
+    _RANGE_FORMAT = '({0}-{1})'
+    _NEGATIVE_RANGE_FORMAT = '-({0}-{1})'
 
     def __init__(self, parent):
         parent.strings.append(self)
@@ -604,17 +601,17 @@ class TranslationString(TranslationReprMixin):
             value = values[tagid]
             if not only_values:
                 string.append(self.strings[i])
-                # The case % is normal substitution
-                if self.tags_types[i] == '$+d' and (
+                # For adding the plus sign to the $+d and $+d%% formats
+                if '+' in self.tags_types[i] and (
                         is_range[tagid] and value[1] > 0 or not is_range[tagid]
                         and value > 0):
                     string.append('+')
 
                 if not use_placeholder:
                     if 'd' in self.tags_types[i]:
-                        fmt = '%d'
+                        fmt = '{0:n}'
                     else:
-                        fmt = '%s'
+                        fmt = '{0}'
 
                     if is_range[tagid]:
                         # Move the minus outside if both values are negative
@@ -627,9 +624,11 @@ class TranslationString(TranslationReprMixin):
                         #TODO: how to show ranges for text stuff?
                         except TypeError:
                             range_fmt = self._RANGE_FORMAT
-                        value = range_fmt.format(fmt) % tuple(value)
+                        value = range_fmt.format(
+                            fmt, fmt.replace('{0', '{1')
+                        ).format(*value)
                     else:
-                        value = fmt % value
+                        value = fmt.format(value)
                 elif use_placeholder is True:
                     value = ascii_letters[23+i]
                 elif callable(use_placeholder):
@@ -653,18 +652,14 @@ class TranslationString(TranslationReprMixin):
 
         return string, unused, values
 
-    def match_range(self, values, indexes):
+    def match_range(self, values):
         """
-        Returns the accumulative range rating of the specified values at
-        the specified indexes
+        Returns the accumulative range rating of the specified values.
 
         Parameters
         ----------
         values : list[int] or list[float]
             List of values
-        indexes : list[int]
-            List of indexes
-
 
         Returns
         -------
@@ -672,8 +667,8 @@ class TranslationString(TranslationReprMixin):
             Sum of the ratings
         """
         rating = 0
-        for i in indexes:
-            rating += self.range[i].in_range(values[i])
+        for i, value in enumerate(values):
+            rating += self.range[i].in_range(value)
         return rating
 
     def reverse_string(self, string):
@@ -817,6 +812,7 @@ class TranslationRange(TranslationReprMixin):
         -------
         int
             Returns the rating of the value
+            -100 if mismatch (out of range)
             0 if no match
             1 if any range is accepted
             2 if either minimum or maximum is specified
@@ -826,15 +822,23 @@ class TranslationRange(TranslationReprMixin):
         if self.min is None and self.max is None:
             return 1
 
-        if self.min is None and value <= self.max:
-            return 2
+        if self.min is None:
+            if value <= self.max:
+                return 2
+            else:
+                return -100
 
-        if self.max is None and value >= self.min:
-            return 2
+        if self.max is None:
+            if value >= self.min:
+                return 2
+            else:
+                return -100
 
         if self.min is not None and self.max is not None:
             if self.min <= value <= self.max:
                 return 3
+            else:
+                return -100
 
         return 0
 
@@ -1100,9 +1104,6 @@ class TranslationResult(TranslationReprMixin):
         List of related translated strings (in order)L
     lines : list[str]
         List of translated strings (minus missing ones)
-    indexes : list[int]
-        List of related indexes (i.e. for use with
-        :method:`TranslationLanguage.get_string`)
     missing_ids : list[str]
         List of missing identifier tags
     missing_values : list[int]
@@ -1124,7 +1125,6 @@ class TranslationResult(TranslationReprMixin):
         'found',
         'found_lines',
         'lines',
-        'indexes',
         'missing_ids',
         'missing_values',
         'partial',
@@ -1135,13 +1135,12 @@ class TranslationResult(TranslationReprMixin):
         'source_values',
     ]
 
-    def __init__(self, found, found_lines, lines, indexes, missing,
+    def __init__(self, found, found_lines, lines, missing,
                  missing_values, partial, values, unused, values_parsed,
                  source_ids, source_values):
         self.found = found
         self.found_lines = found_lines
         self.lines = lines
-        self.indexes = indexes
         self.missing_ids = missing
         self.missing_values = missing_values
         self.partial = partial
@@ -1518,7 +1517,6 @@ class TranslationFile(AbstractFileReadOnly):
         trans_found = []
         trans_missing = []
         trans_missing_values = []
-        trans_found_indexes = []
         trans_found_values = []
         for i, tag in enumerate(tags):
             # stats that are zero are not displayed
@@ -1539,11 +1537,9 @@ class TranslationFile(AbstractFileReadOnly):
                 index = tr.ids.index(tag)
                 if tr in trans_found:
                     tf_index = trans_found.index(tr)
-                    trans_found_indexes[tf_index].append(index)
                     trans_found_values[tf_index][index] = values[i]
                 else:
                     trans_found.append(tr)
-                    trans_found_indexes.append([index, ])
                     # Used to identify invalid translations later
                     v = [0xFFFFFFFF for i in range(0, len(tr.ids))]
                     v[index] = values[i]
@@ -1559,7 +1555,6 @@ class TranslationFile(AbstractFileReadOnly):
                     # Assume 0 as default.
                     found_values[j] = 0
                     partial.append(trans_found[i])
-                    break
 
         if partial:
             warnings.warn(
@@ -1576,7 +1571,7 @@ class TranslationFile(AbstractFileReadOnly):
         for i, tr in enumerate(trans_found):
 
             tl = tr.get_language(lang)
-            result = tl.get_string(trans_found_values[i], trans_found_indexes[i], use_placeholder, only_values)
+            result = tl.get_string(trans_found_values[i], use_placeholder, only_values)
             if result:
                 trans_lines.append(result[0])
                 trans_found_lines.append(result[0])
@@ -1593,7 +1588,6 @@ class TranslationFile(AbstractFileReadOnly):
                 found=trans_found,
                 found_lines=trans_found_lines,
                 lines=trans_lines,
-                indexes=trans_found_indexes,
                 missing=trans_missing,
                 missing_values=trans_missing_values,
                 values=trans_found_values,

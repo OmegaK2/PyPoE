@@ -79,6 +79,11 @@ def tcache():
 
 
 @pytest.fixture(scope='module')
+def ggpk_tc(ggpkfile):
+    return translations.TranslationFileCache(path_or_ggpk=ggpkfile)
+
+
+@pytest.fixture(scope='module')
 def tf_data(rr):
     translations.install_data_dependant_quantifiers(rr)
     tf = translations.TranslationFile()
@@ -129,7 +134,7 @@ class TestTranslationResults:
     }
 
     functionality_tests = (
-        # Tags, values, result, message, trr,
+        # Tags, values, result, message, trr, reverse keyargs
         (
             ['tag_size1_uq1_no1', ],
             [1.0, ],
@@ -194,6 +199,22 @@ class TestTranslationResults:
             {},
             {},
         ),
+        (
+            ['test_plus_percentage', ],
+            [20, ],
+            ['Plus percent: +20%'],
+            '$+d%% format',
+            {},
+            {},
+        ),
+        (
+            ['test_plus_percentage', ],
+            [-20, ],
+            ['Plus percent: -20%'],
+            '$+d%% format with negative value',
+            {},
+            {},
+        ),
         # Used in skills like hypothermia
         (
             ['test_dollar_d', ],
@@ -249,6 +270,31 @@ class TestTranslationResults:
             },
             None,
         ),
+        #
+        # Quantifier tests
+        #
+        (
+            ['test_dollar_d_quantifier_divide_by_one_hundred'],
+            [150],
+            ['Quantifier /100: 1.5'],
+            'Test floating point number with $d format and quantifier',
+            {},
+            {},
+        ),
+    )
+
+    live_functionality_tests = (
+        # File, Tags, values, result, message, trr, reverse keyargs
+        (
+            'skill_stat_descriptions.txt',
+            ['base_number_of_projectiles_in_spiral_nova',
+             'projectile_spiral_nova_angle'],
+            [32, -720],
+            ['Fires Projectiles at all nearby Enemies'],
+            'Test partial and order',
+            {},
+            None,
+        ),
     )
 
     test_data = []
@@ -257,6 +303,17 @@ class TestTranslationResults:
         for i, v in enumerate(values):
             test_data.append((tags, v, results[i]))
 
+    def functionality(self, tf, tags, values, result, message, kwargs,
+                      rkwargs):
+        assert tf.get_translation(tags, values, **kwargs) == result, \
+            "%s: 'normal failed" % message
+
+        if rkwargs is not None:
+            trr = tf.reverse_translation(result[0], **rkwargs)
+            assert trr.translations[0].ids == tags, \
+                '%s: reverse failed incorrect tags' % message
+            assert trr.values[0] == values, \
+                '%s: failed reverse incorrect values' % message
     #
     # Actual tests
     #
@@ -283,16 +340,18 @@ class TestTranslationResults:
                              functionality_tests)
     def test_functionality(self, dbase, tags, values, result, message, kwargs,
                            rkwargs):
+        self.functionality(
+            dbase, tags, values, result, message, kwargs, rkwargs
+        )
 
-        assert dbase.get_translation(tags, values, **kwargs) == result, \
-            "%s: 'normal failed" % message
-
-        if rkwargs is not None:
-            trr = dbase.reverse_translation(result[0], **rkwargs)
-            assert trr.translations[0].ids == tags, \
-                '%s: reverse failed incorrect tags' % message
-            assert trr.values[0] == values, \
-                '%s: failed reverse incorrect values' % message
+    @pytest.mark.parametrize(
+        'filename,tags,values,result,message,kwargs,rkwargs',
+        live_functionality_tests)
+    def test_live_functionality(self, ggpk_tc, filename, tags, values, result,
+                           message, kwargs, rkwargs):
+        self.functionality(
+            ggpk_tc[filename], tags, values, result, message, kwargs, rkwargs
+        )
 
     def test_quantifier_mod_value_to_item_class(self, tf_data, rr):
         rr['ItemClasses.dat'].build_index('Id')
@@ -323,7 +382,6 @@ class TestTranslationResults:
             'reverse failed incorrect tags'
         assert trr.values[0] == values, \
             'failed reverse incorrect values'
-
 
 class TestTranslation:
     pass
