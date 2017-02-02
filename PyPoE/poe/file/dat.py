@@ -43,7 +43,6 @@ See PyPoE/LICENSE
     * DatValue.get_value might hit the python recursion limit, but is not a problem
       for any of the actual dat file.
     * Update RR with the new indexing
-    * Errors for invalid foreignkey indexing
 
 Documentation
 ===============================================================================
@@ -73,6 +72,8 @@ Exceptions & Warnings
 -------------------------------------------------------------------------------
 
 .. autoclass:: SpecificationError
+
+.. autoclass:: SpecificationError.ERRORS
 """
 
 # =============================================================================
@@ -84,6 +85,7 @@ import struct
 import warnings
 from io import BytesIO
 from collections import OrderedDict, Iterable
+from enum import IntEnum
 
 # 3rd Party Library
 import configobj
@@ -93,6 +95,7 @@ import validate
 from PyPoE import DAT_SPECIFICATION, DAT_SPECIFICATION_CONFIGSPEC
 from PyPoE.shared.decorators import deprecated, doc
 from PyPoE.shared.mixins import ReprMixin
+from PyPoE.poe import constants
 from PyPoE.poe.file.shared import AbstractFileReadOnly
 from PyPoE.poe.file.shared.cache import AbstractFileCache
 
@@ -104,10 +107,13 @@ _default_spec = None
 
 
 __all__ = [
+    'DAT_FILE_MAGIC_NUMBER',
     'SpecificationError',
     'DatFile', 'RelationalReader',
     'load_spec', 'reload_default_spec',
 ]
+
+DAT_FILE_MAGIC_NUMBER = b'\xBB\xbb\xBB\xbb\xBB\xbb\xBB\xbb'
 
 # =============================================================================
 # Exceptions & Warnings
@@ -115,7 +121,70 @@ __all__ = [
 
 
 class SpecificationError(ValueError):
-    pass
+    """
+    SpecificationErrors are raised to indicate there is a problem with the
+    specification compared to the data.
+
+    Unlike most errors, they are raised with an error code and the error
+    message. The error code can be used to capture specific errors more
+    accurately.
+    """
+
+    class ERRORS(IntEnum):
+        """
+        Numeric meaning:
+
+        * 1xxx - indicates issues with format of fields
+        * 2xxx - indicates issues with format of virtual fields
+        * 3xxx - indicates issues at runtime
+
+        Attributes
+        ----------
+        INVALID_FOREIGN_KEY_FILE
+            Foreign key file does not exist
+        INVALID_FOREIGN_KEY_ID
+            Foreign key with the specified id does not exist
+        INVALID_ARGUMENT_COMBINATION
+            Invalid combination of multiple arguments; i.e. when they can't be
+            used together
+        INVALID_ENUM_NAME
+            Enum does not exist in :py:mod:`PyPoE.poe.constants`
+        VIRTUAL_KEY_EMPTY
+            Virtual key does not have fields defined
+        VIRTUAL_KEY_DUPLICATE
+            Virtual key is a duplicate of a regular key
+        VIRTUAL_KEY_INVALID_KEY
+            Invalid fields specified for the virtual key
+        VIRTUAL_KEY_INVALID_DATA_TYPE
+            Invalid data type(s) in the target fields
+        RUNTIME_MISSING_SPECIFICATION
+            No specification found in the specification format used for the
+            function call
+        RUNTIME_MISSING_FOREIGN_KEY
+            A single foreign key reference could not be resolved
+        RUNTIME_ROWSIZE_MISMATCH
+            The row size in the specification doesn't match the real data row
+            size
+        """
+        INVALID_FOREIGN_KEY_FILE = 1000
+        INVALID_FOREIGN_KEY_ID = 1001
+        INVALID_ARGUMENT_COMBINATION = 1002
+        INVALID_ENUM_NAME = 1003
+        VIRTUAL_KEY_EMPTY = 2000
+        VIRTUAL_KEY_DUPLICATE = 2001
+        VIRTUAL_KEY_INVALID_KEY = 2002
+        VIRTUAL_KEY_INVALID_DATA_TYPE = 2003
+        RUNTIME_MISSING_SPECIFICATION = 3000
+        RUNTIME_MISSING_FOREIGN_KEY = 3001
+        RUNTIME_ROWSIZE_MISMATCH = 3002
+
+    def __init__(self, code, msg):
+        super(SpecificationError, self).__init__()
+        self.code = self.ERRORS(code)
+        self.msg = msg
+
+    def __str__(self):
+        return '%s: %s' % (repr(self.code), self.msg)
 
 
 class SpecificationWarning(UserWarning):
@@ -474,8 +543,6 @@ class DatReader(ReprMixin):
         Mapping of cast type to the corresponding struct
     type and the size
         of the cast in bytes
-    _data_magic_number :  bytes
-        Magic number that marks the beginning of data section
     auto_build_index : bool
         Whether the index is automatically build after reading
     file_name :  str
@@ -519,7 +586,6 @@ class DatReader(ReprMixin):
         'float': ['f', 4],
         'double': ['d', 8],
     }
-    _data_magic_number = b'\xBB\xbb\xBB\xbb\xBB\xbb\xBB\xbb'
 
     def __init__(self, file_name, *args, use_dat_value=True, specification=None,
                  auto_build_index=False):
@@ -561,7 +627,10 @@ class DatReader(ReprMixin):
             if file_name in _default_spec:
                 specification = _default_spec[file_name]
             else:
-                raise SpecificationError('No specification for "%s"' % file_name)
+                raise SpecificationError(
+                    SpecificationError.ERRORS.RUNTIME_MISSING_SPECIFICATION,
+                    'No specification for "%s"' % file_name
+                )
         else:
             specification = specification[file_name]
         self.specification = specification
@@ -789,7 +858,7 @@ class DatReader(ReprMixin):
         # Jump to last byte to get length
         self.file_length = len(self._file_raw)
 
-        self.data_offset = self._file_raw.find(self._data_magic_number)
+        self.data_offset = self._file_raw.find(DAT_FILE_MAGIC_NUMBER)
 
         if self.data_offset == -1:
             raise ValueError(
@@ -813,6 +882,7 @@ class DatReader(ReprMixin):
 
         if self.cast_size != self.table_record_length:
             raise SpecificationError(
+                SpecificationError.ERRORS.RUNTIME_ROWSIZE_MISMATCH,
                 '"%(name)s": Specification row size %(spec_size)s vs real size %(cast_size)s' % {
                     'name': self.file_name,
                     'spec_size': self.cast_size,
@@ -929,9 +999,26 @@ class DatFile(AbstractFileReadOnly):
 
 
 @doc(doc=AbstractFileCache, prepend="""
-    Read dat files in a relational matter.
+    Read dat files in a relational matter and cache them for further use.
 
-    This acts both as a cache and as a way to easily access the instances.
+    The relational reader will process **all** relations upon accessing a dat
+    file; this means any field marked as relation or enum in the specification
+    will be processed and the pointer will be replaced with the actual value.
+
+
+    For example, if a row "OtherKey" points to another file "OtherDatFil.dat",
+    the contents of "OtherKey" will no longer be a reference like 0, but instead
+    the actual row from the file "OtherDatFile.dat".
+
+    As a result you have equivalence of:
+
+    * rr["DatFile.dat"]["OtherKey"]["OtherDatFileValue"]
+    * rr["OtherDatFile.dat"][0]["OtherDatFileValue"]
+
+
+    Enums are processed in a similar fashion, except they'll be replaced with
+    the according enum instance from :py:mod:`PyPoE.poe.constants` for the
+    specific value.
 """)
 class RelationalReader(AbstractFileCache):
     FILE_TYPE = DatFile
@@ -959,16 +1046,6 @@ class RelationalReader(AbstractFileCache):
     def _set_value(self, obj, other, key, offset):
         if obj is None:
             obj = None
-        elif offset:
-            try:
-                obj = other[obj-offset]
-            except IndexError:
-                msg = 'Did not find proper value at index %s' % (obj-offset, )
-                if self.raise_error_on_missing_relation:
-                    raise SpecificationError(msg)
-                else:
-                    warnings.warn(msg, SpecificationWarning)
-                    obj = None
         elif key:
             try:
                 obj = other.index[key][obj]
@@ -976,12 +1053,27 @@ class RelationalReader(AbstractFileCache):
                 msg = 'Did not find proper value for foreign key "%s" with ' \
                       'value "%s"' % (key, obj)
                 if self.raise_error_on_missing_relation:
-                    raise SpecificationError(msg)
+                    raise SpecificationError(
+                        SpecificationError.ERRORS.RUNTIME_MISSING_FOREIGN_KEY,
+                        msg
+                    )
                 else:
                     warnings.warn(msg, SpecificationWarning)
                     obj = None
         else:
-            obj = other[obj]
+            # offset is default 0
+            try:
+                obj = other[obj-offset]
+            except IndexError:
+                msg = 'Did not find proper value at index %s' % (obj-offset, )
+                if self.raise_error_on_missing_relation:
+                    raise SpecificationError(
+                        SpecificationError.ERRORS.RUNTIME_MISSING_FOREIGN_KEY,
+                        msg
+                    )
+                else:
+                    warnings.warn(msg, SpecificationWarning)
+                    obj = None
         return obj
 
     def _dv_set_value(self, value, other, key, offset):
@@ -1036,29 +1128,43 @@ class RelationalReader(AbstractFileCache):
 
         vf = self._dv_set_value if df.reader.use_dat_value else self._simple_set_value
 
-        for key in df.reader.specification['fields']:
-            other = df.reader.specification['fields'][key]['key']
-            if not other:
-                continue
-            df_other_reader = self[other]
+        for key, spec_row in df.reader.specification['fields'].items():
+            if spec_row['key']:
+                df_other_reader = self[spec_row['key']]
 
-            key_id = df.reader.specification['fields'][key]['key_id']
-            key_offset = df.reader.specification['fields'][key]['key_offset']
-            # Don't need to rebuild the index if it was specified as generic
-            # read option already.
-            if not self.read_options.get('auto_build_index') \
-                    and not key_offset and key_id:
-                df_other_reader.build_index(key_id)
+                key_id = spec_row['key_id']
+                key_offset = spec_row['key_offset']
+                # Don't need to rebuild the index if it was specified as generic
+                # read option already.
+                if not self.read_options.get('auto_build_index') \
+                        and not key_offset and key_id:
+                    df_other_reader.build_index(key_id)
 
-            index = df.reader.table_columns[key]['index']
+                index = df.reader.table_columns[key]['index']
 
-            for i, row in enumerate(df.reader.table_data):
-                df.reader.table_data[i][index] = vf(
-                    row[index],
-                    df_other_reader,
-                    key_id,
-                    key_offset,
-                )
+                for i, row in enumerate(df.reader.table_data):
+                    try:
+                        df.reader.table_data[i][index] = vf(
+                            row[index],
+                            df_other_reader,
+                            key_id,
+                            key_offset,
+                        )
+                    except SpecificationError as e:
+                        raise SpecificationError(
+                            e.code,
+                            '%(fn)s:%(rn)s->%(on)s:%(msg)s' % {
+                                'fn': file_name,
+                                'rn': key,
+                                'on': spec_row['key'],
+                                'msg': e.msg,
+                            },
+                        )
+            elif spec_row['enum']:
+                const_enum = getattr(constants, spec_row['enum'])
+                index = df.reader.table_columns[key]['index']
+                for i, row in enumerate(df.reader.table_data):
+                    df.reader.table_data[i][index] = const_enum(row[index])
 
         return df
 
@@ -1092,7 +1198,9 @@ def load_spec(path=None):
     """
     if path is None:
         path = DAT_SPECIFICATION
-    spec = configobj.ConfigObj(infile=path, configspec=DAT_SPECIFICATION_CONFIGSPEC)
+    spec = configobj.ConfigObj(
+        infile=path, configspec=DAT_SPECIFICATION_CONFIGSPEC
+    )
     spec.validate(validate.Validator())
 
     for file_name, file_spec in spec.items():
@@ -1104,10 +1212,11 @@ def load_spec(path=None):
             if other:
                 if other not in spec:
                     raise SpecificationError(
-                        '%(dat_file)s->%(field)s->key: %(other)s not in '
+                        SpecificationError.ERRORS.INVALID_FOREIGN_KEY_FILE,
+                        '%(dat_file)s->%(field)s->key: %(other)s is not in '
                         'specification' % {
                             'dat_file': file_name,
-                            'field': file_name,
+                            'field': field_name,
                             'other': other,
                         }
                     )
@@ -1115,10 +1224,11 @@ def load_spec(path=None):
                 other_key = field['key_id']
                 if other_key and other_key not in spec[other]['fields']:
                     raise SpecificationError(
+                        SpecificationError.ERRORS.INVALID_FOREIGN_KEY_ID,
                         '%(dat_file)s->%(field)s->key_id: %(other)s->'
                         '%(other_key)s not in specification' % {
                             'dat_file': file_name,
-                            'field': file_name,
+                            'field': field_name,
                             'other': other,
                             'other_key': other_key,
                         }
@@ -1128,6 +1238,28 @@ def load_spec(path=None):
             if field['unique']:
                 columns_unique[field_name] = None
 
+            if field['enum']:
+                if other:
+                    raise SpecificationError(
+                        SpecificationError.ERRORS.INVALID_ARGUMENT_COMBINATION,
+                        '%(dat_file)s->%(field)s->enum: Either key or enum can '
+                        'be specified but never both.' % {
+                            'dat_file': file_name,
+                            'field': field_name,
+                        }
+                    )
+                if not hasattr(constants, field['enum']):
+                    raise SpecificationError(
+                        SpecificationError.ERRORS.INVALID_ENUM_NAME,
+                        '%(dat_file)s->%(field)s->enum: Invalid constant enum '
+                        '""%(enum)s" specified'
+                        % {
+                            'dat_file': file_name,
+                            'field': field_name,
+                            'enum': field['enum'],
+                        }
+                    )
+
         columns_zip = OrderedDict(columns)
         columns_all = OrderedDict(columns)
         columns_data = OrderedDict(columns)
@@ -1136,6 +1268,7 @@ def load_spec(path=None):
             # Validation
             if field_name in file_spec['fields']:
                 raise SpecificationError(
+                    SpecificationError.ERRORS.VIRTUAL_KEY_DUPLICATE,
                     '%(dat_file)s->virtual_fields->%(field)s use the same name '
                     'as a key specified in %(dat_file)s->fields' %
                     {
@@ -1146,6 +1279,7 @@ def load_spec(path=None):
 
             if not field['fields']:
                 raise SpecificationError(
+                    SpecificationError.ERRORS.VIRTUAL_KEY_EMPTY,
                     '%(dat_file)s->virtual_fields->%(field)s->fields is empty' %
                     {
                         'dat_file': file_name,
@@ -1157,6 +1291,7 @@ def load_spec(path=None):
                 if other_field not in file_spec['fields'] and \
                                 other_field not in file_spec['virtual_fields']:
                     raise SpecificationError(
+                        SpecificationError.ERRORS.VIRTUAL_KEY_INVALID_KEY,
                         '%(dat_file)s->virtual_fields->%(field)s->fields: '
                         'Field "%(other_field)s" does not exist' %
                         {
@@ -1169,6 +1304,7 @@ def load_spec(path=None):
                         not file_spec['fields'][other_field]['type'].startswith(
                             'ref|list'):
                     raise SpecificationError(
+                        SpecificationError.ERRORS.VIRTUAL_KEY_INVALID_DATA_TYPE,
                         '%(dat_file)s->virtual_fields->%(field)s->zip: The zip '
                         'option requires "%(other_field)s" to be a list' %
                         {

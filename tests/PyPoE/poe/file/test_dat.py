@@ -41,16 +41,18 @@ import struct
 
 # 3rd Party
 import pytest
-from configobj import ConfigObj
 
 # self
+from PyPoE.poe.constants import MOD_DOMAIN
 from PyPoE.poe.file import dat
 
 # =============================================================================
 # Setup
 # =============================================================================
 
-cur_dir = os.path.split(os.path.realpath(__file__))[0]
+spec_dir = os.path.join(
+    os.path.split(os.path.realpath(__file__))[0], '_data', 'specifications'
+)
 
 test_data = data = [
     ('bool', '?', 1),
@@ -68,12 +70,102 @@ test_str = 'Hello world'
 test_str_enc = test_str.encode('utf-16le') + b'\x00\x00\x00\x00'
 test_list = [17418241, 777123, 0xFEFEFEFE]
 
+
+@pytest.fixture(scope='module')
+def testspec_dat_file():
+    # One row
+    temp_file = []
+    baseptr = 8
+    # One row
+    temp_file.append(struct.pack('<I', 1))
+    for item in test_data:
+        temp_file.append(struct.pack('<' + item[1], item[2]))
+    # ref|string -> int pointer
+    temp_file.append(struct.pack('<i', baseptr))
+    baseptr += len(test_str_enc)
+    # ref|list -> int size, int pointer
+    temp_file.append(struct.pack('<i', 3))
+    temp_file.append(struct.pack('<i', baseptr))
+    baseptr += 3*4
+    # ref|ref|ref|int
+    # The first reference in the data list
+    temp_file.append(struct.pack('<i', baseptr))
+    baseptr += 4
+
+    # Magic number
+    temp_file.append(dat.DAT_FILE_MAGIC_NUMBER)
+    # Data
+    temp_file.append(test_str_enc)
+    for item in test_list:
+        temp_file.append(struct.pack('<I', item))
+
+    # ref|ref|ref|int
+    # the two extra refs, and integer value
+    for i in range(0, 2):
+        temp_file.append(struct.pack('<i', baseptr))
+        baseptr += 4
+    temp_file.append(struct.pack('<i', 0x1337))
+    baseptr += 4
+
+    return b''.join(temp_file)
+
+
+@pytest.fixture(scope='module')
+def rr_temp_dir(tmpdir_factory):
+    file_datas = (
+        {
+            'file_name': 'Main.dat',
+            'data': (
+                (0, 1, 0, 0, 10, 1),
+                (1, 2, 1, 1, 20, 2),
+                (2, 3, 3, 0xFEFEFEFE, 30, 3),
+            )
+        },
+        {
+            'file_name': 'Other.dat',
+            'data': (
+                (10, ),
+                (20, ),
+                (30, ),
+            ),
+        },
+    )
+
+    temp_dir = str(tmpdir_factory.mktemp('rrtest'))
+    os.mkdir(os.path.join(temp_dir, 'Data'))
+
+    for file_data in file_datas:
+        with open(os.path.join(temp_dir, 'Data', file_data['file_name']),
+                  'wb') as temp_file:
+            temp_file.write(struct.pack('<I', len(file_data['data'])))
+            for row in file_data['data']:
+                for value in row:
+                    temp_file.write(struct.pack('<I', value))
+            temp_file.write(dat.DAT_FILE_MAGIC_NUMBER)
+
+    return temp_dir
+
+
+@pytest.fixture(scope='module')
+def rr_instance(rr_temp_dir):
+    return dat.RelationalReader(
+        path_or_ggpk=rr_temp_dir,
+        read_options={
+            'specification': dat.load_spec(os.path.join(
+                spec_dir, 'rr_test.ini'
+            )),
+            'use_dat_value': False,
+        },
+    )
+
 # =============================================================================
 # Tests
 # =============================================================================
 
+
 def test_load_spec():
-    return dat.load_spec(os.path.join(cur_dir, 'dat_testspec.ini'))
+    return dat.load_spec(os.path.join(spec_dir, 'dat_testspec.ini'))
+
 
 def test_reload_default_spec():
     old = dat._default_spec
@@ -86,6 +178,7 @@ def test_reload_default_spec():
 # DatValue instances are created by the script, so they don't contain any
 # error checking upon creation themselves.
 # Hence we just test for them working correctly with correct information.
+
 
 class TestDatValue:
     # Basic Data
@@ -250,47 +343,11 @@ class TestDatValue:
 # DatFile tests
 #
 
-def test_dat_file():
-    # One row
-    temp_file = []
-    baseptr = 8
-    # One row
-    temp_file.append(struct.pack('<I', 1))
-    for item in test_data:
-        temp_file.append(struct.pack('<' + item[1], item[2]))
-    # ref|string -> int pointer
-    temp_file.append(struct.pack('<i', baseptr))
-    baseptr += len(test_str_enc)
-    # ref|list -> int size, int pointer
-    temp_file.append(struct.pack('<i', 3))
-    temp_file.append(struct.pack('<i', baseptr))
-    baseptr += 3*4
-    # ref|ref|ref|int
-    # The first reference in the data list
-    temp_file.append(struct.pack('<i', baseptr))
-    baseptr += 4
-
-    # Magic number
-    temp_file.append(b'\xBB\xbb\xBB\xbb\xBB\xbb\xBB\xbb')
-    # Data
-    temp_file.append(test_str_enc)
-    for item in test_list:
-        temp_file.append(struct.pack('<I', item))
-
-    # ref|ref|ref|int
-    # the two extra refs, and integer value
-    for i in range(0, 2):
-        temp_file.append(struct.pack('<i', baseptr))
-        baseptr += 4
-    temp_file.append(struct.pack('<i', 0x1337))
-    baseptr += 4
-
-    temp_file = b''.join(temp_file)
-
+def test_dat_file(testspec_dat_file):
     spec = test_load_spec()
 
     df = dat.DatFile('TestSpec.dat')
-    dr = df.read(temp_file, specification=spec)
+    dr = df.read(testspec_dat_file, specification=spec)
 
     for row in dr:
         for test in test_data:
@@ -302,3 +359,144 @@ def test_dat_file():
         # 0xFEFEFEFE is a magic key, so return -1
         assert l[2] is None, 'Value mismatch - list, special value'
         assert row['ref|ref|ref|int'] == 0x1337, 'Value mismatch - nested pointers'
+
+
+class TestSpecificationErrors:
+    errors = (
+        (
+            'invalid_foreign_key_file.ini',
+            dat.SpecificationError.ERRORS.INVALID_FOREIGN_KEY_FILE,
+        ),
+        (
+            'invalid_foreign_key_id.ini',
+            dat.SpecificationError.ERRORS.INVALID_FOREIGN_KEY_ID,
+        ),
+        (
+            'invalid_argument_combination.ini',
+            dat.SpecificationError.ERRORS.INVALID_ARGUMENT_COMBINATION,
+        ),
+        (
+            'invalid_enum_name.ini',
+            dat.SpecificationError.ERRORS.INVALID_ENUM_NAME,
+        ),
+        (
+            'virtual_key_empty.ini',
+            dat.SpecificationError.ERRORS.VIRTUAL_KEY_EMPTY,
+        ),
+        (
+            'virtual_key_duplicate.ini',
+            dat.SpecificationError.ERRORS.VIRTUAL_KEY_DUPLICATE,
+        ),
+        (
+            'virtual_key_invalid_key.ini',
+            dat.SpecificationError.ERRORS.VIRTUAL_KEY_INVALID_KEY,
+        ),
+        (
+            'virtual_key_invalid_data_type.ini',
+            dat.SpecificationError.ERRORS.VIRTUAL_KEY_INVALID_DATA_TYPE,
+        ),
+
+    )
+
+    @pytest.mark.parametrize('file_name,error', errors)
+    def test_validation_errors(self, file_name, error):
+        with pytest.raises(dat.SpecificationError) as e:
+            dat.load_spec(os.path.join(spec_dir, file_name))
+        assert e.value.code == error
+
+    def test_runtime_missing_specification(self, testspec_dat_file):
+        df = dat.DatFile('TestSpec.dat')
+        with pytest.raises(dat.SpecificationError) as e:
+            dr = df.read(testspec_dat_file)
+        assert e.value.code == \
+               dat.SpecificationError.ERRORS.RUNTIME_MISSING_SPECIFICATION
+
+    def test_runtime_rowsize_mismatch(self, rr_temp_dir):
+        df = dat.DatFile('Main.dat')
+        with pytest.raises(dat.SpecificationError) as e:
+            dr = df.read(
+                os.path.join(rr_temp_dir, 'Data', 'Main.dat'),
+                specification=dat.load_spec(os.path.join(
+                    spec_dir, 'runtime_rowsize_mismatch.ini'
+                )),
+            )
+
+        assert e.value.code == \
+            dat.SpecificationError.ERRORS.RUNTIME_ROWSIZE_MISMATCH
+
+
+    foreign_key_errors = (
+        'runtime_missing_foreign_key1.ini',
+        'runtime_missing_foreign_key2.ini',
+    )
+
+    @pytest.mark.parametrize('spec_name', foreign_key_errors)
+    def test_runtime_missing_foreign_key(self, rr_temp_dir, spec_name):
+        rr = dat.RelationalReader(
+            path_or_ggpk=rr_temp_dir,
+            raise_error_on_missing_relation=True,
+            read_options={
+                'specification': dat.load_spec(os.path.join(
+                    spec_dir, spec_name
+                )),
+                'use_dat_value': False,
+            },
+        )
+        with pytest.raises(dat.SpecificationError) as e:
+            rr.get_file('Data/Main.dat')
+        assert e.value.code == \
+            dat.SpecificationError.ERRORS.RUNTIME_MISSING_FOREIGN_KEY
+
+
+class TestRelationalReader():
+    relations_expected = {
+        'ForeignKey': [0, 1, 2],
+        'ForeignKeyOffset': [0, 1, 2],
+        'ForeignKeyNone': [0, 1, None],
+        'ForeignKeyCellValue': [0, 1, 2],
+    }
+
+    @pytest.mark.parametrize('use_dat_value', (True, False))
+    def test_relations(self, rr_temp_dir, use_dat_value):
+        rr = dat.RelationalReader(
+            path_or_ggpk=rr_temp_dir,
+            read_options={
+                'specification': dat.load_spec(os.path.join(
+                    spec_dir, 'rr_test.ini'
+                )),
+                'use_dat_value': use_dat_value,
+            },
+        )
+
+        for column, values in self.relations_expected.items():
+            for i, row in enumerate(rr['Main.dat']):
+                expected = values[i]
+                if expected is not None:
+                    expected = rr['Other.dat'][expected]
+                else:
+                    expected = None
+
+                assert row[column] == expected, 'Testing against expected row'
+
+    enums_expected = {
+        'ConstTest': (MOD_DOMAIN(1), MOD_DOMAIN(2), MOD_DOMAIN(3)),
+    }
+
+    @pytest.mark.parametrize('use_dat_value', (True, False))
+    def test_enums(self, rr_temp_dir, use_dat_value):
+        rr = dat.RelationalReader(
+            path_or_ggpk=rr_temp_dir,
+            read_options={
+                'specification': dat.load_spec(os.path.join(
+                    spec_dir, 'rr_test.ini'
+                )),
+                'use_dat_value': use_dat_value,
+            },
+        )
+        for column, values in self.enums_expected.items():
+            for i, row in enumerate(rr['Main.dat']):
+                assert row[column] == values[i], 'Testing against expected enum'
+
+    def test_getitem(self, rr_instance):
+        assert rr_instance['Main.dat'] == \
+               rr_instance.get_file('Data/Main.dat').reader
