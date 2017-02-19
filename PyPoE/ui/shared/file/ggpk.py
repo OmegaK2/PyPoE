@@ -40,7 +40,7 @@ Interal API
 
 # Python
 import os
-from functools import wraps
+import time
 
 # 3rd-party
 from PySide.QtCore import *
@@ -113,32 +113,24 @@ class GGPKThread(QThread):
         self._file_path = file_path
         self.ggpk_file = None
         self._size = 0
+        self._time = 0
 
         self.sig_update_progress.connect(self._progress_updater)
 
         self.progress_bar = GGPKProgressDialog('')
 
-    def _progress_ggpk(self, func):
-        """
-        Hook for GGPKFile._read_record
-        """
-        fm = self.parent()
-
-        @wraps(func)
-        def temp(*args, **kwargs):
-            if not self._size:
-                self._size = kwargs['ggpkfile'].seek(0, os.SEEK_END)
-                kwargs['ggpkfile'].seek(0, os.SEEK_SET)
-            else:
-                #kwargs['offset'])
-
+    def _progress_ggpk(self, records, ggpkfile, offset):
+        if not self._size:
+            self._size = ggpkfile.seek(0, os.SEEK_END)
+            ggpkfile.seek(0, os.SEEK_SET)
+        else:
+            # Emit the event every 200 ms
+            current_time = time.perf_counter()
+            if current_time - self._time > 0.2:
+                self._time = current_time
                 self.progress_bar.sig_progress.emit(
-                    int(kwargs['offset'] / self._size * 100)
+                    int(offset / self._size * 100)
                 )
-
-            return func(*args, **kwargs)
-
-        return temp
 
     def _progress_updater(self, title, max, *args, **kwargs):
         p = self.parent().parent()
@@ -159,8 +151,8 @@ class GGPKThread(QThread):
         self.sig_update_progress.emit(self.tr('Reading GGPK records...'), 100)
         ggpk_file = GGPKFile()
         # Hook the function for progress bar
-        ggpk_file._read_record = self._progress_ggpk(ggpk_file._read_record)
-        ggpk_file.read(self._file_path)
+        # ggpk_file._read_record = self._progress_ggpk(ggpk_file._read_record)
+        ggpk_file.read(self._file_path, callback=self._progress_ggpk)
         # Finished
         self.progress_bar.sig_progress.emit(100)
 
