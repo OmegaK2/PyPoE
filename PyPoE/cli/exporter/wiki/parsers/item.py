@@ -116,6 +116,7 @@ class WikiCondition(object):
         'has_reservation_mana_cost',
         # all items
         'drop_enabled',
+        'drop_league',
         'name_list',
         'inventory_icon',
         'alternate_art_inventory_icons',
@@ -1518,6 +1519,9 @@ class ItemsParser(BaseParser):
 
             if base_item_type['IsTalisman']:
                 infobox['is_talisman'] = base_item_type['IsTalisman']
+                match = re.search('Talisman([0-9])', base_item_type['Id'])
+                if match:
+                    infobox['talisman_tier'] = match.group(1)
 
             funcs = self._cls_map.get(cls)
             if funcs:
@@ -1553,8 +1557,7 @@ class ItemsParser(BaseParser):
                     continue
 
             # putting this last since it's usually manually added
-            if base_item_type['IsTalisman'] or \
-                    base_item_type['Name'] in self._DROP_DISABLED_ITEMS:
+            if base_item_type['Name'] in self._DROP_DISABLED_ITEMS:
                 infobox['drop_enabled'] = False
 
 
