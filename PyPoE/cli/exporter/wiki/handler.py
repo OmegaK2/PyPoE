@@ -187,7 +187,7 @@ class WikiHandler(object):
     def handle(self, *a, mwclient, result, cmdargs, parser):
         # First row is handled separately to prompt the user for his password
         self.site = mwclient.Site(
-            ('http', 'pathofexile.gamepedia.com'),
+            ('https', 'pathofexile.gamepedia.com'),
             path='/'
         )
 
