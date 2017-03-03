@@ -62,13 +62,97 @@ __all__ = [
     'SOCKET_COLOUR',
     'RARITY',
     'MOD_DOMAIN',
-    'MOD_GENERATION_TYPE'
+    'MOD_GENERATION_TYPE',
+
+    'MOD_MAX_STATS',
+    'MOD_STATS_RANGE',
 ]
+
+MOD_MAX_STATS = 5
+MOD_STATS_RANGE = range(1, MOD_MAX_STATS+1)
 
 # =============================================================================
 # Classes
 # =============================================================================
 
+
+'''class ACTIVE_SKILL_TARGET_TYPES(IntEnum):
+    """
+
+    Attributes
+    ----------
+    TARGETABLE_GROUND
+        Can target the ground as long it's targetable
+    ENEMY
+        Can target an enemy
+    WALKABLE_GROUND
+        Can/must target ground that is walkable (seems to be used for teleport
+        skills)
+    ANYWHERE_SELF_TARGET
+        Targets anywhere; used for aura/self-targeting skills
+    ITEM
+        Targets an item
+    CORPSE
+        Targets a corpse
+    NO_LINE_OF_SIGHT
+        Targets even without line of sight
+    BEHIND_MONSTER
+        Targets behind monster
+    SELF_ORIGIN
+        Treats the entity as origin for the skill
+    ROTATE_TO_TARGET
+        Rotates to the target while using the skill (i.e. for channeled skills)
+    """
+    TARGETABLE_GROUND = 1
+    ENEMY = 2
+    WALKABLE_GROUND = 3
+    ANYWHERE_SELF_TARGET = 4
+    ITEM = 5
+    CORPSE = 6
+    UNUSED1 = 7
+    NO_LINE_OF_SIGHT = 8
+    BEHIND_MONSTER = 9
+    SELF_ORIGIN = 10
+    ROTATE_TO_TARGET = 11
+    # Shrine and totem npc stuff
+    UNKNOWN1 = 12
+    # Animate Weapon only
+    UNKNOWN2 = 13
+    # Proximity Shield
+    UNKNOWN3 = 14
+    # Some monster skills
+    UNKNOWN4 = 15
+    # Jump to target? Monster skills.
+    UNKNOWN5 = 16
+    UNUSED2 = 17
+    # 18 and 19 both Scorching Ray only
+    UNKNOWN6 = 18
+    UNKNOWN7 = 19
+
+
+class ACTIVE_SKILL_TYPES(IntEnum):
+    """
+    Attributes
+    ----------
+    ATTACK
+        Is an attack and uses the weapons on the entity
+    CAST
+        Is casted and does not use the weapon
+    PROJECTILE
+        Creates an projectile
+    DUALWIELD_ONLY
+        Uses both hand slots
+    BUFF_SELF
+        Buff that applies to the entity itself
+    """
+    ATTACK = 1
+    CAST = 2
+    PROJECTILE = 3
+    # Why is a monster being dual-wield only?
+    DUALWIELD_ONLY = 4
+    BUFF_SELF = 5
+    #DUALWIELD_POSSIBLE = 6'''
+    
 
 class VERSION(IntEnum):
     """
@@ -261,6 +345,8 @@ class MOD_DOMAIN(IntEnum):
     ATLAS
         Atlas domain for things that appear when using a sextant orb on the
         atlas
+    LEAGUESTONE
+        Leaguestone domain for things that appear on league stones
     """
     ITEM = 1
     FLASK = 2
@@ -274,6 +360,7 @@ class MOD_DOMAIN(IntEnum):
     MASTER = 10
     JEWEL = 11
     ATLAS = 12
+    LEAGUESTONE = 13
 
 
 class MOD_GENERATION_TYPE(IntEnum):
