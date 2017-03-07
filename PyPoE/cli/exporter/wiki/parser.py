@@ -43,7 +43,7 @@ from PyPoE.poe.file.translations import (
     install_data_dependant_quantifiers,
 )
 from PyPoE.poe.file.ot import OTFileCache
-from PyPoE.poe.sim.mods import get_translation
+from PyPoE.poe.sim.mods import get_translation_file_from_domain
 
 # =============================================================================
 # Globals
@@ -663,8 +663,13 @@ class BaseParser(object):
             make_inter_wiki_links(custom)
         )
 
-    def _get_stats(self, mod, translation_file=None):
-        result = get_translation(mod, self.tc, translation_file)
+    def _get_stats(self, stats, values, mod, translation_file=None):
+        if translation_file is None:
+            translation_file = get_translation_file_from_domain(mod['Domain'])
+
+        result = self.tc[translation_file].get_translation(
+            stats, values, full_result=True
+        )
 
         if mod['Domain'] == MOD_DOMAIN.MONSTER:
             default = self.tc['stat_descriptions.txt'].get_translation(

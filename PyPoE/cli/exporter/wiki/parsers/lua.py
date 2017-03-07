@@ -323,20 +323,26 @@ class QuestRewardReader(BaseParser):
 
             # Format the data:
 
-            for cls in classes:
-                for quest in quests:
-                    for item in items:
-                        data = {}
+            for quest in quests:
+                for item in items:
+                    data = {}
 
-                        data['quest'] = quest['Name']
-                        data['quest_id'] = quest['Id']
-                        data['act'] = quest['Act']
-                        data['reward'] = item['Name']
-                        # Pretty sure they are all skills...
-                        data['type'] = 'skill'
-                        data['class_name'] = cls['Name']
-                        data['class_id'] = cls.rowid
-                        data['npc'] = row['NPCKey']['Name']
+                    data['quest'] = quest['Name']
+                    data['quest_id'] = quest['Id']
+                    data['act'] = quest['Act']
+                    data['reward'] = item['Name']
+                    # Pretty sure they are all skills...
+                    data['type'] = 'skill'
 
+                    data['npc'] = row['NPCKey']['Name']
+
+                    if classes:
+                        for cls in classes:
+                            data['class_name'] = cls['Name']
+                            data['class_id'] = cls.rowid
+                            outdata.add(VendorRewardDataTuple(**data))
+                    else:
+                        data['class_name'] = 'All'
+                        data['class_id'] = -1
                         outdata.add(VendorRewardDataTuple(**data))
         return self._write_lua(list(outdata), 'vendor')

@@ -40,7 +40,7 @@ import warnings
 from collections import OrderedDict, defaultdict
 
 # Self
-from PyPoE.poe.constants import MOD_DOMAIN, MOD_GENERATION_TYPE
+from PyPoE.poe.constants import MOD_DOMAIN, MOD_GENERATION_TYPE, MOD_STATS_RANGE
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult, \
     add_format_argument
@@ -98,7 +98,6 @@ class WikiCondition(object):
             template_name='Mod',
             ordered_dict=self.data,
         )
-
 
 
 class ModsHandler(ExporterHandler):
@@ -287,7 +286,7 @@ class ModParser(BaseParser):
 
         return self.mod(args, mods)
 
-    def mod(self, args, mods):
+    def mod(self, parsed_args, mods):
         r = ExporterResult()
 
         if mods:
@@ -320,22 +319,25 @@ class ModParser(BaseParser):
                 data['granted_skill'] = mod['GrantedEffectsPerLevelKey']['GrantedEffectsKey']['Id']
             data['mod_type'] = mod['ModTypeKey']['Name']
 
-            data['stat_text'] = '<br>'.join(self._get_stats(mod))
-
             stats = []
-            for i in range(1, 6):
+            values = []
+            for i in MOD_STATS_RANGE:
                 k = mod['StatsKey%s' % i]
                 if k is None:
                     continue
 
-                stat = k['Id'], mod['Stat%sMin' % i], mod['Stat%sMax' % i]
+                stat = k['Id']
+                value = mod['Stat%sMin' % i], mod['Stat%sMax' % i]
 
-                if stat[1] == 0 and stat[2] == 0:
+                if value[0] == 0 and value[1] == 0:
                     continue
 
                 stats.append(stat)
+                values.append(value)
 
-            for i, (sid, vmin, vmax) in enumerate(stats, start=1):
+            data['stat_text'] = '<br>'.join(self._get_stats(stats, values, mod))
+
+            for i, (sid, (vmin, vmax)) in enumerate(zip(stats, values), start=1):
                 data['stat%s_id' % i] = sid
                 data['stat%s_min' % i] = vmin
                 data['stat%s_max' % i] = vmax
@@ -370,11 +372,11 @@ class ModParser(BaseParser):
             # 3+ tildes not allowed
             page_name = 'Modifier:' + mod['Id'].replace('_', '~').replace(
                 '~~~', '_~~_~~_')
-            cond = WikiCondition(data, args)
+            cond = WikiCondition(data, parsed_args)
 
             r.add_result(
                 text=cond,
-                out_file='mod_%s.txt' % mod['Id'],
+                out_file='mod_%s.txt' % data['id'],
                 wiki_page=[
                     {'page': page_name, 'condition': cond},
                 ],
@@ -397,7 +399,7 @@ class ModParser(BaseParser):
                 continue
 
             stats = []
-            for i in range(1, 6):
+            for i in MOD_STATS_RANGE:
                 stat = mod['StatsKey%s' % i]
                 if stat:
                     stats.append(stat)

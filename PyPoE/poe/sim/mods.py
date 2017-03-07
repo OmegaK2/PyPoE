@@ -36,6 +36,7 @@ Documentation
     :special-members: __init__
 
 .. autofunction:: get_translation
+.. autofunction:: get_translation_file_from_domain
 .. autofunction:: get_mod_from_id
 .. autofunction:: get_spawn_weight
 .. autofunction:: generate_spawnable_mod_list
@@ -53,7 +54,7 @@ Documentation
 # self
 from PyPoE.poe.file.dat import DatRecord
 from PyPoE.poe.file.translations import TranslationFileCache
-from PyPoE.poe.constants import MOD_DOMAIN, MOD_GENERATION_TYPE
+from PyPoE.poe.constants import MOD_DOMAIN, MOD_GENERATION_TYPE, MOD_STATS_RANGE
 
 # =============================================================================
 # Globals
@@ -65,6 +66,7 @@ __all__ = [
     'get_mod_from_id',
     'get_spawn_weight',
     'get_translation',
+    'get_translation_file_from_domain',
 ]
 
 _translation_map = {
@@ -72,6 +74,7 @@ _translation_map = {
     MOD_DOMAIN.CHEST: 'chest_stat_descriptions.txt',
     MOD_DOMAIN.AREA: 'map_stat_descriptions.txt',
     MOD_DOMAIN.ATLAS: 'atlas_stat_descriptions.txt',
+    MOD_DOMAIN.LEAGUESTONE: 'leaguestone_stat_descriptions.txt',
 }
 
 # =============================================================================
@@ -224,6 +227,25 @@ class SpawnChanceCalculator(object):
 # Functions
 # =============================================================================
 
+def get_translation_file_from_domain(domain):
+    """
+    Returns the likely stat translation file for a given mod domain.
+
+    Parameters
+    ----------
+    domain : int
+        Id of the domain
+
+    Returns
+    -------
+    str
+        name of the stat translation file
+    """
+    try:
+        return _translation_map[domain]
+    except KeyError:
+        return 'stat_descriptions.txt'
+
 
 def get_translation(mod, translation_cache, translation_file=None, **kwargs):
     """
@@ -248,7 +270,7 @@ def get_translation(mod, translation_cache, translation_file=None, **kwargs):
 
     """
     stats = []
-    for i in range(1, 6):
+    for i in MOD_STATS_RANGE:
         stat = mod['StatsKey%s' % i]
         if stat:
             stats.append(stat)
@@ -261,10 +283,7 @@ def get_translation(mod, translation_cache, translation_file=None, **kwargs):
         ids.append(stat['Id'])
 
     if translation_file is None:
-        try:
-            tf_name = _translation_map[mod['Domain']]
-        except KeyError:
-            tf_name = 'stat_descriptions.txt'
+        tf_name = get_translation_file_from_domain(mod['Domain'])
     else:
         tf_name = translation_file
 

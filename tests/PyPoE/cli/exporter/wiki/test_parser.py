@@ -36,6 +36,7 @@ import os
 import pytest
 
 # self
+from PyPoE.poe.constants import MOD_STATS_RANGE
 from PyPoE.cli.exporter.wiki import parser
 from PyPoE.cli.exporter import config
 
@@ -48,7 +49,7 @@ from PyPoE.cli.exporter import config
 def parserobj():
     try:
         path = config.option['temp_dir']
-        fail = os.path.exists(path)
+        fail = not os.path.exists(path)
     except KeyError:
         fail = True
     if fail:
@@ -110,7 +111,7 @@ class TestBaseParser():
         (
             'Strength1',
             [
-                '+(8 to 12) to [[Strength]]',
+                '+(8-12) to [[Strength]]',
             ],
         ),
         (
@@ -123,12 +124,24 @@ class TestBaseParser():
     )
     @pytest.mark.parametrize('mod_id,result', data)
     def test_get_stats(self, parserobj, mod_id, result):
-        mods = parserobj.rr['Mods.dat']
-        for mod in mods:
-            if mod['Id'] == mod_id:
-                break
+        mod = parserobj.rr['Mods.dat'].index['Id'][mod_id]
 
-        assert parserobj._get_stats(mod) == result
+        stats = []
+        values = []
+        for i in MOD_STATS_RANGE:
+            k = mod['StatsKey%s' % i]
+            if k is None:
+                continue
+            stat = k['Id']
+            value = mod['Stat%sMin' % i], mod['Stat%sMax' % i]
+
+            if value[0] == 0 and value[1] == 0:
+                continue
+
+            stats.append(stat)
+            values.append(value)
+
+        assert parserobj._get_stats(stats, values, mod) == result
 
 
 @pytest.mark.parametrize('string,result', iwdata)

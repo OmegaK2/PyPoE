@@ -1026,8 +1026,8 @@ class RelationalReader(AbstractFileCache):
     #TODO append doc
     @doc(doc=AbstractFileCache.__init__)
     def __init__(self, raise_error_on_missing_relation=True, *args, **kwargs):
-        super(RelationalReader, self).__init__(*args, **kwargs)
         self.raise_error_on_missing_relation = raise_error_on_missing_relation
+        super(RelationalReader, self).__init__(*args, **kwargs)
 
     def __getitem__(self, item):
         """

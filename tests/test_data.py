@@ -96,6 +96,7 @@ def test_missing(ggpkfile):
         file_set.add(name)
 
     assert file_set.difference(set(files)) == set(), 'ggpk contains unhandled .dat files'
+    assert set(files).difference(file_set) == set(), 'dat specification contains unused dat files'
 
 
 @pytest.mark.parametrize("file_name, field_name", get_pk_validate_fields())

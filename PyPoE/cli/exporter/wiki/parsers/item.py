@@ -85,6 +85,17 @@ def _type_factory(data_file, data_mapping, row_index=True, function=None,
         return True
     return func
 
+
+def _simple_conflict_factory(data):
+    def _conflict_handler(self, infobox, base_item_type):
+        appendix = data.get(base_item_type['Id'])
+        if appendix is None:
+            return base_item_type['Name']
+        else:
+            return base_item_type['Name'] + appendix
+
+    return _conflict_handler
+
 # =============================================================================
 # Classes
 # =============================================================================
@@ -116,12 +127,16 @@ class WikiCondition(object):
         'has_reservation_mana_cost',
         # all items
         'drop_enabled',
-        'drop_league',
+        'drop_leagues',
         'name_list',
         'inventory_icon',
         'alternate_art_inventory_icons',
         'release_version',
         'removal_version',
+    )
+
+    COPY_MATCH = (
+
     )
 
     def __init__(self, data, cmdargs):
@@ -146,11 +161,19 @@ class WikiCondition(object):
                 k = match.group('key')
                 if k in self.COPY_KEYS:
                     self.data[k] = match.group('value').strip('\n\r ')
+                else:
+                    for regex in self.COPY_MATCH:
+                        if regex.match(k):
+                            self.data[k] = match.group('value').strip('\n\r ')
+                            # don't need to add something twice if more then
+                            # one regex matches
+                            break
 
             text = self._get_text()
             if self.data['class'] not in ('Support Skill Gems',
-                                          'Active Skill Gems'):
-                text = '<onlyinclude></onlyinclude>' + self._get_text()
+                                          'Active Skill Gems') and \
+                    '<onlyinclude></onlyinclude>' not in text:
+                text = '<onlyinclude></onlyinclude>' + text
 
             # I need the +1 offset or it adds a space everytime for some reason.
             return page.text()[:self.itembox.start()] + text + \
@@ -293,8 +316,11 @@ class ItemsParser(BaseParser):
     }
 
     _DROP_DISABLED_ITEMS = {
-        'Perandus Coin',
-        'Eternal Orb'
+        'Eternal Orb',
+    }
+
+    _DROP_DISABLED_ITEMS_BY_ID = {
+        'Metadata/Items/Quivers/QuiverDescent',
     }
 
     # Values without the Metadata/Projectiles/ prefix
@@ -837,6 +863,14 @@ class ItemsParser(BaseParser):
         row_index=False,
     )
 
+    def _type_amulet(self, infobox, base_item_type):
+        match = re.search('Talisman([0-9])', base_item_type['Id'])
+        if match:
+            infobox['is_talisman'] = True
+            infobox['talisman_tier'] = match.group(1)
+
+        return True
+
     _type_armour = _type_factory(
         data_file='ComponentArmour.dat',
         data_mapping=(
@@ -1114,6 +1148,8 @@ class ItemsParser(BaseParser):
     )
 
     _cls_map = {
+        # Jewellery
+        'Amulets': (_type_amulet),
         # Armour types
         'Gloves': (_type_level, _type_attribute, _type_armour, ),
         'Boots': (_type_level, _type_attribute, _type_armour, ),
@@ -1179,6 +1215,12 @@ class ItemsParser(BaseParser):
         else:
             infobox['inventory_icon'] = base_item_type['Name'] + appendix
             return base_item_type['Name'] + appendix
+
+    _conflict_quivers_map = {
+        'Metadata/Items/Quivers/QuiverDescent': ' (Descent)'
+    }
+
+    _conflict_quivers = _simple_conflict_factory(_conflict_quivers_map)
 
     _conflict_amulet_id_map = {
         'Metadata/Items/Amulets/Talismans/Talisman2_6_1':
@@ -1391,6 +1433,7 @@ class ItemsParser(BaseParser):
 
     _conflict_resolver_map = {
         'Boots': _conflict_boots,
+        'Quivers': _conflict_quivers,
         'Amulets': _conflict_amulets,
         'Active Skill Gems': _conflict_active_skill_gems,
         'Quest Items': _conflict_quest_items,
@@ -1517,12 +1560,6 @@ class ItemsParser(BaseParser):
             for i, mod in enumerate(base_item_type['Implicit_ModsKeys']):
                 infobox['implicit%s' % (i+1)] = mod['Id']
 
-            if base_item_type['IsTalisman']:
-                infobox['is_talisman'] = base_item_type['IsTalisman']
-                match = re.search('Talisman([0-9])', base_item_type['Id'])
-                if match:
-                    infobox['talisman_tier'] = match.group(1)
-
             funcs = self._cls_map.get(cls)
             if funcs:
                 fail = False
@@ -1557,7 +1594,8 @@ class ItemsParser(BaseParser):
                     continue
 
             # putting this last since it's usually manually added
-            if base_item_type['Name'] in self._DROP_DISABLED_ITEMS:
+            if base_item_type['Name'] in self._DROP_DISABLED_ITEMS or \
+                    base_item_type['Id'] in self._DROP_DISABLED_ITEMS_BY_ID:
                 infobox['drop_enabled'] = False
 
 
