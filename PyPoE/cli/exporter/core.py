@@ -48,11 +48,11 @@ import argparse
 # 3rd party
 
 # self
-from . import config
 from PyPoE.shared.config.validator import IntEnumValidator
 from PyPoE.poe.constants import VERSION, DISTRIBUTOR
 from PyPoE.cli.core import run
 from PyPoE.cli.handler import ConfigHandler, SetupHandler
+from PyPoE.cli.exporter import config
 from PyPoE.cli.exporter.dat import DatHandler
 from PyPoE.cli.exporter.wiki.core import WikiHandler
 
