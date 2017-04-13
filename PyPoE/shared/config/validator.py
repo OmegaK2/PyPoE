@@ -181,7 +181,7 @@ def _exists(value, exists):
         raise ValidateError('Path "%s" does not exist.' % value)
 
 
-def is_file(value, *args, exists=True, **kwargs):
+def is_file(value, *args, exists=True, allow_empty=False, **kwargs):
     """
     Checks whether the value is a valid file path (and optionally whether it
     exists).
@@ -192,6 +192,8 @@ def is_file(value, *args, exists=True, **kwargs):
         The value to validate
     exists : bool
         whether the file is required to exist to pass the validation check
+    allow_empty : bool
+        whether empty strings are allowed
 
     Returns
     -------
@@ -203,13 +205,16 @@ def is_file(value, *args, exists=True, **kwargs):
     ValidateError
         if the the value can't be validated
     """
-    _exists(value, exists)
-    if not os.path.isfile(value):
-        raise ValidateError('"%s" is not a file.' % value)
-    return value
+    if allow_empty and value == '':
+        return ''
+    else:
+        _exists(value, exists)
+        if not os.path.isfile(value):
+            raise ValidateError('"%s" is not a file.' % value)
+        return value
 
 
-def is_directory(value, *args, exists=True, **kwargs):
+def is_directory(value, *args, exists=True, allow_empty=False, **kwargs):
     """
     Checks whether the value is a valid directory path (and optionally whether
     it exists).
@@ -220,6 +225,8 @@ def is_directory(value, *args, exists=True, **kwargs):
         The value to validate
     exists : bool
         whether the directory is required to exist to pass the validation check
+    allow_empty : bool
+        whether empty strings are allowed
 
     Returns
     -------
@@ -231,10 +238,13 @@ def is_directory(value, *args, exists=True, **kwargs):
     ValidateError
         if the the value can't be validated
     """
-    _exists(value, exists)
-    if not os.path.isdir(value):
-        raise ValidateError('"%s" is not a directory.' % value)
-    return value
+    if allow_empty and value == '':
+        return ''
+    else:
+        _exists(value, exists)
+        if not os.path.isdir(value):
+            raise ValidateError('"%s" is not a directory.' % value)
+        return value
 
 # =============================================================================
 # Globals

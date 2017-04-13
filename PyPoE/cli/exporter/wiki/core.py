@@ -34,7 +34,7 @@ import os
 
 # self
 from PyPoE.poe.file.ggpk import GGPKFile
-from PyPoE.cli.core import console
+from PyPoE.cli.core import console, Msg
 from PyPoE.cli.handler import BaseHandler
 from PyPoE.cli.exporter import config
 from PyPoE.cli.exporter.util import get_content_ggpk_hash, get_content_ggpk_path
@@ -59,6 +59,7 @@ class WikiHandler(BaseHandler):
         config.register_setup('temp_dir', self._setup)
         config.add_setup_variable('temp_dir', 'hash', 'string(default="")')
         config.add_setup_listener('version', self._ver_dist_changed)
+        config.add_setup_listener('ggpk_path', self._ver_dist_changed)
 
         # Parser
         self.parser = sub_parser.add_parser('wiki', help='Wiki Exporter')
@@ -72,6 +73,8 @@ class WikiHandler(BaseHandler):
         if value == old_value:
             return
         config.set_setup_variable('temp_dir', 'performed', False)
+        console('Setup needs to be performed due to changes to "%s"' % key,
+                msg=Msg.warning)
 
     def _setup(self, args):
         """

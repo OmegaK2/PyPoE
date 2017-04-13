@@ -65,13 +65,17 @@ def get_content_ggpk_path():
 
     :raises SetupError: if no valid path was found.
     """
-    args = config.get_option('version'), config.get_option('distributor')
-    paths = PoEPath(*args).get_installation_paths()
+    path = config.get_option('ggpk_path')
+    if path == '':
+        args = config.get_option('version'), config.get_option('distributor')
+        paths = PoEPath(*args).get_installation_paths()
 
-    if not paths:
-        raise SetupError('No PoE Installation found.')
+        if not paths:
+            raise SetupError('No PoE Installation found.')
 
-    return os.path.join(paths[0], 'content.ggpk')
+        return os.path.join(paths[0], 'content.ggpk')
+    else:
+        return path
 
 
 def get_content_ggpk_hash():

@@ -1149,7 +1149,7 @@ class ItemsParser(BaseParser):
 
     _cls_map = {
         # Jewellery
-        'Amulets': (_type_amulet),
+        'Amulets': (_type_amulet, ),
         # Armour types
         'Gloves': (_type_level, _type_attribute, _type_armour, ),
         'Boots': (_type_level, _type_attribute, _type_armour, ),

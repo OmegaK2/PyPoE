@@ -87,6 +87,9 @@ def main():
                       VERSION.DEFAULT.value)
     config.add_option('distributor', 'is_distributor(default=%s)' %
                       DISTRIBUTOR.DEFAULT.value)
+    config.add_option(
+        'ggpk_path', 'is_file(default="", exists=True, allow_empty=True)'
+    )
 
     DatHandler(main_sub)
     WikiHandler(main_sub)
