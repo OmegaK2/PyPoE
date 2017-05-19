@@ -45,43 +45,38 @@ from PyPoE.poe.file import dat
 # =============================================================================
 
 
-def get_pk_validate_fields():
-    tests = []
-    for file_name, file_section in dat.load_spec().items():
-        for field_name, field_section in file_section['fields'].items():
-            if not field_section['unique']:
-                continue
-            tests.append((file_name, field_name))
-    return tests
-
 # =============================================================================
 # Setup
 # =============================================================================
 
-files = [section.name for section in dat.load_spec().values()]
+
+@pytest.fixture(scope='module')
+def files(poe_version):
+    return [
+        section.name for section in dat.load_spec(version=poe_version).values()
+    ]
 
 # =============================================================================
 # Tests
 # =============================================================================
 
-
 # Kind of testing the reading of the files twice, but whatever.
-@pytest.mark.parametrize("file_name", files)
-def test_definitions(file_name, ggpkfile):
+# dat_file_name is parametrized in conftest.py
+def test_definitions(dat_file_name, ggpkfile):
     opt = {
         'use_dat_value': False,
     }
     # Will raise errors accordingly if it fails
-    df = dat.DatFile(file_name)
+    df = dat.DatFile(dat_file_name)
     try:
-        node = ggpkfile['Data/' + file_name]
+        node = ggpkfile['Data/' + dat_file_name]
         df.read(node.record.extract(), **opt)
     # If a file is in the spec, but not in the dat file this is allright
     except FileNotFoundError:
         return
 
 
-def test_missing(ggpkfile):
+def test_missing(files, ggpkfile):
     file_set = set()
 
     for node in ggpkfile['Data'].files:
@@ -99,10 +94,10 @@ def test_missing(ggpkfile):
     assert set(files).difference(file_set) == set(), 'dat specification contains unused dat files'
 
 
-@pytest.mark.parametrize("file_name, field_name", get_pk_validate_fields())
-def test_uniqueness(file_name, field_name, rr):
-    df = rr[file_name]
-    index = df.table_columns[field_name]['index']
+# unique_dat_file_name & unique_field_name are parametrized in conftest.py
+def test_uniqueness(unique_dat_file_name, unique_dat_field_name, rr):
+    df = rr[unique_dat_file_name]
+    index = df.table_columns[unique_dat_field_name]['index']
 
     data = []
     for row in df:

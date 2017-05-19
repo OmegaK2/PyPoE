@@ -46,7 +46,7 @@ from PyPoE.cli.exporter import config
 
 
 @pytest.fixture(scope='module')
-def parserobj():
+def parserobj(poe_version):
     try:
         path = config.option['temp_dir']
         fail = not os.path.exists(path)

@@ -1350,12 +1350,17 @@ def load_spec(path=None, version=constants.VERSION.DEFAULT):
     return spec
 
 
-def reload_default_spec():
+def reload_default_spec(version=constants.VERSION.DEFAULT):
     """
     Reloads the default specification.
+
+    Parameters
+    ----------
+    version : constants.VERSION
+        Version of the game to load the default specification for.
     """
     global _default_spec
-    _default_spec = load_spec()
+    _default_spec = load_spec(version=version)
 
 # =============================================================================
 # Init

@@ -1056,8 +1056,8 @@ class ItemsParser(BaseParser):
     )
 
     def _maps_extra(self, infobox, base_item_type, maps):
-        if maps['Fated_AreaLevel'] > 0:
-            infobox['map_area_level'] = maps['Fated_AreaLevel']
+        if maps['Shaped_AreaLevel'] > 0:
+            infobox['map_area_level'] = maps['Shaped_AreaLevel']
         else:
             infobox['map_area_level'] = maps['Regular_WorldAreasKey'][
                 'MonsterLevel']

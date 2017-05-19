@@ -51,7 +51,7 @@ ERR = 'Test relies on the cli client being setup properly to run.'
 
 
 @pytest.fixture(scope='module')
-def item_parser():
+def item_parser(poe_version):
     #TODO: A bit of hacky bandaid
     try:
         path = config['Config']['temp_dir']
