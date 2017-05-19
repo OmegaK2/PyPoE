@@ -57,6 +57,9 @@ class CustomOpenAction(GGPKOpenAction):
 
         self._thread = None
 
+    def _get_version(self):
+        return self._main_window().s_general.version
+
     def _main_window(self):
         return self.parent().parent()
 
@@ -148,6 +151,8 @@ class MiscMenu(QMenu):
     def _reload_specifications(self):
         p = self.parent()
 
-        p._write_log(self.tr('Reloading default specification...'))
-        dat.reload_default_spec()
+        v = p.s_general.version
+
+        p._write_log(self.tr('Reloading default specification... (%s)' % v))
+        dat.reload_default_spec(version=v)
         p._write_log('Done.')

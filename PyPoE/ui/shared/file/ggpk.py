@@ -70,6 +70,9 @@ class GGPKOpenAction(QAction):
         self.setStatusTip(self.tr('Open a content.ggpk file'))
         self.triggered.connect(self._open_ggpk)
 
+    def _get_version(self):
+        return VERSION.DEFAULT
+
     def _open_ggpk(self):
         """
 
@@ -79,7 +82,7 @@ class GGPKOpenAction(QAction):
             Returns GGPKThread if successful, none otherwise
         """
         # TODO replace with config / last path
-        paths = PoEPath(version=VERSION.DEFAULT,
+        paths = PoEPath(version=self._get_version(),
                         distributor=DISTRIBUTOR.GGG).get_installation_paths()
 
         # Use the first found path

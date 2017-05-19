@@ -183,7 +183,7 @@ class BoolSetting(BaseSetting):
     def __init__(self, *args, **kwargs):
         super(BoolSetting, self).__init__(*args, **kwargs)
 
-        self.checkbox = self.checkbox = QCheckBox()
+        self.checkbox = QCheckBox()
         self.checkbox.setChecked(self.value)
         self.checkbox.stateChanged.connect(self._update)
 
@@ -203,6 +203,27 @@ class BoolSetting(BaseSetting):
 
         self.set()
 
+
+class ComboBoxSetting(BaseSetting):
+    def __init__(self, *args, **kwargs):
+        super(ComboBoxSetting, self).__init__(*args, **kwargs)
+
+        self.combobox = QComboBox()
+        self.combobox.setEditable(False)
+        self.combobox.currentIndexChanged.connect(self._update)
+        self.data = {}
+
+    def _set_data(self, data):
+        v = self.value
+        self.data = data
+        for i, (text, value) in enumerate(data.items()):
+            self.combobox.addItem(text)
+            if value == v:
+                self.combobox.setCurrentIndex(i)
+
+    def _update(self, value):
+        self.value = self.data[self.combobox.itemText(value)]
+        self.set(self.value)
 # =============================================================================
 # Functions
 # =============================================================================

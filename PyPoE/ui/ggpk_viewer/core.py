@@ -30,6 +30,7 @@ See PyPoE/LICENSE
 # =============================================================================
 
 # Default Imports
+from collections import OrderedDict
 from traceback import format_exc
 
 # Library Imports
@@ -37,9 +38,10 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 
 # Package Imports
-from PyPoE.poe.file import ggpk
+from PyPoE.poe.constants import VERSION
+from PyPoE.poe.file import ggpk, dat
 from PyPoE.ui.shared import SharedMainWindow
-from PyPoE.ui.shared.settings import SettingFrame, BoolSetting
+from PyPoE.ui.shared.settings import SettingFrame, BoolSetting, ComboBoxSetting
 from PyPoE.ui.shared.file.manager import FileDataManager
 from PyPoE.ui.shared.file.model import GGPKModel
 from PyPoE.ui.ggpk_viewer.toolbar import *
@@ -59,6 +61,7 @@ class GGPKViewerMainWindow(SharedMainWindow):
         )
 
         self.s_general = GeneralSettingsFrame(parent=self)
+        dat.reload_default_spec(version=self.s_general.version)
 
         # Misc Variables set in other places
         self._last_node = None
@@ -256,6 +259,12 @@ class GeneralSettingsFrame(SettingFrame):
             row=1
         ))
 
+        self._add_setting(SettingVersion(
+            parent=self,
+            settings=self.parent().settings,
+            row=2,
+        ))
+
 
 class SettingDDS(BoolSetting):
     KEY = 'uncompress_dds'
@@ -287,7 +296,29 @@ class SettingDDS(BoolSetting):
         parent.layout.addWidget(qlabel, row, 3)
 
 
+class SettingVersion(ComboBoxSetting):
+    KEY = 'version'
+    DEFAULT = VERSION.DEFAULT
 
+    def __init__(self, parent, settings, row, *args, **kwargs):
+        super(SettingVersion, self).__init__(parent, settings, *args, **kwargs)
+        self._set_data(OrderedDict((
+            ('Stable', VERSION.STABLE),
+            ('Beta', VERSION.BETA),
+            ('Alpha', VERSION.ALPHA),
+        )))
+
+        parent.layout.addWidget(QLabel(parent.tr(
+            'Version of the game'
+        )), row, 1)
+        parent.layout.addWidget(self.combobox, row, 2)
+
+    def _get_cast(self, value):
+        return getattr(VERSION, value)
+
+    def _set_cast(self, value):
+        # Change VERSION.STABLE into STABLE
+        return str(value).split('.')[-1]
 
 # =============================================================================
 # Functions
