@@ -117,7 +117,7 @@ from string import ascii_letters
 from collections import Iterable, OrderedDict
 
 # self
-from PyPoE import CUSTOM_TRANSLATION_FILE
+from PyPoE import DATA_DIR
 from PyPoE.shared.decorators import doc
 from PyPoE.shared.mixins import ReprMixin
 from PyPoE.poe.constants import MOD_GENERATION_TYPE
@@ -136,6 +136,8 @@ __all__ = [
     'custom_translation_file',
     'install_data_dependant_quantifiers',
 ]
+
+CUSTOM_TRANSLATION_FILE = os.path.join(DATA_DIR, 'custom_descriptions.txt')
 
 regex_translation_string = re.compile(
     r'^'

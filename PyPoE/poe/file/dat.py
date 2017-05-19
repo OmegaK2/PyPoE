@@ -83,6 +83,7 @@ Exceptions & Warnings
 # Python
 import struct
 import warnings
+import os
 from io import BytesIO
 from collections import OrderedDict, Iterable
 from enum import IntEnum
@@ -92,7 +93,7 @@ import configobj
 import validate
 
 # Library imports
-from PyPoE import DAT_SPECIFICATION, DAT_SPECIFICATION_CONFIGSPEC
+from PyPoE import DATA_DIR
 from PyPoE.shared.decorators import deprecated, doc
 from PyPoE.shared.mixins import ReprMixin
 from PyPoE.poe import constants
@@ -105,7 +106,6 @@ from PyPoE.poe.file.shared.cache import AbstractFileCache
 
 _default_spec = None
 
-
 __all__ = [
     'DAT_FILE_MAGIC_NUMBER',
     'SpecificationError',
@@ -114,6 +114,19 @@ __all__ = [
 ]
 
 DAT_FILE_MAGIC_NUMBER = b'\xBB\xbb\xBB\xbb\xBB\xbb\xBB\xbb'
+
+
+DAT_SPECIFICATION_CONFIGSPEC = os.path.join(DATA_DIR,
+                                            'dat.specification.configspec.ini')
+
+DAT_SPECIFICATIONS = {
+    constants.VERSION.STABLE:
+        os.path.join(DATA_DIR, 'dat.specification.ini'),
+    constants.VERSION.BETA:
+        os.path.join(DATA_DIR, 'dat.specification-beta.ini'),
+    constants.VERSION.ALPHA:
+        os.path.join(DATA_DIR, 'dat.specification-alpha.ini'),
+}
 
 # =============================================================================
 # Exceptions & Warnings
@@ -1174,7 +1187,7 @@ class RelationalReader(AbstractFileCache):
 # =============================================================================
 
 
-def load_spec(path=None):
+def load_spec(path=None, version=constants.VERSION.DEFAULT):
     """
     Loads a specification that can be used for the dat files. It will be
     verified and errors will be raised accordingly if any errors occur.
@@ -1183,7 +1196,9 @@ def load_spec(path=None):
     ----------
     path :  str
         If specified, read the specified file as config
-
+    version : constants.VERSION
+        Version of the game to load the specification for; only works if
+        path is not specified.
 
     Returns
     -------
@@ -1197,7 +1212,7 @@ def load_spec(path=None):
         if key or key_id point to invalid files or keys respectively
     """
     if path is None:
-        path = DAT_SPECIFICATION
+        path = DAT_SPECIFICATIONS[version]
     spec = configobj.ConfigObj(
         infile=path, configspec=DAT_SPECIFICATION_CONFIGSPEC
     )

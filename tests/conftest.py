@@ -38,7 +38,7 @@ import pytest
 # self
 from PyPoE.poe.constants import VERSION, DISTRIBUTOR
 from PyPoE.poe.path import PoEPath
-from PyPoE.poe.file.dat import RelationalReader
+from PyPoE.poe.file.dat import RelationalReader, load_spec
 from PyPoE.poe.file.ggpk import GGPKFile
 
 # =============================================================================
@@ -46,6 +46,11 @@ from PyPoE.poe.file.ggpk import GGPKFile
 # =============================================================================
 
 __all__ = []
+_argparse_versions = {
+    'stable': VERSION.STABLE,
+    'beta': VERSION.BETA,
+    'alpha': VERSION.ALPHA,
+}
 
 # =============================================================================
 # Classes
@@ -56,10 +61,28 @@ __all__ = []
 # =============================================================================
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        '--poe-version',
+        action="store",
+        choices=list(_argparse_versions.keys()),
+        default='stable',
+        help='Target version of path of exile; different version will test '
+             'against different specifications.'
+    )
+
+
 @pytest.fixture(scope='session')
-def poe_path():
+def poe_version(request):
+    version = _argparse_versions[request.config.getoption('--poe-version')]
+    load_spec(version=version)
+    return version
+
+
+@pytest.fixture(scope='session')
+def poe_path(poe_version):
     paths = PoEPath(
-        version=VERSION.STABLE,
+        version=poe_version,
         distributor=DISTRIBUTOR.INTERNATIONAL
     ).get_installation_paths(only_existing=True)
 

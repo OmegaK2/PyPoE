@@ -89,8 +89,3 @@ warnings.simplefilter('default', DeprecationWarning)
 APP_DIR = _get_app_dir()
 DIR = os.path.join(os.path.dirname(__file__))
 DATA_DIR = os.path.join(DIR, '_data')
-CUSTOM_TRANSLATION_FILE = os.path.join(DATA_DIR, 'custom_descriptions.txt')
-DAT_SPECIFICATION = os.path.join(DATA_DIR, 'dat.specification.ini')
-DAT_SPECIFICATION_CONFIGSPEC = os.path.join(DATA_DIR,
-                                            'dat.specification.configspec.ini')
-
