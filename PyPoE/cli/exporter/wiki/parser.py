@@ -34,8 +34,9 @@ import warnings
 import re
 
 # self
+from PyPoE.cli.exporter import config
 from PyPoE.poe.constants import MOD_DOMAIN
-from PyPoE.poe.file.dat import RelationalReader
+from PyPoE.poe.file.dat import RelationalReader, reload_default_spec
 from PyPoE.poe.file.translations import (
     TranslationFileCache,
     MissingIdentifierWarning,
@@ -630,6 +631,9 @@ class BaseParser(object):
     _translations = []
 
     def __init__(self, base_path):
+        # Make sure to load the appropriate version of the specification
+        reload_default_spec(version=config.get_option('version'))
+
         self.base_path = base_path
 
         opt = {
