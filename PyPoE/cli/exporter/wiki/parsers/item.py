@@ -1060,7 +1060,7 @@ class ItemsParser(BaseParser):
             infobox['map_area_level'] = maps['Shaped_AreaLevel']
         else:
             infobox['map_area_level'] = maps['Regular_WorldAreasKey'][
-                'MonsterLevel']
+                'AreaLevel']
 
     _type_map = _type_factory(
         data_file='Maps.dat',

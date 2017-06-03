@@ -36,6 +36,7 @@ TODO
 
 # Python
 import os
+from collections import OrderedDict
 
 # 3rd Party
 import pytest
@@ -112,6 +113,35 @@ def get_test(size, unid, nresults, values):
 # =============================================================================
 # Tests
 # =============================================================================
+
+
+# Move it up here so install_data_dependant_quantifiers doesn't mess this test
+# up
+class TestTranslationFileCache:
+    def test_init(self, tcache):
+        pass
+
+    def test_get_file(self, tcache, dbase, dextended):
+        assert tcache.get_file(
+            'Metadata/StatDescriptions/descriptions_base.txt') == dbase, \
+            'Files should be identical'
+        assert tcache.get_file(
+            'Metadata/StatDescriptions/descriptions_extended.txt') == \
+            dextended, 'Files should be identical'
+
+    def test_getitem(self, tcache, dbase, dextended):
+        assert tcache['descriptions_base.txt'] == dbase, \
+            'Files should be identical'
+        assert tcache['descriptions_extended.txt'] == dextended, \
+            'Files should be identical'
+
+    def test_is_cache_working(self, tcache):
+        a = tcache['descriptions_extended.txt']
+        # Should have cached the included file
+        tcache.files['Metadata/StatDescriptions/descriptions_base.txt']
+
+        assert tcache['descriptions_extended.txt'] is a, \
+            'Cache should return identical object'
 
 
 class TestTranslationResults:
@@ -383,6 +413,18 @@ class TestTranslationResults:
         assert trr.values[0] == values, \
             'failed reverse incorrect values'
 
+    def test_reminderstring(self, tf_data, rr):
+        rr['ClientStrings.dat'].build_index('Id')
+        row = rr['ClientStrings.dat'].index['Id']['ReminderTextLowLife']
+        tags = ['test_quantifier_reminderstring', ]
+        values = [1, ]
+        result = OrderedDict((('reminderstring', row['Text']), ))
+
+        tr = tf_data.get_translation(tags, values, full_result=True)
+
+        assert tr.extra_strings[0] == result
+
+
 class TestTranslation:
     pass
 
@@ -397,33 +439,6 @@ class TestTranslationString:
 
     def test_as_format_string(self, ts):
         assert ts.as_format_string == 'Multiple: {0} {1} {0} {1}'
-
-
-class TestTranslationFileCache:
-    def test_init(self, tcache):
-        pass
-
-    def test_get_file(self, tcache, dbase, dextended):
-        assert tcache.get_file(
-            'Metadata/StatDescriptions/descriptions_base.txt') == dbase, \
-            'Files should be identical'
-        assert tcache.get_file(
-            'Metadata/StatDescriptions/descriptions_extended.txt') == \
-            dextended, 'Files should be identical'
-
-    def test_getitem(self, tcache, dbase, dextended):
-        assert tcache['descriptions_base.txt'] == dbase, \
-            'Files should be identical'
-        assert tcache['descriptions_extended.txt'] == dextended, \
-            'Files should be identical'
-
-    def test_is_cache_working(self, tcache):
-        a = tcache['descriptions_extended.txt']
-        # Should have cached the included file
-        tcache.files['Metadata/StatDescriptions/descriptions_base.txt']
-
-        assert tcache['descriptions_extended.txt'] is a, \
-            'Cache should return identical object'
 
 
 '''def test_tag1_value1():

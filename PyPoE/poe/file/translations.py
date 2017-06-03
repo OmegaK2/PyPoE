@@ -88,7 +88,7 @@ API for internal use, but still may be useful to work with more directly.
 .. autoclass:: TranslationRange
     :special-members: __eq__
 
-.. autoclass:: TranslationQuantifier
+.. autoclass:: TranslationQuantifierHandler
     :special-members: __eq__
 
 Warning Classes
@@ -113,8 +113,9 @@ import io
 import re
 import os
 import warnings
+from enum import IntEnum
 from string import ascii_letters
-from collections import Iterable, OrderedDict
+from collections import Iterable, OrderedDict, defaultdict
 
 # self
 from PyPoE import DATA_DIR
@@ -144,7 +145,7 @@ regex_translation_string = re.compile(
     r'[\s]*'
     r'(?P<minmax>(?:[0-9\-\|#]+[ \t]+)+)'
     r'"(?P<description>.*)"'
-    r'(?P<quantifier>(?:[ \t]*[\w%]+[ \t]+[a-zA-Z0-9]+)*)'
+    r'(?P<quantifier>(?:[ \t]*[\w%]+)*)'
     r'[ \t]*[\r\n]*'
     r'$',
     re.UNICODE | re.MULTILINE
@@ -363,8 +364,9 @@ class TranslationLanguage(TranslationReprMixin):
 
         Returns
         -------
-        str, list[int], list[int] or list[int], list[int], list[int]
-            Returns the formatted string
+        str or list[int], list[int], list[int], dict[str, str]
+            Returns the formatted string. See
+            :meth:`TranslationString:format_string` for details.
         """
         # Support for ranges
         is_range = []
@@ -440,8 +442,8 @@ class TranslationString(TranslationReprMixin):
     ----------
     parent : TranslationLanguage
         parent :class:`TranslationLanguage` instance
-    quantifier : TranslationQuantifier
-        the associated :class:`TranslationQuantifier` instance for this
+    quantifier : TranslationQuantifierHandler
+        the associated :class:`TranslationQuantifierHandler` instance for this
         translation string
     range : list[TranslationRange]
         list of :class:`TranslationRange` instances containing the acceptable
@@ -473,7 +475,7 @@ class TranslationString(TranslationReprMixin):
     def __init__(self, parent):
         parent.strings.append(self)
         self.parent = parent
-        self.quantifier = TranslationQuantifier()
+        self.quantifier = TranslationQuantifierHandler()
         self.range = []
         self.tags = []
         self.tags_types = []
@@ -590,12 +592,20 @@ class TranslationString(TranslationReprMixin):
 
         Returns
         -------
-        str, list[int], list[int] or list[int], list[int], list[int]
-            Returns the formatted string and a list of unused values. If only
-            placeholder is specified, instead of the string a list of parsed
-            values is returned.
+        str or list[int], list[int], list[int], dict[str, str]
+            Returns 4 values.
+
+            The first return value is the formatted string. If only placeholder
+            is specified, instead of the string a list of parsed values is
+            returned.
+
+            The second return value is a list of unused values.
+
+            The third return value is a list of used values.
+
+            The forth return value is a dictionary of extra strings
         """
-        values = self.quantifier.handle(values, is_range)
+        values, extra_strings = self.quantifier.handle(values, is_range)
 
         string = []
         used = set()
@@ -652,7 +662,7 @@ class TranslationString(TranslationReprMixin):
         else:
             string = ''.join(string + [self.strings[-1]])
 
-        return string, unused, values
+        return string, unused, values, extra_strings
 
     def match_range(self, values):
         """
@@ -845,7 +855,7 @@ class TranslationRange(TranslationReprMixin):
         return 0
 
 
-class TranslationQuantifier(TranslationReprMixin):
+class TranslationQuantifierHandler(TranslationReprMixin):
     """
     Class to represent and handle translation quantifiers.
 
@@ -857,6 +867,12 @@ class TranslationQuantifier(TranslationReprMixin):
     ----------
     index_handlers : dict[str, list[int]]
         Mapping of the name of registered handlers to the ids they apply to
+
+    handlers : dict[str, TranslationQuantifier]
+        Class variable. Installed handlers
+
+    reverse_handlers : dict[str, TranslationQuantifier]
+        Class variable. Installed reverse handlers.
     """
 
     _REPR_EXTRA_ATTRIBUTES = OrderedDict((
@@ -865,53 +881,19 @@ class TranslationQuantifier(TranslationReprMixin):
     ))
 
     handlers = {
-        # TODO dp = precision?
-        '60%_of_value': lambda v: v*0.6,
-        'deciseconds_to_seconds': lambda v: v*10,
-        'divide_by_one_hundred': lambda v: v/100,
-        'divide_by_one_hundred_and_negate': lambda v: -v/100,
-        'divide_by_one_hundred_2dp': lambda v: round(v/100, 2),
-        'milliseconds_to_seconds': lambda v: v/1000,
-        'milliseconds_to_seconds_0dp': lambda v: int(round(v/1000, 0)),
-        'milliseconds_to_seconds_2dp': lambda v: round(v/1000, 2),
-        'multiplicative_damage_modifier': lambda v: v+100,
-        'multiplicative_permyriad_damage_modifier': lambda v: v/100+100,
-        'negate': lambda v: v*-1,
-        'old_leech_percent': lambda v: v/5,
-        'old_leech_permyriad': lambda v: v/500,
-        'per_minute_to_per_second': lambda v: round(v/60, 1),
-        'per_minute_to_per_second_0dp': lambda v: int(round(v/60, 0)),
-        'per_minute_to_per_second_2dp': lambda v: round(v/60, 2),
     }
 
-    # TODO hardly possible to accurately reverse rounding
     reverse_handlers = {
-        '60%_of_value': lambda v: v/0.6,
-        'deciseconds_to_seconds': lambda v: float(v)/10,
-        'divide_by_one_hundred': lambda v: float(v)*100,
-        'divide_by_one_hundred_and_negate': lambda v: -v*100,
-        'divide_by_one_hundred_2dp': lambda v: float(v)*100,
-        'milliseconds_to_seconds': lambda v: float(v)*1000,
-        'milliseconds_to_seconds_0dp': lambda v: int(v)*1000,
-        'milliseconds_to_seconds_2dp': lambda v: float(v)*1000,
-        'multiplicative_damage_modifier': lambda v: v-100,
-        'multiplicative_permyriad_damage_modifier': lambda v: (v-100)*100,
-        'negate': lambda v: int(v)*-1,
-        'old_leech_percent': lambda v: float(v)*5,
-        'old_leech_permyriad': lambda v: float(v)*500,
-        'per_minute_to_per_second': lambda v: float(v)*60,
-        'per_minute_to_per_second_0dp': lambda v: int(v)*60,
-        'per_minute_to_per_second_2dp': lambda v: float(v)*60,
     }
 
     __slots__ = ['index_handlers', 'string_handlers']
 
     def __init__(self):
-        self.index_handlers = {}
-        self.string_handlers = {}
+        self.index_handlers = defaultdict(list)
+        self.string_handlers = defaultdict(list)
 
     def __eq__(self, other):
-        if not isinstance(other, TranslationQuantifier):
+        if not isinstance(other, TranslationQuantifierHandler):
             return False
 
         if self.index_handlers != other.index_handlers:
@@ -933,94 +915,57 @@ class TranslationQuantifier(TranslationReprMixin):
             return int(value)
         return value
 
-    #TODO: Index?
-    @staticmethod
-    def _mod_value_to_item_class_reverse(relational_reader, value):
-        for row in relational_reader['ItemClasses.dat']:
-            if row['Name'] == value:
-                return row.rowid
-        return None
-
-    # TODO: I dont think its very clean to return either a list or a single
-    # value
-    @staticmethod
-    def _tempest_mod_text_reverse(relational_reader, value):
-        results = []
-        for row in relational_reader['Mods.dat']:
-            if row['GenerationType'] != MOD_GENERATION_TYPE.TEMPEST:
-                continue
-            if row['Name'] == value:
-                results.append(row.rowid)
-
-        if len(results) == 1:
-            return results[0]
-        elif len(results) == 0:
-            return None
-        else:
-            return results
 
     @classmethod
-    def install_data_dependant_quantifiers(cls, relational_reader):
+    def install_quantifier(cls, quantifier):
         """
-        Install data dependant quantifiers into this class.
+        Install the specified quantifier into the generic quantifier handling
 
         Parameters
         ----------
-        relational_reader : RelationalReader
-            :class:`RelationalReader` instance to read the required game data
-            files from.
-        """
-        cls.handlers.update({
-            'mod_value_to_item_class': lambda value:
-                relational_reader['ItemClasses.dat'][value]['Name'],
-            'tempest_mod_text': lambda value:
-                relational_reader['Mods.dat'][value]['Name'],
-        })
+        quantifier - TranslationQuantifier
+            :class:`TranslationQuantifier` instance
 
-        cls.reverse_handlers.update({
-            'mod_value_to_item_class': lambda value:
-                TranslationQuantifier._mod_value_to_item_class_reverse(
-                    relational_reader, value
-                ),
-            'tempest_mod_text': lambda value:
-                TranslationQuantifier._tempest_mod_text_reverse(
-                    relational_reader, value
-                ),
-        })
+        Returns
+        -------
+        """
+
+        cls.handlers[quantifier.id] = quantifier
+        cls.reverse_handlers[quantifier.id] = quantifier
 
     def diff(self, other):
-        if not isinstance(other, TranslationQuantifier):
+        if not isinstance(other, TranslationQuantifierHandler):
             raise TypeError
 
         #if self.registered_handlers != other.registered_handlers:
         _diff_dict(self.index_handlers, other.index_handlers)
 
-    def register(self, handler, value):
+    def register_from_string(self, string):
         """
-        Registers that the specified handler should be used for the given
-        index of the value.
+        Registers handlers from the quantifier string.
 
         Parameters
         ----------
-        handler : str
-            id of the handler
-        value : object
-            value associated with the handler; usually an index, but can also
-            be a string
+        string : str
+            quantifier string
+        offset : int
+            offset this operation is appearing at (to show errors)
         """
-        try:
-            value = int(value)
-        except ValueError:
-            data = self.string_handlers
-        else:
-            data = self.index_handlers
+        values = iter(string.strip().split())
 
-        if handler in self.index_handlers:
-            data[handler].append(value)
-        else:
-            if handler not in self.handlers:
-                self._warn_uncaptured(handler)
-            data[handler] = [value, ]
+        for partial in values:
+            handler = self.handlers.get(partial)
+            if handler:
+                args = [values.__next__() for i in range(0, handler.arg_size)]
+                if handler.type == TranslationQuantifier.QuantifierTypes.INT:
+                    try:
+                        self.index_handlers[handler.id].append(int(args[0]))
+                    except ValueError as e:
+                        warnings.warn('Broken quantifier. Error: %s' % e.args[0], TranslationWarning)
+                elif handler.type == TranslationQuantifier.QuantifierTypes.STRING:
+                    self.string_handlers[handler.id] = args
+            else:
+                warnings.warn('Uncaptured partial quantifier string "%s"' % (partial, ), UnknownIdentifierWarning)
 
     def handle(self, values, is_range):
         """
@@ -1042,7 +987,7 @@ class TranslationQuantifier(TranslationReprMixin):
         values = list(values)
         for handler_name in self.index_handlers:
             try:
-                f = self.handlers[handler_name]
+                f = self.handlers[handler_name].handler
             except KeyError:
                 self._warn_uncaptured(handler_name)
                 break
@@ -1059,7 +1004,16 @@ class TranslationQuantifier(TranslationReprMixin):
             else:
                  values[i] = self._whole_float_to_int(value)
 
-        return values
+        strings = OrderedDict()
+        for handler_name, args in self.string_handlers.items():
+            try:
+                f = self.handlers[handler_name].handler
+            except KeyError:
+                self._warn_uncaptured(handler_name)
+                break
+            strings[handler_name] = f(*args)
+
+        return values, strings
 
     def handle_reverse(self, values):
         """
@@ -1078,7 +1032,7 @@ class TranslationQuantifier(TranslationReprMixin):
         indexes = set(range(0, len(values)))
         for handler_name in self.index_handlers:
             try:
-                f = self.reverse_handlers[handler_name]
+                f = self.reverse_handlers[handler_name].reverse_handler
             except KeyError:
                 self._warn_uncaptured(handler_name)
                 break
@@ -1092,6 +1046,51 @@ class TranslationQuantifier(TranslationReprMixin):
             values[index] = int(values[index])
 
         return values
+
+
+class TranslationQuantifier(TranslationReprMixin):
+    class QuantifierTypes(IntEnum):
+        INT = 1
+        STRING = 2
+
+    """
+    Attributes
+    ----------
+    id : str
+        string identifier of the handler
+    arg_size : int
+        number of arguments this handler accepts (excluding self)
+    type : QuantifierTypes
+        type of the quantifier
+    handler : function
+        function that handles the values, if any
+    reverse_handler : function
+        function  hat reverses handles the values, if any
+    """
+    def __init__(self, id, arg_size=1, type=QuantifierTypes.INT, handler=None,
+                 reverse_handler=None):
+        self.id = id
+        self.arg_size = arg_size
+        if not isinstance(type, self.QuantifierTypes):
+            raise ValueError('Type must be a QuantifierTypes instance')
+        self.type = type
+        self.handler = handler
+        self.reverse_handler = reverse_handler
+        TranslationQuantifierHandler.install_quantifier(self)
+
+
+class TQReminderString(TranslationQuantifier):
+    def __init__(self, relational_reader, *args, **kwargs):
+        self.relational_reader = relational_reader
+        super(TQReminderString, self).__init__(
+            id='reminderstring',
+            type=self.QuantifierTypes.STRING,
+            handler=self.handle,
+            reverse_handler=None,
+        )
+
+    def handle(self, *args):
+        return self.relational_reader['ClientStrings.dat'].index['Id'][args[0]]['Text']
 
 
 class TranslationResult(TranslationReprMixin):
@@ -1122,6 +1121,9 @@ class TranslationResult(TranslationReprMixin):
         List of the original tags passed before the translation occurred
     source_values : list[int] or list[int, int]
         List of the original values passed before the translation occurred
+    extra_strings : list[dict[str, str]]
+        List of dictionary containing extra strings returned.
+        The key is the quantifier id used and the value is the string returned.
     """
     __slots__ = [
         'found',
@@ -1135,11 +1137,12 @@ class TranslationResult(TranslationReprMixin):
         'values_parsed',
         'source_ids',
         'source_values',
+        'extra_strings',
     ]
 
     def __init__(self, found, found_lines, lines, missing,
                  missing_values, partial, values, unused, values_parsed,
-                 source_ids, source_values):
+                 source_ids, source_values, extra_strings):
         self.found = found
         self.found_lines = found_lines
         self.lines = lines
@@ -1151,6 +1154,7 @@ class TranslationResult(TranslationReprMixin):
         self.values_parsed = values_parsed
         self.source_ids = source_ids
         self.source_values = source_values
+        self.extra_strings = extra_strings
 
     def _get_found_ids(self):
         """
@@ -1324,9 +1328,10 @@ class TranslationFile(AbstractFileReadOnly):
                         ts_match = regex_translation_string.search(data, offset, offset_next_lang)
                         if not ts_match:
                             raise ParserError(
-                                'Malformed translation string near line %s: %s' % (
+                                'Malformed translation string near line %s @ ids %s: %s' % (
                                     data.count('\n', 0, offset),
-                                    data[offset:offset_next_lang],
+                                    ids,
+                                    data[offset:offset_next_lang+1],
                                 )
                             )
 
@@ -1336,8 +1341,8 @@ class TranslationFile(AbstractFileReadOnly):
 
                         # Min/Max limiter
                         limiter = ts_match.group('minmax').strip().split()
-                        for i in range(0, id_count):
-                            matchstr = limiter[i]
+                        for j in range(0, id_count):
+                            matchstr = limiter[j]
                             if matchstr == '#':
                                 TranslationRange(None, None, parent=ts)
                             elif regex_isnumber.match(matchstr):
@@ -1353,18 +1358,9 @@ class TranslationFile(AbstractFileReadOnly):
 
                         ts._set_string(ts_match.group('description'))
 
-                        quant = ts_match.group('quantifier').strip().split()
-                        if len(quant) % 2 == 1:
-                            warnings.warn(
-                                'Uneven number of quantifier handler/value '
-                                'paris. This indicates an issue with the GGG'
-                                ' file. Skipping.\nText found: %s' % quant,
-                                TranslationWarning)
-                        else:
-                            tmp = iter(range(0, len(quant)))
-                            for i in tmp:
-                                ts.quantifier.register(quant[i], quant[i+1])
-                                tmp.__next__()
+                        ts.quantifier.register_from_string(
+                            ts_match.group('quantifier'),
+                        )
 
                     offset = offset_next_lang
 
@@ -1570,6 +1566,7 @@ class TranslationFile(AbstractFileReadOnly):
         trans_found_lines = []
         unused = []
         values_parsed = []
+        extra_strings = []
         for i, tr in enumerate(trans_found):
 
             tl = tr.get_language(lang)
@@ -1580,6 +1577,7 @@ class TranslationFile(AbstractFileReadOnly):
                 values_parsed.append(result[2])
                 if full_result:
                     unused.append(result[1])
+                    extra_strings.append(result[3])
 
             else:
                 trans_found_lines.append('')
@@ -1598,6 +1596,7 @@ class TranslationFile(AbstractFileReadOnly):
                 unused=unused,
                 source_ids=tags,
                 source_values=values,
+                extra_strings=extra_strings,
             )
         if only_values:
             return values_parsed
@@ -1831,6 +1830,159 @@ custom_translation_file = property(
 )
 
 
-@doc(doc=TranslationQuantifier.install_data_dependant_quantifiers)
 def install_data_dependant_quantifiers(relational_reader):
-    TranslationQuantifier.install_data_dependant_quantifiers(relational_reader)
+    """
+    Install data dependant quantifiers into this class.
+
+    Parameters
+    ----------
+    relational_reader : RelationalReader
+        :class:`RelationalReader` instance to read the required game data
+        files from.
+    """
+    def _mod_value_to_item_class_reverse( value):
+        for row in relational_reader['ItemClasses.dat']:
+            if row['Name'] == value:
+                return row.rowid
+        return None
+
+    TranslationQuantifier(
+        id='mod_value_to_item_class',
+        handler=lambda v: relational_reader['ItemClasses.dat'][v]['Name'],
+        reverse_handler=_mod_value_to_item_class_reverse,
+    )
+
+    def _tempest_mod_text_reverse(value):
+        results = []
+        for row in relational_reader['Mods.dat']:
+            if row['GenerationType'] != MOD_GENERATION_TYPE.TEMPEST:
+                continue
+            if row['Name'] == value:
+                results.append(row.rowid)
+
+        if len(results) == 1:
+            return results[0]
+        elif len(results) == 0:
+            return None
+        else:
+            return results
+
+    TranslationQuantifier(
+        id='tempest_mod_text',
+        handler=lambda v: relational_reader['Mods.dat'][v]['Name'],
+        reverse_handler=_tempest_mod_text_reverse,
+    )
+
+    TQReminderString(relational_reader=relational_reader)
+
+# =============================================================================
+# Init
+# =============================================================================
+
+#
+# Translation Quantifiers
+#
+
+# Notes:
+# * It's hardly possible to reverse rounding accurately
+TranslationQuantifier(
+    id='60%_of_value',
+    handler=lambda v: v*0.6,
+    reverse_handler=lambda v: v/0.6,
+)
+
+TranslationQuantifier(
+    id='deciseconds_to_seconds',
+    handler=lambda v: v*10,
+    reverse_handler=lambda v: float(v)/10,
+)
+
+TranslationQuantifier(
+    id='divide_by_one_hundred',
+    handler=lambda v: v/100,
+    reverse_handler=lambda v: float(v)*100,
+)
+
+TranslationQuantifier(
+    id='divide_by_one_hundred_and_negate',
+    handler=lambda v: -v/100,
+    reverse_handler=lambda v: -float(v)*100,
+)
+
+TranslationQuantifier(
+    id='divide_by_one_hundred_2dp',
+    handler=lambda v: round(v/100, 2),
+    reverse_handler=lambda v: float(v)*100,
+)
+
+TranslationQuantifier(
+    id='milliseconds_to_seconds',
+    handler=lambda v: v/1000,
+    reverse_handler=lambda v: float(v)*1000,
+)
+
+TranslationQuantifier(
+    id='milliseconds_to_seconds_0dp',
+    handler=lambda v: int(round(v/1000, 0)),
+    reverse_handler=lambda v: float(v)*1000,
+)
+
+TranslationQuantifier(
+    id='milliseconds_to_seconds_2dp',
+    handler=lambda v: round(v/1000, 2),
+    reverse_handler=lambda v: float(v)*1000,
+)
+
+TranslationQuantifier(
+    id='multiplicative_damage_modifier',
+    handler=lambda v: v+100,
+    reverse_handler=lambda v: float(v)-100,
+)
+
+TranslationQuantifier(
+    id='multiplicative_permyriad_damage_modifier',
+    handler=lambda v: v/100+100,
+    reverse_handler=lambda v: (float(v)-100)*100,
+)
+
+TranslationQuantifier(
+    id='negate',
+    handler=lambda v: -v,
+    reverse_handler=lambda v: -float(v),
+)
+
+TranslationQuantifier(
+    id='old_leech_percent',
+    handler=lambda v: v/5,
+    reverse_handler=lambda v: float(v)*5,
+)
+
+TranslationQuantifier(
+    id='old_leech_permyriad',
+    handler=lambda v: v/500,
+    reverse_handler=lambda v: float(v)*500,
+)
+
+TranslationQuantifier(
+    id='per_minute_to_per_second',
+    handler=lambda v: round(v/60, 1),
+    reverse_handler=lambda v: float(v)*60,
+)
+
+TranslationQuantifier(
+    id='per_minute_to_per_second_0dp',
+    handler=lambda v: int(round(v/60, 0)),
+    reverse_handler=lambda v: float(v)*60,
+)
+
+TranslationQuantifier(
+    id='per_minute_to_per_second_2dp',
+    handler=lambda v: round(v/60, 2),
+    reverse_handler=lambda v: float(v)*60,
+)
+
+TranslationQuantifier(
+    id='canonical_line',
+    type=TranslationQuantifier.QuantifierTypes.STRING,
+    arg_size=0,
+)

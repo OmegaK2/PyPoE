@@ -66,14 +66,7 @@ from PyPoE.cli.exporter.wiki.core import WikiHandler
 # =============================================================================
 
 
-def main():
-    """
-    Entry point for the CLI PyPoE exporter
-    """
-    # Setup
-    main_parser = argparse.ArgumentParser()
-    main_sub = main_parser.add_subparsers()
-
+def setup_config():
     config.validator.functions.update({
         'is_version': IntEnumValidator(
             enum=VERSION,
@@ -90,6 +83,17 @@ def main():
     config.add_option(
         'ggpk_path', 'is_file(default="", exists=True, allow_empty=True)'
     )
+
+
+def main():
+    """
+    Entry point for the CLI PyPoE exporter
+    """
+    # Setup
+    main_parser = argparse.ArgumentParser()
+    main_sub = main_parser.add_subparsers()
+
+    setup_config()
 
     DatHandler(main_sub)
     WikiHandler(main_sub)

@@ -40,6 +40,7 @@ from PyPoE.poe.constants import VERSION, DISTRIBUTOR
 from PyPoE.poe.path import PoEPath
 from PyPoE.poe.file import dat
 from PyPoE.poe.file.ggpk import GGPKFile
+from PyPoE.cli.exporter.core import setup_config
 
 # =============================================================================
 # Globals
@@ -161,5 +162,10 @@ def rr(ggpkfile):
             # When we use this, speed > dat value features
             'use_dat_value': False
         },
+        raise_error_on_missing_relation=False,
     )
 
+
+@pytest.fixture(scope='session')
+def cli_config():
+    setup_config()
