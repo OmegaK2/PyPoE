@@ -328,7 +328,8 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
                     parent_or_base_dir_or_ggpk=self._parent_ggpk
                 )
                 obj.read(file_path_or_raw=
-                    self._parent_ggpk.directory[extend].extract()
+                    self._parent_ggpk.directory[
+                        extend + self.EXTENSION].record.extract()
                 )
                 self.merge(obj)
             else:
