@@ -78,12 +78,10 @@ class KeyValuesSectionAppend(keyvalues.AbstractKeyValueSection):
 
 class KeyValuesSectionOverride(keyvalues.AbstractKeyValueSection):
     NAME = 'Override'
-    OVERRIDE_KEYS = {'key'}
 
 
 class KeyValuesSectionOverrideGeneric(keyvalues.AbstractKeyValueSection):
     NAME = 'OverrideGeneric'
-    OVERRIDE_WARNING = False
 
 
 class KeyValuesSectionHash(keyvalues.AbstractKeyValueSection):

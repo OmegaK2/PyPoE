@@ -126,8 +126,6 @@ class OverriddenKeyWarning(ParserWarning):
 class AbstractKeyValueSection(dict):
     APPEND_KEYS = set()
     ORDERED_HASH_KEYS = set()
-    OVERRIDE_KEYS = set()
-    OVERRIDE_WARNING = True
     NAME = ''
 
     def __init__(self, parent, name=None, *args, **kwargs):
@@ -141,38 +139,21 @@ class AbstractKeyValueSection(dict):
             raise ParserError('Missing name for section')
 
     def __setitem__(self, key, value):
+        # Equals "override" behaviour
         if key in self.ORDERED_HASH_KEYS:
-            if isinstance(value, OrderedDict):
-                for otherkey in value.keys():
-                    if key in self:
-                        self[key][otherkey] = True
-                        return
-                    else:
-                        value = OrderedDict(((otherkey, True), ))
-            else:
+            if not isinstance(value, OrderedDict):
                 if key in self:
                     self[key][value] = True
                     return
                 else:
                     value = OrderedDict(((value, True), ))
         elif key in self.APPEND_KEYS:
-            if isinstance(value, list):
-                if key in self:
-                    value = self[key] + value
-                else:
-                    pass
-            else:
+            if not isinstance(value, list):
                 if key in self:
                     self[key].append(value)
                     return
                 else:
                     value = [value, ]
-        elif self.OVERRIDE_WARNING and key in self and self[key] != value \
-                and key not in self.OVERRIDE_KEYS:
-            warnings.warn('Override of %s[%s] to %s (was %s)' % (
-                self.name, repr(key), repr(value), repr(self[key])
-            ), DuplicateKeyWarning)
-
         super(AbstractKeyValueSection, self).__setitem__(key, value)
 
     def merge(self, other):
@@ -183,8 +164,33 @@ class AbstractKeyValueSection(dict):
             )
 
         for k, v in other.items():
-            if k in self:
-                warnings.warn("%s, %s" % (k, v), OverriddenKeyWarning)
+            if k in self.ORDERED_HASH_KEYS:
+                if isinstance(v, OrderedDict):
+                    if k in self:
+                        v = OrderedDict(list(self[k].items()) + list(v.items()))
+                    else:
+                        v = OrderedDict(v.items())
+                else:
+                    if k in self:
+                        self[k][v] = True
+                        continue
+                    else:
+                        v = OrderedDict(((v, True), ))
+            elif k in self.APPEND_KEYS:
+                if isinstance(v, list):
+                    if k in self:
+                        v += self[k]
+                    else:
+                        pass
+                else:
+                    if k in self:
+                        self[k].append(v)
+                        continue
+                    else:
+                        v = [v, ]
+            elif k in self:
+                continue
+
             self[k] = v
 
 
@@ -302,6 +308,37 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
                 'File is not a valid %s file.' % self.__class__.__name__
             )
 
+        self.version = int(match.group('version'))
+
+        for section_match in self._re_find_kv_sections.finditer(
+                match.group('remainder')):
+            key = section_match.group('key')
+
+            try:
+                section = self[key]
+            except KeyError:
+                #print('Extra section:', key)
+                section = AbstractKeyValueSection(parent=self, name=key)
+                self[key] = section
+
+            for kv_match in self._re_find_kv_pairs.finditer(
+                    section_match.group('contents')):
+                value = kv_match.group('value').strip('"')
+                if value == 'true':
+                    value = True
+                elif value == 'false':
+                    value = False
+                else:
+                    try:
+                        value = int(value)
+                    except ValueError:
+                        try:
+                            value = float(value)
+                        except ValueError:
+                            pass
+
+                section[kv_match.group('key')] = value
+
         extend = match.group('extends')
 
         if extend == 'nothing':
@@ -338,37 +375,6 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
                     'been specified on class creation.' % extend
                 )
             self.extends = extend
-
-        self.version = int(match.group('version'))
-
-        for section_match in self._re_find_kv_sections.finditer(
-                match.group('remainder')):
-            key = section_match.group('key')
-
-            try:
-                section = self[key]
-            except KeyError:
-                #print('Extra section:', key)
-                section = AbstractKeyValueSection(parent=self, name=key)
-                self[key] = section
-
-            for kv_match in self._re_find_kv_pairs.finditer(
-                    section_match.group('contents')):
-                value = kv_match.group('value').strip('"')
-                if value == 'true':
-                    value = True
-                elif value == 'false':
-                    value = False
-                else:
-                    try:
-                        value = int(value)
-                    except ValueError:
-                        try:
-                            value = float(value)
-                        except ValueError:
-                            pass
-
-                section[kv_match.group('key')] = value
 
     @doc(doc=AbstractFile._write)
     def _write(self, buffer, *args, **kwargs):

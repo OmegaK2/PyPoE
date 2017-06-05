@@ -50,9 +50,7 @@ import pytest
 # Tests
 # =============================================================================
 
+
 def test_psg(ggpkfile, rr):
     f = psg.PSGFile(passive_skills_dat_file=rr)
     f.read(ggpkfile['Metadata/PassiveSkillGraph.psg'].record.extract())
-
-    import pprint
-    print(pprint.pprint(f.groups))

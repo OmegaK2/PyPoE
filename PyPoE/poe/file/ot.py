@@ -72,26 +72,15 @@ __all__ = ['OTFile', 'OTFileCache']
 
 class ActionKeyValueSection(AbstractKeyValueSection):
     NAME = 'Actor'
-    '''OVERRIDE_KEYS = [
-        'actor',
-        'armour_surface_type',
-        'basic_action',
-        'off_hand_unarmed_type',
-        'main_hand_unarmed_type'
-    ]'''
-    OVERRIDE_WARNING = False
 
 
 class AnimatedKeyValueSection(AbstractKeyValueSection):
     NAME = 'Animated'
-    # I think this is safe to assume
-    OVERRIDE_WARNING = False
 
 
 class BaseKeyValueSection(AbstractKeyValueSection):
     NAME = 'Base'
     ORDERED_HASH_KEYS = {'tag'}
-    OVERRIDE_KEYS = {'description_text'}
 
 
 class ModsKeyValueSection(AbstractKeyValueSection):
@@ -101,23 +90,18 @@ class ModsKeyValueSection(AbstractKeyValueSection):
 
 class PathfindingKeyValueSection(AbstractKeyValueSection):
     NAME = 'Pathfinding'
-    #OVERRIDE_KEYS = {'base_speed'}
-    OVERRIDE_WARNING = False
 
 
 class PositionedKeyValueSection(AbstractKeyValueSection):
     NAME = 'Positioned'
-    OVERRIDE_WARNING = False
 
 
 class SocketsKeyValueSection(AbstractKeyValueSection):
     NAME = 'Sockets'
-    OVERRIDE_KEYS = {'socket_info'}
 
 
 class StatsKeyValueSection(AbstractKeyValueSection):
     NAME = 'Stats'
-    OVERRIDE_WARNING = False
 
 
 @doc(append=AbstractKeyValueFile)
