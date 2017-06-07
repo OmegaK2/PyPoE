@@ -163,8 +163,7 @@ class PoEPath(object):
         if self.distributor & DISTRIBUTOR.GGG:
             for item in (
                 ('Software\GrindingGearGames\Path of Exile', VERSION.STABLE),
-                ('Software\GrindingGearGames\Path of Exile - The Awakening '
-                 'Closed Beta', VERSION.BETA),
+                ('Software\GrindingGearGames\Path of Exile - beta', VERSION.BETA),
                 ('Software\GrindingGearGames\Path of Exile - Alpha',
                  VERSION.ALPHA)
             ):
