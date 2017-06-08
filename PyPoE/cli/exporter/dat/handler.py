@@ -35,8 +35,10 @@ See PyPoE/LICENSE
 from tqdm import tqdm
 
 # self
-from PyPoE.poe.file.dat import load_spec, DatFile
+from PyPoE.poe.constants import VERSION
+from PyPoE.poe.file import dat
 from PyPoE.cli.core import console, Msg
+from PyPoE.cli.exporter import config
 from PyPoE.cli.exporter.util import get_content_ggpk, get_content_ggpk_path
 
 # =============================================================================
@@ -67,7 +69,13 @@ class DatExportHandler(object):
         )
 
     def handle(self, args):
-        spec = load_spec()
+        ver = config.get_option('version')
+
+        if ver != VERSION.STABLE:
+            console('Loading specification for %s' % ver)
+            dat.reload_default_spec(version=ver)
+
+        spec = dat._default_spec
         if args.files is None:
             args.files = list(spec)
         else:
@@ -88,7 +96,6 @@ class DatExportHandler(object):
             args.files = files
 
     def _read_dat_files(self, args, prefix=''):
-
         path = get_content_ggpk_path()
 
         console(prefix + 'Reading "%s"...' % path)
@@ -108,7 +115,7 @@ class DatExportHandler(object):
                 remove.append(name)
                 continue
 
-            df = DatFile(name)
+            df = dat.DatFile(name)
             df.read(file_path_or_raw=node.record.extract(), use_dat_value=False)
 
             dat_files[name] = df
