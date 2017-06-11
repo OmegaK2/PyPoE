@@ -85,7 +85,7 @@ import struct
 import warnings
 import os
 from io import BytesIO
-from collections import OrderedDict, Iterable
+from collections import OrderedDict, Iterable, defaultdict
 from enum import IntEnum
 
 # 3rd Party Library
@@ -612,7 +612,8 @@ class DatReader(ReprMixin):
         specification : ConfigObj
             Specification to use
         auto_build_index : bool
-            Whether to automatically build the index after reading.
+            Whether to automatically build the index for unique columns after
+            reading.
 
         Raises
         -------
@@ -682,7 +683,9 @@ class DatReader(ReprMixin):
         """
         Builds or rebuilds the index for the specified column.
 
-        Indexed columns can be accessed though the instance variable index.
+        Indexed columns can be accessed though the instance variable index and
+        will return a single value for unique columns and a list for non-unique
+        columns.
 
         For example:
         self.index[column_name][indexed_value]
@@ -696,12 +699,8 @@ class DatReader(ReprMixin):
         column : str or Iterable or None
             if specified the index will the built for the specified column
             or iterable of columns
-
-        Raises
-        ------
-        ValueError
-            if the specified column is not unique and therefore not indexable
-
+            if not specified, the index will be build for any 'unique' columns
+            by default
         """
         columns = set()
         if column is None:
@@ -713,20 +712,22 @@ class DatReader(ReprMixin):
             for c in column:
                 columns.add(c)
 
-        # new object to avoid "RuntimeError: Set changed size during iteration"
-        for column in list(columns):
-            if column not in self.columns_unique:
-                raise ValueError('Column %s is not indexable' % column)
-
-            if column in self.index:
-                columns.remove(column)
-            else:
+        columns_1to1 = set()
+        columns_1toN = set()
+        for column in columns:
+            if column in self.columns_unique:
                 self.index[column] = {}
+                columns_1to1.add(column)
+            else:
+                columns_1toN.add(column)
+                self.index[column] = defaultdict(list)
 
         # Second loop
         for row in self:
-            for column in columns:
+            for column in columns_1to1:
                 self.index[column][row[column]] = row
+            for column in columns_1toN:
+                self.index[column][row[column]].append(row)
 
     def row_iter(self):
         """
@@ -1078,7 +1079,8 @@ class RelationalReader(AbstractFileCache):
             try:
                 obj = other[obj-offset]
             except IndexError:
-                msg = 'Did not find proper value at index %s' % (obj-offset, )
+                msg = 'Did not find proper value at index %s in %s' % (
+                    obj-offset, other.file_name)
                 if self.raise_error_on_missing_relation:
                     raise SpecificationError(
                         SpecificationError.ERRORS.RUNTIME_MISSING_FOREIGN_KEY,
