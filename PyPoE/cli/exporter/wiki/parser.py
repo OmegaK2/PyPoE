@@ -34,6 +34,7 @@ import warnings
 import re
 
 # self
+from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter import config
 from PyPoE.poe.constants import MOD_DOMAIN
 from PyPoE.poe.file.dat import RelationalReader, reload_default_spec
@@ -626,6 +627,7 @@ class BaseParser(object):
 
     _DETAILED_FORMAT = '<abbr title="%s">%s</abbr>'
     _HIDDEN_FORMAT = '%s (Hidden)'
+    _MISSING_MSG = 'Several arguments have not been found:\n%s'
 
     _files = []
     _translations = []
@@ -657,6 +659,36 @@ class BaseParser(object):
         self.ot = OTFileCache(path_or_ggpk=base_path)
 
         self.custom = get_custom_translation_file()
+
+    def _column_index_filter(self, dat_file_name, column_id, arg_list,
+                             error_msg=_MISSING_MSG):
+        self.rr[dat_file_name].build_index(column_id)
+
+        rows = []
+        missing = []
+
+        if column_id in self.rr[dat_file_name].columns_unique:
+            func = rows.append
+        else:
+            func = rows.extend
+
+        for argument in arg_list:
+            try:
+                func(
+                    self.rr[dat_file_name].index[column_id][argument]
+                )
+            except KeyError:
+                missing.append(argument)
+
+        if missing:
+            console(
+                self._MISSING_MSG % '\n'.join(missing), msg=Msg.warning
+            )
+
+        return rows
+
+    def _format_wiki_title(self, title):
+        return title.replace('_', '~').replace('~~~', '_~~_~~_')
 
     def _format_hidden(self, custom):
         return self._HIDDEN_FORMAT % make_inter_wiki_links(custom)

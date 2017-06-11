@@ -1188,6 +1188,7 @@ class ItemsParser(BaseParser):
         'Stackable Currency': (_type_currency, _type_essence),
         'Hideout Doodads': (_type_currency, _type_hideout_doodad),
         'Microtransactions': (_type_currency, ),
+        'Divination Card': (_type_currency, ),
         # Labyrinth stuff
         #'Labyrinth Item': (),
         'Labyrinth Trinket': (_type_labyrinth_trinket, ),

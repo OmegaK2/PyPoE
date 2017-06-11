@@ -215,20 +215,12 @@ class ModParser(BaseParser):
             mylist.append('* %s %s' % (stat_id, value))
 
     def modid(self, args):
-        mods = []
-
-        requested_mods = list(args.modid)
-
-        for mod in self.rr['Mods.dat']:
-            try:
-                i = requested_mods.index(mod['Id'])
-            except ValueError:
-                continue
-
-            requested_mods.pop(i)
-            mods.append(mod)
-
-        return self.mod(args, mods)
+        return self.mod(args, self._column_index_filter(
+            dat_file_name='Mods.dat',
+            column_id='Id',
+            arg_list=args.modid,
+            error_msg='Several mods have not been found:\n%s',
+        ))
 
     def rowid(self, args):
         mods = list(self.rr['Mods.dat'])
@@ -292,8 +284,9 @@ class ModParser(BaseParser):
         if mods:
             console('Found %s mods. Processing...' % len(mods))
         else:
-            warnings.warn(
-                'No mods found for the specified parameters. Quitting.'
+            console(
+                'No mods found for the specified parameters. Quitting.',
+                msg=Msg.warning
             )
             return r
 
@@ -370,8 +363,7 @@ class ModParser(BaseParser):
                     data['sell_price%s_amount' % i] = amount
 
             # 3+ tildes not allowed
-            page_name = 'Modifier:' + mod['Id'].replace('_', '~').replace(
-                '~~~', '_~~_~~_')
+            page_name = 'Modifier:' + self._format_wiki_title(mod['Id'])
             cond = WikiCondition(data, parsed_args)
 
             r.add_result(
