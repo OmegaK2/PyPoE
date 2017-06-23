@@ -6,9 +6,13 @@ More detailed docs: [http://omegak2.net/poe/PyPoE/](http://omegak2.net/poe/PyPoE
 
 The docs are occasionally updated until I get a build bot up - however docs can also be manually built with sphinx.
 
-**Please make sure to install Python 3.4 not 3.5 if you want to use the UI. Pyside (the UI library) currently does not support python 3.5**
-
 [![Build Status](https://travis-ci.org/OmegaK2/PyPoE.svg?branch=dev)](https://travis-ci.org/OmegaK2/PyPoE)
+
+Common problems & advisory
+--------
+* Install **Python 3.4** (on windows 86x (32 bit)) to avoid issues with the UI. Pyside support in other versions is currently not available until pyside2 is released.
+* On windows 10 machines there seems to a be bug in the python install that prevents arguments being passed to the command line interface; you can identify this issue if you get a "help" listing if you supplied more then 1 argument. See [this on stack overflow](https://stackoverflow.com/questions/2640971/windows-is-not-passing-command-line-arguments-to-python-programs-executed-from-t) for possible solutions
+
 
 Overview
 --------
