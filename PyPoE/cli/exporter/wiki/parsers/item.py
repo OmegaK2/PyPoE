@@ -44,9 +44,7 @@ from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter.util import get_content_ggpk_path
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult, \
     add_format_argument
-from PyPoE.cli.exporter.wiki.parser import (
-    BaseParser, format_result_rows, make_inter_wiki_links
-)
+from PyPoE.cli.exporter.wiki import parser
 
 # =============================================================================
 # Functions
@@ -102,19 +100,6 @@ def _simple_conflict_factory(data):
 
 
 class WikiCondition(object):
-    # This only works as long there aren't nested templates inside the infobox
-    regex_search = re.compile(
-        '(<onlyinclude>|<onlyinclude></onlyinclude>|)\{\{(Item|#invoke:item\|item)\n'
-        '(?P<data>[^\}]*)'
-        '\n\}\}(</onlyinclude>|)',
-        re.UNICODE | re.IGNORECASE | re.MULTILINE | re.DOTALL
-    )
-
-    regex_infobox_split = re.compile(
-        '\|(?P<key>[\S]+)[\s]*=[\s]*(?P<value>[^|]*)',
-        re.UNICODE | re.IGNORECASE | re.MULTILINE | re.DOTALL,
-    )
-
     COPY_KEYS = (
         # for skills
         'radius',
@@ -126,11 +111,15 @@ class WikiCondition(object):
         'has_percentage_mana_cost',
         'has_reservation_mana_cost',
         # all items
+        'alternate_art_inventory_icons',
+        'can_not_be_traded_or_modified',
         'drop_enabled',
         'drop_leagues',
-        'name_list',
         'inventory_icon',
-        'alternate_art_inventory_icons',
+        'is_corrupted',
+        'is_relic',
+        'name_list',
+        'quality',
         'release_version',
         'removal_version',
     )
@@ -150,39 +139,29 @@ class WikiCondition(object):
         if page is not None:
             # Abuse this so it can be called as "text" and "condition"
             if self.itembox is None:
-                self.itembox = self.regex_search.search(page.text())
-                if self.itembox is None:
+                self.itembox = parser.find_template(page.text(), 'Item')
+                if len(self.itembox['texts']) == 1:
+                    self.infobox = None
                     return False
 
                 return True
 
-            for match in self.regex_infobox_split.finditer(
-                    self.itembox.group('data')):
-                k = match.group('key')
-                if k in self.COPY_KEYS:
-                    self.data[k] = match.group('value').strip('\n\r ')
-                else:
-                    for regex in self.COPY_MATCH:
-                        if regex.match(k):
-                            self.data[k] = match.group('value').strip('\n\r ')
-                            # don't need to add something twice if more then
-                            # one regex matches
-                            break
+            for k in self.COPY_KEYS:
+                try:
+                    self.data[k] = self.itembox['kwargs'][k]
+                except KeyError:
+                    pass
 
-            text = self._get_text()
-            if self.data['class'] not in ('Support Skill Gems',
-                                          'Active Skill Gems') and \
-                    '<onlyinclude></onlyinclude>' not in text:
-                text = '<onlyinclude></onlyinclude>' + text
+            prefix = ''
+            if '<onlyinclude></onlyinclude>' not in page.text():
+                prefix = '<onlyinclude></onlyinclude>'
 
-            # I need the +1 offset or it adds a space everytime for some reason.
-            return page.text()[:self.itembox.start()] + text + \
-                page.text()[self.itembox.end()+1:]
+            return prefix + self.itembox['texts'][0] + self._get_text() + ''.join(self.itembox['texts'][1:])
         else:
             return self._get_text()
 
     def _get_text(self):
-        return format_result_rows(
+        return parser.format_result_rows(
             parsed_args=self.cmdargs,
             template_name='Item',
             indent=33,
@@ -277,7 +256,7 @@ class ItemsHandler(ExporterHandler):
         add_format_argument(parser)
 
 
-class ItemsParser(BaseParser):
+class ItemsParser(parser.BaseParser):
     _regex_format = re.compile(
         '(?P<index>x|y|z)'
         '(?:[\W]*)'
@@ -910,7 +889,7 @@ class ItemsParser(BaseParser):
                 stats, flasks['BuffStatValues'], full_result=True
             )
             infobox['buff_stat_text'] = '<br>'.join([
-                make_inter_wiki_links(line) for line in tr.lines
+                parser.make_inter_wiki_links(line) for line in tr.lines
             ])
 
 

@@ -177,18 +177,18 @@ class AreaParser(BaseParser):
                 'ngImages/', '').replace('.dds', ''),
         }),
         ('Connections_WorldAreasKeys', {
-            'template': 'connections',
+            'template': 'connection_ids',
             'format': lambda value: ', '.join([
                 area['Id'] for area in value
             ]),
             'default': [],
         }),
         ('ParentTown_WorldAreasKey', {
-            'template': 'parent_town',
+            'template': 'parent_area_id',
             'format': lambda value: value['Id'],
         }),
         ('ModsKeys', {
-            'template': 'mod_ids',
+            'template': 'modifier_ids',
             'format': lambda value: ', '.join([
                 mod['Id'] for mod in value
             ]),
@@ -250,7 +250,7 @@ class AreaParser(BaseParser):
         }),
         # bools
         ('IsMapArea', {
-            'template': 'is_map',
+            'template': 'is_map_area',
             'default': False,
         }),
         ('IsUniqueMapArea', {
@@ -258,11 +258,11 @@ class AreaParser(BaseParser):
             'default': False,
         }),
         ('IsTown', {
-            'template': 'is_town',
+            'template': 'is_town_area',
             'default': False,
         }),
         ('IsHideout', {
-            'template': 'is_hideout',
+            'template': 'is_hideout_area',
             'default': False,
         }),
         ('IsVaalArea', {
@@ -278,7 +278,7 @@ class AreaParser(BaseParser):
             'default': False,
         }),
         ('IsLabyrinthAirlock', {
-            'template': 'is_labyrinth_airlock',
+            'template': 'is_labyrinth_airlock_area',
             'default': False,
         }),
         ('IsLabyrinthBossArea', {

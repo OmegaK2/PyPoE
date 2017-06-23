@@ -837,7 +837,7 @@ def format_result_rows(parsed_args, ordered_dict, template_name,
         out = ['{{%s\n' % template_name]
         for k, v in ordered_dict.items():
             out.append(('|{0: <%s}= {1}\n' % indent).format(k, v))
-        out.append('}}\n')
+        out.append('}}')
     elif parsed_args.format == 'module':
         out = ['{']
         for k, v in ordered_dict.items():
