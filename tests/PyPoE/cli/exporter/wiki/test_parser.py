@@ -31,6 +31,7 @@ See PyPoE/LICENSE
 
 # Python
 import os
+from collections import OrderedDict
 
 # 3rd-party
 import pytest
@@ -99,6 +100,48 @@ iwdata = (
     ),
 )
 
+# Input string, template name, other text, template args, template kwargs
+ftdata = (
+    (
+        """{{Upcoming content|version=3.0.0}}
+
+{{Item
+|rarity                           = Normal
+|name                             = Captured Soul of Glace
+|drop_level                       = 1
+|description                      = {{c|corrupted|Cannot be traded or modified}}
+|metadata_id                      = Metadata/Items/PantheonSouls/PantheonSoulBrineKingUpgrade1
+|release_version                  = 3.0.0
+}}
+
+'''{{PAGENAME}}''' can be given to [[Sin]] to upgrade the [[The Pantheon|Soul of the Brine King]] Pantheon Power.
+
+==Acquisition==
+This item can be obtained by using a {{il|Divine Vessel}} with a {{il|Beach Map}} and then killing [[Glace]]; The captured soul will be in whichever map device was used to open the map.""",
+        'Item',
+        [
+            """{{Upcoming content|version=3.0.0}}
+
+""",
+    """
+
+'''{{PAGENAME}}''' can be given to [[Sin]] to upgrade the [[The Pantheon|Soul of the Brine King]] Pantheon Power.
+
+==Acquisition==
+This item can be obtained by using a {{il|Divine Vessel}} with a {{il|Beach Map}} and then killing [[Glace]]; The captured soul will be in whichever map device was used to open the map.""",
+        ],
+        [],
+        OrderedDict((
+            ('rarity', 'Normal'),
+            ('name', 'Captured Soul of Glace'),
+            ('drop_level', '1'),
+            ('description', '{{c|corrupted|Cannot be traded or modified}}'),
+            ('metadata_id', 'Metadata/Items/PantheonSouls/PantheonSoulBrineKingUpgrade1'),
+            ('release_version', '3.0.0'),
+        )),
+    ),
+)
+
 
 # =============================================================================
 # Tests
@@ -147,3 +190,11 @@ class TestBaseParser():
 @pytest.mark.parametrize('string,result', iwdata)
 def test_interwiki_linker(string, result):
     assert parser.make_inter_wiki_links(string) == result
+
+
+@pytest.mark.parametrize('string,template,texts,args,kwargs', ftdata)
+def test_find_template(string, template, texts, args, kwargs):
+    result = parser.find_template(string, template)
+    assert result['texts'] == texts
+    assert result['args'] == args
+    assert result['kwargs'] == kwargs

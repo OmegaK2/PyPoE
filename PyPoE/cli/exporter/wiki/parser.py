@@ -23,6 +23,23 @@ Agreement
 ===============================================================================
 
 See PyPoE/LICENSE
+
+Documentation
+===============================================================================
+
+Classes
+-------------------------------------------------------------------------------
+
+.. autoclass:: BaseParser
+
+Functions
+-------------------------------------------------------------------------------
+
+.. autofunction:: find_template
+
+.. autofunction:: format_result_rows
+
+.. autofunction:: make_inter_wiki_links
 """
 
 # =============================================================================
@@ -30,8 +47,10 @@ See PyPoE/LICENSE
 # =============================================================================
 
 # Python
-import warnings
 import re
+import warnings
+from collections import OrderedDict
+from functools import partial
 
 # self
 from PyPoE.cli.core import console, Msg
@@ -865,3 +884,92 @@ def make_inter_wiki_links(string):
         string = ''.join(out)
 
     return string
+
+
+def find_template(wikitext, template_name):
+    """
+    Finds a template within wikitext and parses the arguments.
+
+    Parameters
+    ----------
+    wikitext: string
+        wiktext
+    template_name: string
+        Name of the template to find
+
+    Returns
+    -------
+    dict[str, object]
+        returns a dictionary containing 3 keys:
+
+        texts: list[str]
+            text not included in the template itself; each template call
+            inbetween
+        args: list[str]
+            positional arguments passed to the template
+        kwargs: OrderedDict[str, str]
+            keyword arguments passed to the template in the order they
+            appeared in the wikitext
+
+    """
+    def f(scanner, result, tid):
+        return tid, scanner.match, result
+
+    scanner = re.Scanner([
+        ('{{%s' % template_name, partial(f, tid='template')),
+        ('{{', partial(f, tid='l_brace')),
+        ('}}', partial(f, tid='r_brace')),
+        ('\|', partial(f, tid='pipe')),
+        ('=', partial(f, tid='equals')),
+        (r'[{}]{1}', partial(f, tid='single_brace')),
+        (r'[^{}\|=]+', partial(f, tid='text')),
+    ], re.UNICODE | re.MULTILINE)
+
+    # Returns
+    texts = [[], ]
+    kw_arguments = OrderedDict()
+    arguments = []
+
+    # Loop parameters
+    in_template = False
+    pre_equal = True
+    brace_count = 0
+    template_argument = ['', '']
+
+    for tid, match, text in scanner.scan(wikitext)[0]:
+        if tid == 'template':
+            in_template = True
+        elif in_template:
+            # r_brace is needed to capture the last argument, as it's not
+            # delimited by a pipe
+            # It also prevents reaching the second condition in that case
+            if tid in ('pipe', 'r_brace') and brace_count == 0:
+                pre_equal = True
+                if template_argument[1]:
+                    kw_arguments[template_argument[0]] = template_argument[1]
+                elif template_argument[0]:
+                    arguments.append([template_argument[0]])
+                template_argument = ['', '']
+            elif tid in ('text', 'l_brace', 'r_brace', 'single_brace', 'pipe'):
+                index = 0 if pre_equal else 1
+                template_argument[index] += text.strip(' \n')
+            elif tid == 'equals':
+                pre_equal = False
+
+            # Brace counting must be done after the text parsing because
+            # the previous brace count is needed up there
+            if tid == 'l_brace':
+                brace_count += 1
+            elif tid == 'r_brace':
+                if brace_count == 0:
+                    in_template = False
+                    texts.append([])
+                else:
+                    brace_count -= 1
+        else:
+            texts[-1].append(text)
+
+    # Don't really need the list anymore
+    texts = [''.join(t) for t in texts]
+
+    return {'texts': texts, 'args': arguments, 'kwargs': kw_arguments}
