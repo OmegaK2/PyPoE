@@ -807,6 +807,59 @@ class BaseParser(object):
 
         return finalout
 
+
+class WikiCondition(object):
+    COPY_KEYS = (
+        'base_page',
+    )
+
+    NAME = NotImplemented
+    INDENT = 33
+    ADD_INCLUDE = False
+
+    def __init__(self, data, cmdargs):
+        self.data = data
+        self.cmdargs = cmdargs
+        self.template_arguments = None
+
+    def __call__(self, *args, **kwargs):
+        page = kwargs.get('page')
+
+        if page is not None:
+            # Abuse this so it can be called as "text" and "condition"
+            if self.template_arguments is None:
+                self.template_arguments = find_template(page.text(), self.NAME)
+                if len(self.template_arguments['texts']) == 1:
+                    self.template_arguments = None
+                    return False
+
+                return True
+
+            for k in self.COPY_KEYS:
+                try:
+                    self.data[k] = self.template_arguments['kwargs'][k]
+                except KeyError:
+                    pass
+
+            prefix = ''
+            if self.ADD_INCLUDE and '<onlyinclude></onlyinclude>' not in \
+                    page.text():
+                prefix = '<onlyinclude></onlyinclude>'
+
+            return prefix + self.template_arguments['texts'][0] + \
+                   self._get_text() + \
+                   ''.join(self.template_arguments['texts'][1:])
+        else:
+            return self._get_text()
+
+    def _get_text(self):
+        return format_result_rows(
+            parsed_args=self.cmdargs,
+            template_name=self.NAME,
+            indent=self.INDENT,
+            ordered_dict=self.data,
+        )
+
 # =============================================================================
 # Functions
 # =============================================================================

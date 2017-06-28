@@ -99,7 +99,7 @@ def _simple_conflict_factory(data):
 # =============================================================================
 
 
-class WikiCondition(object):
+class WikiCondition(parser.WikiCondition):
     COPY_KEYS = (
         # for skills
         'radius',
@@ -124,49 +124,8 @@ class WikiCondition(object):
         'removal_version',
     )
 
-    COPY_MATCH = (
-
-    )
-
-    def __init__(self, data, cmdargs):
-        self.data = data
-        self.cmdargs = cmdargs
-        self.itembox = None
-
-    def __call__(self, *args, **kwargs):
-        page = kwargs.get('page')
-
-        if page is not None:
-            # Abuse this so it can be called as "text" and "condition"
-            if self.itembox is None:
-                self.itembox = parser.find_template(page.text(), 'Item')
-                if len(self.itembox['texts']) == 1:
-                    self.infobox = None
-                    return False
-
-                return True
-
-            for k in self.COPY_KEYS:
-                try:
-                    self.data[k] = self.itembox['kwargs'][k]
-                except KeyError:
-                    pass
-
-            prefix = ''
-            if '<onlyinclude></onlyinclude>' not in page.text():
-                prefix = '<onlyinclude></onlyinclude>'
-
-            return prefix + self.itembox['texts'][0] + self._get_text() + ''.join(self.itembox['texts'][1:])
-        else:
-            return self._get_text()
-
-    def _get_text(self):
-        return parser.format_result_rows(
-            parsed_args=self.cmdargs,
-            template_name='Item',
-            indent=33,
-            ordered_dict=self.data,
-        )
+    NAME = 'Item'
+    ADD_INCLUDE = True
 
 
 class ItemsHandler(ExporterHandler):
@@ -1528,7 +1487,7 @@ class ItemsParser(parser.BaseParser):
                 ])
 
             tags = [t['Id'] for t in base_item_type['TagsKeys']]
-            infobox['tags'] = ', '.join(list(ot['Base']['tag']) + tags)
+            infobox['tags'] = ', '.join(tags + list(ot['Base']['tag']))
 
             infobox['metadata_id'] = base_item_type['Id']
 

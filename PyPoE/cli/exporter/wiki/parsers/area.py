@@ -44,9 +44,9 @@ from collections import OrderedDict
 
 # self
 from PyPoE.cli.core import console, Msg
+from PyPoE.cli.exporter.wiki import parser
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult, \
     add_format_argument
-from PyPoE.cli.exporter.wiki.parser import BaseParser, format_result_rows
 
 # =============================================================================
 # Globals
@@ -57,6 +57,15 @@ __all__ = []
 # =============================================================================
 # Classes
 # =============================================================================
+
+
+class WikiCondition(parser.WikiCondition):
+    COPY_KEYS = (
+        'base_page',
+    )
+
+    NAME = 'Area'
+    ADD_INCLUDE = False
 
 
 class AreaCommandHandler(ExporterHandler):
@@ -129,13 +138,13 @@ class AreaCommandHandler(ExporterHandler):
         )
 
 
-class AreaParser(BaseParser):
+class AreaParser(parser.BaseParser):
     _files = [
         'WorldAreas.dat'
     ]
 
     _area_column_index_filter = partialmethod(
-        BaseParser._column_index_filter,
+        parser.BaseParser._column_index_filter,
         dat_file_name='WorldAreas.dat',
         error_msg='Several areas have not been found:\n%s',
     )
@@ -348,17 +357,18 @@ class AreaParser(BaseParser):
                 data['spawn_weight%s_tag' % i] = tag['Id']
                 data['spawn_weight%s_value' % i] = value
 
+            cond = WikiCondition(
+                data=data,
+                cmdargs=parsed_args,
+            )
+
             r.add_result(
-                text=format_result_rows(
-                    parsed_args=parsed_args,
-                    template_name='Area',
-                    ordered_dict=data,
-                ),
+                text=cond,
                 out_file='area_%s.txt' % data['id'],
                 wiki_page=[
                     {
                         'page': 'Area:' + self._format_wiki_title(data['id']),
-                        'condition': None
+                        'condition': cond,
                     },
                 ],
                 wiki_message='Mod updater',
