@@ -72,6 +72,13 @@ class JSONExportHandler(DatExportHandler):
             action='store_true',
         )
 
+        self.json.add_argument(
+            '--include-virtual-fields',
+            help='includes virtual_fields from the spec',
+            dest='include_virtual_fields',
+            action='store_true',
+        )
+
         self.add_default_arguments(self.json)
 
     def handle(self, args):
@@ -90,8 +97,17 @@ class JSONExportHandler(DatExportHandler):
                     in enumerate(
                         dat_file.reader.specification['fields'].items())
                 ]
+
+                virtual_header = [
+                    dict([('name', k), ('rowid', i)] + f.items())
+                    for i, (k, f)
+                    in enumerate(
+                        dat_file.reader.specification['virtual_fields'].items()
+                    )
+                ]
+
                 if args.use_object_format:
-                    out.append({
+                    out_obj = {
                         'filename': file_name,
                         'header': {row['name']: row for row in header},
                         'data': [{
@@ -100,13 +116,22 @@ class JSONExportHandler(DatExportHandler):
                                 )
                             } for row in dat_file.reader.table_data
                         ],
-                    })
+                    }
+
+                    virtual_header = (
+                        {row['name']: row for row in virtual_header}
+                    )
                 else:
-                    out.append({
+                    out_obj = {
                         'filename': file_name,
                         'header': header,
                         'data': dat_file.reader.table_data,
-                    })
+                    }
+
+                if args.include_virtual_fields:
+                    out_obj['virtual_header'] = virtual_header
+
+                out.append(out_obj)
 
             console('Dumping data to "%s"...' % args.target)
 
