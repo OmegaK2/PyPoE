@@ -61,7 +61,7 @@ __all__ = []
 
 class WikiCondition(parser.WikiCondition):
     COPY_KEYS = (
-        'base_page',
+        'main_page',
     )
 
     NAME = 'Area'
@@ -187,9 +187,9 @@ class AreaParser(parser.BaseParser):
         }),
         ('Connections_WorldAreasKeys', {
             'template': 'connection_ids',
-            'format': lambda value: ', '.join([
+            'format': lambda value: ', '.join(OrderedDict.fromkeys([
                 area['Id'] for area in value
-            ]),
+            ]).keys()),
             'default': [],
         }),
         ('ParentTown_WorldAreasKey', {
