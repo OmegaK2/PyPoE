@@ -71,9 +71,9 @@ class DatExportHandler(object):
     def handle(self, args):
         ver = config.get_option('version')
 
-        if ver != VERSION.STABLE:
+        if ver != VERSION.DEFAULT:
             console('Loading specification for %s' % ver)
-            dat.reload_default_spec(version=ver)
+            dat.set_default_spec(version=ver)
 
         spec = dat._default_spec
         if args.files is None:
@@ -94,6 +94,8 @@ class DatExportHandler(object):
             files = list(files)
             files.sort()
             args.files = files
+
+        args.spec = spec
 
     def _read_dat_files(self, args, prefix=''):
         path = get_content_ggpk_path()

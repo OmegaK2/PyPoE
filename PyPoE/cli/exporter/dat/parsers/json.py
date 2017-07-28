@@ -84,6 +84,8 @@ class JSONExportHandler(DatExportHandler):
     def handle(self, args):
         super(JSONExportHandler, self).handle(args)
 
+        dict_spec = args.spec.as_dict()
+
         with open(args.target, mode='w') as f:
             dat_files = self._read_dat_files(args)
 
@@ -92,19 +94,9 @@ class JSONExportHandler(DatExportHandler):
 
             for file_name in args.files:
                 dat_file = dat_files[file_name]
-                header = [
-                    dict([('name', k), ('rowid', i)] + f.items()) for i, (k, f)
-                    in enumerate(
-                        dat_file.reader.specification['fields'].items())
-                ]
+                header = dict_spec[file_name]['fields']
 
-                virtual_header = [
-                    dict([('name', k), ('rowid', i)] + f.items())
-                    for i, (k, f)
-                    in enumerate(
-                        dat_file.reader.specification['virtual_fields'].items()
-                    )
-                ]
+                virtual_header = dict_spec[file_name]['virtual_fields']
 
                 if args.use_object_format:
                     out_obj = {

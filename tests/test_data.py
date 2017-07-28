@@ -39,6 +39,7 @@ import pytest
 
 # self
 from PyPoE.poe.file import dat
+from PyPoE.poe.file.specification import load
 
 # =============================================================================
 # Functions
@@ -53,7 +54,7 @@ from PyPoE.poe.file import dat
 @pytest.fixture(scope='module')
 def files(poe_version):
     return [
-        section.name for section in dat.load_spec(version=poe_version).values()
+        section for section in load(version=poe_version)
     ]
 
 # =============================================================================

@@ -61,7 +61,7 @@ class GGPKViewerMainWindow(SharedMainWindow):
         )
 
         self.s_general = GeneralSettingsFrame(parent=self)
-        dat.reload_default_spec(version=self.s_general.version)
+        dat.set_default_spec(version=self.s_general.version)
 
         # Misc Variables set in other places
         self._last_node = None

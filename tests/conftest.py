@@ -39,6 +39,7 @@ import pytest
 from PyPoE.poe.constants import VERSION, DISTRIBUTOR
 from PyPoE.poe.path import PoEPath
 from PyPoE.poe.file import dat
+from PyPoE.poe.file.specification import load
 from PyPoE.poe.file.ggpk import GGPKFile
 from PyPoE.cli.exporter.core import setup_config
 
@@ -83,33 +84,23 @@ def pytest_addoption(parser):
     )
 
 
-def get_pk_validate_fields():
-    tests = []
-    for file_name, file_section in dat.load_spec().items():
-        for field_name, field_section in file_section['fields'].items():
-            if not field_section['unique']:
-                continue
-            tests.append((file_name, field_name))
-    return tests
-
-
 def pytest_generate_tests(metafunc):
     global run
     if run:
-        dat.reload_default_spec(version=get_version(metafunc.config))
+        dat.set_default_spec(version=get_version(metafunc.config))
         run = False
     if 'dat_file_name' in metafunc.fixturenames:
         file_names = [
-            section.name for section in dat.load_spec(
+            fn for fn in load(
                 version=get_version(metafunc.config)
-            ).values()
+            )
         ]
 
         metafunc.parametrize('dat_file_name', file_names)
     elif 'unique_dat_file_name' in metafunc.fixturenames and \
             'unique_dat_field_name' in metafunc.fixturenames:
         tests = []
-        for file_name, file_section in dat.load_spec(
+        for file_name, file_section in load(
                 version=get_version(metafunc.config)).items():
             for field_name, field_section in file_section['fields'].items():
                 if not field_section['unique']:
@@ -128,7 +119,7 @@ def pytest_generate_tests(metafunc):
 @pytest.fixture(scope='session')
 def poe_version(request):
     v = get_version(request.config)
-    dat.reload_default_spec(v)
+    dat.set_default_spec(v)
     return v
 
 

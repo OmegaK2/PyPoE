@@ -154,5 +154,5 @@ class MiscMenu(QMenu):
         v = p.s_general.version
 
         p._write_log(self.tr('Reloading default specification... (%s)' % v))
-        dat.reload_default_spec(version=v)
+        dat.set_default_spec(version=v, reload=True)
         p._write_log('Done.')

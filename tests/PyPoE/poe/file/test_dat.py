@@ -28,7 +28,8 @@ TODO
 ===============================================================================
 
 - more/better tests for DatFile
-=============================================================================== RecordList tests
+- RecordList tests
+===============================================================================
 """
 
 # =============================================================================
@@ -45,6 +46,7 @@ import pytest
 # self
 from PyPoE.poe.constants import MOD_DOMAIN
 from PyPoE.poe.file import dat
+from PyPoE.poe.file.specification import load
 
 # =============================================================================
 # Setup
@@ -151,8 +153,8 @@ def rr_instance(rr_temp_dir):
     return dat.RelationalReader(
         path_or_ggpk=rr_temp_dir,
         read_options={
-            'specification': dat.load_spec(os.path.join(
-                spec_dir, 'rr_test.ini'
+            'specification': load(os.path.join(
+                spec_dir, 'rr_test.py'
             )),
             'use_dat_value': False,
         },
@@ -163,13 +165,13 @@ def rr_instance(rr_temp_dir):
 # =============================================================================
 
 
-def test_load_spec():
-    return dat.load_spec(os.path.join(spec_dir, 'dat_testspec.ini'))
+def test_load():
+    return load(os.path.join(spec_dir, 'dat_testspec.py'))
 
 
 def test_reload_default_spec():
     old = dat._default_spec
-    dat.reload_default_spec()
+    dat.set_default_spec(reload=True)
     assert id(old) != id(dat._default_spec), 'Specification wasn\'t reloaded'
 
 #
@@ -344,7 +346,7 @@ class TestDatValue:
 #
 
 def test_dat_file(testspec_dat_file):
-    spec = test_load_spec()
+    spec = test_load()
 
     df = dat.DatFile('TestSpec.dat')
     dr = df.read(testspec_dat_file, specification=spec)
@@ -364,35 +366,35 @@ def test_dat_file(testspec_dat_file):
 class TestSpecificationErrors:
     errors = (
         (
-            'invalid_foreign_key_file.ini',
+            'invalid_foreign_key_file.py',
             dat.SpecificationError.ERRORS.INVALID_FOREIGN_KEY_FILE,
         ),
         (
-            'invalid_foreign_key_id.ini',
+            'invalid_foreign_key_id.py',
             dat.SpecificationError.ERRORS.INVALID_FOREIGN_KEY_ID,
         ),
         (
-            'invalid_argument_combination.ini',
+            'invalid_argument_combination.py',
             dat.SpecificationError.ERRORS.INVALID_ARGUMENT_COMBINATION,
         ),
         (
-            'invalid_enum_name.ini',
+            'invalid_enum_name.py',
             dat.SpecificationError.ERRORS.INVALID_ENUM_NAME,
         ),
         (
-            'virtual_key_empty.ini',
+            'virtual_key_empty.py',
             dat.SpecificationError.ERRORS.VIRTUAL_KEY_EMPTY,
         ),
         (
-            'virtual_key_duplicate.ini',
+            'virtual_key_duplicate.py',
             dat.SpecificationError.ERRORS.VIRTUAL_KEY_DUPLICATE,
         ),
         (
-            'virtual_key_invalid_key.ini',
+            'virtual_key_invalid_key.py',
             dat.SpecificationError.ERRORS.VIRTUAL_KEY_INVALID_KEY,
         ),
         (
-            'virtual_key_invalid_data_type.ini',
+            'virtual_key_invalid_data_type.py',
             dat.SpecificationError.ERRORS.VIRTUAL_KEY_INVALID_DATA_TYPE,
         ),
 
@@ -401,7 +403,7 @@ class TestSpecificationErrors:
     @pytest.mark.parametrize('file_name,error', errors)
     def test_validation_errors(self, file_name, error):
         with pytest.raises(dat.SpecificationError) as e:
-            dat.load_spec(os.path.join(spec_dir, file_name))
+            load(os.path.join(spec_dir, file_name))
         assert e.value.code == error
 
     def test_runtime_missing_specification(self, testspec_dat_file):
@@ -416,8 +418,8 @@ class TestSpecificationErrors:
         with pytest.raises(dat.SpecificationError) as e:
             dr = df.read(
                 os.path.join(rr_temp_dir, 'Data', 'Main.dat'),
-                specification=dat.load_spec(os.path.join(
-                    spec_dir, 'runtime_rowsize_mismatch.ini'
+                specification=load(os.path.join(
+                    spec_dir, 'runtime_rowsize_mismatch.py'
                 )),
             )
 
@@ -426,8 +428,8 @@ class TestSpecificationErrors:
 
 
     foreign_key_errors = (
-        'runtime_missing_foreign_key1.ini',
-        'runtime_missing_foreign_key2.ini',
+        'runtime_missing_foreign_key1.py',
+        'runtime_missing_foreign_key2.py',
     )
 
     @pytest.mark.parametrize('spec_name', foreign_key_errors)
@@ -436,7 +438,7 @@ class TestSpecificationErrors:
             path_or_ggpk=rr_temp_dir,
             raise_error_on_missing_relation=True,
             read_options={
-                'specification': dat.load_spec(os.path.join(
+                'specification': load(os.path.join(
                     spec_dir, spec_name
                 )),
                 'use_dat_value': False,
@@ -461,8 +463,8 @@ class TestRelationalReader():
         rr = dat.RelationalReader(
             path_or_ggpk=rr_temp_dir,
             read_options={
-                'specification': dat.load_spec(os.path.join(
-                    spec_dir, 'rr_test.ini'
+                'specification': load(os.path.join(
+                    spec_dir, 'rr_test.py'
                 )),
                 'use_dat_value': use_dat_value,
             },
@@ -487,8 +489,8 @@ class TestRelationalReader():
         rr = dat.RelationalReader(
             path_or_ggpk=rr_temp_dir,
             read_options={
-                'specification': dat.load_spec(os.path.join(
-                    spec_dir, 'rr_test.ini'
+                'specification': load(os.path.join(
+                    spec_dir, 'rr_test.py'
                 )),
                 'use_dat_value': use_dat_value,
             },
