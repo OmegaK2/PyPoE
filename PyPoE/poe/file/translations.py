@@ -1885,6 +1885,15 @@ def install_data_dependant_quantifiers(relational_reader):
 
 # Notes:
 # * It's hardly possible to reverse rounding accurately
+
+"""
+TranslationQuantifier(
+    id='',
+    handler=lambda v: ,
+    reverse_handler=lambda v: ,
+)
+"""
+
 TranslationQuantifier(
     id='60%_of_value',
     handler=lambda v: v*0.6,
@@ -1979,6 +1988,36 @@ TranslationQuantifier(
     id='per_minute_to_per_second_2dp',
     handler=lambda v: round(v/60, 2),
     reverse_handler=lambda v: float(v)*60,
+)
+
+TranslationQuantifier(
+    id='per_minute_to_per_second_2dp_if_required',
+    handler=lambda v: round(v/60, 2) if v//60 != 0 else v//60,
+    reverse_handler=lambda v: float(v)*60,
+)
+
+TranslationQuantifier(
+    id='divide_by_ten_0dp',
+    handler=lambda v: v//10,
+    reverse_handler=lambda v: int(v)*10,
+)
+
+TranslationQuantifier(
+    id='divide_by_two_0dp',
+    handler=lambda v: v//2,
+    reverse_handler=lambda v: int(v)*2,
+)
+
+TranslationQuantifier(
+    id='divide_by_fifteen_0dp',
+    handler=lambda v: v//15,
+    reverse_handler=lambda v: int(v)*15,
+)
+
+TranslationQuantifier(
+    id='divide_by_twenty_then_double_0dp',
+    handler=lambda v: v//20*2,
+    reverse_handler=lambda v: int(v)*20//2,
 )
 
 TranslationQuantifier(
