@@ -40,11 +40,8 @@ import warnings
 
 __all__ = [
     'APP_DIR',
-    'CUSTOM_TRANSLATION_FILE',
     'DIR',
     'DATA_DIR',
-    'DAT_SPECIFICATION',
-    'DAT_SPECIFICATION_CONFIGSPEC',
 ]
 __version__ = '1.0.0a0'
 
