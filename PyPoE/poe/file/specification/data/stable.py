@@ -468,6 +468,9 @@ specification = Specification({
             ('Data11', Field(
                 type='ref|list|int',
             )),
+            ('Key0', Field(
+                type='ulong',
+            )),
         )),
     ),
     'BeyondDemons.dat': File(
@@ -3363,6 +3366,17 @@ specification = Specification({
             )),
         )),
     ),
+    'ItemThemes.dat': File(
+        fields=OrderedDict((
+            ('Id', Field(
+                type='ref|string',
+                unique=True,
+            )),
+            ('Name', Field(
+                type='ref|string',
+            )),
+        )),
+    ),
     'ItemVisualEffect.dat': File(
         fields=OrderedDict((
             ('Id', Field(
@@ -3596,6 +3610,9 @@ specification = Specification({
             )),
             ('Data3', Field(
                 type='ref|list|uint',
+            )),
+            ('Data4', Field(
+                type='ref|list|int',
             )),
         )),
     ),
@@ -4102,6 +4119,23 @@ specification = Specification({
             )),
         )),
     ),
+    'MicroMigrationData.dat': File(
+        fields=OrderedDict((
+            ('BaseItemTypesKey', Field(
+                type='ulong',
+                key='BaseItemTypes.dat',
+            )),
+            ('Unknown2', Field(
+                type='int',
+            )),
+            ('Key0', Field(
+                type='ulong',
+            )),
+            ('Key1', Field(
+                type='ulong',
+            )),
+        )),
+    ),
     'MicrotransactionCharacterPortraitVariations.dat': File(
         fields=OrderedDict((
         )),
@@ -4138,6 +4172,10 @@ specification = Specification({
                 file_path=True,
                 file_ext='.ao',
             )),
+        )),
+    ),
+    'MicrotransactionSlotId.dat': File(
+        fields=OrderedDict((
         )),
     ),
     'MicrotransactionSocialFrameVariations.dat': File(
@@ -5101,6 +5139,14 @@ specification = Specification({
                 type='ref|string',
                 file_path=True,
                 file_ext='.ogg',
+            )),
+        )),
+    ),
+    'MysteryBoxes.dat': File(
+        fields=OrderedDict((
+            ('BaseItemTypesKey', Field(
+                type='ulong',
+                key='BaseItemTypes.dat',
             )),
         )),
     ),
@@ -6302,6 +6348,10 @@ specification = Specification({
             )),
             ('Unknown5', Field(
                 type='ref|int',
+            )),
+            ('AppliedTo_BaseItemTypesKey', Field(
+                type='ulong',
+                key='BaseItemTypes.dat',
             )),
         )),
     ),
