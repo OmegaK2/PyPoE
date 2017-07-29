@@ -138,7 +138,7 @@ class DatStyle(QStyledItemDelegate):
     def _get_text(self, data):
         if isinstance(data, DatValue):
             outstr = []
-            self._show_value(outstr, data, data.specification['display_type'])
+            self._show_value(outstr, data, data.specification.display_type)
             text = ''.join(outstr)
         else:
             text = str(data)

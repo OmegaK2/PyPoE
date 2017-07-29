@@ -67,7 +67,7 @@ class DatTableModel(DatModelShared):
     def __init__(self, *args, **kwargs):
         DatModelShared.__init__(self, *args, **kwargs)
 
-        self._columns = [item['section'] for item in self._dat_file.reader.table_columns.values()]
+        self._columns = [(id, item['section']) for id, item in self._dat_file.reader.table_columns.items()]
 
     def rowCount(self, parent=QModelIndex()):
         return len(self._dat_file.reader.table_data)
@@ -92,15 +92,20 @@ class DatTableModel(DatModelShared):
             return None
 
         # Is a specification entry
-        s = self._columns[section-1] if section > 0 else None
+        if section > 0:
+            name, field = self._columns[section-1]
+        else:
+            field = None
+            name = None
 
         if role == Qt.DisplayRole:
-            if s:
-                return s['display'].replace('\\n', '\n') if s['display'] else s.name
+            if field:
+                return field.display.replace('\\n', '\n') if field.display \
+                    else name
             else:
                 return self.tr('RowID')
-        elif role == Qt.ToolTipRole and s:
-            return s['description'] or None
+        elif role == Qt.ToolTipRole and field:
+            return field.description
 
         return None
 

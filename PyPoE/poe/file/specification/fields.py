@@ -467,7 +467,7 @@ class Field(_Common):
 
     def __init__(self, type, key=None, key_id=None, key_offset=0, enum=None,
                  unique=False, file_path=False, file_ext=None, display=None,
-                 display_type=None, description=None):
+                 display_type='{0}', description=None):
         """
         All parameters except type are optional.
 
