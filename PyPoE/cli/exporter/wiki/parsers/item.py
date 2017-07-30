@@ -1537,10 +1537,6 @@ class ItemsParser(parser.BaseParser):
                     base_item_type['Id'] in self._DROP_DISABLED_ITEMS_BY_ID:
                 infobox['drop_enabled'] = False
 
-            infobox['drop_leagues'] = 'Harbinger'
-            infobox['release_version'] = '3.0.0'
-
-
             cond = WikiCondition(
                 data=infobox,
                 cmdargs=parsed_args,
