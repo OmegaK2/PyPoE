@@ -929,6 +929,11 @@ class ItemsParser(parser.BaseParser):
             infobox['help_text'] += self.rr['ClientStrings.dat'].index[
                 'Id']['ItemDisplayStackDescription']['Text']
 
+        infobox['description'] = parser.parse_and_handle_description_tags(
+            rr=self.rr,
+            text=infobox['description'],
+        ).replace('\n', '<br>')
+
         return True
 
     _type_currency = _type_factory(

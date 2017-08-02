@@ -126,7 +126,6 @@ specification = Specification({
                 type='int',
                 key='AchievementSetsDisplay.dat',
                 key_id='Id',
-                key_offset=1,
             )),
             ('Objective', Field(
                 type='ref|string',
@@ -5648,8 +5647,8 @@ specification = Specification({
             ('Unknown7', Field(
                 type='int',
             )),
-            ('AchievementItemsKey', Field(
-                type='ulong',
+            ('AchievementItemsKeys', Field(
+                type='ref|list|ulong',
                 key='AchievementItems.dat',
             )),
             ('SignatureModSpawnWeight_TagsKeys', Field(
@@ -8656,9 +8655,9 @@ specification = Specification({
     ),
     'Words.dat': File(
         fields=OrderedDict((
-            ('Type', Field(
+            ('WordlistsKey', Field(
                 type='int',
-                description='1 Prefix\n2 Suffix\n3 Monster base\n4 Monster adjective\n5 monster suffix\n6unique item\n7 prefix box\n8 suffix box',
+                enum='WORDLISTS',
             )),
             ('Text', Field(
                 type='ref|string',

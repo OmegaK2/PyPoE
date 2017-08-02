@@ -8096,9 +8096,9 @@ specification = Specification({
     ),
     'Words.dat': File(
         fields=OrderedDict((
-            ('Type', Field(
+            ('WordlistsKey', Field(
                 type='int',
-                description='1 Prefix\n2 Suffix\n3 Monster base\n4 Monster adjective\n5 monster suffix\n6unique item\n7 prefix box\n8 suffix box',
+                enum='WORDLISTS',
             )),
             ('Text', Field(
                 type='ref|string',

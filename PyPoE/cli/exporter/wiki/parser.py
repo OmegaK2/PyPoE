@@ -32,6 +32,10 @@ Classes
 
 .. autoclass:: BaseParser
 
+.. autoclass:: WikiCondition
+
+.. autoclass:: TagHandler
+
 Functions
 -------------------------------------------------------------------------------
 
@@ -40,6 +44,8 @@ Functions
 .. autofunction:: format_result_rows
 
 .. autofunction:: make_inter_wiki_links
+
+.. autofunction:: parse_and_handle_description_tags
 """
 
 # =============================================================================
@@ -55,7 +61,8 @@ from functools import partial
 # self
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter import config
-from PyPoE.poe.constants import MOD_DOMAIN
+from PyPoE.poe.constants import MOD_DOMAIN, WORDLISTS
+from PyPoE.poe.text import parse_description_tags
 from PyPoE.poe.file.dat import RelationalReader, set_default_spec
 from PyPoE.poe.file.translations import (
     TranslationFileCache,
@@ -70,7 +77,16 @@ from PyPoE.poe.sim.mods import get_translation_file_from_domain
 # Globals
 # =============================================================================
 
-__all__ = ['BaseParser', 'format_result_rows', 'make_inter_wiki_links']
+__all__ = [
+    'BaseParser',
+    'WikiCondition',
+    'TagHandler',
+
+    'find_template',
+    'format_result_rows',
+    'make_inter_wiki_links',
+    'parse_and_handle_description_tags',
+]
 
 DEFAULT_INDENT = 32
 
@@ -808,6 +824,85 @@ class BaseParser(object):
         return finalout
 
 
+class TagHandler(object):
+    """
+    Provides tag handlers for use with :func:`parse_description_tags`
+
+    Parameters
+    ----------
+    tag_handlers : dict[str, callable]
+        dictionary containing tags and a callable function for passing to
+        :func:`parse_description_tags`
+    """
+
+    _IL_FORMAT = '{{il|%s|html=}}'
+    _C_FORMAT = '{{c|%s|%s}}'
+
+    def __init__(self, rr):
+        """
+        Parameters
+        ----------
+        rr : RelationalReader
+            RelationalReader instance to use when looking up whether items are
+            'real' for linking purposes
+        """
+        self.rr = rr
+        self.rr['BaseItemTypes.dat'].build_index('Name')
+        self.rr['Words.dat'].build_index('Text')
+
+        self.tag_handlers = {}
+        for key, func in TagHandler.tag_handlers.items():
+            self.tag_handlers[key] = partial(func, self)
+
+    def _check_link(self, string):
+        if self.rr['BaseItemTypes.dat'].index['Name'][string]:
+            string = self._IL_FORMAT % string
+        return string
+
+    def _default_handler(self, hstr, parameter, tid):
+        return self._C_FORMAT % (tid, self._check_link(hstr))
+
+    def _link_handler(self, hstr, parameter, tid):
+        return self._C_FORMAT % (tid, '[[%s]]' % hstr)
+
+    def _unique_handler(self, hstr, parameter):
+        words = self.rr['Words.dat'].index['Text'][hstr]
+        if words and words[0]['WordlistsKey'] == WORDLISTS.UNIQUE_ITEM:
+            hstr = self._IL_FORMAT % hstr
+        else:
+            hstr = self._check_link(hstr)
+        return self._C_FORMAT % ('unique', hstr)
+
+    def _currency_handler(self, hstr, parameter):
+        if 'x ' in hstr:
+            s = hstr.split('x ', maxsplit=1)
+            return self._C_FORMAT % (
+                'currency', '%sx %s' % (s[0], self._check_link(s[1]))
+            )
+        else:
+            return self._default_handler(hstr, parameter, 'currency')
+
+    tag_handlers = {
+        'normal': partial(_default_handler, tid='normal'),
+        'default': partial(_default_handler, tid='default'),
+        'augmented': partial(_default_handler, tid='augmented'),
+        'size': lambda self, hstr, parameter: hstr,
+
+        'gemitem': partial(_default_handler, tid='gem'),
+        'currencyitem': _currency_handler,
+
+        'whiteitem': partial(_default_handler, tid='white'),
+        'magicitem': partial(_default_handler, tid='magic'),
+        'rareitem': partial(_default_handler, tid='rare'),
+        'uniqueitem': _unique_handler,
+
+        'divination': partial(_default_handler, tid='divination'),
+        'prophecy': partial(_default_handler, tid='prophecy'),
+
+        'corrupted': partial(_link_handler, tid='corrupted'),
+    }
+
+
 class WikiCondition(object):
     COPY_KEYS = (
         'base_page',
@@ -1026,3 +1121,22 @@ def find_template(wikitext, template_name):
     texts = [''.join(t) for t in texts]
 
     return {'texts': texts, 'args': arguments, 'kwargs': kw_arguments}
+
+
+def parse_and_handle_description_tags(rr, text):
+    """
+    Parses and handles description texts
+
+    Parameters
+    ----------
+    rr : RelationalReader
+        RelationalReader instance to pass to TagHandler when parsing
+    text : str
+        Text which to parse
+
+    Returns
+    -------
+    str
+        Parsed texts with wiki templates/links
+    """
+    return parse_description_tags(text).handle_tags(TagHandler(rr).tag_handlers)

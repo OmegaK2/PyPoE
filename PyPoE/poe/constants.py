@@ -38,6 +38,8 @@ Documentation
 
 .. autoclass:: MOD_GENERATION_TYPE
 
+.. autoclass:: WORDLISTS
+
 """
 
 # =============================================================================
@@ -63,6 +65,7 @@ __all__ = [
     'RARITY',
     'MOD_DOMAIN',
     'MOD_GENERATION_TYPE',
+    'WORDLISTS',
 
     'MOD_MAX_STATS',
     'MOD_STATS_RANGE',
@@ -369,6 +372,8 @@ class MOD_GENERATION_TYPE(IntEnum):
 
     This constant is primarily used in relation to Mods.dat.
 
+    Attributes
+    ----------
     PREFIX
         Prefix generation type
     SUFFIX
@@ -407,6 +412,46 @@ class MOD_GENERATION_TYPE(IntEnum):
     TALISMAN = 9
     ENCHANTMENT = 10
     ESSENCE = 11
+
+
+class WORDLISTS(IntEnum):
+    """
+    Representation of words lists ( Wordlists.dat )
+
+    This constant is primarily used in relation to Words.dat
+
+    Attributes
+    ----------
+    ITEM_PREFIX
+        Prefix word of a randomly generated item name
+    ITEM_SUFFIX
+        Suffix word of a randomly generated item name; separate from the prefix
+    MONSTER_PREFIX
+        Prefix word of a randomly generated monster name.
+    MONSTER_SUFFIX
+        Suffix word of a randomly generated monster name; composite with the
+        prefix
+    MONSTER_TITLE
+        Title ("the xxx") of a randomly generated monster name
+    UNIQUE_ITEM
+        Name of a unique item
+    STRONGBOX_PREFIX
+        Prefix word of a randomly generated strongbox name
+    STRONGBOG_SUFFIX
+        Suffix word of a randomly generated strongbox name; separate from the
+        prefix
+    ESSENCE
+        Name of an essence
+    """
+    ITEM_PREFIX = 1
+    ITEM_SUFFIX = 2
+    MONSTER_PREFIX = 3
+    MONSTER_SUFFIX = 4
+    MONSTER_TITLE = 5
+    UNIQUE_ITEM = 6
+    STRONGBOX_PREFIX = 7
+    STRONGBOX_SUFFIX = 8
+    ESSENCE = 9
 
 # =============================================================================
 # Functions

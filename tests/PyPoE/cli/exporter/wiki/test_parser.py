@@ -38,6 +38,7 @@ import pytest
 
 # self
 from PyPoE.poe.constants import MOD_STATS_RANGE
+from PyPoE.poe.text import parse_description_tags
 from PyPoE.cli.exporter.wiki import parser
 from PyPoE.cli.exporter import config
 
@@ -56,6 +57,18 @@ def parserobj(poe_version, cli_config):
     if fail:
         pytest.skip('temp dir from pypoe_exporter not found')
     return parser.BaseParser(base_path=path)
+
+@pytest.fixture(scope='module')
+def tag_handler_obj(rr):
+    return parser.TagHandler(rr)
+
+@pytest.fixture(scope='module')
+def divination_card_texts(rr):
+    return [
+        parse_description_tags(row['Description'])
+        for row in rr['CurrencyItems.dat']
+        if row['BaseItemTypesKey']['ItemClassesKey']['Name'] ==
+        'Divination Card']
 
 # =============================================================================
 # Tests
@@ -185,6 +198,18 @@ class TestBaseParser():
             values.append(value)
 
         assert parserobj._get_stats(stats, values, mod) == result
+
+
+class TestTagHandler:
+    def test_handlers(self, tag_handler_obj, divination_card_texts):
+        missing_handlers = set()
+        for tag in divination_card_texts:
+            try:
+                text = tag.handle_tags(tag_handler_obj.tag_handlers)
+            except KeyError as e:
+                missing_handlers.add(e.args[0])
+
+        assert missing_handlers == set()
 
 
 @pytest.mark.parametrize('string,result', iwdata)
