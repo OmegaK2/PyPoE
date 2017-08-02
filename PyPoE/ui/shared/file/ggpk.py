@@ -49,7 +49,7 @@ from PySide.QtGui import *
 # self
 from PyPoE.poe.constants import DISTRIBUTOR, VERSION
 from PyPoE.poe.path import PoEPath
-from PyPoE.poe.file import GGPKFile
+from PyPoE.poe.file.ggpk import GGPKFile
 
 # =============================================================================
 # Globals
