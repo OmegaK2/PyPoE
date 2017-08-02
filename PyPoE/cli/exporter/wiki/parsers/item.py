@@ -37,6 +37,7 @@ import os
 from collections import defaultdict, OrderedDict
 
 # Self
+from PyPoE.poe.constants import RARITY
 from PyPoE.poe.file.ggpk import GGPKFile, extract_dds
 from PyPoE.poe.file.stat_filters import StatFilterFile, SkillEntry
 from PyPoE.poe.sim.formula import gem_stat_requirement, GemTypes
@@ -1498,6 +1499,14 @@ class ItemsParser(parser.BaseParser):
 
             for i, mod in enumerate(base_item_type['Implicit_ModsKeys']):
                 infobox['implicit%s' % (i+1)] = mod['Id']
+
+            for rarity in RARITY:
+                for i, (item, cost) in enumerate(
+                        base_item_type[rarity.name_upper + 'Purchase'],
+                        start=1):
+                    prefix = 'purchase_cost_%s%s' % (rarity.name_lower, i)
+                    infobox[prefix + '_name'] = item['Name']
+                    infobox[prefix + '_amount'] = cost
 
             funcs = self._cls_map.get(cls)
             if funcs:

@@ -619,6 +619,32 @@ specification = Specification({
                 type='ulong',
             )),
         )),
+        virtual_fields=OrderedDict((
+            ('NormalPurchase', VirtualField(
+                fields=[
+                    'NormalPurchase_BaseItemTypesKeys', 'NormalPurchase_Costs'
+                ],
+                zip=True,
+            )),
+            ('MagicPurchase', VirtualField(
+                fields=[
+                    'MagicPurchase_BaseItemTypesKeys', 'MagicPurchase_Costs'
+                ],
+                zip=True,
+            )),
+            ('RarePurchase', VirtualField(
+                fields=[
+                    'RarePurchase_BaseItemTypesKeys', 'RarePurchase_Costs'
+                ],
+                zip=True,
+            )),
+            ('UniquePurchase', VirtualField(
+                fields=[
+                    'UniquePurchase_BaseItemTypesKeys', 'UniquePurchase_Costs'
+                ],
+                zip=True,
+            )),
+        )),
     ),
     'BeyondDemons.dat': File(
         fields=OrderedDict((
