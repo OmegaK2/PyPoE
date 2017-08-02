@@ -132,7 +132,6 @@ class QuestRewardReader(BaseParser):
     _files = [
         'BaseItemTypes.dat',
         'Characters.dat',
-        'Difficulties.dat',
         'NPCs.dat',
         'Quest.dat',
         'QuestStates.dat',
@@ -151,8 +150,6 @@ class QuestRewardReader(BaseParser):
         outdata.sort(key=lambda x: x.reward)
         outdata.sort(key=lambda x: x.quest_id)
         outdata.sort(key=lambda x: x.act)
-        if data_type != 'vendor':
-            outdata.sort(key=lambda x: x.difficulty)
 
         out = []
         out.append('local rewards = {\n')
@@ -199,7 +196,6 @@ class QuestRewardReader(BaseParser):
             item = row['BaseItemTypesKey']
             quest = row['QuestKey']
             character = row['CharactersKey']
-            difficulty = row['Difficulty']
             itemcls = item['ItemClassesKey']['Name']
 
             # Format the data
@@ -238,11 +234,6 @@ class QuestRewardReader(BaseParser):
             r = row['Rarity']
             rarity = rarities[r] if r in rarities else '???'
 
-            # Start counting at 1 for some reason...
-
-            data['difficulty'] = difficulty
-            #data['difficulty'] = difficulties.table_data[difficulty_id-1]['Id']
-
             sockets = row['SocketGems']
             if sockets:
                 data['sockets'] = sockets
@@ -262,7 +253,7 @@ class QuestRewardReader(BaseParser):
                     if uid in item_map:
                         name = item_map[uid]
                     else:
-                        warnings.warn('Uncaptured unique item. %s %s %s %s' % (uid, data['quest'], data['difficulty'], name))
+                        warnings.warn('Uncaptured unique item. %s %s %s' % (uid, data['quest'], name))
 
             data['reward'] = name
 
@@ -283,16 +274,6 @@ class QuestRewardReader(BaseParser):
 
     def read_vendor_rewards(self, args):
         outdata = set()
-        eternal_nightmare_quest = None
-        for row in self.rr['Quest.dat']:
-            if row['Id'] == 'a4q1':
-                eternal_nightmare_quest = row
-                break
-
-        if eternal_nightmare_quest is None:
-            console('Could not find the Eternal Nightmare quest. Stopping',
-                    msg=Msg.error)
-
 
         for row in self.rr['QuestVendorRewards.dat']:
             # Find the corresponding keys
@@ -305,12 +286,22 @@ class QuestRewardReader(BaseParser):
 
                 quests.append(quest_state_row['QuestKey'])
 
-            # Fix for eternal night mare...
-            if not quests and quest_state_key == 698:
-                quests.append(eternal_nightmare_quest)
+            if not quests and quest_state_key == 385:
+                # Fallen from Grace quest
+                quests.append(self.rr['Quest.dat'].index['Id']['a6q4'])
 
             if not quests:
-                warnings.warn('Row %s: Quest vendor rewardwith no quests...?' % row.rowid)
+                warnings.warn(
+                    'Row %s: Quest vendor reward had no quest associated; \n'
+                    'State: %s\n'
+                    'NPC: %s\n'
+                    'Items: %s\n' % (
+                        row.rowid,
+                        quest_state_key,
+                        row['NPCKey']['Name'],
+                        [i['Name'] for i in row['BaseItemTypesKeys']],
+                    )
+                )
                 continue
 
             items = row['BaseItemTypesKeys']
