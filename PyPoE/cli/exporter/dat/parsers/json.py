@@ -94,9 +94,18 @@ class JSONExportHandler(DatExportHandler):
 
             for file_name in args.files:
                 dat_file = dat_files[file_name]
-                header = dict_spec[file_name]['fields']
+                
+                header = [
+                    dict({ 'name': name, 'rowid': index }, **props)
+                    for index, (name, props) 
+                    in enumerate(dict_spec[file_name]['fields'].items())
+                ]
 
-                virtual_header = dict_spec[file_name]['virtual_fields']
+                virtual_header = [
+                    dict({ 'name': name, 'rowid': index }, **props)
+                    for index, (name, props) 
+                    in enumerate(dict_spec[file_name]['virtual_fields'].items())
+                ]
 
                 if args.use_object_format:
                     out_obj = {
