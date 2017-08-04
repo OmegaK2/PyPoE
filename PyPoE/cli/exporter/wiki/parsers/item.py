@@ -31,15 +31,15 @@ See PyPoE/LICENSE
 
 # Python
 import re
-import sys
 import warnings
 import os
 from collections import defaultdict, OrderedDict
 
 # Self
 from PyPoE.poe.constants import RARITY
+from PyPoE.poe.file.ot import OTFile
 from PyPoE.poe.file.ggpk import GGPKFile, extract_dds
-from PyPoE.poe.file.stat_filters import StatFilterFile, SkillEntry
+from PyPoE.poe.file.stat_filters import StatFilterFile
 from PyPoE.poe.sim.formula import gem_stat_requirement, GemTypes
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter.util import get_content_ggpk_path
@@ -118,7 +118,7 @@ class WikiCondition(parser.WikiCondition):
         'quality',
 
         # Icons
-        'inventory_icon'
+        'inventory_icon',
         'alternate_art_inventory_icons',
 
         # Drop restrictions
@@ -1061,7 +1061,7 @@ class ItemsParser(parser.BaseParser):
             }),
             ('Unique_WorldAreasKey', {
                 'template': 'unique_map_area_level',
-                'format': lambda v: v['MonsterLevel'],
+                'format': lambda v: v['AreaLevel'],
                 'condition': lambda v: v is not None,
             }),
         ),
@@ -1242,42 +1242,6 @@ class ItemsParser(parser.BaseParser):
             return base_item_type['Name']
 
     _conflict_quest_item_id_map = {
-        'Metadata/Items/QuestItems/SkillBooks/Book-a1q6':
-            ' (The Marooned Mariner)',
-        'Metadata/Items/QuestItems/SkillBooks/Book-a1q7':
-            ' (The Dweller of the Deep)',
-        'Metadata/Items/QuestItems/SkillBooks/Book-a1q8':
-            ' (A Dirty Job)',
-        'Metadata/Items/QuestItems/SkillBooks/Book-a1q9':
-            ' (The Way Forward)',
-        'Metadata/Items/QuestItems/SkillBooks/Book-a2q5':
-            ' (Through Sacred Ground)',
-        'Metadata/Items/QuestItems/SkillBooks/Book-a3q9':
-            ' (Piety\'s Pets)',
-        #'Metadata/Items/QuestItems/SkillBooks/Book-a3q11v0':
-        #    ' (6)',
-        #'Metadata/Items/QuestItems/SkillBooks/Book-a3q11v1':
-        #    ' (7)',
-        'Metadata/Items/QuestItems/SkillBooks/Book-a3q11v2':
-            ' (Victario\'s Secrets)',
-        'Metadata/Items/QuestItems/Act4/Book-a4q6':
-            ' (An Indomitable Spirit)',
-        'Metadata/Items/QuestItems/SkillBooks/Descent2_1':
-            ' (Descent 1)',
-        'Metadata/Items/QuestItems/SkillBooks/Descent2_2':
-            ' (Descent 2)',
-        'Metadata/Items/QuestItems/SkillBooks/Descent2_3':
-            ' (Descent 3)',
-        'Metadata/Items/QuestItems/SkillBooks/Descent2_4':
-            ' (Descent 4)',
-        'Metadata/Items/QuestItems/SkillBooks/BanditRespecEramir':
-            ' (Eramir)',
-        'Metadata/Items/QuestItems/SkillBooks/BanditRespecAlira':
-            ' (Alira)',
-        'Metadata/Items/QuestItems/SkillBooks/BanditRespecOak':
-            ' (Oak)',
-        'Metadata/Items/QuestItems/SkillBooks/BanditRespecKraityn':
-            ' (Kraityn)',
         'Metadata/Items/QuestItems/GoldenPages/Page1':
             ' (1 of 4)',
         'Metadata/Items/QuestItems/GoldenPages/Page2':
@@ -1305,6 +1269,47 @@ class ItemsParser(parser.BaseParser):
     }
 
     def _conflict_quest_items(self, infobox, base_item_type):
+        name = base_item_type['Name']
+        if name in ('Book of Skill', 'Book of Regrets', 'Book of Reform'):
+            qid = base_item_type['Id'].replace('Metadata/Items/QuestItems/', '')
+            # Regular quest skill books
+            match = re.match(r'(?:SkillBooks|Act[0-9]+)/Book-(?P<id>.*)', qid)
+            if match:
+                qid = match.group('id')
+                ver = re.findall(r'v[0-9]$', qid)
+                # Only need one of the skill books from "choice" quets
+                if ver:
+                    if ver[0] != 'v0':
+                        return
+                    qid = qid.replace(ver[0], '')
+
+                try:
+                    return base_item_type['Name'] + ' (%s)' % \
+                           self.rr['Quest.dat'].index['Id'][qid]['Name']
+                except KeyError:
+                    console('Quest %s not found' % qid, msg=Msg.error)
+
+            # Descent skill books
+            match = re.match(r'SkillBooks/Descent2_(?P<id>[0-9]+)', qid)
+            if match:
+                return base_item_type['Name'] + ' (Descent %s)' % match.group('id')
+
+            # Bandit respec
+            match = re.match(r'SkillBooks/BanditRespec(?P<id>.+)', qid)
+            if match:
+                return base_item_type['Name'] + ' (%s)' % match.group('id')
+        elif name == 'Firefly':
+            match = re.match(
+                r'Metadata/Items/QuestItems/Act7/Firefly(?P<id>[0-9]+)$',
+                base_item_type['Id']
+            )
+            pageid = base_item_type['Name'] + ' (%s of 7)' % match.group('id')
+            infobox['inventory_icon'] = pageid
+            return pageid
+        elif 'Shaper\'s Orb' in name:
+            infobox['inventory_icon'] = 'Shaper\'s Orb'
+
+
         appendix = self._conflict_quest_item_id_map.get(base_item_type['Id'])
         if appendix is None:
             return
@@ -1566,7 +1571,9 @@ class ItemsParser(parser.BaseParser):
                     name not in self._IGNORE_DROP_LEVEL_ITEMS:
                 infobox['drop_level'] = base_item_type['DropLevel']
 
-            base_ot = self.ot[base_item_type['InheritsFrom'] + '.ot']
+            base_ot = OTFile(parent_or_base_dir_or_ggpk=self.base_path)
+            base_ot.read(
+                self.base_path + '/' + base_item_type['InheritsFrom'] + '.ot')
             try:
                 ot = self.ot[base_item_type['Id'] + '.ot']
             except FileNotFoundError:
@@ -1585,6 +1592,11 @@ class ItemsParser(parser.BaseParser):
             infobox['tags'] = ', '.join(tags + list(ot['Base']['tag']))
 
             infobox['metadata_id'] = base_item_type['Id']
+
+            description = ot['Stack'].get('function_text')
+            if description:
+                 infobox['description'] = self.rr['ClientStrings.dat'].index[
+                     'Id'][description]['Text']
 
             help_text = ot['Base'].get('description_text')
             if help_text:
