@@ -3715,6 +3715,7 @@ specification = Specification({
             )),
             ('Name', Field(
                 type='ref|string',
+                unique=True,
             )),
             ('Category', Field(
                 type='ref|string',
