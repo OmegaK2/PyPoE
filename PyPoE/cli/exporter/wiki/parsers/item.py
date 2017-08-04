@@ -111,22 +111,34 @@ class WikiCondition(parser.WikiCondition):
         'radius_tertiary_description',
         'has_percentage_mana_cost',
         'has_reservation_mana_cost',
+        #
         # all items
-        'alternate_art_inventory_icons',
-        'can_not_be_traded_or_modified',
-        'drop_enabled',
-        'drop_leagues',
-        'inventory_icon',
-        'is_corrupted',
-        'is_relic',
+        #
         'name_list',
         'quality',
+
+        # Icons
+        'inventory_icon'
+        'alternate_art_inventory_icons',
+
+        # Drop restrictions
+        'drop_enabled',
+        'drop_leagues',
+        'drop_areas',
+        'drop_text',
+
+        # Item flags
+        'is_corrupted',
+        'is_relic',
+        'can_not_be_traded_or_modified',
+
+        # Version information
         'release_version',
         'removal_version',
     )
 
     NAME = 'Item'
-    ADD_INCLUDE = True
+    ADD_INCLUDE = False
 
 
 class ItemsHandler(ExporterHandler):
@@ -140,23 +152,17 @@ class ItemsHandler(ExporterHandler):
         # Generic base item export
         #
         parser = sub.add_parser(
-            'export',
-            help='Extracts the item information'
+            'by_name',
+            help='Extracts the item information based on item names'
         )
         self.add_default_parsers(
             parser=parser,
             cls=ItemsParser,
-            func=ItemsParser.export,
+            func=ItemsParser.by_name,
         )
 
         add_format_argument(parser)
-
-        parser.add_argument(
-            '-ft-c', '--filter-class',
-            help='Filter by item class(es). Case sensitive.',
-            nargs='*',
-            dest='item_class',
-        )
+        self._shared_item_arguments(parser)
 
         parser.add_argument(
             '-mid', '--is-metadata-id',
@@ -166,26 +172,24 @@ class ItemsHandler(ExporterHandler):
         )
 
         parser.add_argument(
-            '-im', '--store-images',
-            help='If specified item 2d art images will be extracted. '
-                 'Requires brotli to be installed.',
-            action='store_true',
-            dest='store_images',
-        )
-
-        parser.add_argument(
-            '-im-c', '--convert-images',
-            help='Convert extracted images to png using ImageMagick '
-                 '(requires "magick" command to be executeable)',
-            action='store_true',
-            dest='convert_images',
-        )
-
-        parser.add_argument(
             'item',
             help='Name of the item; can be specified multiple times',
             nargs='+',
         )
+
+        parser = sub.add_parser(
+            'by_filter',
+            help='Extracts all items matching various filters',
+        )
+
+        self.add_default_parsers(
+            parser=parser,
+            cls=ItemsParser,
+            func=ItemsParser.by_filter,
+        )
+        add_format_argument(parser)
+        self._shared_item_arguments(parser)
+
         #
         # Prophecies
         #
@@ -214,6 +218,30 @@ class ItemsHandler(ExporterHandler):
         )
 
         add_format_argument(parser)
+
+    def _shared_item_arguments(self, parser):
+        parser.add_argument(
+            '-ft-c', '--filter-class',
+            help='Filter by item class(es). Case sensitive.',
+            nargs='*',
+            dest='item_class',
+        )
+
+        parser.add_argument(
+            '-im', '--store-images',
+            help='If specified item 2d art images will be extracted. '
+                 'Requires brotli to be installed.',
+            action='store_true',
+            dest='store_images',
+        )
+
+        parser.add_argument(
+            '-im-c', '--convert-images',
+            help='Convert extracted images to png using ImageMagick '
+                 '(requires "magick" command to be executeable)',
+            action='store_true',
+            dest='convert_images',
+        )
 
 
 class ItemsParser(parser.BaseParser):
@@ -569,9 +597,10 @@ class ItemsParser(parser.BaseParser):
         if not ge['IsSupport']:
             infobox['cast_time'] = ge['CastTime'] / 1000
 
+        infobox['gem_description'] = skill_gem['Description']
+
         # From ActiveSkills.dat
         if ae:
-            infobox['gem_description'] = ae['Description']
             infobox['active_skill_name'] = ae['DisplayedName']
             if ae['WeaponRestriction_ItemClassesKeys']:
                 # The class name may be empty for reason, causing issues
@@ -929,10 +958,11 @@ class ItemsParser(parser.BaseParser):
             infobox['help_text'] += self.rr['ClientStrings.dat'].index[
                 'Id']['ItemDisplayStackDescription']['Text']
 
-        infobox['description'] = parser.parse_and_handle_description_tags(
-            rr=self.rr,
-            text=infobox['description'],
-        ).replace('\n', '<br>')
+        if infobox.get('description'):
+            infobox['description'] = parser.parse_and_handle_description_tags(
+                rr=self.rr,
+                text=infobox['description'],
+            )
 
         return True
 
@@ -1150,6 +1180,9 @@ class ItemsParser(parser.BaseParser):
             ' (Fire and Cold Resistance)',
         'Metadata/Items/Armours/Boots/BootsAtlas3':
             ' (Fire and Lightning Resistance)',
+        # Legion Boots
+        'Metadata/Items/Armours/Boots/BootsStrInt7':
+            '',
     }
 
     def _conflict_boots(self, infobox, base_item_type):
@@ -1376,6 +1409,54 @@ class ItemsParser(parser.BaseParser):
             infobox['inventory_icon'] = base_item_type['Name'] + appendix
             return base_item_type['Name'] + appendix
 
+    _conflict_piece_map = {
+        'Metadata/Items/UniqueFragments/FragmentUniqueShield1_1':
+            ' (1 of 4)',
+        'Metadata/Items/UniqueFragments/FragmentUniqueShield1_2':
+            ' (2 of 4)',
+        'Metadata/Items/UniqueFragments/FragmentUniqueShield1_3':
+            ' (3 of 4)',
+        'Metadata/Items/UniqueFragments/FragmentUniqueShield1_4':
+            ' (4 of 4)',
+        'Metadata/Items/UniqueFragments/FragmentUniqueSword1_1':
+            ' (1 of 3)',
+        'Metadata/Items/UniqueFragments/FragmentUniqueSword1_2':
+            ' (2 of 3)',
+        'Metadata/Items/UniqueFragments/FragmentUniqueSword1_3':
+            ' (3 of 3)',
+        'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_1':
+            ' (1 of 3)',
+        'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_2':
+            ' (2 of 3)',
+        'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_3':
+            ' (3 of 3)',
+        'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_1':
+            ' (1 of 2)',
+        'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_2':
+            ' (2 of 2)',
+        'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_1':
+            ' (1 of 3)',
+        'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_2':
+            ' (2 of 3)',
+        'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_3':
+            ' (3 of 3)',
+        'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_1':
+            ' (1 of 3)',
+        'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_2':
+            ' (2 of 3)',
+        'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_3':
+            ' (3 of 3)',
+    }
+
+    def _conflict_piece(self, infobox, base_item_type):
+        appendix = self._conflict_piece_map.get(
+            base_item_type['Id'])
+        if appendix is None:
+            return
+        else:
+            infobox['inventory_icon'] = base_item_type['Name'] + appendix
+            return base_item_type['Name'] + appendix
+
     _conflict_resolver_map = {
         'Boots': _conflict_boots,
         'Quivers': _conflict_quivers,
@@ -1385,6 +1466,7 @@ class ItemsParser(parser.BaseParser):
         'Hideout Doodads': _conflict_hideout_doodad,
         'Maps': _conflict_maps,
         'Microtransactions': _conflict_microtransactions,
+        'Piece': _conflict_piece,
     }
 
     def _write_stats(self, infobox, stats_and_values, global_prefix):
@@ -1393,47 +1475,50 @@ class ItemsParser(parser.BaseParser):
             infobox[prefix + 'id'] = val[0]
             infobox[prefix + 'value'] = val[1]
 
-    def export(self, parsed_args):
-        # Pre processing filters
-        valid_classes = [row['Name'] for row in self.rr['ItemClasses.dat']]
-
-        invalid = False
+    def _parse_class_filter(self, parsed_args):
+        self.rr['ItemClasses.dat'].build_index('Name')
         if parsed_args.item_class:
-            for cls in list(parsed_args.item_class):
-                if cls not in valid_classes:
-                    invalid = True
-                    parsed_args.item_class.remove(cls)
-                    console('Invalid filter item class: %s' % cls, Msg.error)
-        if invalid:
-            console('Invalid filters were specified. Search may yield '
-                    'unintended results.', Msg.warning)
-
-        itemkey = 'Id' if parsed_args.is_metadata_id else 'Name'
-
-        # Create item list
-        items = []
-        names = defaultdict(list)
-        for row in self.rr['BaseItemTypes.dat']:
-            names[row['Name']].append(row)
-            # catch exception in case item class was not specified
-            try:
-                if row['ItemClassesKey'][itemkey] not in parsed_args.item_class:
-                    continue
-            except TypeError:
-                pass
-
-            if row[itemkey] in parsed_args.item:
-                items.append(row)
-
-        if not items:
-            console('No items found. Exiting...')
-            sys.exit(-1)
+            return [self.rr['ItemClasses.dat'].index['Name'][cls]
+                   for cls in parsed_args.item_class]
         else:
-            console('Found %s items with matching names' % len(items))
+            return []
+
+    def by_name(self, parsed_args):
+        self.rr['BaseItemTypes.dat'].build_index('Name')
+        classes = self._parse_class_filter(parsed_args)
+
+        if parsed_args.is_metadata_id:
+            items = [
+                self.rr['BaseItemTypes.dat'].index['Id'][itemid] for itemid
+                in parsed_args.item
+            ]
+        else:
+            items = []
+            for itemid in parsed_args.item:
+                items.extend(self.rr['BaseItemTypes.dat'].index['Name'][itemid])
+
+        # apply class filter
+        if classes:
+            items = [
+                item for item in items if item['ItemClassesKey'] in classes
+            ]
+
+        return self._export(items, parsed_args)
+
+    def by_filter(self, parsed_args):
+        classes = self._parse_class_filter(parsed_args)
+
+        items = [
+            item for item in self.rr['BaseItemTypes.dat'] if
+            item['ItemClassesKey'] in classes]
+
+        return self._export(items, parsed_args)
+
+    def _export(self, items, parsed_args):
+        console('Found %s items' % len(items))
 
         console('Additional files may be loaded. Processing information - this '
                 'may take a while...')
-
         ggpk = None
         if parsed_args.store_images:
             try:
@@ -1455,6 +1540,7 @@ class ItemsParser(parser.BaseParser):
                 console('content.ggpk has been loaded.')
 
         r = ExporterResult()
+        self.rr['BaseItemTypes.dat'].build_index('Name')
 
         for base_item_type in items:
             name = base_item_type['Name']
@@ -1470,8 +1556,11 @@ class ItemsParser(parser.BaseParser):
             infobox['size_x'] = base_item_type['Width']
             infobox['size_y'] = base_item_type['Height']
             if base_item_type['FlavourTextKey']:
-                infobox['flavour_text'] = base_item_type['FlavourTextKey'][
-                    'Text'].replace('\n', '<br>').replace('\r', '')
+                infobox['flavour_text'] = \
+                    parser.parse_and_handle_description_tags(
+                        rr=self.rr,
+                        text=base_item_type['FlavourTextKey']['Text'],
+                    )
 
             if cls not in self._IGNORE_DROP_LEVEL_CLASSES and \
                     name not in self._IGNORE_DROP_LEVEL_ITEMS:
@@ -1528,7 +1617,7 @@ class ItemsParser(parser.BaseParser):
                     continue
 
             # handle items with duplicate name entries
-            if len(names[name]) > 1:
+            if len(self.rr['BaseItemTypes.dat'].index['Name'][name]) > 1:
                 resolver = self._conflict_resolver_map.get(cls)
 
                 if resolver:

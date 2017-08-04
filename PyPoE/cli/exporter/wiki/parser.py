@@ -180,6 +180,7 @@ _inter_wiki_map = (
     ('Bone Offering', {'link': 'Bone Offering'}),
     ('Burning Arrow', {'link': 'Burning Arrow'}),
     ('Caustic Arrow', {'link': 'Caustic Arrow'}),
+    ('Charged Dash', {'link': 'Charged Dash'}),
     ('Clarity', {'link': 'Clarity'}),
     ('Cleave', {'link': 'Cleave'}),
     ('Cold Snap', {'link': 'Cold Snap'}),
@@ -189,6 +190,7 @@ _inter_wiki_map = (
     ('Convocation', {'link': 'Convocation'}),
     ('Cyclone', {'link': 'Cyclone'}),
     ('Damage Infusion', {'link': 'Damage Infusion'}),
+    ('Dark Pact', {'link': 'Dark Pact'}),
     ('Decoy Totem', {'link': 'Decoy Totem'}),
     ('Desecrate', {'link': 'Desecrate'}),
     ('Determination', {'link': 'Determination'}),
@@ -300,13 +302,14 @@ _inter_wiki_map = (
     ('Split Arrow', {'link': 'Split Arrow'}),
     ('Static Strike', {'link': 'Static Strike'}),
     ('Static Tether', {'link': 'Static Tether'}),
+    ('Storm Burst', {'link': 'Storm Burst'}),
     ('Storm Call', {'link': 'Storm Call'}),
     ('(?:Summon |)Chaos Golem(?:|s)', {'link': 'Summon Chaos Golem'}),
     ('(?:Summon |)Flame Golem(?:|s)', {'link': 'Summon Flame Golem'}),
     ('(?:Summon |)Ice Golem(?:|s)', {'link': 'Summon Ice Golem'}),
     ('(?:Summon |)Lightning Golem(?:|s)', {'link': 'Summon Lightning Golem'}),
     ('Summon Raging Spirit', {'link': 'Summon Raging Spirit'}),
-    ('Summon Skeletons', {'link': 'Summon Skeletons'}),
+    ('Summon Skeleton', {'link': 'Summon Skeleton'}),
     ('(?:Summon |)Stone Golem(?:|s)', {'link': 'Summon Stone Golem'}),
     ('Sunder', {'link': 'Sunder'}),
     ('Sweep', {'link': 'Sweep'}),
@@ -431,12 +434,15 @@ _inter_wiki_map = (
         'link': 'Added Lightning Damage Support'}),
     ('(?:level [0-9]+) Additional Accuracy', {
         'link': 'Additional Accuracy Support'}),
+    ('(?:level [0-9]+) Arcane Surge', {'link': 'Arcane Surge Support'}),
     ('(?:level [0-9]+) Blasphemy', {'link': 'Blasphemy Support'}),
     ('(?:level [0-9]+) Blind', {'link': 'Blind Support'}),
     ('(?:level [0-9]+) Block Chance Reduction', {
         'link': 'Block Chance Reduction Support'}),
     ('(?:level [0-9]+) Blood Magic', {'link': 'Blood Magic Support'}),
     ('(?:level [0-9]+) Bloodlust', {'link': 'Bloodlust Support'}),
+    ('(?:level [0-9]+) Brutality', {'link': 'Brutality Support'}),
+    ('(?:level [0-9]+) Burning Damage', {'link': 'Burning Damage Support'}),
     ('(?:level [0-9]+) Cast On Critical Strike', {
         'link': 'Cast On Critical Strike Support'}),
     ('(?:level [0-9]+) Cast on Death', {'link': 'Cast on Death Support'}),
@@ -446,6 +452,7 @@ _inter_wiki_map = (
         'link': 'Cast when Damage Taken Support'}),
     ('(?:level [0-9]+) Cast when Stunned', {'link': 'Cast when Stunned Support'}),
     ('(?:level [0-9]+) Chain', {'link': 'Chain Support'}),
+    ('(?:level [0-9]+) Chance to Bleed', {'link': 'Chance to Bleed Support'}),
     ('(?:level [0-9]+) Chance to Flee', {'link': 'Chance to Flee Support'}),
     ('(?:level [0-9]+) Chance to Ignite', {'link': 'Chance to Ignite Support'}),
     ('(?:level [0-9]+) Cluster Traps', {'link': 'Cluster Traps Support'}),
@@ -457,6 +464,11 @@ _inter_wiki_map = (
         'link': 'Controlled Destruction Support'}),
     ('(?:level [0-9]+) Culling Strike', {'link': 'Culling Strike Support'}),
     ('(?:level [0-9]+) Curse On Hit', {'link': 'Curse On Hit Support'}),
+    ('(?:level [0-9]+) Damage on Full Life', {
+        'link': 'Damage on Full Life Support'}),
+    ('(?:level [0-9]+) Deadly Ailments', {'link': 'Deadly Ailments Support'}),
+    ('(?:level [0-9]+) Decay', {'link': 'Decay Support'}),
+    ('(?:level [0-9]+) Efficacy', {'link': 'Efficacy Support'}),
     ('(?:level [0-9]+) Elemental Focus', {'link': 'Elemental Focus Support'}),
     ('(?:level [0-9]+) Elemental Proliferation', {
         'link': 'Elemental Proliferation Support'}),
@@ -465,6 +477,8 @@ _inter_wiki_map = (
         'link': 'Endurance Charge on Melee Stun Support'}),
     ('(?:level [0-9]+) Enhance', {'link': 'Enhance Support'}),
     ('(?:level [0-9]+) Enlighten', {'link': 'Enlighten Support'}),
+    ('(?:level [0-9]+) Elemental Damage with Attacks', {
+        'link': 'Elemental Damage with Attacks Support'}),
     ('(?:level [0-9]+) Faster Attacks', {'link': 'Faster Attacks Support'}),
     ('(?:level [0-9]+) Faster Casting', {'link': 'Faster Casting Support'}),
     ('(?:level [0-9]+) Faster Projectiles', {
@@ -479,8 +493,6 @@ _inter_wiki_map = (
     ('(?:level [0-9]+) Ice Bite', {'link': 'Ice Bite Support'}),
     ('(?:level [0-9]+) Increased Area of Effect', {
         'link': 'Increased Area of Effect Support'}),
-    ('(?:level [0-9]+) Increased Burning Damage', {
-        'link': 'Increased Burning Damage Support'}),
     ('(?:level [0-9]+) Increased Critical Damage', {
         'link': 'Increased Critical Damage Support'}),
     ('(?:level [0-9]+) Increased Critical Strikes', {
@@ -488,21 +500,23 @@ _inter_wiki_map = (
     ('(?:level [0-9]+) Increased Duration', {
         'link': 'Increased Duration Support'}),
     ('(?:level [0-9]+) Innervate', {'link': 'Innervate Support'}),
+    ('(?:level [0-9]+) Ignite Proliferation', {'link': 'Ignite Proliferation Support'}),
     ('(?:level [0-9]+) Iron Grip', {'link': 'Iron Grip Support'}),
     ('(?:level [0-9]+) Iron Will', {'link': 'Iron Will Support'}),
     ('(?:level [0-9]+) Item Quantity', {'link': 'Item Quantity Support'}),
     ('(?:level [0-9]+) Item Rarity', {'link': 'Item Rarity Support'}),
+    ('(?:level [0-9]+) Immolate', {'link': 'Immolate Support'}),
     ('(?:level [0-9]+) Knockback', {'link': 'Knockback Support'}),
     ('(?:level [0-9]+) Less Duration', {'link': 'Less Duration Support'}),
     ('(?:level [0-9]+) Lesser Multiple Projectiles', {
         'link': 'Lesser Multiple Projectiles Support'}),
+    ('(?:level [0-9]+) Lesser Poison', {'link': 'Lesser Poison Support'}),
     ('(?:level [0-9]+) Life Gain on Hit', {'link': 'Life Gain on Hit Support'}),
     ('(?:level [0-9]+) Life Leech', {'link': 'Life Leech Support'}),
     ('(?:level [0-9]+) Lightning Penetration', {
         'link': 'Lightning Penetration Support'}),
+    ('(?:level [0-9]+) Maim', {'link': 'Maim Support'}),
     ('(?:level [0-9]+) Mana Leech', {'link': 'Mana Leech Support'}),
-    ('(?:level [0-9]+) Melee Damage on Full Life', {
-        'link': 'Melee Damage on Full Life Support'}),
     ('(?:level [0-9]+) Melee Physical Damage', {
         'link': 'Melee Physical Damage Support'}),
     ('(?:level [0-9]+) Melee Splash', {'link': 'Melee Splash Support'}),
@@ -514,6 +528,7 @@ _inter_wiki_map = (
         'link': 'Minion and Totem Elemental Resistance Support'}),
     ('(?:level [0-9]+) Multiple Traps', {'link': 'Multiple Traps Support'}),
     ('(?:level [0-9]+) Multistrike', {'link': 'Multistrike Support'}),
+    ('(?:level [0-9]+) Onslaught', {'link': 'Onslaught Support'}),
     ('(?:level [0-9]+) Physical Projectile Attack Damage', {
         'link': 'Physical Projectile Attack Damage Support'}),
     ('(?:level [0-9]+) Physical to Lightning', {
@@ -525,11 +540,11 @@ _inter_wiki_map = (
         'link': 'Power Charge On Critical Support'}),
     ('(?:level [0-9]+) Ranged Attack Totem', {
         'link': 'Ranged Attack Totem Support'}),
-    ('(?:level [0-9]+) Rapid Decay', {'link': 'Rapid Decay Support'}),
     ('(?:level [0-9]+) Reduced Mana', {'link': 'Reduced Mana Support'}),
     ('(?:level [0-9]+) Remote Mine', {'link': 'Remote Mine Support'}),
     ('(?:level [0-9]+) Return Projectiles', {
         'link': 'Return Projectiles Support'}),
+    ('(?:level [0-9]+) Ruthless', {'link': 'Ruthless Support'}),
     ('(?:level [0-9]+) Slower Projectiles', {
         'link': 'Slower Projectiles Support'}),
     ('(?:level [0-9]+) Spell Echo', {'link': 'Spell Echo Support'}),
@@ -537,14 +552,15 @@ _inter_wiki_map = (
     ('(?:level [0-9]+) Split Projectiles', {
         'link': 'Split Projectiles Support'}),
     ('(?:level [0-9]+) Stun', {'link': 'Stun Support'}),
+    ('(?:level [0-9]+) Swift Affliction', {'link': 'Swift Affliction Support'}),
     ('(?:level [0-9]+) Trap', {'link': 'Trap Support'}),
     ('(?:level [0-9]+) Trap Cooldown', {'link': 'Trap Cooldown Support'}),
     ('(?:level [0-9]+) Trap and Mine Damage', {
         'link': 'Trap and Mine Damage Support'}),
+    ('(?:level [0-9]+) Unbound Ailments', {'link': 'Unbound Ailments Support'}),
+    ('(?:level [0-9]+) Vile Toxins', {'link': 'Vile Toxins Support'}),
     ('(?:level [0-9]+) Void Manipulation', {
         'link': 'Void Manipulation Support'}),
-    ('(?:level [0-9]+) Weapon Elemental Damage', {
-        'link': 'Weapon Elemental Damage Support'}),
     #
     # Groups
     #
@@ -836,6 +852,7 @@ class TagHandler(object):
     """
 
     _IL_FORMAT = '{{il|%s|html=}}'
+    _IL_PAGE_FORMAT = '{{il|page=%s|html=}}'
     _C_FORMAT = '{{c|%s|%s}}'
 
     def __init__(self, rr):
@@ -855,8 +872,14 @@ class TagHandler(object):
             self.tag_handlers[key] = partial(func, self)
 
     def _check_link(self, string):
-        if self.rr['BaseItemTypes.dat'].index['Name'][string]:
-            string = self._IL_FORMAT % string
+        items = self.rr['BaseItemTypes.dat'].index['Name'][string]
+        if items:
+            if items[0]['ItemClassesKey']['Name'] == 'Maps':
+                string = self._IL_PAGE_FORMAT % string
+            elif string == 'Two-Stone Ring':
+                return '[[%s]]' % string
+            else:
+                string = self._IL_FORMAT % string
         return string
 
     def _default_handler(self, hstr, parameter, tid):
@@ -882,11 +905,16 @@ class TagHandler(object):
         else:
             return self._default_handler(hstr, parameter, 'currency')
 
+    def _pass_through_handler(self, hstr, parameter):
+        return hstr
+
     tag_handlers = {
         'normal': partial(_default_handler, tid='normal'),
         'default': partial(_default_handler, tid='default'),
         'augmented': partial(_default_handler, tid='augmented'),
-        'size': lambda self, hstr, parameter: hstr,
+
+        'size': _pass_through_handler,
+        'smaller': _pass_through_handler,
 
         'gemitem': partial(_default_handler, tid='gem'),
         'currencyitem': _currency_handler,
@@ -1064,11 +1092,14 @@ def find_template(wikitext, template_name):
         return tid, scanner.match, result
 
     scanner = re.Scanner([
-        ('{{%s' % template_name, partial(f, tid='template')),
-        ('{{', partial(f, tid='l_brace')),
-        ('}}', partial(f, tid='r_brace')),
-        ('\|', partial(f, tid='pipe')),
-        ('=', partial(f, tid='equals')),
+        # Need to have this look ahead to avoid matching templates that start
+        # with the same name.
+        (r'{{%s(?=[^\w}\|]*\||}})' % template_name,
+            partial(f, tid='template')),
+        (r'{{', partial(f, tid='l_brace')),
+        (r'}}', partial(f, tid='r_brace')),
+        (r'\|', partial(f, tid='pipe')),
+        (r'=', partial(f, tid='equals')),
         (r'[{}]{1}', partial(f, tid='single_brace')),
         (r'[^{}\|=]+', partial(f, tid='text')),
     ], re.UNICODE | re.MULTILINE)
@@ -1139,4 +1170,5 @@ def parse_and_handle_description_tags(rr, text):
     str
         Parsed texts with wiki templates/links
     """
-    return parse_description_tags(text).handle_tags(TagHandler(rr).tag_handlers)
+    return parse_description_tags(text).handle_tags(
+        TagHandler(rr).tag_handlers).replace('\n', '<br>').replace('\r', '')

@@ -115,6 +115,39 @@ iwdata = (
 
 # Input string, template name, other text, template args, template kwargs
 ftdata = (
+    # Intended behaviour
+    (
+        """other{{Test|param=5}}text""",
+        'Test',
+        ['other', 'text'],
+        [],
+        OrderedDict((
+            ('param', '5'),
+        )),
+    ),
+    (
+        """other{{Test}}text""",
+        'Test',
+        ['other', 'text'],
+        [],
+        OrderedDict(()),
+    ),
+    # Shouldn't be matched
+    (
+        """other{{Test match|param=5}}text""",
+        'Test',
+        ['other{{Test match|param=5}}text'],
+        [],
+        OrderedDict(()),
+    ),
+    (
+        """other{{Test match}}text""",
+        'Test',
+        ['other{{Test match}}text'],
+        [],
+        OrderedDict(()),
+    ),
+    # Real life test
     (
         """{{Upcoming content|version=3.0.0}}
 

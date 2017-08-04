@@ -101,6 +101,26 @@ class WikiHandler(object):
             action='store_true',
         )
 
+        parser.add_argument(
+            '-w-oe', '--wiki-only-existing',
+            dest='only_existing',
+            help='Only write to existing pages and do not create new ones',
+            action='store_true',
+        )
+
+    def _error_catcher(self, *args, **kwargs):
+        fail = 1
+        while fail > 0:
+            try:
+                self.handle_page(*args, **kwargs)
+                fail = 0
+            except mwclient.APIError as e:
+                console(
+                    'APIError occurred. Retrying - total attempts: %s' % fail,
+                    msg=Msg.error
+                )
+                fail += 1
+
     def handle_page(self, *a, row):
         if isinstance(row['wiki_page'], str):
             pages = [
@@ -144,6 +164,13 @@ class WikiHandler(object):
                         'One or more conditions failed on page "%s". Skipping.'
                         % pdata['page'], msg=Msg.warning
                     )
+            elif self.cmdargs.only_existing:
+                console(
+                    'Page "%s" does not exist. Bot is set to only write to '
+                    'existing pages, skipping.' % pdata['page'],
+                    msg=Msg.warning
+                )
+                return
             else:
                 console('Page "%s" does not exist. It will be created.' %
                         pdata['page'])
@@ -209,7 +236,7 @@ class WikiHandler(object):
 
             for row in result:
                 tp.submit(
-                    self.handle_page,
+                    self._error_catcher,
                     row=row,
                 )
 
@@ -217,7 +244,7 @@ class WikiHandler(object):
         else:
             console('Editing pages...')
             for row in result:
-                self.handle_page(row=row)
+                self._error_catcher(row=row)
 
 
 class ExporterHandler(BaseHandler):
