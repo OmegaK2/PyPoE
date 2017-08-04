@@ -940,6 +940,17 @@ class TranslationQuantifierHandler(TranslationReprMixin):
         #if self.registered_handlers != other.registered_handlers:
         _diff_dict(self.index_handlers, other.index_handlers)
 
+    def _get_handler_func(self, handler_name):
+        try:
+            f = self.handlers[handler_name].handler
+        except KeyError:
+            self._warn_uncaptured(handler_name)
+            return None
+        if f is None:
+            self._warn_uncaptured(handler_name)
+            return None
+        return f
+
     def register_from_string(self, string):
         """
         Registers handlers from the quantifier string.
@@ -986,11 +997,9 @@ class TranslationQuantifierHandler(TranslationReprMixin):
         """
         values = list(values)
         for handler_name in self.index_handlers:
-            try:
-                f = self.handlers[handler_name].handler
-            except KeyError:
-                self._warn_uncaptured(handler_name)
-                break
+            f = self._get_handler_func(handler_name)
+            if f is None:
+                continue
             for index in self.index_handlers[handler_name]:
                 index -= 1
                 if is_range[index]:
@@ -1006,11 +1015,9 @@ class TranslationQuantifierHandler(TranslationReprMixin):
 
         strings = OrderedDict()
         for handler_name, args in self.string_handlers.items():
-            try:
-                f = self.handlers[handler_name].handler
-            except KeyError:
-                self._warn_uncaptured(handler_name)
-                break
+            f = self._get_handler_func(handler_name)
+            if f is None:
+                continue
             strings[handler_name] = f(*args)
 
         return values, strings

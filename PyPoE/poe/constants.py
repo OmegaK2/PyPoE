@@ -230,6 +230,21 @@ class DISTRIBUTOR(IntEnum):
     DEFAULT = ALL
 
 
+class SHOP_PACKAGE_PLATFORM(IntEnum):
+    """
+    ShopPackagePlatform.dat
+
+    Attributes
+    ----------
+    PC
+        PC
+    XBOX
+        Microsoft XBox
+    """
+    PC = 1
+    XBOX = 2
+
+
 class SOCKET_COLOUR(Enum):
     """
     Representation of item socket colours.
