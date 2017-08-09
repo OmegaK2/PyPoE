@@ -1999,7 +1999,7 @@ TranslationQuantifier(
 
 TranslationQuantifier(
     id='per_minute_to_per_second_2dp_if_required',
-    handler=lambda v: round(v/60, 2) if v//60 != 0 else v//60,
+    handler=lambda v: round(v/60, 2) if v % 60 != 0 else v//60,
     reverse_handler=lambda v: float(v)*60,
 )
 
