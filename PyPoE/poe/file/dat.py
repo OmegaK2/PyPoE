@@ -419,6 +419,9 @@ class DatRecord(list):
                 values.append(value)
         return values'''
 
+    def __hash__(self):
+        return hash((self.parent.file_name, self.rowid))
+
     def iter(self):
         """
         Iterates over the DatRecord and returns key, value and index
@@ -613,10 +616,14 @@ class DatReader(ReprMixin):
 
         columns_1to1 = set()
         columns_1toN = set()
+        columns_NtoN = set()
         for column in columns:
             if column in self.columns_unique:
                 self.index[column] = {}
                 columns_1to1.add(column)
+            elif self.specification.fields[column].type.startswith('ref|list'):
+                columns_NtoN.add(column)
+                self.index[column] = defaultdict(list)
             else:
                 columns_1toN.add(column)
                 self.index[column] = defaultdict(list)
@@ -627,6 +634,9 @@ class DatReader(ReprMixin):
                 self.index[column][row[column]] = row
             for column in columns_1toN:
                 self.index[column][row[column]].append(row)
+            for column in columns_NtoN:
+                for value in row[column]:
+                    self.index[column][value].append(row)
 
     def row_iter(self):
         """
