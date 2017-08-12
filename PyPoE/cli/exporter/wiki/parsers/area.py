@@ -140,7 +140,9 @@ class AreaCommandHandler(ExporterHandler):
 
 class AreaParser(parser.BaseParser):
     _files = [
-        'WorldAreas.dat'
+        'WorldAreas.dat',
+        'MapPins.dat',
+        'AtlasNode.dat',
     ]
 
     _area_column_index_filter = partialmethod(
@@ -321,14 +323,19 @@ class AreaParser(parser.BaseParser):
 
         r = ExporterResult()
 
-        if areas:
-            console('Found %s areas. Processing...' % len(areas))
-        else:
+        if not areas:
             console(
                 'No areas found for the specified parameters. Quitting.',
                 msg=Msg.warning,
             )
             return r
+
+        console('Accessing additional data...')
+
+        self.rr['MapPins.dat'].build_index('WorldAreasKeys')
+        self.rr['AtlasNode.dat'].build_index('WorldAreasKey')
+
+        console('Found %s areas. Processing...' % len(areas))
 
         for area in areas:
             data = OrderedDict()
@@ -353,9 +360,19 @@ class AreaParser(parser.BaseParser):
                 data[copy_data['template']] = value
 
             for i, (tag, value) in enumerate(zip(area['SpawnWeight_TagsKeys'],
-                                                 area['SpawnWeight_Values'])):
+                                                 area['SpawnWeight_Values']),
+                                             start=1):
                 data['spawn_weight%s_tag' % i] = tag['Id']
                 data['spawn_weight%s_value' % i] = value
+
+            map_pin = self.rr['MapPins.dat'].index['WorldAreasKeys'].get(area)
+            if map_pin:
+                data['flavour_text'] = map_pin[0]['FlavourText']
+
+            atlas_node = self.rr['AtlasNode.dat'].index['WorldAreasKey'].get(
+                area)
+            if atlas_node:
+                data['flavour_text'] = atlas_node[0]['FlavourText']
 
             cond = WikiCondition(
                 data=data,

@@ -1370,7 +1370,10 @@ class ItemsParser(parser.BaseParser):
         elif id.startswith('2'):
             name = '%s (pre 2.4)' % base_item_type['Name']
         elif id.startswith('Atlas'):
-            return base_item_type['Name']
+            if 'Harbinger' in id:
+                name = '%s (%s Tier)' % (base_item_type['Name'], id.replace('AtlasHarbinger', ''))
+            else:
+                return base_item_type['Name']
 
         # Each iteration of maps has it's own art
         if name is not None:
