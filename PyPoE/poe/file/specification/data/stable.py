@@ -1517,7 +1517,7 @@ specification = Specification({
                 key='AchievementItems.dat',
                 description='Achievement item checked on currency use',
             )),
-            ('Encounter_AchievementItemsKey', Field(
+            ('Encounter_AchievementItemsKeys', Field(
                 type='ref|list|ulong',
                 key='AchievementItems.dat',
                 description='Achievement item granted on encounter',
@@ -2208,7 +2208,7 @@ specification = Specification({
             ('SpawnWeight', Field(
                 type='int',
             )),
-            ('ModsKey', Field(
+            ('ModsKeys', Field(
                 type='ref|list|long',
                 key='Mods.dat',
             )),
@@ -4306,7 +4306,7 @@ specification = Specification({
                 key='BaseItemTypes.dat',
                 unique=True,
             )),
-            ('LabyrinthSecretsKey', Field(
+            ('LabyrinthSecretsKeys', Field(
                 type='ref|list|ulong',
                 key='LabyrinthSecrets.dat',
             )),
