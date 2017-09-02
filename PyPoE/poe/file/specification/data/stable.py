@@ -3406,13 +3406,16 @@ specification = Specification({
                 type='ulong',
                 key='MonsterVarieties.dat',
             )),
-            ('Unknown2', Field(
+            ('Unknown1', Field(
                 type='int',
             )),
             ('MinLevel', Field(
                 type='int',
             )),
             ('MaxLevel', Field(
+                type='int',
+            )),
+            ('Unknown2', Field(
                 type='int',
             )),
         )),
@@ -4553,6 +4556,10 @@ specification = Specification({
             ('MapsKey3', Field(
                 type='int',
                 key='Maps.dat',
+            )),
+            ('MapIteration', Field(
+                type='int',
+                enum='MAP_ITERATION',
             )),
         )),
     ),
@@ -7034,6 +7041,9 @@ specification = Specification({
                 file_path=True,
                 file_ext='.png',
             )),
+            ('Flag1', Field(
+                type='bool',
+            )),
         )),
     ),
     'ShopItemPrice.dat': File(
@@ -7107,8 +7117,12 @@ specification = Specification({
                 type='int',
                 description='Number of points the user gets back if they opt-out of physical items',
             )),
-            ('Unknown6', Field(
+            ('XBoxId', Field(
+                type='ref|string',
+            )),
+            ('ShopPackagePlatformKey', Field(
                 type='int',
+                enum='SHOP_PACKAGE_PLATFORM',
             )),
         )),
     ),
@@ -8172,6 +8186,10 @@ specification = Specification({
             )),
             ('Time1', Field(
                 type='ref|string',
+            )),
+            ('ShopPackagePlatformKey', Field(
+                type='int',
+                enum='SHOP_PACKAGE_PLATFORM',
             )),
         )),
     ),

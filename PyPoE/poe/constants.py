@@ -331,6 +331,27 @@ class RARITY(Enum):
         self.colour = colour
 
 
+class MAP_ITERATION(IntEnum):
+    """
+    Representation of map iterations
+
+    Attributes
+    ----------
+    LEGACY
+        Maps prior to Awakening (2.0)
+    SQUARE
+        Maps after Awakening (2.0), but before Atlas of Worlds (2.4)
+    ATLAS
+        Maps since Atlas of Worlds update (2.4)
+    """
+
+    LEGACY = 1
+    SQUARE = 2
+    ATLAS = 3
+
+    ROUND = ATLAS
+
+
 class MOD_DOMAIN(IntEnum):
     """
     Representation of mod domains.
