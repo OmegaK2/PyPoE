@@ -1738,7 +1738,7 @@ class ItemsParser(parser.BaseParser):
 
             if not prophecy['IsEnabled'] and not parsed_args.allow_disabled:
                 console(
-                    'Propehcy "%s" is disabled - skipping.' % name,
+                    'Prophecy "%s" is disabled - skipping.' % name,
                     msg=Msg.error
                 )
                 continue
@@ -1758,9 +1758,7 @@ class ItemsParser(parser.BaseParser):
             infobox['flavour_text'] = prophecy['FlavourText']
             infobox['prophecy_id'] = prophecy['Id']
             infobox['prediction_text'] = prophecy['PredictionText']
-            infobox['seal_cost_normal'] = prophecy['SealCost_Normal']
-            infobox['seal_cost_cruel'] = prophecy['SealCost_Cruel']
-            infobox['seal_cost_merciless'] = prophecy['SealCost_Merciless']
+            infobox['seal_cost'] = prophecy['SealCost']
 
             if not prophecy['IsEnabled']:
                 infobox['drop_enabled'] = False
