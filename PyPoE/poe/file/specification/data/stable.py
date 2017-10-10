@@ -6199,7 +6199,7 @@ specification = Specification({
             ('IsMultipleChoiceOption', Field(
                 type='bool',
             )),
-            ('Unknown0', Field(
+            ('Stat5Value', Field(
                 type='int',
             )),
         )),
