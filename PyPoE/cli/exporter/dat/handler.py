@@ -67,6 +67,11 @@ class DatExportHandler(object):
             help='.dat files to export',
             nargs='*',
         )
+        parser.add_argument(
+            '--locale',
+            help='locale code for which data should be exported',
+            dest='locale',
+        )
 
     def handle(self, args):
         ver = config.get_option('version')
@@ -107,7 +112,7 @@ class DatExportHandler(object):
         console(prefix + 'Reading .dat files')
 
         dat_files = {}
-        ggpk_data = ggpk['Data']
+        ggpk_data = self._ggpk_data(args.locale, ggpk)
         remove = []
         for name in tqdm(args.files):
             try:
@@ -126,6 +131,20 @@ class DatExportHandler(object):
             args.files.remove(file_name)
 
         return dat_files
+
+    def _ggpk_data(self, locale, ggpk):
+        ggpk_data = ggpk['Data']
+
+        if locale is None:
+            return ggpk_data
+        elif locale == 'pt':
+            return ggpk_data['Portuguese']
+        elif locale == 'ru':
+            return ggpk_data['Russian']
+        elif locale == 'th':
+            return ggpk_data['Thai']
+        else:
+            raise ValueError('Unrecognized locale ' + str(locale))
 
 
 # =============================================================================
