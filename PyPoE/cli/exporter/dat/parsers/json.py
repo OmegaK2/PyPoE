@@ -79,6 +79,14 @@ class JSONExportHandler(DatExportHandler):
             action='store_true',
         )
 
+        self.json.add_argument(
+            '--force-ascii-format',
+            help='Will enforce the json file to be written as ascii, escaping '
+                 'unicode characters using python escapes accordingly',
+            dest='ascii',
+            action='store_true',
+        )
+
         self.add_default_arguments(self.json)
 
     def handle(self, args):
@@ -86,7 +94,11 @@ class JSONExportHandler(DatExportHandler):
 
         dict_spec = args.spec.as_dict()
 
-        with open(args.target, mode='w') as f:
+        with open(
+                args.target,
+                mode='w',
+                encoding='ascii' if args.ascii else 'utf-8'
+        ) as f:
             dat_files = self._read_dat_files(args)
 
             console('Building data object...')
@@ -136,7 +148,7 @@ class JSONExportHandler(DatExportHandler):
 
             console('Dumping data to "%s"...' % args.target)
 
-            dump(out, f)
+            dump(out, f, ensure_ascii=args.ascii)
 
         console('Done.')
 
