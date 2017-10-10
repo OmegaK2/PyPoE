@@ -117,6 +117,8 @@ class ContextToolbar(QToolBar):
             self,
             self.tr('Select directory to extract to')
         )
+        if not target_dir:
+            return
         p._write_log(self.tr('Extracting file(s) to "%s"...' % target_dir))
         node.extract_to(target_dir)
 
