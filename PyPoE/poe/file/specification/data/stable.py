@@ -600,7 +600,7 @@ specification = Specification({
             ('UniquePurchase_Costs', Field(
                 type='ref|list|int',
             )),
-            ('Unknown3', Field(
+            ('Inflection', Field(
                 type='ref|string',
             )),
             ('Equip_AchievementItemsKey', Field(
@@ -5924,7 +5924,7 @@ specification = Specification({
             ('Flag0', Field(
                 type='bool',
             )),
-            ('Unknown0', Field(
+            ('Inflection', Field(
                 type='ref|string',
             )),
         )),
@@ -8783,7 +8783,7 @@ specification = Specification({
             ('Text2', Field(
                 type='ref|string',
             )),
-            ('Unknown8', Field(
+            ('Inflection', Field(
                 type='ref|string',
             )),
         )),
