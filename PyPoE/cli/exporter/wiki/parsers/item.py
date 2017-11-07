@@ -1725,9 +1725,13 @@ class ItemsParser(parser.BaseParser):
         'MysteriousInvadersLightning': ' (Lightning)',
         'MysteriousInvadersPhysical': ' (Physical)',
         'MysteriousInvadersChaos': ' (Chaos)',
+
+        'AreaAllRaresAreCloned': ' (prophecy)',
+        'HillockDropsTheAnvil': ' (prophecy)',
     }
 
     def prophecy(self, parsed_args):
+        self.rr['Prophecies.dat'].build_index('Name')
         prophecies = []
         names = defaultdict(list)
         for prophecy in self.rr['Prophecies.dat']:

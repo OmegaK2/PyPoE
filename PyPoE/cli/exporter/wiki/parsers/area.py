@@ -37,6 +37,7 @@ Interal API
 # =============================================================================
 
 # Python
+import re
 from functools import partialmethod
 from collections import OrderedDict
 
@@ -136,6 +137,24 @@ class AreaCommandHandler(ExporterHandler):
             nargs='?',
             help='Ending index',
             type=int,
+        )
+
+        # filtering
+        a_filter = sub.add_parser(
+            'filter',
+            help='Extract areas using filters.'
+        )
+        self.add_default_parsers(
+            parser=a_filter,
+            cls=AreaParser,
+            func=AreaParser.by_filter,
+        )
+        add_format_argument(a_filter)
+
+        a_filter.add_argument(
+            '--re-id',
+            help='Regular expression on the id',
+            type=str,
         )
 
 
@@ -319,6 +338,18 @@ class AreaParser(parser.BaseParser):
             column_id='Name', arg_list=parsed_args.area_name
         ))
 
+    def by_filter(self, parsed_args):
+        re_id = re.compile(parsed_args.re_id) if parsed_args.re_id else None
+
+        out = []
+        for row in self.rr['WorldAreas.dat']:
+            if re_id:
+                if not re_id.match(row['Id']):
+                    continue
+            out.append(row)
+
+        return self.export(parsed_args, out)
+
     def export(self, parsed_args, areas):
         console('Found %s areas, parsing...' % len(areas))
 
@@ -375,6 +406,26 @@ class AreaParser(parser.BaseParser):
             if atlas_node:
                 data['flavour_text'] = atlas_node[0]['FlavourText']
 
+            #
+            # Add main-page if possible
+            #
+
+            # TODO: Harbinger maps are not handled correctly atm
+
+            # Double legacy maps, pre 2.0
+            if area['Id'].startswith('MapTier') and 'Unique' not in area['Id']:
+                data['main_page'] = '%s Map (pre 2.0)' % area['Name']
+            # Legacy maps (square maps), pre 2.4
+            elif area['Id'].startswith('Map2Tier') and 'Unique' not in area['Id']:
+                data['main_page'] = '%s Map (pre 2.4)' % area['Name']
+            # Atlas maps
+            elif area['Id'].startswith('MapAtlas'):
+                if 'Unique' in area['Id'] or 'BreachBoss' in area['Id'] or \
+                        area['Id'].endswith('ShapersRealm'):
+                    data['main_page'] = area['Name']
+                else:
+                    data['main_page'] = '%s Map' % area['Name']
+
             cond = WikiCondition(
                 data=data,
                 cmdargs=parsed_args,
@@ -389,7 +440,7 @@ class AreaParser(parser.BaseParser):
                         'condition': cond,
                     },
                 ],
-                wiki_message='Mod updater',
+                wiki_message='Area updater',
             )
 
 
