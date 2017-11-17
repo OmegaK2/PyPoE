@@ -1709,6 +1709,9 @@ specification = Specification({
             ('IsDisabled', Field(
                 type='bool',
             )),
+            ('Flag0', Field(
+                type='bool',
+            )),
         )),
     ),
     'CurrencyItems.dat': File(
@@ -3951,6 +3954,9 @@ specification = Specification({
             ('CreateCorruptedJewelAchievementItemsKey', Field(
                 type='ulong',
                 key='AchievementItems.dat',
+            )),
+            ('Unknown30', Field(
+                type='int',
             )),
         )),
     ),
@@ -7042,6 +7048,9 @@ specification = Specification({
                 file_ext='.png',
             )),
             ('Flag1', Field(
+                type='bool',
+            )),
+            ('Flag2', Field(
                 type='bool',
             )),
         )),
