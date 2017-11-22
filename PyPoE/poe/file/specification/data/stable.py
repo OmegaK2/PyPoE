@@ -600,7 +600,7 @@ specification = Specification({
             ('UniquePurchase_Costs', Field(
                 type='ref|list|int',
             )),
-            ('Unknown3', Field(
+            ('Inflection', Field(
                 type='ref|string',
             )),
             ('Equip_AchievementItemsKey', Field(
@@ -1707,6 +1707,9 @@ specification = Specification({
                 type='ref|string',
             )),
             ('IsDisabled', Field(
+                type='bool',
+            )),
+            ('Flag0', Field(
                 type='bool',
             )),
         )),
@@ -3952,6 +3955,9 @@ specification = Specification({
                 type='ulong',
                 key='AchievementItems.dat',
             )),
+            ('Unknown30', Field(
+                type='int',
+            )),
         )),
     ),
     'ItemisedVisualEffect.dat': File(
@@ -5924,7 +5930,7 @@ specification = Specification({
             ('Flag0', Field(
                 type='bool',
             )),
-            ('Unknown0', Field(
+            ('Inflection', Field(
                 type='ref|string',
             )),
         )),
@@ -6199,7 +6205,7 @@ specification = Specification({
             ('IsMultipleChoiceOption', Field(
                 type='bool',
             )),
-            ('Unknown0', Field(
+            ('Stat5Value', Field(
                 type='int',
             )),
         )),
@@ -7042,6 +7048,9 @@ specification = Specification({
                 file_ext='.png',
             )),
             ('Flag1', Field(
+                type='bool',
+            )),
+            ('Flag2', Field(
                 type='bool',
             )),
         )),
@@ -8783,7 +8792,7 @@ specification = Specification({
             ('Text2', Field(
                 type='ref|string',
             )),
-            ('Unknown8', Field(
+            ('Inflection', Field(
                 type='ref|string',
             )),
         )),
