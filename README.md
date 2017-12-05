@@ -45,8 +45,8 @@ These instructions are for the current development version of PyPoE.
 * make sure Python 3.4 and python scripts folder is in your %PATH% on windows
 * checkout PyPoE with git
 * go into the PyPoE folder
-* Minimum install: ```pip install -e . ```
-* Full install: ```pip install -e .[full]```
+* Minimum install: ```pip3 install -e . ```
+* Full install: ```pip3 install -e .[full]```
 
 Usage
 --------
