@@ -91,8 +91,9 @@ def test_missing(files, ggpkfile):
 
         file_set.add(name)
 
-    assert file_set.difference(set(files)) == set(), 'ggpk contains unhandled .dat files'
-    assert set(files).difference(file_set) == set(), 'dat specification contains unused dat files'
+    # Sorting by name makes this easier to correct when error shows up
+    assert sorted(file_set.difference(set(files))) == [], 'ggpk contains unhandled .dat files'
+    assert sorted(set(files).difference(file_set)) == [], 'dat specification contains unused dat files'
 
 
 # unique_dat_file_name & unique_field_name are parametrized in conftest.py
