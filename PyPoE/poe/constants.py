@@ -71,7 +71,7 @@ __all__ = [
     'MOD_STATS_RANGE',
 ]
 
-MOD_MAX_STATS = 5
+MOD_MAX_STATS = 6
 MOD_STATS_RANGE = range(1, MOD_MAX_STATS+1)
 
 # =============================================================================
@@ -380,12 +380,17 @@ class MOD_DOMAIN(IntEnum):
         Master domain for Forsaken Master related mods, in particular for
         master crafting mods
     JEWEL
-        Jewel domain for things that appear on jewel items
+        Jewel domain for modifiers that appear on jewel items
     ATLAS
-        Atlas domain for things that appear when using a sextant orb on the
+        Atlas domain for modifiers that appear when using a sextant orb on the
         atlas
     LEAGUESTONE
-        Leaguestone domain for things that appear on league stones
+        Leaguestone domain for modifiers that appear on league stones
+    ABYSS_JEWEL
+        Domain for modifiers that appear on Abyss jewels
+    MAP_DEVICE
+        For implicit modifiers that can be applied through the map device
+        For example, vaal fragments or soul flasks
     """
     ITEM = 1
     FLASK = 2
@@ -400,6 +405,8 @@ class MOD_DOMAIN(IntEnum):
     JEWEL = 11
     ATLAS = 12
     LEAGUESTONE = 13
+    ABYSS_JEWEL = 14
+    MAP_DEVICE = 15
 
 
 class MOD_GENERATION_TYPE(IntEnum):
