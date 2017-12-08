@@ -68,6 +68,7 @@ class WikiCondition(parser.WikiCondition):
 
     NAME = 'Area'
     ADD_INCLUDE = False
+    INDENT = 33
 
 
 class AreaCommandHandler(ExporterHandler):
@@ -152,9 +153,10 @@ class AreaCommandHandler(ExporterHandler):
         add_format_argument(a_filter)
 
         a_filter.add_argument(
-            '--re-id',
+            '-ft-id', '--filter-id', '--filter-metadata-id',
             help='Regular expression on the id',
             type=str,
+            dest='re_id',
         )
 
 
@@ -413,18 +415,28 @@ class AreaParser(parser.BaseParser):
             # TODO: Harbinger maps are not handled correctly atm
 
             # Double legacy maps, pre 2.0
-            if area['Id'].startswith('MapTier') and 'Unique' not in area['Id']:
-                data['main_page'] = '%s Map (pre 2.0)' % area['Name']
-            # Legacy maps (square maps), pre 2.4
-            elif area['Id'].startswith('Map2Tier') and 'Unique' not in area['Id']:
-                data['main_page'] = '%s Map (pre 2.4)' % area['Name']
-            # Atlas maps
-            elif area['Id'].startswith('MapAtlas'):
+            map_version = None
+            if data.get('tags') and 'map' in data['tags']:
+                for row in self.rr['MapSeries.dat']:
+                    if not area['Id'].startswith(row['Id']):
+                        continue
+                    map_version = row['Name']
+
+
+            if map_version:
                 if 'Unique' in area['Id'] or 'BreachBoss' in area['Id'] or \
                         area['Id'].endswith('ShapersRealm'):
-                    data['main_page'] = area['Name']
+                    data['main_page'] = '%s (%s)' % (area['Name'], map_version)
+                elif 'Harbinger' in area['Id']:
+                    data['main_page'] = '%s (%s Tier) (%s)' % (
+                        area['Name'],
+                        re.sub('^.*Harbinger', '', area['Id']),
+                        map_version,
+                    )
                 else:
-                    data['main_page'] = '%s Map' % area['Name']
+                    data['main_page'] = '%s Map (%s)' % (
+                        area['Name'], map_version
+                    )
 
             cond = WikiCondition(
                 data=data,

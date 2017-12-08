@@ -933,8 +933,8 @@ class TagHandler(object):
 
 class WikiCondition(object):
     COPY_KEYS = (
-        'base_page',
     )
+    COPY_MATCH = None
 
     NAME = NotImplemented
     INDENT = 33
@@ -963,6 +963,11 @@ class WikiCondition(object):
                     self.data[k] = self.template_arguments['kwargs'][k]
                 except KeyError:
                     pass
+
+            if self.COPY_MATCH:
+                for k, v in self.template_arguments['kwargs'].items():
+                    if self.COPY_MATCH.match(k):
+                        self.data[k] = v
 
             prefix = ''
             if self.ADD_INCLUDE and '<onlyinclude></onlyinclude>' not in \

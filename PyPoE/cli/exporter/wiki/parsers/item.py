@@ -136,8 +136,12 @@ class WikiCondition(parser.WikiCondition):
         'release_version',
         'removal_version',
     )
+    COPY_MATCH = re.compile(
+        r'^upgraded_from_set.*'
+        , re.UNICODE)
 
     NAME = 'Item'
+    INDENT = 36
     ADD_INCLUDE = False
 
 
@@ -189,6 +193,18 @@ class ItemsHandler(ExporterHandler):
         )
         add_format_argument(parser)
         self._shared_item_arguments(parser)
+
+        parser.add_argument(
+            '-ft-n', '--filter-name',
+            help='Filter by item name using regular expression.',
+            dest='re_name',
+        )
+
+        parser.add_argument(
+            '-ft-id', '--filter-id', '--filter-metadata-id',
+            help='Filter by item metadata id using regular expression',
+            dest='re_id',
+        )
 
         #
         # Prophecies
@@ -338,6 +354,9 @@ class ItemsParser(parser.BaseParser):
         super(ItemsParser, self).__init__(*args, **kwargs)
 
         self._skill_stat_filters = None
+        self._img_path = None
+        self._ggpk = None
+        self._parsed_args = None
 
     @property
     def skill_stat_filter(self):
@@ -360,6 +379,25 @@ class ItemsParser(parser.BaseParser):
 
     def _format_lines(self, lines):
         return '<br>'.join(lines).replace('\n', '<br>')
+
+    def _write_image(self, data, out_path):
+        with open(out_path, 'wb') as f:
+            f.write(extract_dds(
+                data,
+                path_or_ggpk=self.ggpk,
+            ))
+
+            console('Wrote "%s"' % out_path)
+
+        if not self._parsed_args.convert_images:
+            return
+
+        os.system('magick convert "%s" "%s"' % (
+            out_path, out_path.replace('.dds', '.png'),
+        ))
+        os.remove(out_path)
+
+        console('Converted "%s" to png' % out_path)
 
     _skill_column_map = (
         ('ManaCost', {
@@ -456,6 +494,15 @@ class ItemsParser(parser.BaseParser):
             except KeyError as e:
                 warnings.warn('Missing active skill in stat filers: %s' % e.args[0])
                 tf = self.tc['skill_stat_descriptions.txt']
+
+            if self._parsed_args.store_images and ae['Icon_DDSFile']:
+                self._write_image(
+                    data=self.ggpk[ae['Icon_DDSFile']].record.extract().read(),
+                    out_path=os.path.join(
+                        self._img_path,
+                        '%s skill icon.dds' % base_item_type['Name']
+                    ),
+                )
         else:
             tf = self.tc['gem_stat_descriptions.txt']
 
@@ -507,13 +554,28 @@ class ItemsParser(parser.BaseParser):
                     (qtr, 'qstats'),
             ):
                 for j, stats in enumerate(result.found_ids):
+                    values = list(result.values[j])
+                    stats = list(stats)
+                    values_parsed = list(result.values_parsed[j])
+                    # Skip zero stats again, since some translations might
+                    # provide them
+                    while True:
+                        try:
+                            index = values.index(0)
+                            del values[index]
+                            del values_parsed[index]
+                            del stats[index]
+                        except ValueError:
+                            break
+                    if result.values[j] == 0:
+                        continue
                     k = '__'.join(stats)
                     stat_key_order[key][k] = None
                     data[key]['__'.join(stats)] = {
                         'line': result.found_lines[j],
                         'stats': stats,
-                        'values': result.values[j],
-                        'values_parsed': result.values_parsed[j],
+                        'values': values,
+                        'values_parsed': values_parsed,
                     }
                 for stat, value in result.missing:
                     warnings.warn('Missing translation for %s' % stat)
@@ -601,6 +663,7 @@ class ItemsParser(parser.BaseParser):
 
         # From ActiveSkills.dat
         if ae:
+            infobox['gem_description'] = ae['Description']
             infobox['active_skill_name'] = ae['DisplayedName']
             if ae['WeaponRestriction_ItemClassesKeys']:
                 # The class name may be empty for reason, causing issues
@@ -1361,25 +1424,32 @@ class ItemsParser(parser.BaseParser):
                 return '%s (%s)' % (base_item_type['Name'], league)
 
     def _conflict_maps(self, infobox, base_item_type):
-        id = base_item_type['Id'].replace('Metadata/Items/Maps/Map', '')
-        name = None
+        id = base_item_type['Id'].replace('Metadata/Items/Maps/', '')
         # Legacy maps
-        if id.startswith('T'):
-            name = '%s (pre 2.0)' % base_item_type['Name']
-        # 2.0 maps
-        elif id.startswith('2'):
-            name = '%s (pre 2.4)' % base_item_type['Name']
-        elif id.startswith('Atlas'):
-            if 'Harbinger' in id:
-                name = '%s (%s Tier)' % (base_item_type['Name'], id.replace('AtlasHarbinger', ''))
-            else:
-                return base_item_type['Name']
+        map_version = None
+        for row in self.rr['MapSeries.dat']:
+            if not id.startswith(row['Id']):
+                continue
+            map_version = row['Name']
+
+        if 'Harbinger' in id:
+            name = '%s (%s Tier) (%s)' % (
+                base_item_type['Name'],
+                re.sub(r'^.*Harbinger', '', id),
+                map_version,
+            )
+        else:
+            name = '%s (%s)' % (
+                base_item_type['Name'],
+                map_version
+            )
 
         # Each iteration of maps has it's own art
-        if name is not None:
-            infobox['inventory_icon'] = name
+        infobox['inventory_icon'] = name
+        if not id.startswith('MapWorld'):
             infobox['drop_enabled'] = False
-            return name
+
+        return name
 
     _conflict_microtransactions_map = {
         'Metadata/Items/MicrotransactionCurrency/MysteryBox1x1':
@@ -1486,7 +1556,7 @@ class ItemsParser(parser.BaseParser):
     def _parse_class_filter(self, parsed_args):
         self.rr['ItemClasses.dat'].build_index('Name')
         if parsed_args.item_class:
-            return [self.rr['ItemClasses.dat'].index['Name'][cls]
+            return [self.rr['ItemClasses.dat'].index['Name'][cls][0]
                    for cls in parsed_args.item_class]
         else:
             return []
@@ -1516,18 +1586,36 @@ class ItemsParser(parser.BaseParser):
     def by_filter(self, parsed_args):
         classes = self._parse_class_filter(parsed_args)
 
-        items = [
-            item for item in self.rr['BaseItemTypes.dat'] if
-            item['ItemClassesKey'] in classes]
+        if parsed_args.re_name:
+            parsed_args.re_name = re.compile(parsed_args.re_name,
+                                             flags=re.UNICODE)
+        if parsed_args.re_id:
+            parsed_args.re_id = re.compile(parsed_args.re_id, flags=re.UNICODE)
+
+        items = []
+
+        for item in self.rr['BaseItemTypes.dat']:
+            if classes and not item['ItemClassesKey'] in classes:
+                continue
+
+            if parsed_args.re_name and not \
+                    parsed_args.re_name.match(item['Name']):
+                continue
+
+            if parsed_args.re_id and not \
+                    parsed_args.re_id.match(item['Id']):
+                continue
+
+            items.append(item)
 
         return self._export(items, parsed_args)
 
     def _export(self, items, parsed_args):
+        self._parsed_args = parsed_args
         console('Found %s items' % len(items))
 
         console('Additional files may be loaded. Processing information - this '
                 'may take a while...')
-        ggpk = None
         if parsed_args.store_images:
             try:
                 import brotli
@@ -1542,10 +1630,14 @@ class ItemsParser(parser.BaseParser):
                     'Images are flagged for extraction. Loading content.ggpk '
                     '...'
                 )
-                ggpk = GGPKFile()
-                ggpk.read(get_content_ggpk_path())
-                ggpk.directory_build()
+                self.ggpk = GGPKFile()
+                self.ggpk.read(get_content_ggpk_path())
+                self.ggpk.directory_build()
                 console('content.ggpk has been loaded.')
+
+                self._img_path = os.path.join(self.base_path, 'img')
+                if not os.path.exists(self._img_path):
+                    os.makedirs(self._img_path)
 
         r = ExporterResult()
         self.rr['BaseItemTypes.dat'].build_index('Name')
@@ -1632,7 +1724,9 @@ class ItemsParser(parser.BaseParser):
                     continue
 
             # handle items with duplicate name entries
-            if len(self.rr['BaseItemTypes.dat'].index['Name'][name]) > 1:
+            # Maps must be handled in any case due to unique naming style of
+            # pages
+            if cls == 'Maps' or len(self.rr['BaseItemTypes.dat'].index['Name'][name]) > 1:
                 resolver = self._conflict_resolver_map.get(cls)
 
                 if resolver:
@@ -1672,7 +1766,7 @@ class ItemsParser(parser.BaseParser):
                 wiki_message='Item exporter',
             )
 
-            if parsed_args.store_images and ggpk:
+            if parsed_args.store_images and self.ggpk:
                 if not base_item_type['ItemVisualIdentityKey']['DDSFile']:
                     warnings.warn(
                         'Missing 2d art inventory icon for item "%s"' %
@@ -1680,33 +1774,14 @@ class ItemsParser(parser.BaseParser):
                     )
                     continue
 
-                filepath = os.path.join(self.base_path, 'img')
-                if not os.path.exists(filepath):
-                    os.makedirs(filepath)
-
-                filepath = os.path.join(filepath, (
-                    infobox.get('inventory_icon') or name) +
-                    ' inventory icon.dds'
+                self._write_image(
+                    data=self.ggpk[base_item_type['ItemVisualIdentityKey'][
+                        'DDSFile']].record.extract().read(),
+                    out_path=os.path.join(self._img_path, (
+                        infobox.get('inventory_icon') or name) +
+                        ' inventory icon.dds'
+                    ),
                 )
-
-                with open(filepath, 'wb') as f:
-                    f.write(extract_dds(
-                        ggpk[base_item_type['ItemVisualIdentityKey'][
-                            'DDSFile']].record.extract().read(),
-                        path_or_ggpk=ggpk,
-                    ))
-
-                console('Wrote "%s"' % filepath)
-
-                if not parsed_args.convert_images:
-                    continue
-
-                os.system('magick convert "%s" "%s"' % (
-                    filepath, filepath.replace('.dds', '.png'),
-                ))
-                os.remove(filepath)
-
-                console('Converted "%s" to png' % filepath)
 
         return r
 

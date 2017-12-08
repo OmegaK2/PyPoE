@@ -68,6 +68,8 @@ class WikiCondition(object):
         re.UNICODE | re.MULTILINE | re.DOTALL
     )
 
+    INDENT = 33
+
     def __init__(self, data, cmdargs):
         self.data = data
         self.cmdargs = cmdargs

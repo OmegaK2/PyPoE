@@ -745,7 +745,7 @@ specification = Specification({
             ('IsPickedUpByMonsters', Field(
                 type='bool',
             )),
-            ('Identify_AchievementItemsKeys', Field(
+            ('IdentifyRare_AchievementItemsKeys', Field(
                 type='ref|list|ulong',
                 key='AchievementItems.dat',
             )),
@@ -753,9 +753,9 @@ specification = Specification({
                 type='ulong',
                 key='ItemThemes.dat',
             )),
-            #3.1.0
-            ('Data12', Field(
-                type='ref|list|int',
+            ('IdentifyMagic_AchievementItemsKeys', Field(
+                type='ref|list|ulong',
+                key='AchievementItems.dat',
             )),
         )),
         virtual_fields=OrderedDict((
@@ -4785,21 +4785,23 @@ specification = Specification({
             ('Shaped_AreaLevel', Field(
                 type='int',
             )),
-            ('MapsKey1', Field(
+            ('MapsKey', Field(
                 type='int',
                 key='Maps.dat',
             )),
-            ('MapsKey2', Field(
+            ('AtlasCompletion_MapsKey', Field(
                 type='int',
                 key='Maps.dat',
             )),
-            ('MapsKey3', Field(
+            ('AtlasCompletionUnique_MapsKey', Field(
                 type='int',
                 key='Maps.dat',
             )),
             #3.1.0
-            ('Unknown0', Field(
+            ('MapSeriesKey', Field(
                 type='int',
+                key='MapSeries.dat',
+                key_offset=1,
             )),
             ('Flag0', Field(
                 type='byte',
