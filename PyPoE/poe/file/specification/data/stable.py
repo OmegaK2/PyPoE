@@ -734,7 +734,7 @@ specification = Specification({
             ('UniquePurchase_Costs', Field(
                 type='ref|list|int',
             )),
-            ('Unknown3', Field(
+            ('Inflection', Field(
                 type='ref|string',
             )),
             ('Equip_AchievementItemsKey', Field(
@@ -1656,7 +1656,7 @@ specification = Specification({
                 key='AchievementItems.dat',
                 description='Achievement item checked on currency use',
             )),
-            ('Encounter_AchievementItemsKey', Field(
+            ('Encounter_AchievementItemsKeys', Field(
                 type='ref|list|ulong',
                 key='AchievementItems.dat',
                 description='Achievement item granted on encounter',
@@ -2364,7 +2364,7 @@ specification = Specification({
             ('SpawnWeight', Field(
                 type='int',
             )),
-            ('ModsKey', Field(
+            ('ModsKeys', Field(
                 type='ref|list|long',
                 key='Mods.dat',
             )),
@@ -6234,7 +6234,7 @@ specification = Specification({
             ('Flag0', Field(
                 type='bool',
             )),
-            ('Unknown0', Field(
+            ('Inflection', Field(
                 type='ref|string',
             )),
         )),
@@ -6555,7 +6555,7 @@ specification = Specification({
             ('IsMultipleChoiceOption', Field(
                 type='bool',
             )),
-            ('Unknown0', Field(
+            ('Stat5Value', Field(
                 type='int',
             )),
         )),
@@ -9227,7 +9227,7 @@ specification = Specification({
             ('Text2', Field(
                 type='ref|string',
             )),
-            ('Unknown8', Field(
+            ('Inflection', Field(
                 type='ref|string',
             )),
         )),
