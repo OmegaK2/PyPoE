@@ -5252,6 +5252,9 @@ specification = Specification({
                 type='ulong',
                 key='Stats.dat',
             )),
+            ('TierText', Field(
+               type='ref|string',
+            )),
         )),
         virtual_fields=OrderedDict((
             ('SpawnWeight', VirtualField(
