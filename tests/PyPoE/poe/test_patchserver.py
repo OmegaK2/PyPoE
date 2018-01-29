@@ -46,6 +46,7 @@ import pytest
 
 # self
 from PyPoE.poe import patchserver
+from PyPoE.poe.file import ggpk
 
 # =============================================================================
 # Setup
@@ -53,6 +54,21 @@ from PyPoE.poe import patchserver
 
 _TEST_FILE = 'Data/Wordlists.dat'
 _re_version = re.compile(r'[\d]+\.[\d]+\.[\d]+\.[\d]+', re.UNICODE)
+
+def get_node_folders(file):
+    dir_paths = []
+    parent_dirs = file.rsplit('/', 1)
+    if len(parent_dirs) < 2:
+        return []
+    cdir = ''
+    for dirname in parent_dirs[0].split('/'):
+        if cdir:
+            cdir += '/'
+        cdir += dirname
+        dir_paths.append(cdir)
+    return dir_paths
+
+_TEST_NODE_PATHS = get_node_folders(_TEST_FILE)
 
 # =============================================================================
 # Fixtures
@@ -66,10 +82,15 @@ def patch():
 def patch_temp():
     return patchserver.Patch()
 
+@pytest.fixture(scope='module')
+def patch_file_list(patch):
+    return patchserver.PatchFileList(patch)
+
 # =============================================================================
 # Tests
 # =============================================================================
 
+@pytest.mark.dependency(name="test_socket")
 def test_socket_fd_open_close(patch_temp):
     test_sock_from_fd = patchserver.socket_fd_open(patch_temp.sock_fd)
     assert isinstance(test_sock_from_fd, socket)
@@ -105,3 +126,37 @@ class TestPatch(object):
         assert _re_version.match(patch.version) is not None, 'patch.version ' \
             'result is expected to match the x.x.x.x format'
 
+@pytest.mark.dependency(depends=["test_socket"])
+class TestPatchFileList(object):
+    @pytest.mark.dependency()
+    def test_init(self, patch_file_list):
+        assert isinstance(patch_file_list.directory,
+                          ggpk.DirectoryNode)
+        assert len(patch_file_list.directory.children) > 1
+
+    @pytest.mark.dependency(name="test_updatelist",
+                            depends="TestPatchFileList::test_init")
+    @pytest.mark.parametrize("node_path",
+                             [_TEST_FILE]
+                             + _TEST_NODE_PATHS
+                             + [_TEST_FILE])
+    def test_updatelist(self, patch_file_list, node_path):
+        try:
+            node = patch_file_list.directory[node_path]
+            # if already have metadata for this node,
+            # do not redownload
+            if node.children:
+                return
+        except FileNotFoundError:
+            with pytest.raises(ValueError):
+                # test update_filelist will not query an unknown path
+                patch_file_list.update_filelist([node_path])
+            return
+        # test update_filelist will not query a file
+        if isinstance(node.record, ggpk.FileRecord):
+            with pytest.raises(ValueError):
+                patch_file_list.update_filelist([node_path])
+        else:
+            patch_file_list.update_filelist([node_path])
+        # check that there is a record for the queried node
+        assert patch_file_list.directory[node_path].record
