@@ -39,6 +39,7 @@ candidate for testing.
 import os
 import re
 from urllib.error import HTTPError
+from socket import socket
 
 # 3rd-party
 import pytest
@@ -61,10 +62,19 @@ _re_version = re.compile(r'[\d]+\.[\d]+\.[\d]+\.[\d]+', re.UNICODE)
 def patch():
     return patchserver.Patch()
 
+@pytest.fixture(scope='function')
+def patch_temp():
+    return patchserver.Patch()
+
 # =============================================================================
 # Tests
 # =============================================================================
 
+def test_socket_fd_open_close(patch_temp):
+    test_sock_from_fd = patchserver.socket_fd_open(patch_temp.sock_fd)
+    assert isinstance(test_sock_from_fd, socket)
+    sock_fd = test_sock_from_fd.detach()
+    patchserver.socket_fd_close(sock_fd)
 
 class TestPatch(object):
     def test_dst_file(self, patch, tmpdir):

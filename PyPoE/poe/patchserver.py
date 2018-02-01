@@ -34,6 +34,10 @@ Public API
 
 Internal API
 -------------------------------------------------------------------------------
+
+.. autofunction:: socket_fd_open
+.. autofunction:: socket_fd_close
+
 """
 
 # =============================================================================
@@ -59,6 +63,50 @@ from urllib.error import URLError
 __all__ = []
 
 # =============================================================================
+# Functions
+# =============================================================================
+
+def socket_fd_open(socket_fd):
+    """
+    Create a TCP/IP socket object from a
+    :meth:`socket.socket.detach` file descriptor.
+    Uses :func:`socket.fromfd`.
+
+    Parameters
+    ---------
+    socket_fd : fd
+        File descriptor to build socket from.
+
+    Returns
+    ------
+    socket : :mod:`socket`
+    """
+
+    # open new socket from fd
+    sock = socket.fromfd(fd=socket_fd,
+                         family=socket.AF_INET,
+                         type=socket.SOCK_STREAM,
+                         proto=socket.IPPROTO_TCP)
+    return sock
+
+def socket_fd_close(socket_fd):
+    """
+    Shutdown (FIN) and close a TCP/IP socket object from a
+    :meth:`socket.socket.detach` file descriptor.
+
+    Parameters
+    ---------
+    socket_fd : fd
+        File descriptor for socket to close
+    """
+
+    sock = socket_fd_open(socket_fd)
+    # fin the connection
+    sock.shutdown(socket.SHUT_RDWR)
+    # close the socket
+    sock.close()
+
+# =============================================================================
 # Classes
 # =============================================================================
 
@@ -75,11 +123,14 @@ class Patch(object):
         specific, load-balanced server
     patch_cdn_url : str
         Load-balanced patching url including port for the current PoE version.
+    sock_fd : fd
+        Socket file descriptor for connection to patch server
     """
 
     _SERVER = 'pathofexile.com'
     _PORT = 12995
-    _PROTO = b'\x01\x05'
+    # use patch proto 4
+    _PROTO = b'\x01\x04'
 
     def __init__(self, master_server=_SERVER, master_port=_PORT):
         """
@@ -100,25 +151,53 @@ class Patch(object):
         self._master_server = (master_server, master_port)
         self.update_patch_urls()
 
+    def __del__(self):
+        """
+        Automatically close the patchserver connection and socket.
+        """
+
+        sock = socket_fd_open(self.sock_fd)
+        try:
+            sock.shutdown(socket.SHUT_RDWR)
+        except OSError:
+            pass
+        try:
+            sock.close()
+        except OSError:
+            raise
+
     def update_patch_urls(self):
         """
         Updates the patch urls from the master server.
+
+        Open a connection to the patchserver, get webroot details,
+        detach from socket, and store socket file descriptor as :attr:`sock_fd`
+
+        .. note::
+
+            Recreate socket object later with: :func:`.socket_fd_open`
+
+            When finished, destroy socket with: :func:`.socket_fd_close`.
+            Equivalent is called in :meth:`.__del__`
         """
         with socket.socket(proto=socket.IPPROTO_TCP) as sock:
             sock.connect(self._master_server)
             sock.send(Patch._PROTO)
             data = io.BytesIO(sock.recv(1024))
 
-            unknown = struct.unpack('<B', data.read(1))[0]
+            unknown = struct.unpack('B', data.read(1))[0]
+            blank = struct.unpack('33s', data.read(33))[0]
 
-            data.seek(34)
-            url_length = struct.unpack('<B', data.read(1))[0]
+            url_length = struct.unpack('B', data.read(1))[0]
             self.patch_url = data.read(url_length*2).decode('utf-16')
 
-            data.seek(2, io.SEEK_CUR)
-            self.patch_cdn_url = data.read(999).decode('utf-16')
+            blank = struct.unpack('B', data.read(1))[0]
 
-            sock.close()
+            url2_length = struct.unpack('B', data.read(1))[0]
+            self.patch_cdn_url = data.read(url2_length*2).decode('utf-16')
+
+            # Close this later!
+            self.sock_fd = sock.detach()
 
     def download(self, file_path, dst_dir=None, dst_file=None):
         """
@@ -216,7 +295,3 @@ class Patch(object):
             internal scheme for the a/b/c patches and hotfixes.
         """
         return self.patch_url.strip('/').rsplit('/', maxsplit=1)[-1]
-
-# =============================================================================
-# Functions
-# =============================================================================
