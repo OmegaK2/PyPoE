@@ -1105,10 +1105,13 @@ def find_template(wikitext, template_name):
             partial(f, tid='template')),
         (r'{{', partial(f, tid='l_brace')),
         (r'}}', partial(f, tid='r_brace')),
+        (r'\[\[', partial(f, tid='l_brackets')),
+        (r'\]\]', partial(f, tid='r_brackets')),
         (r'\|', partial(f, tid='pipe')),
         (r'=', partial(f, tid='equals')),
         (r'[{}]{1}', partial(f, tid='single_brace')),
-        (r'[^{}\|=]+', partial(f, tid='text')),
+        (r'[\[\]]{1}', partial(f, tid='single_bracket')),
+        (r'[^{}\|=\[\]]+', partial(f, tid='text')),
     ], re.UNICODE | re.MULTILINE)
 
     # Returns
@@ -1120,6 +1123,7 @@ def find_template(wikitext, template_name):
     in_template = False
     pre_equal = True
     brace_count = 0
+    bracket_count = 0
     template_argument = ['', '']
 
     for tid, match, text in scanner.scan(wikitext)[0]:
@@ -1129,16 +1133,19 @@ def find_template(wikitext, template_name):
             # r_brace is needed to capture the last argument, as it's not
             # delimited by a pipe
             # It also prevents reaching the second condition in that case
-            if tid in ('pipe', 'r_brace') and brace_count == 0:
+            if tid in ('pipe', 'r_brace') and brace_count == 0 and \
+                            bracket_count == 0:
                 pre_equal = True
                 if template_argument[1]:
-                    kw_arguments[template_argument[0]] = template_argument[1]
+                    kw_arguments[template_argument[0].strip(' \n')] = \
+                        template_argument[1].strip(' \n')
                 elif template_argument[0]:
-                    arguments.append([template_argument[0]])
+                    arguments.append([template_argument[0].strip(' \n')])
                 template_argument = ['', '']
-            elif tid in ('text', 'l_brace', 'r_brace', 'single_brace', 'pipe'):
+            elif tid in ('text', 'l_brace', 'r_brace', 'single_brace', 'pipe',
+                         'l_brackets', 'r_brackets', 'single_bracket'):
                 index = 0 if pre_equal else 1
-                template_argument[index] += text.strip(' \n')
+                template_argument[index] += text
             elif tid == 'equals':
                 pre_equal = False
 
@@ -1152,6 +1159,10 @@ def find_template(wikitext, template_name):
                     texts.append([])
                 else:
                     brace_count -= 1
+            elif tid == 'l_brackets':
+                bracket_count += 1
+            elif tid == 'r_brackets':
+                bracket_count -= 1
         else:
             texts[-1].append(text)
 

@@ -135,6 +135,10 @@ class WikiCondition(parser.WikiCondition):
         # Version information
         'release_version',
         'removal_version',
+
+        # prophecies
+        'prophecy_objective',
+        'prophecy_reward',
     )
     COPY_MATCH = re.compile(
         r'^upgraded_from_set.*'
@@ -304,6 +308,119 @@ class ItemsParser(parser.BaseParser):
 
     _DROP_DISABLED_ITEMS_BY_ID = {
         'Metadata/Items/Quivers/QuiverDescent',
+    }
+
+    # Unreleased or disabled items to avoid exporting to the wiki
+    _SKIP_ITEMS_BY_ID = {
+        'Metadata/Items/MicrotransactionSkillEffects/MicrotransactionSpectralThrowEbony',
+        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionFirstBlood',
+        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionFirstBloodWeaponEffect',
+        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionTitanPlate',
+        'Metadata/Items/MicrotransactionSkillEffects/MicrotransactionStatueSummonSkeletons2',
+        'Metadata/Items/MicrotransactionSkillEffects/MicrotransactionStatueSummonSkeletons3',
+        'Metadata/Items/MicrotransactionSkillEffects/MicrotransactionStatueSummonSkeletons4',
+        'Metadata/Items/MicrotransactionSkillEffects/MicrotransactionAlternatePortal',
+        'Metadata/Items/MicrotransactionSkillEffects/MicrotransactionBloodSlam',
+        'Metadata/Items/MicrotransactionSkillEffects/MicrotransactionNewRaiseSpectre',
+        'Metadata/Items/MicrotransactionSkillEffects/MicrotransactionNewRaiseZombie',
+        'Metadata/Items/MicrotransactionSkillEffects/MicrotransactionNewTotem',
+        'Metadata/Items/MicrotransactionSkillEffects/MicrotransactionPlinthWarp',
+        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionWhiteWeapon',
+        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionYellowWeapon',
+        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionHeartWeapon2015',
+        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionPortalSteam1',
+        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionTestCharacterPortrait',
+        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionTestCharacterPortrait2',
+        'Metadata/Items/MicrotransactionSkillEffects/MicrotransactionAuraEffect1',
+        'Metadata/Items/MicrotransactionSkillEffects/MicrotransactionAuraEffect2',
+        'Metadata/Items/MicrotransactionSkillEffects/MicrotransactionAuraEffect3',
+        'Metadata/Items/MicrotransactionSkillEffects/MicrotransactionAuraEffect4',
+        'Metadata/Items/MicrotransactionSkillEffects/MicrotransactionBloodRavenSummonRagingSpirit',
+        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionMarkOfThePhoenixPurple',
+        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionWuqiWeaponEffect',
+        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionBlackguardCape',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionGhostflameCharacterEffect',
+        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionDemonhandClaw',
+        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionDivineShield',
+        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionEldritchWings',
+
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencent1Frame',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencent2Frame',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencent3Frame',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencent4Frame',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencent5Frame',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencent6Frame',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencent7Frame',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge1_1',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge1_2',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge1_3',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge1_4',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge1_5',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge1_6',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge1_7',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge2_1',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge2_2',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge2_3',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge2_4',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge2_5',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge2_6',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge2_7',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge3_1',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge3_2',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge3_3',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge3_4',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge3_5',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge3_6',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge3_7',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge4_1',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge4_2',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge4_3',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge4_4',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge4_5',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge4_6',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge4_7',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge5_1',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge5_2',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge5_3',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge5_4',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge5_5',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge5_6',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge5_7',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge6_1',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge6_2',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge6_3',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge6_4',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge6_5',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge6_6',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge6_7',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge7_1',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge7_2',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge7_3',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge7_4',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge7_5',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge7_6',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge7_7',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge8_1',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge8_2',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge8_3',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge8_4',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge8_5',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge8_6',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge8_7',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge9_1',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge9_2',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge9_3',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge9_4',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge9_5',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge9_6',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge9_7',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge10_1',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge10_2',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge10_3',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge10_4',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge10_5',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge10_6',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge10_7',
     }
 
     # Values without the Metadata/Projectiles/ prefix
@@ -681,7 +798,6 @@ class ItemsParser(parser.BaseParser):
         # From GrantedEffects.dat
 
         infobox['skill_id'] = ge['Id']
-        infobox['is_support_gem'] = ge['IsSupport']
         if ge['SupportGemLetter']:
             infobox['support_gem_letter'] = ge['SupportGemLetter']
 
@@ -1476,6 +1592,14 @@ class ItemsParser(parser.BaseParser):
         '',
         'Metadata/Items/MicrotransactionItemEffects/MicrotransactionInfernalAxe'
         : ' (Weapon Skin)',
+        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionColossus'
+        'Sword': '',
+        'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+        'LegionBoots': ' (microtransaction)',
+        'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+        'LegionGloves': ' (microtransaction)',
+        'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+        'ScholarBoots': ' (microtransaction)',
     }
 
     def _conflict_microtransactions(self, infobox, base_item_type):
@@ -1612,7 +1736,12 @@ class ItemsParser(parser.BaseParser):
 
     def _export(self, items, parsed_args):
         self._parsed_args = parsed_args
-        console('Found %s items' % len(items))
+        console('Found %s items. Removing disabled items...' % len(items))
+        items = [
+            base_item_type for base_item_type in items
+            if base_item_type['Id'] not in self._SKIP_ITEMS_BY_ID
+        ]
+        console('%s items left for processing.' % len(items))
 
         console('Additional files may be loaded. Processing information - this '
                 'may take a while...')
@@ -1833,7 +1962,7 @@ class ItemsParser(parser.BaseParser):
             infobox['rarity'] = 'Normal'
             infobox['name'] = name
             infobox['class'] = 'Stackable Currency'
-            infobox['base_item'] = 'Prophecy'
+            infobox['base_item_page'] = 'Prophecy'
             infobox['flavour_text'] = prophecy['FlavourText']
             infobox['prophecy_id'] = prophecy['Id']
             infobox['prediction_text'] = prophecy['PredictionText']
