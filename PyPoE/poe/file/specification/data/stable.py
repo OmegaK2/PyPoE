@@ -757,6 +757,13 @@ specification = Specification({
                 type='ref|list|ulong',
                 key='AchievementItems.dat',
             )),
+            # the item which represents this item
+            # in the fragment stash tab since the stash tab
+            # can only hold currencies it seems
+            ('FragmentBaseItemTypesKey', Field(
+                type='uint',
+                key='BaseItemTypes.dat',
+            )),
         )),
         virtual_fields=OrderedDict((
             ('NormalPurchase', VirtualField(
