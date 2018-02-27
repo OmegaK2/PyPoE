@@ -33,6 +33,7 @@ Public API
 .. autoclass:: Patch
 .. autoclass:: PatchFileList
 .. autoclass:: DirectoryNodeExtended
+.. autofunction:: node_check_hash
 
 Internal API
 -------------------------------------------------------------------------------
@@ -58,6 +59,8 @@ import os
 from urllib import request
 from urllib.error import URLError
 from collections import OrderedDict
+from hashlib import sha256
+from hmac import compare_digest
 
 # 3rd-party
 
@@ -115,6 +118,200 @@ def socket_fd_close(socket_fd):
     sock.shutdown(socket.SHUT_RDWR)
     # close the socket
     sock.close()
+
+def node_check_hash(directory_node, folder_path=None, ggpk=None,
+                    recurse=True, bufsize=2**20):
+    """
+    Compare expected hash against files on disk.
+
+    Folder hash is sha256sum of concaterated items in folder.
+
+    Accepts either a string folder path or a GGPKFile
+
+    Example GGPK::
+
+        from PyPoE.poe.file.ggpk import GGPKFile
+        ggpk_file = '/mnt/poe/Path_of_Exile/Content.ggpk'
+        ggpk = GGPKFile()
+        ggpk.read(ggpk_file)
+        ggpk.directory_build()
+
+        from PyPoE.poe.patchserver import node_check_hash
+        node_check_hash(ggpk['Data/Maps.dat'], ggpk=ggpk)
+
+        test_node = 'Art/2DArt/Atlas'
+
+        node = ggpk[test_node]
+
+        # GGPK files match GGPK hashes?
+        node_hashes = node_check_hash(node, ggpk=ggpk)
+
+        if node_hashes[-1][2] is True:
+          print('hashes match for {}'.format(node.get_path()))
+        else:
+          for child_node, child_hash, child_bool in node_hashes:
+            if bool is False:
+              print(child_node.record.name)
+              print('{} file hash'.format(child_hash.hexdigest()))
+              print('{:064x} expected hash'.format(child_node.record.hash))
+
+        # up to date?
+        import PyPoE.poe.patchserver
+        patch = PyPoE.poe.patchserver.Patch()
+        patch_file_list = PyPoE.poe.patchserver.PatchFileList(patch)
+        cdir = ''
+        for dir in test_node.split('/'):
+          if len(cdir) > 0:
+              cdir += '/'
+          cdir += dir
+          patch_file_list.update_filelist([cdir])
+
+        from hmac import compare_digest
+        node_patchserver_results = []
+        for index, child in enumerate(node_hashes):
+            node_path = child[0].get_path()
+            node_patchserver = patch_file_list.directory[node_path]
+            node_file_hash = child[1]
+            hash_test = compare_digest(
+                node_file_hash.hexdigest(),
+                format(node_patchserver.record.hash, '064x'))
+
+            node_patchserver_results.append(hash_test)
+
+        if list(zip(node_hashes, node_patchserver_results))[-1][1] is True:
+          print('hashes match patchserver for {}'.format(test_node))
+
+    Example files::
+
+        import os
+        import PyPoE.poe.patchserver
+
+        patch = PyPoE.poe.patchserver.Patch()
+        patch_file_list = PyPoE.poe.patchserver.PatchFileList(patch)
+        poe_dir = '/mnt/poe/Path_of_Exile'
+        node_hash_list = PyPoE.poe.patchserver.node_check_hash(
+          patch_file_list.directory, folder_path=poe_dir, recurse=False)
+        for node, checksum, matched in node_hash_list:
+          print('{} hashed okay?: {}'.format(
+            node.record.name,
+            matched))
+
+    Parameters
+    ---------
+    directory_node : :class:`.PyPoE.poe.file.ggpk.DirectoryNode`
+        The node to check that
+        folder & files or GGPKFile contents match expected values.
+
+    folder_path : str
+        file system directory where files to check are located
+
+    ggpk : :class:`.PyPoE.poe.file.ggpk.GGPKFile`
+        GGPK file record
+
+    recurse : bool
+        If set, check folders
+
+    bufsize : int
+        The size of the buffer to use for computing each hash
+
+    Returns
+    ------
+    :class:`list` [ :class:`tuple` ]
+        :class:`.PyPoE.poe.file.ggpk.DirectoryNode` :
+            The tested node
+
+        :mod:`hashlib` :
+            sha256sum for file or folder
+
+        :class:`bool` :
+            True if folder bytes hash == expected hash
+
+    Raises
+    -----
+    ValueError
+        One of either ggpk or folder_path must be given
+    """
+
+    if bool(folder_path) == bool(ggpk):
+        raise ValueError('Must specify either folder_path or ggpk')
+
+    node_hash = None
+    hash_test = False
+    self = directory_node
+
+    if isinstance(self.record, FileRecord):
+        if folder_path:
+            file = os.path.join(folder_path, self.record.name)
+            try:
+                file_handle = open(file, 'rb')
+            except FileNotFoundError:
+                return [(self, node_hash, hash_test)]
+        elif ggpk:
+            file_handle = ggpk[self.get_path()].record.extract()
+
+        if file_handle:
+            file_hash = sha256()
+            while True:
+                # Hash max bufsize (1MB default) at a time
+                buf = file_handle.read(bufsize)
+                if not buf:
+                    break
+                file_hash.update(buf)
+
+            node_hash = file_hash
+            del file_hash
+
+            hash_test = compare_digest(node_hash.hexdigest(),
+                                       format(self.record.hash, '064x'))
+
+            file_handle.close()
+            del file_handle
+
+        return [(self, node_hash, hash_test)]
+
+    elif (isinstance(self.record, DirectoryRecord)
+          or self.record is None):
+        if folder_path:
+            folder = ''
+            if self.record is not None:
+                folder = self.record.name
+            folder_path = os.path.join(folder_path, folder)
+            children = self.children
+        elif ggpk:
+            # PyPoE ggpk children are reversed
+            children = self.children[::-1]
+
+        child_hash_list = []
+        hash_list = []
+        missing_files = False
+        # need the order of items in folder to generate hash
+        for node in children:
+            # if node is directory and do not want to recurse
+            if not (isinstance(node.record, DirectoryRecord)
+                    and not recurse):
+                child_node_hash = node_check_hash(node,
+                                                  folder_path=folder_path,
+                                                  ggpk=ggpk,
+                                                  recurse=recurse,
+                                                  bufsize=bufsize)
+                if child_node_hash[-1][1] is None:
+                    missing_files = True
+                # only calculate the folder hash from immediate
+                # children hashes ... no grandchildren
+                child_hash_list.append(child_node_hash[-1])
+                # store all hash results to return
+                hash_list += child_node_hash
+        if missing_files is False and recurse:
+            folder_hash_concat = b''.join(
+                item[1].digest() for item in child_hash_list)
+            node_hash = sha256(folder_hash_concat)
+            hash_test = compare_digest(node_hash.hexdigest(),
+                                       format(self.record.hash, '064x'))
+        # put folder hash at end of list if recurse and not root
+        if self.record is not None and recurse:
+            return hash_list + [(self, node_hash, hash_test)]
+
+        return hash_list
 
 # =============================================================================
 # Classes

@@ -52,7 +52,7 @@ from PyPoE.poe.file import ggpk
 # Setup
 # =============================================================================
 
-_TEST_FILE = 'Data/Wordlists.dat'
+_TEST_FILE = 'Metadata/Items/Amulets/Amulet.ao'
 _re_version = re.compile(r'[\d]+\.[\d]+\.[\d]+\.[\d]+', re.UNICODE)
 
 def get_node_folders(file):
@@ -77,6 +77,11 @@ _TEST_NODE_PATHS = get_node_folders(_TEST_FILE)
 @pytest.fixture(scope='module')
 def patch():
     return patchserver.Patch()
+
+@pytest.fixture(scope='module')
+def temp(tmpdir_factory):
+    tempdir = tmpdir_factory.mktemp('patchserver')
+    return tempdir
 
 @pytest.fixture(scope='function')
 def patch_temp():
@@ -104,10 +109,11 @@ class TestPatch(object):
             dst_file=os.path.join(str(tmpdir), 'test.txt'),
         )
 
-    def test_dst_dir(self, patch, tmpdir):
+    @pytest.mark.dependency(name="test_download_file")
+    def test_dst_dir(self, patch, temp):
         patch.download(
             file_path=_TEST_FILE,
-            dst_dir=str(tmpdir),
+            dst_dir=str(temp),
         )
 
     def test_missing_dst_error(self, patch):
@@ -160,3 +166,26 @@ class TestPatchFileList(object):
             patch_file_list.update_filelist([node_path])
         # check that there is a record for the queried node
         assert patch_file_list.directory[node_path].record
+
+@pytest.mark.dependency(depends=["test_updatelist",
+                                 "test_download_file"])
+@pytest.mark.parametrize("recurse,node_path", [
+    (True, _TEST_FILE),
+    (True, _TEST_FILE.rsplit('/', 1)[0]),
+    (False, _TEST_FILE.rsplit('/', 1)[0])
+])
+def test_node_check_hash(temp, patch_file_list, recurse, node_path):
+    node = patch_file_list.directory[node_path]
+    node_hashes = patchserver.node_check_hash(node,
+                                              str(temp),
+                                              recurse=recurse)
+    if (isinstance(node, ggpk.FileRecord)
+            and os.path.exists(os.path.join(str(temp),
+                                            node.record.name))):
+        assert node_hashes[-1][2] is True
+    else:
+        if recurse:
+            assert len(node_hashes) > len(node.children)
+        else:
+            assert (len(node_hashes) == (len(node.children)
+                                         - len(node.directories)))
