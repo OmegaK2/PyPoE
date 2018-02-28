@@ -64,7 +64,6 @@ class DatHandler(object):
             'dat',
             help='.dat export',
         )
-        parser.set_defaults(func=lambda args: parser.print_help())
 
         sub = parser.add_subparsers(help='Export type')
         JSONExportHandler(sub)
