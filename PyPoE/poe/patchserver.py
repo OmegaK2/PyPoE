@@ -46,6 +46,7 @@ import struct
 import io
 import os
 from urllib import request
+from urllib.error import URLError
 
 # 3rd-party
 
@@ -186,12 +187,20 @@ class Patch(object):
         ValueError
             if the HTTP status code is not 200 (and it wasn't raised by urllib)
         """
-        with request.urlopen(
-            url="%s%s" % (self.patch_cdn_url, file_path),
-        ) as robj:
-            if robj.getcode() != 200:
-                raise ValueError('HTTP response code: %s' % robj.getcode())
-            return robj.read()
+        hosts = [self.patch_cdn_url, self.patch_url]
+        for index, host in enumerate(hosts):
+            try:
+                with request.urlopen(
+                    url="%s%s" % (host, file_path),
+                ) as robj:
+                    if robj.getcode() != 200:
+                        raise ValueError('HTTP response code: %s' % robj.getcode())
+                    return robj.read()
+            except URLError as url_error:
+                # try alternate patch url if connection refused
+                if (not isinstance(url_error.reason, ConnectionRefusedError)
+                    or not index < len(hosts)):
+                    raise url_error
 
     @property
     def version(self):
