@@ -187,7 +187,7 @@ class Patch(object):
             if the HTTP status code is not 200 (and it wasn't raised by urllib)
         """
         with request.urlopen(
-            url="%s/%s" % (self.patch_cdn_url, file_path),
+            url="%s%s" % (self.patch_cdn_url, file_path),
         ) as robj:
             if robj.getcode() != 200:
                 raise ValueError('HTTP response code: %s' % robj.getcode())
