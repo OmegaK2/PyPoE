@@ -51,7 +51,7 @@ from PyPoE.poe import patchserver
 # Setup
 # =============================================================================
 
-_TEST_URL = 'Data/Wordlists.dat'
+_TEST_FILE = 'Data/Wordlists.dat'
 _re_version = re.compile(r'[\d]+\.[\d]+\.[\d]+\.[\d]+', re.UNICODE)
 
 # =============================================================================
@@ -71,21 +71,21 @@ class TestPatch(object):
     def test_dst_file(self, patch):
         with TemporaryDirectory() as temp:
             patch.download(
-                file_path=_TEST_URL,
+                file_path=_TEST_FILE,
                 dst_file=os.path.join(temp, 'test.txt'),
             )
 
     def test_dst_dir(self, patch):
         with TemporaryDirectory() as temp:
             patch.download(
-                file_path=_TEST_URL,
+                file_path=_TEST_FILE,
                 dst_dir=temp,
             )
 
     def test_missing_dst_error(self, patch):
         with pytest.raises(ValueError):
             patch.download(
-                file_path=_TEST_URL,
+                file_path=_TEST_FILE,
             )
 
     def test_file_not_found(self, patch):
