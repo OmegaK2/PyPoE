@@ -167,7 +167,8 @@ class TestPatchFileList(object):
         # check that there is a record for the queried node
         assert patch_file_list.directory[node_path].record
 
-@pytest.mark.dependency(depends=["test_updatelist",
+@pytest.mark.dependency(name="test_node_check_hash",
+                        depends=["test_updatelist",
                                  "test_download_file"])
 @pytest.mark.parametrize("recurse,node_path", [
     (True, _TEST_FILE),
@@ -189,3 +190,55 @@ def test_node_check_hash(temp, patch_file_list, recurse, node_path):
         else:
             assert (len(node_hashes) == (len(node.children)
                                          - len(node.directories)))
+
+@pytest.mark.dependency(depends=["test_node_check_hash"])
+@pytest.mark.parametrize("recurse,node_path", [
+    (True, _TEST_FILE),
+    (False, _TEST_FILE),
+    (True, _TEST_FILE + 'BAD'),
+    (True, _TEST_NODE_PATHS[-1]),
+    (False, _TEST_NODE_PATHS[-1])
+    #,(True, _TEST_NODE_PATHS[-2]) #expensive test
+])
+def test_node_outdated_files(temp, patch_file_list, recurse, node_path):
+    # already have metadata, so know what will fail
+    try:
+        node = patch_file_list.directory[node_path]
+    except FileNotFoundError:
+        # check that error is raised if node_path not found
+        with pytest.raises(ValueError):
+            files_needed = patchserver.node_outdated_files(patch_file_list,
+                                                           node_path,
+                                                           str(temp),
+                                                           recurse=recurse)
+        return
+
+    temp = temp.join(node_path.rsplit('/', 1)[0])
+    # get return values for the tested function
+    files_needed_dict = patchserver.node_outdated_files(patch_file_list,
+                                                        node_path,
+                                                        str(temp),
+                                                        recurse=recurse)
+    # get list of nodes needed
+    files_needed = []
+    for needed_node in files_needed_dict.values():
+        files_needed = files_needed + needed_node
+
+    # get list of files in a directory node
+    files_in_node = []
+    # if recursing, walk through sub directories to find files
+    if recurse:
+        max_depth = -1
+    else:
+        max_depth = 1
+    for walk_node, depth in node.gen_walk(max_depth=max_depth):
+        if isinstance(walk_node.record, ggpk.FileRecord):
+            files_in_node.append(walk_node)
+
+    # if the previously downloaded test file is one of the files in the
+    # directory node being tested, it should match the expected hash
+    # then it is expected that it will not be in the needed files
+    one_matching_file = (patch_file_list.directory[_TEST_FILE]
+                         in files_in_node)
+    assert patch_file_list.directory[_TEST_FILE] not in files_needed
+    assert len(files_needed) == (len(files_in_node) - one_matching_file)

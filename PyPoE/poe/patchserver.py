@@ -34,6 +34,7 @@ Public API
 .. autoclass:: PatchFileList
 .. autoclass:: DirectoryNodeExtended
 .. autofunction:: node_check_hash
+.. autofunction:: node_outdated_files
 
 Internal API
 -------------------------------------------------------------------------------
@@ -312,6 +313,107 @@ def node_check_hash(directory_node, folder_path=None, ggpk=None,
             return hash_list + [(self, node_hash, hash_test)]
 
         return hash_list
+
+def node_outdated_files(patch_file_list, directory_node_path,
+                        folder_path, recurse=False, bufsize=2**10):
+    """
+    Get expected hash based list of outdated files on disk
+    for given directory node.
+
+    Example::
+
+        import PyPoE.poe.patchserver
+        patch = PyPoE.poe.patchserver.Patch()
+        patch_file_list = PyPoE.poe.patchserver.PatchFileList(patch)
+        poe_dir = '/mnt/poe/Path_of_Exile'
+        node = ''
+        update_list = PyPoE.poe.patchserver.node_outdated_files(
+            patch_file_list, node, poe_dir, recurse=False)
+        print(update_list)
+
+    Parameters
+    ---------
+    patch_file_list : :class:`.PatchFileList`
+        The connection to a patch server
+
+    directory_node_path : str
+        The path name of the node
+        :meth:`.PyPoE.poe.file.ggpk.DirectoryNode.get_path`
+        to update folder & files for.
+
+    folder_path : str
+        file system directory where files to check are located
+
+    recurse : bool
+        If set, update all files in directories below directory_node_path
+
+    bufsize : int
+        The size of the buffer to use for computing each hash
+
+    Returns
+    ------
+    dict
+        :mod:`hashlib`:
+            :class:`list`:
+                :class:`PyPoE.poe.file.ggpk.DirectoryNode`
+    """
+
+    # get needed depth of directory node first
+    try:
+        directory_node = patch_file_list.directory[directory_node_path]
+        # if directory and no child metadata
+        if (isinstance(directory_node.record, DirectoryRecord)
+                and not directory_node.children):
+            raise FileNotFoundError('Just here to trigger the except')
+    except FileNotFoundError:
+        directory_paths = directory_node_path.split('/')
+        cdir = ''
+        for index, dir_name in enumerate(directory_paths):
+            if cdir:
+                cdir += '/'
+            cdir += dir_name
+            # do not know if node is file or folder
+            # if file, second last node is final
+            if (len(directory_paths) - index) < 1:
+                directory_node = patch_file_list.directory[directory_node_path]
+                if (directory_node.record is not None
+                        and isinstance(directory_node.record, FileRecord)):
+                    break
+            patch_file_list.update_filelist([cdir])
+    directory_node = patch_file_list.directory[directory_node_path]
+
+    # walk metadata
+    if recurse:
+        directories = directory_node.directories
+        end_directories = []
+        while directories:
+            child = directories.pop()
+            # if child is directory
+            if isinstance(child.record, DirectoryRecord):
+                # if metadata is not present
+                if not child.children:
+                    patch_file_list.update_filelist([child.get_path()])
+                directories = directories + child.directories
+                if not child.directories:
+                    end_directories.append(child)
+
+    node_hash_list = node_check_hash(directory_node,
+                                     folder_path=folder_path,
+                                     recurse=recurse,
+                                     bufsize=bufsize)
+
+    download_list = {}
+    for node, checksum, match in node_hash_list:
+        # For files that did not match
+        if isinstance(node.record, FileRecord) and not match:
+            try:
+                # expected hash as key,
+                # so not downloading same file many times
+                download_list[node.record.hash].append(node)
+            except KeyError:
+                download_list[node.record.hash] = [node]
+
+    return download_list
 
 # =============================================================================
 # Classes
