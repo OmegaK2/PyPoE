@@ -39,7 +39,6 @@ candidate for testing.
 import os
 import re
 from urllib.error import HTTPError
-from tempfile import TemporaryDirectory
 
 # 3rd-party
 import pytest
@@ -68,19 +67,17 @@ def patch():
 
 
 class TestPatch(object):
-    def test_dst_file(self, patch):
-        with TemporaryDirectory() as temp:
-            patch.download(
-                file_path=_TEST_FILE,
-                dst_file=os.path.join(temp, 'test.txt'),
-            )
+    def test_dst_file(self, patch, tmpdir):
+        patch.download(
+            file_path=_TEST_FILE,
+            dst_file=os.path.join(str(tmpdir), 'test.txt'),
+        )
 
-    def test_dst_dir(self, patch):
-        with TemporaryDirectory() as temp:
-            patch.download(
-                file_path=_TEST_FILE,
-                dst_dir=temp,
-            )
+    def test_dst_dir(self, patch, tmpdir):
+        patch.download(
+            file_path=_TEST_FILE,
+            dst_dir=str(tmpdir),
+        )
 
     def test_missing_dst_error(self, patch):
         with pytest.raises(ValueError):
