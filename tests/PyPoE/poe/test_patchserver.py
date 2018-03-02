@@ -191,7 +191,8 @@ def test_node_check_hash(temp, patch_file_list, recurse, node_path):
             assert (len(node_hashes) == (len(node.children)
                                          - len(node.directories)))
 
-@pytest.mark.dependency(depends=["test_node_check_hash"])
+@pytest.mark.dependency(name="test_node_outdated_files",
+                        depends=["test_node_check_hash"])
 @pytest.mark.parametrize("recurse,node_path", [
     (True, _TEST_FILE),
     (False, _TEST_FILE),
@@ -242,3 +243,30 @@ def test_node_outdated_files(temp, patch_file_list, recurse, node_path):
                          in files_in_node)
     assert patch_file_list.directory[_TEST_FILE] not in files_needed
     assert len(files_needed) == (len(files_in_node) - one_matching_file)
+
+@pytest.mark.dependency(depends=["test_node_check_hash"])
+@pytest.mark.parametrize("recurse,node_path", [
+    (False,_TEST_NODE_PATHS[-1])
+])
+@pytest.mark.skip(reason="expensive test")
+def test_node_update_files(patch_file_list, temp, recurse, node_path):
+    patchserver.node_update_files(patch_file_list,
+                                  node_path,
+                                  str(temp),
+                                  recurse=recurse)
+
+    node = patch_file_list.directory[node_path]
+    if recurse:
+        max_depth = -1
+    else:
+        max_depth = 1
+    for walk_node, depth in node.gen_walk(max_depth=max_depth):
+        if isinstance(walk_node.record, ggpk.FileRecord):
+            assert os.path.exists(os.path.join(str(temp),
+                                               node.get_path()))
+
+    files_needed = patchserver.node_outdated_files(patch_file_list,
+                                                   node_path,
+                                                   str(temp),
+                                                   recurse=recurse)
+    assert files_needed

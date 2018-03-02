@@ -415,6 +415,104 @@ def node_outdated_files(patch_file_list, directory_node_path,
 
     return download_list
 
+def node_update_files(patch_file_list, directory_node_path,
+                      folder_path, recurse=False, bufsize=2**10):
+    """
+    Update files and folders on disk for given node path.
+
+    Example::
+
+        import PyPoE.poe.patchserver
+        patch = PyPoE.poe.patchserver.Patch()
+        patch_file_list = PyPoE.poe.patchserver.PatchFileList(patch)
+        poe_dir = '/tmp/pypoe/poe'
+        node = 'Metadata/Items/Amulets'
+        PyPoE.poe.patchserver.node_update_files(
+          patch_file_list, node, poe_dir, recurse=False)
+        node = 'Metadata/Items/Rings'
+        PyPoE.poe.patchserver.node_update_files(
+          patch_file_list, node, poe_dir, recurse=False)
+
+    Parameters
+    ---------
+    patch_file_list : :class:`.PatchFileList`
+        The connection to a patch server
+
+    directory_node_path : str
+        The path name of the node
+        :meth:`.PyPoE.poe.file.ggpk.DirectoryNode.get_path`
+        to update folder & files for.
+
+    folder_path : str
+        file system directory where files to check are located
+
+    recurse : bool
+        If set, update all files in directories below directory_node_path
+
+    bufsize : int
+        The size of the buffer to use for computing each hash
+    """
+    node_parent_split = directory_node_path.rsplit('/', 1)
+    node_parent = directory_node_path.rsplit('/', 1)[0]
+    if len(node_parent_split) == 1:
+        node_parent = ''
+    hash_path = os.path.join(folder_path,
+                             node_parent)
+    download_list = node_outdated_files(patch_file_list,
+                                        directory_node_path,
+                                        hash_path,
+                                        recurse=recurse,
+                                        bufsize=bufsize)
+
+    from json import dump
+    dump_dict = patch_file_list.directory.get_dict()
+    dump_dict['version'] = patch_file_list.patch.version
+    file_handle = open(os.path.join(folder_path,
+                                    'poe_file_details.json'),
+                       'w', encoding='utf-8')
+    dump(dump_dict, file_handle)
+    file_handle.close()
+
+    dir_fd = os.open(folder_path, os.O_DIRECTORY)
+
+    files_subdir = 'files'
+    files_count = len(download_list.keys())
+    download_index = 0
+    for hash, nodes in download_list.items():
+        pretty_hash = format(hash, '064x')
+        dst_file = os.path.join(folder_path, files_subdir, pretty_hash)
+        node_file_name = nodes[0].get_path()
+        print("{} file downloads remaining".format(
+            files_count - download_index))
+        patch_file_list.patch.download(node_file_name,
+                                       dst_file=dst_file)
+        print("downloaded: {}".format(node_file_name))
+        download_index += 1
+
+        for node in nodes:
+            link_src = dst_file
+            node_path = node.get_path()
+            link_dst = os.path.join(folder_path,
+                                    node_path)
+            link_parent = os.path.dirname(link_dst)
+            os.makedirs(link_parent, exist_ok=True)
+            link_source_rel = os.path.relpath(link_src, link_parent)
+            try:
+                old_source = os.path.realpath(link_dst)
+                if old_source != link_src:
+                    os.remove(old_source, dir_fd=dir_fd)
+            except FileNotFoundError:
+                pass
+
+            try:
+                os.remove(node_path, dir_fd=dir_fd)
+            except FileNotFoundError:
+                pass
+
+            os.symlink(link_source_rel, node_path, dir_fd=dir_fd)
+
+    os.close(dir_fd)
+
 # =============================================================================
 # Classes
 # =============================================================================
