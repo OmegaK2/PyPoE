@@ -8,7 +8,6 @@ https://github.com/pypa/sampleproject
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
 # To use a consistent encoding
-from codecs import open
 from os import path
 
 here = path.abspath(path.dirname(__file__))
@@ -20,9 +19,19 @@ extras_require = {
     'ui': ['PySide'],
     'ui-extra': ['PyOpenGL'],
 }
-extras_require['full'] = list({v for v in extras_require.values()})
-extras_require['cli-full'] = list({v for k, v in extras_require.items() if k.startswith('cli')})
-extras_require['ui-full'] = list({v for k, v in extras_require.items() if k.startswith('ui')})
+
+_full = {'full': set(), 'cli-full': set(), 'ui-full': set()}
+
+for k, v in dict(extras_require).items():
+    for item in v:
+        _full['full'].add(item)
+        if k.startswith('cli'):
+            _full['cli-full'].add(item)
+        if k.startswith('ui'):
+            _full['ui-full'].add(item)
+
+for k, v in _full.items():
+    extras_require[k] = list(v)
 
 setup(
     name='PyPoE',
