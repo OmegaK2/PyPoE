@@ -455,6 +455,7 @@ class MOD_GENERATION_TYPE(IntEnum):
     TALISMAN = 9
     ENCHANTMENT = 10
     ESSENCE = 11
+    BESTIARY = 13
 
 
 class WORDLISTS(IntEnum):

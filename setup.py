@@ -20,9 +20,9 @@ extras_require = {
     'ui': ['PySide'],
     'ui-extra': ['PyOpenGL'],
 }
-extras_require['full'] = [v for v in extras_require.values()]
-extras_require['cli-full'] = [v for k, v in extras_require.items() if k.startswith('cli')]
-extras_require['ui-full'] = [v for k, v in extras_require.items() if k.startswith('ui')]
+extras_require['full'] = list({v for v in extras_require.values()})
+extras_require['cli-full'] = list({v for k, v in extras_require.items() if k.startswith('cli')})
+extras_require['ui-full'] = list({v for k, v in extras_require.items() if k.startswith('ui')})
 
 setup(
     name='PyPoE',
