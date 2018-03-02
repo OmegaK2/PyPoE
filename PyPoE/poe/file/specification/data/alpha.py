@@ -226,7 +226,16 @@ specification = Specification({
                 type='bool',
             )),
             ('Unknown4', Field(
-                type='int',
+                type='ref|string',
+            )),
+            ('Flag5', Field(
+                type='bool',
+            )),
+            ('Flag6', Field(
+                type='bool',
+            )),
+            ('Flag7', Field(
+                type='bool',
             )),
         )),
     ),
@@ -309,6 +318,28 @@ specification = Specification({
             )),
         )),
     ),
+    'ArchetypeRewards.dat': File(
+        fields=OrderedDict((
+            ('Id', Field(
+                type='ref|string',
+                unique=True,
+            )),
+            ('Key0', Field(
+                type='ulong',
+            )),
+            ('Keys0', Field(
+                type='ref|list|ulong',
+            )),
+            ('Key1', Field(
+                type='ulong',
+            )),
+            ('BK2File', Field(
+                type='ref|string',
+                file_path=True,
+                file_ext='.BK2',
+            )),
+        )),
+    ),
     'Archetypes.dat': File(
         fields=OrderedDict((
             ('Id', Field(
@@ -339,11 +370,16 @@ specification = Specification({
             ('Unknown0', Field(
                 type='int',
             )),
+            # x, y position?
             ('Unknown1', Field(
-                type='int',
+                type='float',
             )),
             ('Unknown2', Field(
-                type='int',
+                type='float',
+            )),
+            ('BackgroundImageFile', Field(
+                type='ref|string',
+                file_path=True,
             )),
         )),
     ),
@@ -578,13 +614,13 @@ specification = Specification({
             ('Y', Field(
                 type='float',
             )),
-            ('Unknown4', Field(
+            ('Unknown0', Field(
                 type='int',
             )),
-            ('Unknown5', Field(
+            ('Unknown1', Field(
                 type='int',
             )),
-            ('Unknown6', Field(
+            ('Unknown2', Field(
                 type='int',
             )),
             ('AtlasNodeKeys', Field(
@@ -600,6 +636,9 @@ specification = Specification({
             )),
             ('Flag0', Field(
                 type='bool',
+            )),
+            ('Unknown3', Field(
+                type='int',
             )),
         )),
     ),
@@ -753,9 +792,19 @@ specification = Specification({
                 type='ulong',
                 key='ItemThemes.dat',
             )),
-            #3.1.0
-            ('Data12', Field(
-                type='ref|list|int',
+            ('IdentifyMagic_AchievementItemsKeys', Field(
+                type='ref|list|ulong',
+                key='AchievementItems.dat',
+            )),
+            # the item which represents this item
+            # in the fragment stash tab since the stash tab
+            # can only hold currencies it seems
+            ('FragmentBaseItemTypesKey', Field(
+                type='uint',
+                key='BaseItemTypes.dat',
+            )),
+            ('IsBlessing', Field(
+                type='bool',
             )),
         )),
         virtual_fields=OrderedDict((
@@ -782,6 +831,262 @@ specification = Specification({
                     'UniquePurchase_BaseItemTypesKeys', 'UniquePurchase_Costs'
                 ],
                 zip=True,
+            )),
+        )),
+    ),
+    'BestiaryCapturableMonsters.dat': File(
+        fields=OrderedDict((
+            ('Unknown0', Field(
+                type='ulong',
+            )),
+            ('Unknown2', Field(
+                type='ulong',
+            )),
+            ('Name', Field(
+                type='ref|string',
+            )),
+            ('Unknown5', Field(
+                type='ulong',
+            )),
+            ('Flag0', Field(
+                type='bool',
+            )),
+            ('IconSmall', Field(
+                type='ref|string',
+                file_path=True,
+            )),
+            ('Icon', Field(
+                type='ref|string',
+                file_path=True,
+            )),
+            ('Unknown9', Field(
+                type='ulong',
+            )),
+            ('Unknown11', Field(
+                type='ulong',
+            )),
+            ('Flag1', Field(
+                type='bool',
+            )),
+            ('BestiaryCapturableMonstersKey', Field(
+                type='int',
+                key='BestiaryCapturableMonsters.dat'
+            )),
+            ('Flag2', Field(
+                type='bool',
+            )),
+        )),
+    ),
+    'BestiaryEncounters.dat': File(
+        fields=OrderedDict((
+            ('Id', Field(
+                type='ref|string',
+                unique=True,
+            )),
+            ('MinLevel', Field(
+                type='int',
+            )),
+            ('MaxLevel', Field(
+                type='int',
+            )),
+            ('SpawnWeight', Field(
+                type='int',
+            )),
+            ('Key0', Field(
+                type='ulong',
+            )),
+            ('MonsterSpawnerId', Field(
+                type='ref|string',
+                file_path=True,
+            )),
+        )),
+    ),
+    'BestiaryFamilies.dat': File(
+        fields=OrderedDict((
+            ('Id', Field(
+                type='ref|string',
+                unique=True,
+            )),
+            ('Name', Field(
+                type='ref|string',
+            )),
+            ('Icon', Field(
+                type='ref|string',
+                file_path=True,
+            )),
+            ('IconSmall', Field(
+                type='ref|string',
+                file_path=True,
+            )),
+            ('Illustration', Field(
+                type='ref|string',
+                file_path=True,
+            )),
+            ('PageArt', Field(
+                type='ref|string',
+                file_path=True,
+            )),
+            ('FlavourText', Field(
+                type='ref|string',
+                file_path=True,
+            )),
+            ('Flag0', Field(
+                type='bool',
+            )),
+            ('Key0', Field(
+                type='ulong',
+            )),
+            ('Unknown9', Field(
+                type='int',
+            )),
+        )),
+    ),
+    'BestiaryGenus.dat': File(
+        fields=OrderedDict((
+            ('Id', Field(
+                type='ref|string',
+                unique='True',
+            )),
+            ('Name', Field(
+                type='ref|string',
+            )),
+            ('Key0', Field(
+                type='ulong',
+            )),
+            ('Name2', Field(
+                type='ref|string',
+            )),
+            ('Icon', Field(
+                type='ref|string',
+                file_path=True,
+            )),
+            ('Unknown6', Field(
+                type='int',
+            )),
+        )),
+    ),
+    'BestiaryGroups.dat': File(
+        fields=OrderedDict((
+            ('Name', Field(
+                type='ref|string',
+            )),
+            ('Description', Field(
+                type='ref|string',
+            )),
+            ('Illustraiton', Field(
+                type='ref|string',
+            )),
+            ('GroupName', Field(
+                type='ref|string',
+            )),
+            ('Icon', Field(
+                type='ref|string',
+                file_path=True,
+            )),
+            ('IconSmall', Field(
+                type='ref|string',
+                file_path=True,
+            )),
+            ('Key0', Field(
+                type='ulong',
+            )),
+            ('Keys0', Field(
+                type='ref|list|ulong',
+            )),
+        )),
+    ),
+    'BestiaryNets.dat': File(
+        fields=OrderedDict((
+            ('Key0', Field(
+                type='ulong',
+            )),
+            ('Unknown2', Field(
+                type='int',
+            )),
+        )),
+    ),
+    'BestiaryRecipeComponent.dat': File(
+        fields=OrderedDict((
+            ('Id', Field(
+                type='ref|string',
+                unique=True,
+            )),
+            ('MinLevel', Field(
+                type='int',
+            )),
+            ('Unknown2', Field(
+                type='ulong',
+            )),
+            ('Unknown3', Field(
+                type='ulong',
+            )),
+            ('Unknown4', Field(
+                type='ulong',
+            )),
+            ('Unknown8', Field(
+                type='ulong',
+            )),
+            ('Unknown9', Field(
+                type='int',
+            )),
+            ('Unknown10', Field(
+                type='ulong',
+            )),
+        )),
+    ),
+    'BestiaryRecipeItemCreation.dat': File(
+        fields=OrderedDict((
+            ('Unknown0', Field(
+                type='int',
+            )),
+            ('Unknown1', Field(
+                type='int',
+            )),
+            ('Unknown2', Field(
+                type='int',
+            )),
+            ('Unknown3', Field(
+                type='int',
+            )),
+            ('Unknown4', Field(
+                type='int',
+            )),
+        )),
+    ),
+    'BestiaryRecipes.dat': File(
+        fields=OrderedDict((
+            ('Unknown0', Field(
+                type='int',
+            )),
+            ('Unknown1', Field(
+                type='int',
+            )),
+            ('Unknown2', Field(
+                type='int',
+            )),
+            ('Unknown3', Field(
+                type='int',
+            )),
+            ('Unknown4', Field(
+                type='int',
+            )),
+            ('Unknown5', Field(
+                type='int',
+            )),
+            ('Unknown6', Field(
+                type='int',
+            )),
+            ('Unknown7', Field(
+                type='int',
+            )),
+            ('Unknown8', Field(
+                type='int',
+            )),
+            ('Unknown9', Field(
+                type='int',
+            )),
+            ('Unknown10', Field(
+                type='short',
             )),
         )),
     ),
@@ -1084,7 +1389,10 @@ specification = Specification({
                 key='PreloadGroups.dat',
             )),
             ('Flag0', Field(
-                type='byte',
+                type='bool',
+            )),
+            ('Key0', Field(
+                type='ulong',
             )),
         )),
     ),
@@ -3397,7 +3705,7 @@ specification = Specification({
                 type='uint',
             )),
             #display_type = 0x{:08x}
-            ('Unknown2', Field(
+            ('Data3', Field(
                 type='ref|list|int',
             )),
             ('Flag1', Field(
@@ -3419,6 +3727,9 @@ specification = Specification({
             # Just for the "LesserShrine" triggered skill
             ('Flag3', Field(
                 type='bool',
+            )),
+            ('Data4', Field(
+                type='ref|list|int',
             )),
         )),
     ),
@@ -4879,6 +5190,9 @@ specification = Specification({
                 type='ref|list|ulong',
                 key='BaseItemTypes.dat',
             )),
+            ('Unknown1', Field(
+                type='int',
+            )),
         )),
     ),
     'MicrotransactionFireworksVariations.dat': File(
@@ -4963,6 +5277,9 @@ specification = Specification({
             ('PreloadGroupsKeys', Field(
                 type='ref|list|ulong',
                 key='PreloadGroups.dat',
+            )),
+            ('Unknown0', Field(
+                type='int',
             )),
             ('Unknown1', Field(
                 type='int',
@@ -5250,6 +5567,9 @@ specification = Specification({
                 type='ulong',
                 key='Stats.dat',
             )),
+            ('TierText', Field(
+                type='ref|string',
+            )),
         )),
         virtual_fields=OrderedDict((
             ('SpawnWeight', VirtualField(
@@ -5271,11 +5591,15 @@ specification = Specification({
             ('Stat5', VirtualField(
                 fields=('StatsKey5', 'Stat5Min', 'Stat5Max'),
             )),
+            ('Stat6', VirtualField(
+                fields=('StatsKey6', 'Stat6Min', 'Stat6Max'),
+            )),
             ('StatsKeys', VirtualField(
-                fields=('StatsKey1', 'StatsKey2', 'StatsKey3', 'StatsKey4', 'StatsKey5'),
+                fields=('StatsKey1', 'StatsKey2', 'StatsKey3', 'StatsKey4',
+                        'StatsKey5', 'StatsKey6'),
             )),
             ('Stats', VirtualField(
-                fields=('Stat1', 'Stat2', 'Stat3', 'Stat4', 'Stat5'),
+                fields=('Stat1', 'Stat2', 'Stat3', 'Stat4', 'Stat5', 'Stat6'),
             )),
             ('GenerationWeight', VirtualField(
                 fields=('GenerationWeight_TagsKeys', 'GenerationWeight_Values'),
@@ -6084,7 +6408,7 @@ specification = Specification({
                 type='ref|string',
                 unique=True,
             )),
-            ('Unknown1', Field(
+            ('Unknown0', Field(
                 type='int',
             )),
             ('SoldItem_TagsKeys', Field(
@@ -6101,11 +6425,14 @@ specification = Specification({
             ('Unknown_Values', Field(
                 type='ref|list|uint',
             )),
-            ('Unknown10', Field(
+            ('Unknown1', Field(
                 type='int',
             )),
-            ('Unknown11', Field(
+            ('Keys1', Field(
                 type='ref|list|ulong',
+            )),
+            ('Unknown3', Field(
+                type='ref|list|int',
             )),
         )),
     ),
@@ -6403,8 +6730,14 @@ specification = Specification({
                 type='ulong',
                 key='BaseItemTypes.dat',
             )),
-            ('Unknown2', Field(
+            ('Unknown0', Field(
                 type='int',
+            )),
+            ('Key1', Field(
+                type='ulong',
+            )),
+            ('Key2', Field(
+                type='ulong',
             )),
         )),
     ),
@@ -6555,6 +6888,9 @@ specification = Specification({
             )),
             ('Unknown0', Field(
                 type='int',
+            )),
+            ('BuffRelatedUnknown2', Field(
+                type='ref|list|int',
             )),
         )),
         virtual_fields=OrderedDict((
@@ -6888,35 +7224,30 @@ specification = Specification({
             ('Unknown0', Field(
                 type='int',
             )),
-            ('Unknown1', Field(
-                type='int',
-            )),
             ('Flag0', Field(
+                type='bool',
+            )),
+            ('Flag1', Field(
                 type='bool',
             )),
         )),
     ),
     'QuestAchievements.dat': File(
         fields=OrderedDict((
-            ('AchievementItemsKey', Field(
-                type='ulong',
-                key='AchievementItems.dat',
+            ('Unknown0', Field(
+                type='ref|string',
             )),
             ('QuestStates', Field(
                 type='ref|list|int',
             )),
-            ('IsStandardAchievement', Field(
-                type='byte',
-            )),
-            ('IsHardcoreAchievement', Field(
-                type='byte',
-            )),
-            #3.1.0
-            ('Data0', Field(
+            ('Unknown3', Field(
                 type='ref|list|int',
             )),
-            ('Flag0', Field(
-                type='bool',
+            ('AchievementItemsKeys', Field(
+                type='ref|list|ulong',
+            )),
+            ('Key0', Field(
+                type='ulong',
             )),
         )),
     ),
@@ -6930,7 +7261,7 @@ specification = Specification({
                 type='ulong',
                 key='Quest.dat',
             )),
-            ('Unknown3', Field(
+            ('Unknown1', Field(
                 type='int',
             )),
             ('CharactersKey', Field(
@@ -6949,7 +7280,7 @@ specification = Specification({
                 description='1=Normal, 2=Magic, 3=Rare',
             )),
             #TODO RARITY constant
-            ('Unknown9', Field(
+            ('Unknown2', Field(
                 type='int',
             )),
             ('SocketGems', Field(
@@ -6961,14 +7292,20 @@ specification = Specification({
             ('Key1', Field(
                 type='ulong',
             )),
-            ('Unknown1', Field(
+            ('Unknown3', Field(
                 type='int',
             )),
-            ('Unknown2', Field(
+            ('Flag1', Field(
                 type='bool',
             )),
-            ('Unknown5', Field(
+            ('Flag2', Field(
                 type='bool',
+            )),
+            ('Keys0', Field(
+                type='ref|list|ulong',
+            )),
+            ('Unknown6', Field(
+                type='int',
             )),
         )),
     ),
@@ -7898,6 +8235,15 @@ specification = Specification({
             ('ObjectCount', Field(
                 type='int',
             )),
+            ('Data0', Field(
+                type='ref|list|int',
+            )),
+            ('Unknown0', Field(
+                type='int',
+            )),
+            ('Flag0', Field(
+                type='bool',
+            )),
         )),
     ),
     'StrDexIntMissionMaps.dat': File(
@@ -7974,60 +8320,61 @@ specification = Specification({
             )),
         )),
     ),
+    # Zana
     'StrDexIntMissions.dat': File(
         fields=OrderedDict((
             ('Id', Field(
                 type='ref|string',
                 unique=True,
             )),
+            ('Key0', Field(
+                type='ulong',
+            )),
             ('SpawnWeight', Field(
                 type='int',
             )),
-            ('HasObjectiveBossKill', Field(
-                type='bool',
+            ('Key1', Field(
+                type='ulong',
             )),
-            ('HasObjectiveFullClear', Field(
-                type='bool',
+            ('Key2', Field(
+                type='ulong',
             )),
             ('Extra_ModsKeys', Field(
                 type='ref|list|ulong',
                 key='Mods.dat',
             )),
-            ('Unknown4', Field(
-                type='int',
+            ('Flag0', Field(
+                type='byte',
             )),
-            ('Unknown5', Field(
-                type='int',
+            ('Flag1', Field(
+                type='byte',
             )),
-            ('HasObjectiveKillExiles', Field(
-                type='bool',
+            ('Flag2', Field(
+                type='byte',
             )),
-            ('HasObjectiveFindUnique', Field(
-                type='bool',
-            )),
-            ('Key0', Field(
+            ('Key3', Field(
                 type='ulong',
             )),
-            ('HasObjectiveCompleteMasterMission', Field(
-                type='bool',
-            )),
-            ('NPCTalkKey', Field(
-                type='ulong',
-                key='NPCTalk.dat',
-            )),
-            ('MonsterPacksKey', Field(
-                type='ulong',
-                key='MonsterPacks.dat',
-            )),
-            ('ObjectCountRequired', Field(
+            ('Unknown12', Field(
                 type='int',
             )),
-            ('ObjectCountTotal', Field(
+            ('Unknown13', Field(
                 type='int',
             )),
-            ('AchievementItemsKeys', Field(
-                type='ref|list|ulong',
-                key='AchievementItems.dat',
+            ('Unknown14', Field(
+                type='int',
+            )),
+            ('Unknown15', Field(
+                type='int',
+            )),
+            ('Key4', Field(
+                type='ulong',
+            )),
+            ('Key5', Field(
+                type='ulong',
+            )),
+            ('Key6', Field(
+                type='ulong',
             )),
         )),
     ),
@@ -9507,17 +9854,22 @@ specification = Specification({
             ('Unknown93', Field(
                 type='int',
             )),
+            # this field added in 3.2.0
+            ('Unknown94', Field(
+                type='int',
+            )),
             ('IsMasterDailyArea', Field(
-                type='bool',
+                type='byte',
             )),
             ('EnvironmentsKey', Field(
                 type='ulong',
                 key='Environments.dat',
             )),
-            ('HarbingerSpawnChance', Field(
+            # shouldn't be harbingers, it's disabled now.
+            ('Unknown95', Field(
                 type='int',
             )),
-            ('HarbingerCount', Field(
+            ('Unknown96', Field(
                 type='int',
             )),
             #3.1.0
@@ -9532,6 +9884,16 @@ specification = Specification({
                 key='AchievementItems.dat',
             )),
             ('Unknown98', Field(
+                type='int',
+            )),
+            #3.2.0
+            ('BestiaryUnknown99', Field(
+                type='int',
+            )),
+            ('BestiaryUnknown100', Field(
+                type='int',
+            )),
+            ('BestiaryUnknown101', Field(
                 type='int',
             )),
         )),
