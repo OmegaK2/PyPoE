@@ -833,7 +833,9 @@ class BaseParser(object):
         finalout = []
         for line in out:
             if '\n' in line:
-                finalout.extend(line.split('\n'))
+                # By request differentiate between breaks from the source file
+                # and different stats
+                finalout.append('<br />'.join(line.split('\n')))
             else:
                 finalout.append(line)
 
@@ -1143,10 +1145,11 @@ def find_template(wikitext, template_name):
                     arguments.append([template_argument[0].strip(' \n')])
                 template_argument = ['', '']
             elif tid in ('text', 'l_brace', 'r_brace', 'single_brace', 'pipe',
-                         'l_brackets', 'r_brackets', 'single_bracket'):
+                         'l_brackets', 'r_brackets', 'single_bracket') or (
+                    tid == 'equals' and brace_count >= 1):
                 index = 0 if pre_equal else 1
                 template_argument[index] += text
-            elif tid == 'equals':
+            elif tid == 'equals' and brace_count == 0:
                 pre_equal = False
 
             # Brace counting must be done after the text parsing because
