@@ -752,8 +752,10 @@ specification = Specification({
             ('UniquePurchase_Costs', Field(
                 type='ref|list|int',
             )),
-            ('Unknown3', Field(
+            # see https://github.com/OmegaK2/PyPoE/pull/41 for further explanation
+            ('inflection', Field(
                 type='ref|string',
+                description='the inflection identifier used for i18n in related fields'
             )),
             ('Equip_AchievementItemsKey', Field(
                 type='ulong',
@@ -6652,8 +6654,10 @@ specification = Specification({
             ('Flag0', Field(
                 type='bool',
             )),
-            ('Unknown0', Field(
+            # see https://github.com/OmegaK2/PyPoE/pull/41 for further explanation
+            ('inflection', Field(
                 type='ref|string',
+                description='the inflection identifier used for i18n in related fields'
             )),
         )),
     ),
@@ -9585,8 +9589,10 @@ specification = Specification({
             ('Text2', Field(
                 type='ref|string',
             )),
-            ('Unknown8', Field(
+            # see https://github.com/OmegaK2/PyPoE/pull/41 for further explanation
+            ('inflection', Field(
                 type='ref|string',
+                description='the inflection identifier used for i18n in related fields'
             )),
         )),
     ),
