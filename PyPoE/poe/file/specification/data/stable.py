@@ -1020,8 +1020,10 @@ specification = Specification({
                 type='ulong',
                 key='BestiaryCapturableMonsters.dat',
             )),
-            ('Unknown9', Field(
+            # Rarity.dat has 4 rows, so 5 is equal -1
+            ('RarityKey', Field(
                 type='int',
+                key='Rarity.dat',
             )),
             ('BestiaryGenusKey', Field(
                 type='ulong',
