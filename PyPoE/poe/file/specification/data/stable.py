@@ -1016,8 +1016,9 @@ specification = Specification({
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Key3', Field(
+            ('BestiaryCapturableMonstersKey', Field(
                 type='ulong',
+                key='BestiaryCapturableMonsters.dat',
             )),
             ('Unknown9', Field(
                 type='int',
@@ -1062,7 +1063,7 @@ specification = Specification({
                 type='ref|string',
             )),
             ('Flag0', Field(
-                type='byte',
+                type='bool',
             )),
             ('Data0', Field(
                 type='ref|list|int',
@@ -1071,8 +1072,8 @@ specification = Specification({
                 type='ref|list|ulong',
                 key='AchievementItems.dat',
             )),
-            ('Data1', Field(
-                type='byte',
+            ('Flag1', Field(
+                type='bool',
             )),
         )),
     ),
