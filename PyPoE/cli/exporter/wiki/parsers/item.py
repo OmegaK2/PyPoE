@@ -1746,27 +1746,18 @@ class ItemsParser(parser.BaseParser):
         console('Additional files may be loaded. Processing information - this '
                 'may take a while...')
         if parsed_args.store_images:
-            try:
-                import brotli
-            except ImportError:
-                console(
-                    'Brotli was not found. Image extraction will be skipped!',
-                    msg=Msg.error,
-                )
-                parsed_args.store_images = False
-            else:
-                console(
-                    'Images are flagged for extraction. Loading content.ggpk '
-                    '...'
-                )
-                self.ggpk = GGPKFile()
-                self.ggpk.read(get_content_ggpk_path())
-                self.ggpk.directory_build()
-                console('content.ggpk has been loaded.')
+            console(
+                'Images are flagged for extraction. Loading content.ggpk '
+                '...'
+            )
+            self.ggpk = GGPKFile()
+            self.ggpk.read(get_content_ggpk_path())
+            self.ggpk.directory_build()
+            console('content.ggpk has been loaded.')
 
-                self._img_path = os.path.join(self.base_path, 'img')
-                if not os.path.exists(self._img_path):
-                    os.makedirs(self._img_path)
+            self._img_path = os.path.join(self.base_path, 'img')
+            if not os.path.exists(self._img_path):
+                os.makedirs(self._img_path)
 
         r = ExporterResult()
         self.rr['BaseItemTypes.dat'].build_index('Name')

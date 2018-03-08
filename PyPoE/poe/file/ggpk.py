@@ -79,10 +79,7 @@ import os
 import re
 
 # 3rd Party
-try:
-    import brotli
-except ImportError:
-    brotli = None
+import brotli
 
 # self
 from PyPoE.shared import InheritedDocStringsMeta
@@ -113,13 +110,6 @@ def extract_dds(data, path_or_ggpk=None):
     a file instead.
     If any problems arise an error will be raised instead.
 
-    .. warning::
-
-        For the decompression to work the brotli library must be installed.
-
-        Brotli is currently not available through PyPI and can be obtained as
-        wheel from https://github.com/google/brotli
-
     Parameters
     ----------
     data : bytes
@@ -135,8 +125,6 @@ def extract_dds(data, path_or_ggpk=None):
 
     Raises
     -------
-    NotImplementedError
-        If the brotli library is not installed
     ValueError
         If the file data contains a reference, but path_or_ggpk is not specified
     TypeError
@@ -147,12 +135,6 @@ def extract_dds(data, path_or_ggpk=None):
     brotli.error
         If whatever bytes were read were not brotli compressed
     """
-    if brotli is None:
-        raise NotImplementedError(
-            'brotli library must be installed for this function.\nVisit '
-            'https://github.com/google/brotli for python packages.'
-        )
-
     # Already a DDS file, so return it
     if data[:4] == b'DDS ':
         return data

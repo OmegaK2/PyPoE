@@ -280,21 +280,6 @@ class SettingDDS(BoolSetting):
         )), row, 1)
         parent.layout.addWidget(self.checkbox, row, 2)
 
-        try:
-            import brotli
-        except ImportError:
-            qlabel = QLabel(parent.tr(
-                'Brotli is not installed'
-            ))
-            qlabel.setStyleSheet("QLabel {color: red;}")
-        else:
-            qlabel = QLabel(parent.tr(
-                'Brotli is installed'
-            ))
-            qlabel.setStyleSheet("QLabel {color: green;}")
-
-        parent.layout.addWidget(qlabel, row, 3)
-
 
 class SettingVersion(ComboBoxSetting):
     KEY = 'version'
