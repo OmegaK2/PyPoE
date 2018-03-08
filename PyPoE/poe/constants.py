@@ -283,9 +283,13 @@ class SOCKET_COLOUR(Enum):
     BLUE = B
     WHITE = W
 
-    def __init__(self, char, id):
-        self.char = char
-        self.id = id
+    def __new__(cls, char, id):
+        obj = object.__new__(cls)
+        obj._value_ = char
+        obj.char = char
+        obj.id = id
+
+        return obj
 
 
 class RARITY(Enum):
@@ -327,11 +331,14 @@ class RARITY(Enum):
     UNIQUE = (4, 'Unique', 'unique', 'brown')
     ANY = (5, 'Any', 'any', 'any')
 
-    def __init__(self, id, upper, lower, colour):
-        self.id = id
-        self.name_upper = upper
-        self.name_lower = lower
-        self.colour = colour
+    def __new__(cls, id, upper, lower, colour):
+        obj = object.__new__(cls)
+        obj._value_ = id
+        obj.id = id
+        obj.upper = upper
+        obj.lower = lower
+        obj.colour = colour
+        return obj
 
 
 class MAP_ITERATION(IntEnum):
