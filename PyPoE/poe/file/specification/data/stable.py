@@ -753,7 +753,7 @@ specification = Specification({
                 type='ref|list|int',
             )),
             # see https://github.com/OmegaK2/PyPoE/pull/41 for further explanation
-            ('inflection', Field(
+            ('Inflection', Field(
                 type='ref|string',
                 description='the inflection identifier used for i18n in related fields'
             )),
@@ -6655,7 +6655,7 @@ specification = Specification({
                 type='bool',
             )),
             # see https://github.com/OmegaK2/PyPoE/pull/41 for further explanation
-            ('inflection', Field(
+            ('Inflection', Field(
                 type='ref|string',
                 description='the inflection identifier used for i18n in related fields'
             )),
@@ -9590,7 +9590,7 @@ specification = Specification({
                 type='ref|string',
             )),
             # see https://github.com/OmegaK2/PyPoE/pull/41 for further explanation
-            ('inflection', Field(
+            ('Inflection', Field(
                 type='ref|string',
                 description='the inflection identifier used for i18n in related fields'
             )),

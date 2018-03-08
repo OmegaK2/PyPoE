@@ -752,8 +752,10 @@ specification = Specification({
             ('UniquePurchase_Costs', Field(
                 type='ref|list|int',
             )),
-            ('Unknown3', Field(
+            # see https://github.com/OmegaK2/PyPoE/pull/41 for further explanation
+            ('Inflection', Field(
                 type='ref|string',
+                description='the inflection identifier used for i18n in related fields'
             )),
             ('Equip_AchievementItemsKey', Field(
                 type='ulong',
@@ -1962,10 +1964,10 @@ specification = Specification({
                 key='AchievementItems.dat',
                 description='Achievement item checked on currency use',
             )),
-            ('Encounter_AchievementItemsKey', Field(
+            ('Encounter_AchievementItemsKeys', Field(
                 type='ref|list|ulong',
                 key='AchievementItems.dat',
-                description='Achievement item granted on encounter',
+                description='Achievement items granted on encounter',
             )),
             ('Key4', Field(
                 type='ulong',
@@ -2670,7 +2672,7 @@ specification = Specification({
             ('SpawnWeight', Field(
                 type='int',
             )),
-            ('ModsKey', Field(
+            ('ModsKeys', Field(
                 type='ref|list|long',
                 key='Mods.dat',
             )),
@@ -6652,8 +6654,10 @@ specification = Specification({
             ('Flag0', Field(
                 type='bool',
             )),
-            ('Unknown0', Field(
+            # see https://github.com/OmegaK2/PyPoE/pull/41 for further explanation
+            ('Inflection', Field(
                 type='ref|string',
+                description='the inflection identifier used for i18n in related fields'
             )),
         )),
     ),
@@ -9585,8 +9589,10 @@ specification = Specification({
             ('Text2', Field(
                 type='ref|string',
             )),
-            ('Unknown8', Field(
+            # see https://github.com/OmegaK2/PyPoE/pull/41 for further explanation
+            ('Inflection', Field(
                 type='ref|string',
+                description='the inflection identifier used for i18n in related fields'
             )),
         )),
     ),
