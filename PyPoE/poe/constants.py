@@ -302,6 +302,8 @@ class RARITY(Enum):
         Rare rarity ("yellow" colour)
     UNIQUE : RARITY
         Unique rarity ("brown" colour)
+    ANY : RARITY
+        Any rarity
     id : int
         When accessing a :class:`RARITY` instance (e.x. :attr:`RARITY.NORMAL`)
         the id attribute denotes the integer that is sometimes used in the game
@@ -323,6 +325,7 @@ class RARITY(Enum):
     MAGIC = (2, 'Magic', 'magic', 'blue')
     RARE = (3, 'Rare', 'rare', 'yellow')
     UNIQUE = (4, 'Unique', 'unique', 'brown')
+    ANY = (5, 'Any', 'any', 'any')
 
     def __init__(self, id, upper, lower, colour):
         self.id = id

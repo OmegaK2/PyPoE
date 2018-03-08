@@ -990,8 +990,26 @@ specification = Specification({
                 type='ulong',
                 key='BaseItemTypes.dat',
             )),
-            ('Unknown2', Field(
+            ('Unknown0', Field(
                 type='int',
+            )),
+            ('CaptureMinLevel', Field(
+                type='int',
+            )),
+            ('CaptureMaxLevel', Field(
+                type='int',
+            )),
+            ('DropMinLevel', Field(
+                type='int',
+            )),
+            ('DropMaxLevel', Field(
+                type='int',
+            )),
+            ('Unknown1', Field(
+                type='int',
+            )),
+            ('IsEnabled', Field(
+                type='bool',
             )),
         )),
     ),
@@ -1020,10 +1038,9 @@ specification = Specification({
                 type='ulong',
                 key='BestiaryCapturableMonsters.dat',
             )),
-            # Rarity.dat has 4 rows, so 5 is equal -1
             ('RarityKey', Field(
                 type='int',
-                key='Rarity.dat',
+                enum='RARITY',
             )),
             ('BestiaryGenusKey', Field(
                 type='ulong',
@@ -7386,9 +7403,9 @@ specification = Specification({
             ('ItemLevel', Field(
                 type='int',
             )),
-            ('Rarity', Field(
+            ('RarityKey', Field(
                 type='int',
-                description='1=Normal, 2=Magic, 3=Rare',
+                enum='RARITY',
             )),
             #TODO RARITY constant
             ('Unknown2', Field(
