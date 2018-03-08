@@ -1138,11 +1138,14 @@ def find_template(wikitext, template_name):
             if tid in ('pipe', 'r_brace') and brace_count == 0 and \
                             bracket_count == 0:
                 pre_equal = True
+                for i in range(0, 2):
+                    template_argument[i] = template_argument[i].strip(' \n')
+
                 if template_argument[1]:
-                    kw_arguments[template_argument[0].strip(' \n')] = \
-                        template_argument[1].strip(' \n')
+                    kw_arguments[template_argument[0]] = \
+                        template_argument[1]
                 elif template_argument[0]:
-                    arguments.append([template_argument[0].strip(' \n')])
+                    arguments.append([template_argument[0]])
                 template_argument = ['', '']
             elif tid in ('text', 'l_brace', 'r_brace', 'single_brace', 'pipe',
                          'l_brackets', 'r_brackets', 'single_bracket') or (
