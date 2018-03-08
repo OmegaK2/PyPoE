@@ -302,7 +302,7 @@ class ModParser(BaseParser):
                 ('Domain', 'domain'),
                 ('GenerationType', 'generation_type'),
                 ('Level', 'required_level'),
-
+                ('TierText', 'tier_text'),
             ):
                 data[k[1]] = mod[k[0]]
 
