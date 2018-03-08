@@ -312,11 +312,11 @@ class RARITY(Enum):
         When accessing a :class:`RARITY` instance (e.x. :attr:`RARITY.NORMAL`)
         the id attribute denotes the integer that is sometimes used in the game
         files to represent the colour
-    upper : str
+    name_upper : str
         When accessing a :class:`RARITY` instance (e.x. :attr:`RARITY.NORMAL`)
         the upper attribute represents the textual representation with an upper
         case starting letter
-    lower : str
+    name_lower : str
         When accessing a :class:`RARITY` instance (e.x. :attr:`RARITY.NORMAL`)
         the lower attribute represents the textual representation with an lower
         case starting letter
@@ -335,8 +335,8 @@ class RARITY(Enum):
         obj = object.__new__(cls)
         obj._value_ = id
         obj.id = id
-        obj.upper = upper
-        obj.lower = lower
+        obj.name_upper = upper
+        obj.name_lower = lower
         obj.colour = colour
         return obj
 
