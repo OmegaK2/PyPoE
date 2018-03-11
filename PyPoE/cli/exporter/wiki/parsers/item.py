@@ -1822,6 +1822,8 @@ class ItemsParser(parser.BaseParser):
                 infobox['implicit%s' % (i+1)] = mod['Id']
 
             for rarity in RARITY:
+                if rarity.id >= 5:
+                    break
                 for i, (item, cost) in enumerate(
                         base_item_type[rarity.name_upper + 'Purchase'],
                         start=1):
