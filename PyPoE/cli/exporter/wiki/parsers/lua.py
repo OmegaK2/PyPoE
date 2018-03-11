@@ -33,7 +33,7 @@ See PyPoE/LICENSE
 
 # Python
 import warnings
-from collections import namedtuple
+from collections import OrderedDict, defaultdict
 
 # Self
 from PyPoE.cli.core import console, Msg
@@ -53,51 +53,39 @@ rarities = {
     5: 'Unique',
 }
 
-# TODO find a better way
-# TODO Break with updates
-item_map = {
-    # Though Scared Ground, Normal
-    423: "Survival Instincts", # Veridian
-    424: "Survival Skills", # Crimson
-    425: "Survival Secrets", # Cobalt
-    # Though Scared Ground, Cruel
-    454: "Poacher's Aim", # Verdian
-    455: "Warlord's Reach ", # Crimson
-    456: "Assassin's Haste", # Cobalt
-    # Though Scared Ground, Merciless
-    457: "Conqueror's Efficiency", # crimson
-    458: "Conqueror's Potency", # cobalt
-    459: "Conqueror's Longevity", #viridian
-}
+# =============================================================================
+# Functions
+# =============================================================================
 
-two_stone_map = {
-    'Ring12': "Two-Stone Ring (ruby and topaz)",
-    'Ring13': "Two-Stone Ring (sapphire and topaz)",
-    'Ring14': "Two-Stone Ring (ruby and sapphire)",
-}
 
-item_format_order = [
-    'reward', 'type', 'class_name', 'difficulty', 'quest', 'quest_id', 'npc',
-    'act', 'itemlevel', 'rarity', 'sockets', 'page_link'
-]
+def lua_format_value(key, value):
+    if isinstance(value, int):
+        f = '\t\t%s=%s,\n'
+    else:
+        f = '\t\t%s="%s",\n'
+    return f % (key, value)
 
-out_key_map = {
-    'class_name': 'class',
-}
+
+def lua_formatter(outdata, key_order=None):
+    out = []
+    out.append('local data = {\n')
+    for data in outdata:
+        out.append('\t{\n')
+        for key, value in data.items():
+            if isinstance(value, int):
+                out.append('\t\t%s=%s,\n' % (key, value))
+            else:
+                out.append('\t\t%s="%s",\n' % (key, value.replace('"', '\\"')))
+        out.append('\t},\n')
+    out.append('\n}')
+    out.append('\n')
+    out.append('return data')
+
+    return ''.join(out)
 
 # =============================================================================
 # Classes
 # =============================================================================
-
-# class factory
-RewardDataTuple = namedtuple('RewardDataTuple', [
-    'quest', 'quest_id', 'act', 'type', 'class_name', 'class_id', 'rarity',
-    'difficulty', 'sockets', 'page_link', 'itemlevel', 'reward'
-])
-VendorRewardDataTuple = namedtuple('VendorRewardDataTuple', [
-    'quest', 'quest_id', 'act', 'reward', 'type', 'class_name', 'class_id',
-    'npc'
-])
 
 
 class LuaHandler(ExporterHandler):
@@ -126,6 +114,120 @@ class LuaHandler(ExporterHandler):
             func=QuestRewardReader.read_vendor_rewards,
         )
 
+        parser = lua_sub.add_parser(
+            'bestiary',
+            help='Extract bestiary information',
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=BestiaryParser,
+            func=BestiaryParser.main,
+        )
+
+
+class BestiaryParser(BaseParser):
+    _files = [
+        # pretty much chain loads everything we need
+        'BestiaryRecipes.dat',
+    ]
+
+    _COPY_KEYS_BESTIARY = (
+        ('Id', {
+            'key': 'id',
+        }),
+        ('HintText', {
+            'key': 'header',
+        }),
+        ('Description', {
+            'key': 'subheader',
+        }),
+        ('Notes', {
+            'key': 'notes',
+        }),
+    )
+
+    _COPY_KEYS_BESTIARY_COMPONENTS = (
+        ('Id', {
+            'key': 'id',
+        }),
+        ('MinLevel', {
+            'key': 'min_level',
+        }),
+        ('RarityKey', {
+            'key': 'rarity',
+            'value': lambda x: x.name_upper,
+        }),
+        ('BestiaryFamiliesKey', {
+            'key': 'family',
+            'value': lambda x: x['Name'],
+        }),
+        ('BestiaryGroupsKey', {
+            'key': 'beast_group',
+            'value': lambda x: x['Name'],
+        }),
+        ('BestiaryGenusKey', {
+            'key': 'genus',
+            'value': lambda x: x['Name'],
+        }),
+        ('ModsKey', {
+            'key': 'mod_id',
+            'value': lambda x: x['Id'],
+        }),
+        ('BestiaryCapturableMonstersKey', {
+            'key': 'monster',
+            'value': lambda x: x['Name'],
+        }),
+    )
+
+    def _copy_from_keys(self, row, keys, out_data):
+        copyrow = OrderedDict()
+        for k, copy_data in keys:
+
+            value = row[k]
+            if value:
+                if 'value' in copy_data:
+                    value = copy_data['value'](value)
+                copyrow[copy_data['key']] = value
+
+        out_data.append(copyrow)
+
+    def main(self, parsed_args):
+        recipes = []
+        components = []
+        recipe_components_temp = defaultdict(lambda:defaultdict(int))
+
+        for row in self.rr['BestiaryRecipes.dat']:
+            self._copy_from_keys(row, self._COPY_KEYS_BESTIARY, recipes)
+            for value in row['BestiaryRecipeComponentKeys']:
+                recipe_components_temp[row['Id']][value['Id']] += 1
+
+        for row in self.rr['BestiaryRecipeComponent.dat']:
+            self._copy_from_keys(
+                row, self._COPY_KEYS_BESTIARY_COMPONENTS, components
+            )
+
+        recipe_components = []
+        for recipe_id, data in recipe_components_temp.items():
+            for component_id, amount in data.items():
+                recipe_components.append(OrderedDict((
+                    ('recipe_id', recipe_id),
+                    ('component_id', component_id),
+                    ('amount', amount)
+                )))
+
+        r = ExporterResult()
+        for k in ('recipes', 'components', 'recipe_components'):
+            r.add_result(
+                text=lua_formatter(locals()[k]),
+                out_file='bestiary_%s.lua' % k,
+                wiki_page=[{
+                    'page': 'Module:Bestiary/%s' % k,
+                    'condition': None,
+                }]
+            )
+
+        return r
+
 
 class QuestRewardReader(BaseParser):
     # Load the files we need
@@ -139,6 +241,29 @@ class QuestRewardReader(BaseParser):
         'QuestVendorRewards.dat',
     ]
 
+    # TODO find a better way
+    # TODO Break with updates
+    _ITEM_MAP = {
+        # Though Scared Ground, Normal
+        423: "Survival Instincts", # Veridian
+        424: "Survival Skills", # Crimson
+        425: "Survival Secrets", # Cobalt
+        # Though Scared Ground, Cruel
+        454: "Poacher's Aim", # Verdian
+        455: "Warlord's Reach ", # Crimson
+        456: "Assassin's Haste", # Cobalt
+        # Though Scared Ground, Merciless
+        457: "Conqueror's Efficiency", # crimson
+        458: "Conqueror's Potency", # cobalt
+        459: "Conqueror's Longevity", #viridian
+    }
+
+    _TWO_STONE_MAP = {
+        'Ring12': "Two-Stone Ring (ruby and topaz)",
+        'Ring13': "Two-Stone Ring (sapphire and topaz)",
+        'Ring14': "Two-Stone Ring (ruby and sapphire)",
+    }
+
     def _write_lua(self, outdata, data_type):
         if data_type == 'vendor':
             subpage = 'vendor_reward_data'
@@ -146,40 +271,14 @@ class QuestRewardReader(BaseParser):
             subpage = 'data'
 
         # Pre-sort
-        outdata.sort(key=lambda x: x.class_id)
-        outdata.sort(key=lambda x: x.reward)
-        outdata.sort(key=lambda x: x.quest_id)
-        outdata.sort(key=lambda x: x.act)
-
-        out = []
-        out.append('local rewards = {\n')
-        for data in outdata:
-            out.append('\t{\n')
-            for item in item_format_order:
-                if not hasattr(data, item):
-                    continue
-                value = getattr(data, item)
-                if value is None:
-                    continue
-
-                if isinstance(value, int):
-                    f = '\t\t%s=%s,\n'
-                else:
-                    f = '\t\t%s="%s",\n'
-
-                try:
-                    outkey = out_key_map[item]
-                except KeyError:
-                    outkey = item
-                out.append(f % (outkey, value))
-            out.append('\t},\n')
-        out.append('\n}')
-        out.append('\n')
-        out.append('return rewards')
+        outdata.sort(key=lambda x: x['class_id'])
+        outdata.sort(key=lambda x: x['reward'])
+        outdata.sort(key=lambda x: x['quest_id'])
+        outdata.sort(key=lambda x: x['act'])
 
         r = ExporterResult()
         r.add_result(
-            text=''.join(out),
+            text=lua_formatter(outdata),
             out_file='%s_rewards.txt' % data_type,
             wiki_page=[{
                 'page': 'Module:QuestReward/%s' % subpage,
@@ -190,7 +289,7 @@ class QuestRewardReader(BaseParser):
         return r
 
     def read_quest_rewards(self, args):
-        outdata = set()
+        outdata = list()
         for row in self.rr['QuestRewards.dat']:
             # Find the corresponding keys
             item = row['BaseItemTypesKey']
@@ -199,7 +298,7 @@ class QuestRewardReader(BaseParser):
             itemcls = item['ItemClassesKey']['Name']
 
             # Format the data
-            data = {}
+            data = OrderedDict()
 
             data['quest'] = quest['Name']
             data['quest_id'] = quest['Id']
@@ -225,10 +324,10 @@ class QuestRewardReader(BaseParser):
 
             # TODO: Unused class_id atm, only for sorting
             if character is None:
-                data['class_name'] = 'All'
+                data['class'] = 'All'
                 data['class_id'] = -1
             else:
-                data['class_name'] = character['Name']
+                data['class'] = character['Name']
                 data['class_id'] = character.rowid
 
             r = row['Rarity']
@@ -250,8 +349,8 @@ class QuestRewardReader(BaseParser):
                 # Unique and not a quest item or gem
                 if rarity == 'Unique':
                     uid = row['Key0']
-                    if uid in item_map:
-                        name = item_map[uid]
+                    if uid in self._ITEM_MAP:
+                        name = self._ITEM_MAP[uid]
                     else:
                         warnings.warn('Uncaptured unique item. %s %s %s' % (uid, data['quest'], name))
 
@@ -259,21 +358,17 @@ class QuestRewardReader(BaseParser):
 
             if name == 'Two-Stone Ring':
                 itemid = item['ItemVisualIdentityKey']['Id']
-                if itemid in two_stone_map:
-                    data['page_link'] = two_stone_map[itemid]
+                if itemid in self._TWO_STONE_MAP:
+                    data['page_link'] = self._TWO_STONE_MAP[itemid]
                 else:
                     warnings.warn('Fix ItemID for two-stones')
 
-            for field in RewardDataTuple._fields:
-                if field not in data:
-                    data[field] = None
-
             # Add to formatting list
-            outdata.add(RewardDataTuple(**data))
-        return self._write_lua(list(outdata), 'quest')
+            outdata.append(data)
+        return self._write_lua(outdata, 'quest')
 
     def read_vendor_rewards(self, args):
-        outdata = set()
+        outdata = []
 
         for row in self.rr['QuestVendorRewards.dat']:
             # Find the corresponding keys
@@ -307,7 +402,7 @@ class QuestRewardReader(BaseParser):
             items = row['BaseItemTypesKeys']
 
             if not items:
-                warnings.warn('Row %s: No corressponding items found for given item ids' % row.rowid)
+                warnings.warn('Row %s: No corresponding items found for given item ids' % row.rowid)
                 continue
 
             classes = row['CharactersKeys']
@@ -316,7 +411,7 @@ class QuestRewardReader(BaseParser):
 
             for quest in quests:
                 for item in items:
-                    data = {}
+                    data = OrderedDict()
 
                     data['quest'] = quest['Name']
                     data['quest_id'] = quest['Id']
@@ -329,11 +424,11 @@ class QuestRewardReader(BaseParser):
 
                     if classes:
                         for cls in classes:
-                            data['class_name'] = cls['Name']
+                            data['class'] = cls['Name']
                             data['class_id'] = cls.rowid
-                            outdata.add(VendorRewardDataTuple(**data))
+                            outdata.append(data)
                     else:
-                        data['class_name'] = 'All'
+                        data['class'] = 'All'
                         data['class_id'] = -1
-                        outdata.add(VendorRewardDataTuple(**data))
-        return self._write_lua(list(outdata), 'vendor')
+                        outdata.append(data)
+        return self._write_lua(outdata, 'vendor')
