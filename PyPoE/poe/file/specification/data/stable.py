@@ -1094,6 +1094,9 @@ specification = Specification({
             ('Flag1', Field(
                 type='bool',
             )),
+            ('Unknown1', Field(
+                type='int',
+            )),
         )),
     ),
     'BeyondDemons.dat': File(
@@ -2226,7 +2229,7 @@ specification = Specification({
             ('Keys0', Field(
                 type='ref|list|ulong',
             )),
-            ('Unknown17', Field(
+            ('Unknown0', Field(
                 type='ref|list|int',
             )),
             ('CurrencyTab_StackSize', Field(
@@ -2237,6 +2240,9 @@ specification = Specification({
             )),
             ('XBoxDirections', Field(
                 type='ref|string',
+            )),
+            ('Unknown1', Field(
+                type='int',
             )),
         )),
     ),
@@ -9236,6 +9242,9 @@ specification = Specification({
             )),
             ('Unknown4', Field(
                 type='ref|list|int',
+            )),
+            ('Flag0', Field(
+                type='bool',
             )),
         )),
     ),
