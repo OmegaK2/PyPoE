@@ -3156,11 +3156,11 @@ specification = Specification({
             ('Unknown11', Field(
                 type='ulong',
             )),
-            ('ModsKey1', Field(
+            ('Display_Wand_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('ModsKey2', Field(
+            ('Display_Bow_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
@@ -3168,35 +3168,35 @@ specification = Specification({
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Amulet1_ModsKey', Field(
+            ('Display_Amulet_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Belt1_ModsKey', Field(
+            ('Display_Ring_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Belt3_ModsKey', Field(
+            ('Display_Belt_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Gloves1_ModsKey', Field(
+            ('Display_Gloves_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Boots1_ModsKey', Field(
+            ('Display_Boots_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('BodyArmour1_ModsKey', Field(
+            ('Display_BodyArmour_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Helmet1_ModsKey', Field(
+            ('Display_Helmet_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Shield1_ModsKey', Field(
+            ('Display_Shield_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
@@ -3223,47 +3223,47 @@ specification = Specification({
             ('Unknown31', Field(
                 type='int',
             )),
-            ('1Hand_ModsKey1', Field(
+            ('Display_Weapon_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('ModsKey13', Field(
+            ('Display_Melee_Weapon_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('ModsKey14', Field(
+            ('Display_1HandWeapon_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('ModsKey15', Field(
+            ('Display_2HandWeapon_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('2Hand_ModsKey1', Field(
+            ('Display_2HandMeleeWeapon_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Boots3_ModsKey', Field(
+            ('Display_Armour_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Ranged_ModsKey', Field(
+            ('Display_Ranged_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Helmet2_ModsKey', Field(
+            ('Helmet_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('BodyArmour2_ModsKey', Field(
+            ('BodyArmour_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Boots2_ModsKey', Field(
+            ('Boots_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Gloves2_ModsKey', Field(
+            ('Gloves_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
@@ -3275,62 +3275,62 @@ specification = Specification({
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('2Hand_ModsKey2', Field(
+            ('Staff_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('2Hand_ModsKey3', Field(
+            ('2HandSword_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('2Hand_ModsKey4', Field(
+            ('2HandAxe_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('2Hand_ModsKey5', Field(
+            ('2HandMace_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('1Hand_ModsKey2', Field(
+            ('Claw_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('1Hand_ModsKey3', Field(
+            ('Dagger_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('1Hand_ModsKey4', Field(
+            ('1HandSword_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('1Hand_ModsKey5', Field(
+            ('1HandThrustingSword_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('1Hand_ModsKey6', Field(
+            ('1HandAxe_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('1Hand_ModsKey7', Field(
+            ('1HandMace_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('1Hand_ModsKey8', Field(
+            ('Sceptre_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('1Hand_ModsKey9', Field(
+            ('Display_Monster_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
             ('ItemLevelRestriction', Field(
                 type='int',
             )),
-            ('Belt2_ModsKey', Field(
+            ('Belt_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Amulet2_ModsKey', Field(
+            ('Amulet_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
@@ -3338,16 +3338,15 @@ specification = Specification({
                 type='ulong',
                 key='Mods.dat',
             )),
-            # Ring? Jewel?
-            ('ModsKey41', Field(
+            ('Display_Jewellry_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Shield2_ModsKey', Field(
+            ('Shield_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('ModsKey43', Field(
+            ('Display_Item_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
