@@ -38,14 +38,11 @@ from collections import defaultdict, OrderedDict
 # Self
 from PyPoE.poe.constants import RARITY
 from PyPoE.poe.file.ot import OTFile
-from PyPoE.poe.file.ggpk import GGPKFile, extract_dds
-from PyPoE.poe.file.stat_filters import StatFilterFile
 from PyPoE.poe.sim.formula import gem_stat_requirement, GemTypes
 from PyPoE.cli.core import console, Msg
-from PyPoE.cli.exporter.util import get_content_ggpk_path
-from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult, \
-    add_format_argument
+from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult
 from PyPoE.cli.exporter.wiki import parser
+from PyPoE.cli.exporter.wiki.parsers.skill import SkillParserShared
 
 # =============================================================================
 # Functions
@@ -131,6 +128,7 @@ class WikiCondition(parser.WikiCondition):
         'is_corrupted',
         'is_relic',
         'can_not_be_traded_or_modified',
+        'suppress_improper_modifiers_category',
 
         # Version information
         'release_version',
@@ -141,7 +139,7 @@ class WikiCondition(parser.WikiCondition):
         'prophecy_reward',
     )
     COPY_MATCH = re.compile(
-        r'^upgraded_from_set.*'
+        r'^(upgraded_from_set|implicit[0-9]+_text).*'
         , re.UNICODE)
 
     NAME = 'Item'
@@ -168,8 +166,6 @@ class ItemsHandler(ExporterHandler):
             cls=ItemsParser,
             func=ItemsParser.by_name,
         )
-
-        add_format_argument(parser)
         self._shared_item_arguments(parser)
 
         parser.add_argument(
@@ -195,7 +191,6 @@ class ItemsHandler(ExporterHandler):
             cls=ItemsParser,
             func=ItemsParser.by_filter,
         )
-        add_format_argument(parser)
         self._shared_item_arguments(parser)
 
         parser.add_argument(
@@ -237,7 +232,9 @@ class ItemsHandler(ExporterHandler):
             nargs='+',
         )
 
-        add_format_argument(parser)
+    def add_default_parsers(self, *args, **kwargs):
+        super().add_default_parsers(*args, **kwargs)
+        self.add_format_argument(kwargs['parser'])
 
     def _shared_item_arguments(self, parser):
         parser.add_argument(
@@ -247,24 +244,10 @@ class ItemsHandler(ExporterHandler):
             dest='item_class',
         )
 
-        parser.add_argument(
-            '-im', '--store-images',
-            help='If specified item 2d art images will be extracted. '
-                 'Requires brotli to be installed.',
-            action='store_true',
-            dest='store_images',
-        )
-
-        parser.add_argument(
-            '-im-c', '--convert-images',
-            help='Convert extracted images to png using ImageMagick '
-                 '(requires "magick" command to be executeable)',
-            action='store_true',
-            dest='convert_images',
-        )
+        self.add_image_arguments(parser)
 
 
-class ItemsParser(parser.BaseParser):
+class ItemsParser(SkillParserShared):
     _regex_format = re.compile(
         '(?P<index>x|y|z)'
         '(?:[\W]*)'
@@ -312,6 +295,8 @@ class ItemsParser(parser.BaseParser):
 
     # Unreleased or disabled items to avoid exporting to the wiki
     _SKIP_ITEMS_BY_ID = {
+        'Metadata/Items/Gems/SkillGemLightningTendrilsChannelled',
+
         'Metadata/Items/MicrotransactionSkillEffects/MicrotransactionSpectralThrowEbony',
         'Metadata/Items/MicrotransactionItemEffects/MicrotransactionFirstBlood',
         'Metadata/Items/MicrotransactionItemEffects/MicrotransactionFirstBloodWeaponEffect',
@@ -423,44 +408,6 @@ class ItemsParser(parser.BaseParser):
         'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge10_7',
     }
 
-    # Values without the Metadata/Projectiles/ prefix
-    _skill_gem_to_projectile_map = {
-        'Fireball': 'Fireball',
-        'Spark': 'Spark',
-        'Ice Spear': 'IceSpear',
-        'Freezing Pulse': 'FreezingPulse',
-        'Ethereal Knives': 'ShadowProjectile',
-        'Arctic Breath': 'ArcticBreath',
-        'Flame Totem': 'TotemFireSpray',
-        'Caustic Arrow': 'CausticArrow',
-        'Burning Arrow': 'BurningArrow',
-        'Vaal Burning Arrow': 'VaalBurningArrow',
-        'Explosive Arrow': 'FuseArrow',
-        'Lightning Arrow': 'LightningArrow',
-        'Ice Shot': 'IceArrow',
-        'Incinerate': 'Flamethrower1',
-        'Lightning Trap': 'LightningTrap',
-        'Spectral Throw': 'ThrownWeapon',
-        'Ball Lightning': 'BallLightningPlayer',
-        'Tornado Shot': 'TornadoShotArrow',
-        # TornadoShotSecondaryArrow,
-        'Frost Blades': 'IceStrikeProjectile',
-        'Molten Strike': 'FireMortar',
-        'Wild Strike': 'ElementalStrikeColdProjectile',
-        'Shrapnel Shot': 'ShrapnelShot',
-        'Power Siphon': 'Siphon',
-        'Siege Ballista': 'CrossbowSnipeProjectile',
-        #'Ethereal Knives': 'ShadowBlades',
-        'Frostbolt': 'FrostBolt',
-        'Split Arrow': 'SplitArrowDefault',
-    }
-
-    _cp_columns = (
-        'Level', 'LevelRequirement', 'ManaMultiplier', 'CriticalStrikeChance',
-        'ManaCost', 'DamageMultiplier', 'VaalSouls', 'VaalStoredUses',
-        'Cooldown', 'StoredUses', 'DamageEffectiveness'
-    )
-
     _attribute_map = OrderedDict((
         ('Str', 'Strength'),
         ('Dex', 'Dexterity'),
@@ -468,99 +415,8 @@ class ItemsParser(parser.BaseParser):
     ))
 
     def __init__(self, *args, **kwargs):
-        super(ItemsParser, self).__init__(*args, **kwargs)
-
-        self._skill_stat_filters = None
-        self._img_path = None
-        self._ggpk = None
+        super().__init__(*args, **kwargs)
         self._parsed_args = None
-
-    @property
-    def skill_stat_filter(self):
-        """
-
-        Returns
-        -------
-        StatFilterFile
-        """
-        if self._skill_stat_filters is None:
-            self._skill_stat_filters = StatFilterFile()
-            self._skill_stat_filters.read(os.path.join(
-                self.base_path, 'Metadata', 'StatDescriptions',
-                'skillpopup_stat_filters.txt'
-            ))
-            #TODO remove once fixed
-            #self._skill_stat_filters.skills['spirit_offering'] = SkillEntry(skill_id='spirit_offering', translation_file_path='Metadata/StatDescriptions/offering_skill_stat_descriptions.txt', stats=[])
-
-        return self._skill_stat_filters
-
-    def _format_lines(self, lines):
-        return '<br>'.join(lines).replace('\n', '<br>')
-
-    def _write_image(self, data, out_path):
-        with open(out_path, 'wb') as f:
-            f.write(extract_dds(
-                data,
-                path_or_ggpk=self.ggpk,
-            ))
-
-            console('Wrote "%s"' % out_path)
-
-        if not self._parsed_args.convert_images:
-            return
-
-        os.system('magick convert "%s" "%s"' % (
-            out_path, out_path.replace('.dds', '.png'),
-        ))
-        os.remove(out_path)
-
-        console('Converted "%s" to png' % out_path)
-
-    _skill_column_map = (
-        ('ManaCost', {
-            'template': 'mana_cost',
-            'default': 0,
-            'format': lambda v: '{0:n}'.format(v),
-        }),
-        ('ManaMultiplier', {
-            'template': 'mana_multiplier',
-            'format': lambda v: '{0:n}'.format(v),
-            'default_cls': ('Active Skill Gems', ),
-        }),
-        ('StoredUses', {
-            'template': 'stored_uses',
-            'default': 0,
-            'format': lambda v: '{0:n}'.format(v),
-        }),
-        ('Cooldown', {
-            'template': 'cooldown',
-            'default': 0,
-            'format': lambda v: '{0:n}'.format(v/1000),
-        }),
-        ('VaalSouls', {
-            'template': 'vaal_souls_requirement',
-            'default': 0,
-            'format': lambda v: '{0:n}'.format(v),
-        }),
-        ('VaalStoredUses', {
-            'template': 'vaal_stored_uses',
-            'default': 0,
-            'format': lambda v: '{0:n}'.format(v),
-        }),
-        ('CriticalStrikeChance', {
-            'template': 'critical_strike_chance',
-            'default': 0,
-            'format': lambda v: '{0:n}'.format(v/100),
-        }),
-        ('DamageEffectiveness', {
-            'template': 'damage_effectiveness',
-            'format': lambda v: '{0:n}'.format(v+100),
-        }),
-        ('DamageMultiplier', {
-            'template': 'damage_multiplier',
-            'format': lambda v: '{0:n}'.format(v/100+100),
-        }),
-    )
 
     def _skill_gem(self, infobox, base_item_type):
         try:
@@ -568,6 +424,19 @@ class ItemsParser(parser.BaseParser):
                 base_item_type.rowid]
         except KeyError:
             return False
+
+        # SkillGems.dat
+        for attr_short, attr_long in self._attribute_map.items():
+            if not skill_gem[attr_short]:
+                continue
+            infobox[attr_long.lower() + '_percent'] = skill_gem[attr_short]
+
+        infobox['gem_tags'] = ', '.join(
+            [gt['Tag'] for gt in skill_gem['GemTagsKeys'] if gt['Tag']]
+        )
+
+        # No longer used
+        #
 
         # TODO: Maybe catch empty stuff here?
         exp = 0
@@ -584,322 +453,18 @@ class ItemsParser(parser.BaseParser):
             console('No experience progression found for "%s" - assuming max '
                     'level 1' %
                     base_item_type['Name'], msg=Msg.error)
-            exp_level = [0]
             exp_total = [0]
 
+        max_level = len(exp_total)-1
         ge = skill_gem['GrantedEffectsKey']
 
-        gepl = []
-        for row in self.rr['GrantedEffectsPerLevel.dat']:
-            if row['GrantedEffectsKey'] == ge:
-                gepl.append(row)
+        self._skill(ge=ge, infobox=infobox, parsed_args=self._parsed_args,
+                    msg_name=base_item_type['Name'], max_level=max_level)
 
-        if not gepl:
-            console('No level progression found for "%s". Skipping.' %
-                    base_item_type['Name'], msg=Msg.error)
-            return False
-
-        gepl.sort(key=lambda x:x['Level'])
-
-        ae = ge['ActiveSkillsKey']
-
-        max_level = len(exp_total)-1
-        if ae:
-            try:
-                tf = self.tc[self.skill_stat_filter.skills[
-                    ae['Id']].translation_file_path]
-            except KeyError as e:
-                warnings.warn('Missing active skill in stat filers: %s' % e.args[0])
-                tf = self.tc['skill_stat_descriptions.txt']
-
-            if self._parsed_args.store_images and ae['Icon_DDSFile']:
-                self._write_image(
-                    data=self.ggpk[ae['Icon_DDSFile']].record.extract().read(),
-                    out_path=os.path.join(
-                        self._img_path,
-                        '%s skill icon.dds' % base_item_type['Name']
-                    ),
-                )
-        else:
-            tf = self.tc['gem_stat_descriptions.txt']
-
-        # reformat the datas we need
-        level_data = []
-        stat_key_order = {
-            'stats': OrderedDict(),
-            'qstats': OrderedDict(),
-        }
-
-        for i, row in enumerate(gepl):
-            data = defaultdict()
-
-            stats = [r['Id'] for r in row['StatsKeys']] + \
-                    [r['Id'] for r in row['StatsKeys2']]
-            values = row['StatValues'] + ([1, ] * len(row['StatsKeys2']))
-
-            # Remove 0 (unused) stats
-            remove_ids = [
-                stat for stat, value in zip(stats, values) if value == 0
-            ]
-            for stat_id in remove_ids:
-                index = stats.index(stat_id)
-                if values[index] == 0:
-                    del stats[index]
-                    del values[index]
-
-            tr = tf.get_translation(
-                tags=stats,
-                values=values,
-                full_result=True,
-            )
-            data['_tr'] = tr
-
-            qtr = tf.get_translation(
-                tags=[r['Id'] for r in row['Quality_StatsKeys']],
-                # Offset Q1000
-                values=[v/50 for v in row['Quality_Values']],
-                full_result=True,
-                use_placeholder=lambda i: "{%s}" % i,
-            )
-            data['_qtr'] = qtr
-
-            data['stats'] = {}
-            data['qstats'] = {}
-
-            for result, key in (
-                    (tr, 'stats'),
-                    (qtr, 'qstats'),
-            ):
-                for j, stats in enumerate(result.found_ids):
-                    values = list(result.values[j])
-                    stats = list(stats)
-                    values_parsed = list(result.values_parsed[j])
-                    # Skip zero stats again, since some translations might
-                    # provide them
-                    while True:
-                        try:
-                            index = values.index(0)
-                            del values[index]
-                            del values_parsed[index]
-                            del stats[index]
-                        except ValueError:
-                            break
-                    if result.values[j] == 0:
-                        continue
-                    k = '__'.join(stats)
-                    stat_key_order[key][k] = None
-                    data[key]['__'.join(stats)] = {
-                        'line': result.found_lines[j],
-                        'stats': stats,
-                        'values': values,
-                        'values_parsed': values_parsed,
-                    }
-                for stat, value in result.missing:
-                    warnings.warn('Missing translation for %s' % stat)
-                    stat_key_order[key][stat] = None
-                    data[key][stat] = {
-                        'line': '',
-                        'stats': [stat, ],
-                        'values': [value, ],
-                    }
-
-            for stat_dict in data['qstats'].values():
-                for k in ('values', 'values_parsed'):
-                    new = []
-                    for v in stat_dict[k]:
-                        v /= 20
-                        if v.is_integer():
-                            v = int(v)
-                        new.append(v)
-                    stat_dict[k] = new
-                stat_dict['line'] = stat_dict['line'].format(
-                    *stat_dict['values_parsed']
-                )
-
-
-            try:
-                data['exp'] = exp_level[i]
-                data['exp_total'] = exp_total[i]
-            except IndexError:
-                pass
-
-            for column in self._cp_columns:
-                data[column] = row[column]
-
-            level_data.append(data)
-
-        # Find static & dynamic stats..
-
-        static = {
-            'columns': set(self._cp_columns),
-            'stats': OrderedDict(stat_key_order['stats']),
-            'qstats': OrderedDict(stat_key_order['qstats']),
-        }
-        dynamic = {
-            'columns': set(),
-            'stats': OrderedDict(),
-            'qstats': OrderedDict(),
-        }
-        last = level_data[0]
-        for data in level_data[1:]:
-            for key in list(static['columns']):
-                if last[key] != data[key]:
-                    static['columns'].remove(key)
-                    dynamic['columns'].add(key)
-            for stat_key in ('stats', 'qstats'):
-                for key in list(static[stat_key]):
-                    if key not in last[stat_key]:
-                        continue
-                    if key not in data[stat_key]:
-                        continue
-
-                    if last[stat_key][key]['values'] != data[stat_key][key][
-                            'values']:
-                        del static[stat_key][key]
-                        dynamic[stat_key][key] = None
-            last = data
-
-        #
-        # Output handling for gem infobox
-        #
-
-        # SkillGems.dat
-        for attr_short, attr_long in self._attribute_map.items():
-            if not skill_gem[attr_short]:
-                continue
-            infobox[attr_long.lower() + '_percent'] = skill_gem[attr_short]
-
-        infobox['gem_tags'] = ', '.join(
-            [gt['Tag'] for gt in skill_gem['GemTagsKeys'] if gt['Tag']]
-        )
-
-        if not ge['IsSupport']:
-            infobox['cast_time'] = ge['CastTime'] / 1000
-
-        infobox['gem_description'] = skill_gem['Description']
-
-        # From ActiveSkills.dat
-        if ae:
-            infobox['gem_description'] = ae['Description']
-            infobox['active_skill_name'] = ae['DisplayedName']
-            if ae['WeaponRestriction_ItemClassesKeys']:
-                # The class name may be empty for reason, causing issues
-                infobox['item_class_restriction'] = ', '.join([
-                    c['Name'] if c['Name'] else c['Id'] for c in
-                    ae['WeaponRestriction_ItemClassesKeys']
-                ])
-
-        # From Projectile.dat if available
-        key = self._skill_gem_to_projectile_map.get(base_item_type['Name'])
-        if key:
-            infobox['projectile_speed'] = self.rr['Projectiles.dat'].index[
-                'Id']['Metadata/Projectiles/' + key]['ProjectileSpeed']
-
-        # From GrantedEffects.dat
-
-        infobox['skill_id'] = ge['Id']
-        if ge['SupportGemLetter']:
-            infobox['support_gem_letter'] = ge['SupportGemLetter']
-
-        # GrantedEffectsPerLevel.dat
-        infobox['required_level'] = level_data[0]['LevelRequirement']
-
-        # Don't add columns that are zero/default
-        for column, column_data in self._skill_column_map:
-            if column not in static['columns']:
-                continue
-
-            default = column_data.get('default')
-            if default is not None and gepl[0][column] == \
-                    column_data['default']:
-                continue
-
-            df = column_data.get('default_cls')
-            if df is not None and infobox['class'] in df:
-                continue
-            infobox['static_' + column_data['template']] = \
-                column_data['format'](gepl[0][column])
-
-        # Normal stats
-        # TODO: Loop properly - some stats not available at level 0
-        stats = []
-        values = []
-        lines = []
-        for key in stat_key_order['stats']:
-            if key in static['stats']:
-                sdict = level_data[0]['stats'][key]
-                line = sdict['line']
-                stats.extend(sdict['stats'])
-                values.extend(sdict['values'])
-            elif key in dynamic['stats']:
-                try:
-                    stat_dict_max = level_data[max_level]['stats'][key]
-                except KeyError:
-                    maxerr = True
-                else:
-                    maxerr = False
-
-                # Stat was 0
-                try:
-                    stat_dict = level_data[0]['stats'][key]
-                except KeyError:
-                    minerr = True
-                else:
-                    minerr = False
-
-                if not maxerr and not minerr:
-                    stat_ids = stat_dict['stats']
-                elif maxerr and not minerr:
-                    stat_ids = stat_dict['stats']
-                    stat_dict_max = {'values': [0] * len(stat_ids)}
-                elif not maxerr and minerr:
-                    stat_ids = stat_dict_max['stats']
-                    stat_dict = {'values': [0] * len(stat_ids)}
-                elif maxerr and minerr:
-                    console('Neither min or max skill available. Investigate.',
-                            msg=Msg.error)
-                    return
-
-                tr_values = []
-                for j, value in enumerate(stat_dict['values']):
-                    tr_values.append((value, stat_dict_max['values'][j]))
-
-                # Should only be one
-                line = tf.get_translation(stat_ids, tr_values)
-                line = line[0] if line else ''
-
-            if line:
-                lines.append(line)
-
-        self._write_stats(infobox, zip(stats, values), 'static_')
-
-        # Add the attack damage stat from the game data
-        if ae and 'Attack' in infobox['gem_tags']:
-            values = (
-                level_data[0]['DamageMultiplier'],
-                level_data[max_level]['DamageMultiplier'],
-            )
-            # Account for default (0 = 100%)
-            if values[0] != 0 or values[1] != 0:
-                lines.insert(0, tf.get_translation(
-                    tags=['active_skill_attack_damage_final_permyriad', ],
-                    values=[values, ]
-                )[0])
-
-        infobox['stat_text'] = self._format_lines(lines)
-
-        # Quality stats
-        lines = []
-        stats = []
-        values = []
-        for key in static['qstats']:
-            stat_dict = level_data[0]['qstats'][key]
-            lines.append(stat_dict['line'])
-            stats.extend(stat_dict['stats'])
-            values.extend(stat_dict['values'])
-
-        infobox['quality_stat_text'] = self._format_lines(lines)
-        self._write_stats(infobox, zip(stats, values), 'static_quality_')
+        # some descriptions come from active skills which are parsed in above
+        # function
+        if 'gem_description' not in infobox:
+            infobox['gem_description'] = skill_gem['Description']
 
         #
         # Output handling for progression
@@ -910,9 +475,6 @@ class ItemsParser(parser.BaseParser):
             'Str': 'strength_requirement',
             'Int': 'intelligence_requirement',
             'Dex': 'dexterity_requirement',
-            'ManaCost': 'mana_cost',
-            'CriticalStrikeChance': 'critical_strike_chance',
-            'ManaMultiplier': 'mana_multiplier',
         }
 
         if base_item_type['ItemClassesKey']['Name'] == 'Active Skill Gems':
@@ -920,67 +482,24 @@ class ItemsParser(parser.BaseParser):
         elif base_item_type['ItemClassesKey']['Name'] == 'Support Skill Gems':
             gtype = GemTypes.support
 
-        for i, row in enumerate(level_data):
-            prefix = 'level%s' % (i + 1)
-            infobox[prefix] = 'True'
-
-            prefix += '_'
-
-            infobox[prefix + 'level_requirement'] = row['LevelRequirement']
-
+        # +1 for gem levels starting at 1
+        # +1 for being able to corrupt gems to +1 level
+        # +1 for python counting only up to, but not including the number
+        for i in range(1, max_level+3):
+            prefix = 'level%s_' % i
             for attr in ('Str', 'Dex', 'Int'):
-                # +1 for gem levels starting at 1
-                # +1 for being able to corrupt gems to +1 level
-                if row['Level'] <= (max_level+2) and skill_gem[attr]:
+                if skill_gem[attr]:
                     try:
                         infobox[prefix + map2[attr]] = gem_stat_requirement(
-                            level=row['LevelRequirement'],
+                            level=infobox[prefix + 'level_requirement'],
                             gtype=gtype,
                             multi=skill_gem[attr],
                         )
                     except ValueError as e:
                         warnings.warn(str(e))
-
-            # Column handling
-            for column, column_data in self._skill_column_map:
-                if column not in dynamic['columns']:
-                    continue
-                # Removed the check of defaults on purpose, makes sense
-                # to add the info since it is dynamically changed
-                infobox[prefix + column_data['template']] = \
-                    column_data['format'](row[column])
-
-            # Stat handling
-            for stat_key, stat_prefix in (
-                    ('stats', ''),
-                    ('qstats', 'quality_'),
-            ):
-                lines = []
-                values = []
-                stats = []
-                for key in stat_key_order[stat_key]:
-                    if key not in dynamic[stat_key]:
-                        continue
-
-                    try:
-                        stat_dict = row[stat_key][key]
-                    # No need to add stat that don't exist at specific levels
-                    except KeyError:
-                        continue
-                    # Don't add empty lines
-                    if stat_dict['line']:
-                        lines.append(stat_dict['line'])
-                    stats.extend(stat_dict['stats'])
-                    values.extend(stat_dict['values'])
-                if lines:
-                    infobox[prefix + stat_prefix + 'stat_text'] = \
-                        self._format_lines(lines)
-                self._write_stats(
-                    infobox, zip(stats, values), prefix + stat_prefix
-                )
-
             try:
-                infobox[prefix + 'experience'] = exp_total[i]
+                # Index starts at 0 while levels start at 1
+                infobox[prefix + 'experience'] = exp_total[i-1]
             except IndexError:
                 pass
 
@@ -1410,6 +929,7 @@ class ItemsParser(parser.BaseParser):
     _conflict_active_skill_gems_map = {
         'Metadata/Items/Gems/SkillGemArcticArmour': True,
         'Metadata/Items/Gems/SkillGemPhaseRun': True,
+        'Metadata/Items/Gems/SkillGemLightningTendrils': True,
     }
 
     def _conflict_active_skill_gems(self, infobox, base_item_type):
@@ -1671,12 +1191,6 @@ class ItemsParser(parser.BaseParser):
         'Piece': _conflict_piece,
     }
 
-    def _write_stats(self, infobox, stats_and_values, global_prefix):
-        for i, val in enumerate(stats_and_values):
-            prefix = '%sstat%s_' % (global_prefix, (i + 1))
-            infobox[prefix + 'id'] = val[0]
-            infobox[prefix + 'value'] = val[1]
-
     def _parse_class_filter(self, parsed_args):
         self.rr['ItemClasses.dat'].build_index('Name')
         if parsed_args.item_class:
@@ -1745,19 +1259,7 @@ class ItemsParser(parser.BaseParser):
 
         console('Additional files may be loaded. Processing information - this '
                 'may take a while...')
-        if parsed_args.store_images:
-            console(
-                'Images are flagged for extraction. Loading content.ggpk '
-                '...'
-            )
-            self.ggpk = GGPKFile()
-            self.ggpk.read(get_content_ggpk_path())
-            self.ggpk.directory_build()
-            console('content.ggpk has been loaded.')
-
-            self._img_path = os.path.join(self.base_path, 'img')
-            if not os.path.exists(self._img_path):
-                os.makedirs(self._img_path)
+        self._image_init(parsed_args)
 
         r = ExporterResult()
         self.rr['BaseItemTypes.dat'].build_index('Name')
@@ -1896,13 +1398,14 @@ class ItemsParser(parser.BaseParser):
                     )
                     continue
 
-                self._write_image(
+                self._write_dds(
                     data=self.ggpk[base_item_type['ItemVisualIdentityKey'][
                         'DDSFile']].record.extract().read(),
                     out_path=os.path.join(self._img_path, (
                         infobox.get('inventory_icon') or name) +
-                        ' inventory icon.dds'
+                        ' inventory icon.dds',
                     ),
+                    parsed_args=parsed_args,
                 )
 
         return r

@@ -51,8 +51,7 @@ from PyPoE.cli.exporter.util import check_hash
 # Globals
 # =============================================================================
 
-__all__ = ['ExporterHandler', 'ExporterResult', 'WikiHandler',
-           'add_format_argument']
+__all__ = ['ExporterHandler', 'ExporterResult', 'WikiHandler']
 
 # =============================================================================
 # Classes
@@ -348,6 +347,31 @@ class ExporterHandler(BaseHandler):
             action='store_true',
         )
 
+    def add_image_arguments(self, parser):
+        parser.add_argument(
+            '-im', '--store-images',
+            help='If specified item 2d art images will be extracted. '
+                 'Requires brotli to be installed.',
+            action='store_true',
+            dest='store_images',
+        )
+
+        parser.add_argument(
+            '-im-c', '--convert-images',
+            help='Convert extracted images to png using ImageMagick '
+                 '(requires "magick" command to be executeable)',
+            action='store_true',
+            dest='convert_images',
+        )
+
+    def add_format_argument(self, parser):
+        parser.add_argument(
+            '--format',
+            help='Output format',
+            choices=['template', 'module'],
+            default='template',
+        )
+
 
 class ExporterResult(list):
     def add_result(self, text=None, out_file=None, wiki_page=None,
@@ -366,12 +390,3 @@ class ExporterResult(list):
 # =============================================================================
 # Functions
 # =============================================================================
-
-
-def add_format_argument(parser):
-    parser.add_argument(
-        '--format',
-        help='Output format',
-        choices=['template', 'module'],
-        default='template',
-    )

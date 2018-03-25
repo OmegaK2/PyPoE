@@ -42,8 +42,7 @@ from collections import OrderedDict, defaultdict
 # Self
 from PyPoE.poe.constants import MOD_DOMAIN, MOD_GENERATION_TYPE, MOD_STATS_RANGE
 from PyPoE.cli.core import console, Msg
-from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult, \
-    add_format_argument
+from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult
 from PyPoE.cli.exporter.wiki.parser import BaseParser, format_result_rows
 from PyPoE.shared.decorators import deprecated
 
@@ -124,7 +123,7 @@ class ModsHandler(ExporterHandler):
             nargs='+',
         )
 
-        add_format_argument(parser)
+        self.add_format_argument(parser)
 
         self.add_default_parsers(
             parser=parser,
@@ -148,7 +147,7 @@ class ModsHandler(ExporterHandler):
             type=int,
         )
 
-        add_format_argument(parser)
+        self.add_format_argument(parser)
 
         self.add_default_parsers(
             parser=parser,
@@ -171,7 +170,7 @@ class ModsHandler(ExporterHandler):
             choices=[k.name for k in MOD_GENERATION_TYPE],
         )
 
-        add_format_argument(parser)
+        self.add_format_argument(parser)
 
         self.add_default_parsers(
             parser=parser,

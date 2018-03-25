@@ -55,12 +55,14 @@ Functions
 # Python
 import re
 import warnings
+import os
 from collections import OrderedDict
 from functools import partial
 
 # self
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter import config
+from PyPoE.cli.exporter.util import get_content_ggpk_path
 from PyPoE.poe.constants import MOD_DOMAIN, WORDLISTS
 from PyPoE.poe.text import parse_description_tags
 from PyPoE.poe.file.dat import RelationalReader, set_default_spec
@@ -70,6 +72,7 @@ from PyPoE.poe.file.translations import (
     get_custom_translation_file,
     install_data_dependant_quantifiers,
 )
+from PyPoE.poe.file.ggpk import GGPKFile, extract_dds
 from PyPoE.poe.file.ot import OTFileCache
 from PyPoE.poe.sim.mods import get_translation_file_from_domain
 
@@ -109,8 +112,12 @@ _inter_wiki_map = (
     ('Critical Strike', {'link': 'Critical Strike'}),
     ('Movement Speed', {'link': 'Movement Speed'}),
     ('Leech', {'link': 'Leech'}), # Life Leech, Mana Leech
+    ('Low Life', {'link': 'Low Life'}),
+    ('Full Life', {'link': 'Full Life'}),
     ('Life', {'link': 'Life'}),
     ('Mana Reservation', {'link': 'Mana Reservation'}),
+    ('Low Mana', {'link': 'Low Mana'}),
+    ('Full Mana', {'link': 'Full Mana'}),
     ('Mana', {'link': 'Mana'}),
     # Just damage
     #('Damage', {'link': 'Damage'}),
@@ -638,6 +645,8 @@ _inter_wiki_map = (
     ('Hit(?:|s)', {'link': 'Hit'}),
     ('Kill(?:|s)', {'link': 'Kill'}),
     ('Charge(?:|s)', {'link': 'Charge'}),
+    ('Lucky', {'link': 'Lucky'}),
+    ('Unlucky', {'link': 'Unlucky'}),
 )
 
 '''_inter_wiki_re = re.compile(
@@ -711,6 +720,9 @@ class BaseParser(object):
 
         self.custom = get_custom_translation_file()
 
+        self.ggpk = None
+        self._img_path = None
+
     def _column_index_filter(self, dat_file_name, column_id, arg_list,
                              error_msg=_MISSING_MSG):
         self.rr[dat_file_name].build_index(column_id)
@@ -738,6 +750,9 @@ class BaseParser(object):
 
         return rows
 
+    def _format_lines(self, lines):
+        return '<br>'.join(lines).replace('\n', '<br>')
+
     def _format_wiki_title(self, title):
         return title.replace('_', '~').replace('~~~', '_~~_~~_')
 
@@ -749,6 +764,44 @@ class BaseParser(object):
             ingame,
             make_inter_wiki_links(custom)
         )
+
+    def _write_dds(self, data, out_path, parsed_args):
+        with open(out_path, 'wb') as f:
+            f.write(extract_dds(
+                data,
+                path_or_ggpk=self.ggpk,
+            ))
+
+            console('Wrote "%s"' % out_path)
+
+        if not parsed_args.convert_images:
+            return
+
+        os.system('magick convert "%s" "%s"' % (
+            out_path, out_path.replace('.dds', '.png'),
+        ))
+        os.remove(out_path)
+
+        console('Converted "%s" to png' % out_path)
+
+    def _load_ggpk(self):
+        if self.ggpk is None:
+            self.ggpk = GGPKFile()
+            self.ggpk.read(get_content_ggpk_path())
+            self.ggpk.directory_build()
+            console('content.ggpk has been loaded.')
+
+    def _image_init(self, parsed_args):
+        if parsed_args.store_images:
+            console(
+                'Images are flagged for extraction. Loading content.ggpk '
+                '...'
+            )
+            self._load_ggpk()
+
+            self._img_path = os.path.join(self.base_path, 'img')
+            if not os.path.exists(self._img_path):
+                os.makedirs(self._img_path)
 
     def _get_stats(self, stats, values, mod, translation_file=None):
         if translation_file is None:

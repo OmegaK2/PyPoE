@@ -46,8 +46,7 @@ from collections import OrderedDict
 # self
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter.wiki import parser
-from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult, \
-    add_format_argument
+from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult
 
 # =============================================================================
 # Globals
@@ -91,7 +90,6 @@ class AreaCommandHandler(ExporterHandler):
             cls=AreaParser,
             func=AreaParser.by_id,
         )
-        add_format_argument(a_id)
         a_id.add_argument(
             'area_id',
             help='Id of the area, can be specified multiple times.',
@@ -108,7 +106,6 @@ class AreaCommandHandler(ExporterHandler):
             cls=AreaParser,
             func=AreaParser.by_name,
         )
-        add_format_argument(a_name)
         a_name.add_argument(
             'area_name',
             help='Visible name of the area (localized), can be specified multiple times.',
@@ -125,7 +122,6 @@ class AreaCommandHandler(ExporterHandler):
             cls=AreaParser,
             func=AreaParser.by_rowid,
         )
-        add_format_argument(a_rid)
         a_rid.add_argument(
             'start',
             help='Starting index',
@@ -150,7 +146,6 @@ class AreaCommandHandler(ExporterHandler):
             cls=AreaParser,
             func=AreaParser.by_filter,
         )
-        add_format_argument(a_filter)
 
         a_filter.add_argument(
             '-ft-id', '--filter-id', '--filter-metadata-id',
@@ -158,6 +153,10 @@ class AreaCommandHandler(ExporterHandler):
             type=str,
             dest='re_id',
         )
+
+    def add_default_parsers(self, *args, **kwargs):
+        super().add_default_parsers(*args, **kwargs)
+        self.add_format_argument(kwargs['parser'])
 
 
 class AreaParser(parser.BaseParser):
