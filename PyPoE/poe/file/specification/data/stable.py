@@ -5702,6 +5702,7 @@ specification = Specification({
             )),
             ('GenerationWeight', VirtualField(
                 fields=('GenerationWeight_TagsKeys', 'GenerationWeight_Values'),
+                zip=True,
             )),
         )),
     ),
