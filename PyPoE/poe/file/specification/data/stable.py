@@ -7020,7 +7020,7 @@ specification = Specification({
             ('IsMultipleChoiceOption', Field(
                 type='bool',
             )),
-            ('Unknown0', Field(
+            ('Stat5Value', Field(
                 type='int',
             )),
             ('BuffRelatedUnknown2', Field(
@@ -7029,7 +7029,7 @@ specification = Specification({
         )),
         virtual_fields=OrderedDict((
             ('StatValues', VirtualField(
-                fields=('Stat1Value', 'Stat2Value', 'Stat3Value', 'Stat4Value'),
+                fields=('Stat1Value', 'Stat2Value', 'Stat3Value', 'Stat4Value', 'Stat5Value'),
             )),
             ('Stats', VirtualField(
                 fields=('StatsKeys', 'StatValues'),
