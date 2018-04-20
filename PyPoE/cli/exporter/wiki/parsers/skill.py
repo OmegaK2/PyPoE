@@ -34,6 +34,7 @@ See PyPoE/LICENSE
 # Python
 import os
 import warnings
+import traceback
 from collections import OrderedDict, defaultdict
 
 # Self
@@ -41,7 +42,6 @@ from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult
 from PyPoE.cli.exporter.wiki import parser
 from PyPoE.poe.file.stat_filters import StatFilterFile
-from PyPoE.poe.sim.formula import gem_stat_requirement, GemTypes
 
 # =============================================================================
 # Globals
@@ -108,6 +108,13 @@ class SkillHandler(ExporterHandler):
         super().add_default_parsers(*args, **kwargs)
         self.add_format_argument(kwargs['parser'])
         self.add_image_arguments(kwargs['parser'])
+        kwargs['parser'].add_argument(
+            '--allow-skill-gems',
+            action='store_true',
+            help='Disable the check that prevents skill gems skill from being '
+                 'exported.',
+            dest='allow_skill_gems',
+        )
 
 
 class WikiCondition(parser.WikiCondition):
@@ -121,6 +128,8 @@ class WikiCondition(parser.WikiCondition):
         'radius_tertiary_description',
         'has_percentage_mana_cost',
         'has_reservation_mana_cost',
+        'skill_screenshot',
+        'skill_screenshot_file',
     )
 
     NAME = 'Skill'
@@ -284,6 +293,7 @@ class SkillParserShared(parser.BaseParser):
                         self._img_path,
                         '%s skill icon.dds' % msg_name
                     ),
+                    parsed_args=parsed_args,
                 )
         else:
             tf = self.tc['gem_stat_descriptions.txt']
@@ -623,12 +633,26 @@ class SkillParser(SkillParserShared):
         )
 
     def export(self, parsed_args, skills):
+        self._image_init(parsed_args=parsed_args)
         console('Found %s skills, parsing...' % len(skills))
+        self.rr['SkillGems.dat'].build_index('GrantedEffectsKey')
         r = ExporterResult()
         for skill in skills:
+            if not parsed_args.allow_skill_gems and skill in \
+                    self.rr['SkillGems.dat'].index['GrantedEffectsKey']:
+                console(
+                    'Skipping skill gem skill "%s"' % skill['Id'],
+                    msg=Msg.warning)
+                continue
             data = OrderedDict()
 
-            self._skill(ge=skill, infobox=data, parsed_args=parsed_args)
+            try:
+                self._skill(ge=skill, infobox=data, parsed_args=parsed_args)
+            except Exception as e:
+                console(
+                    'Error when parsing skill "%s":' % skill['Id'],
+                    msg=Msg.error)
+                console(traceback.format_exc(), msg=Msg.error)
 
             cond = WikiCondition(
                 data=data,
