@@ -293,6 +293,11 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/Quivers/QuiverDescent',
     }
 
+    _NAME_OVERRIDE_BY_ID = {
+        'Metadata/Items/Hideout/HideoutLightningCoil':
+            'Lightning Coil (Decoration)',
+    }
+
     # Unreleased or disabled items to avoid exporting to the wiki
     _SKIP_ITEMS_BY_ID = {
         'Metadata/Items/Gems/SkillGemLightningTendrilsChannelled',
@@ -696,7 +701,7 @@ class ItemsParser(SkillParserShared):
         ('NPCMasterKey', {
             'template': 'master',
             'format': lambda v: v['NPCsKey']['Name'],
-            #'condition': lambda v: v is not None,
+            'condition': lambda v: v is not None,
         }),
         ('MasterLevel', {
             'template': 'master_level_requirement',
@@ -1029,35 +1034,28 @@ class ItemsParser(SkillParserShared):
         if ho['NPCMasterKey']:
             if base_item_type['Id'].startswith('Metadata/Items/Hideout/Hideout'
                                                'Wounded'):
-                return '%s (%s %s decoration, %s)' % (
+                name = '%s (%s %s decoration, %s)' % (
                     base_item_type['Name'],
                     ho['NPCMasterKey']['NPCsKey']['ShortName'],
                     ho['MasterLevel'],
                     base_item_type['Id'].replace('Metadata/Items/Hideout/Hideout'
                                                  'Wounded', '')
                 )
-
-            return '%s (%s %s decoration)' % (
-                base_item_type['Name'],
-                ho['NPCMasterKey']['NPCsKey']['ShortName'],
-                ho['MasterLevel']
-            )
+            else:
+                name = '%s (%s %s decoration)' % (
+                    base_item_type['Name'],
+                    ho['NPCMasterKey']['NPCsKey']['ShortName'],
+                    ho['MasterLevel']
+                )
+            infobox['inventory_icon'] = name
+            return name
         elif base_item_type['Id'].startswith(
                 'Metadata/Items/Hideout/HideoutTotemPole'):
             # Ingore the test doodads on purpose
             if base_item_type['Id'].endswith('Test'):
                 return
 
-            match = re.search(
-                '(?<=in the )(.*)(?= Leagues)', infobox['help_text']
-            )
-
-            if match:
-                league = match.group(0)
-                if league.endswith('Challenge'):
-                    league = league.replace(' Challenge', '')
-
-                return '%s (%s)' % (base_item_type['Name'], league)
+            return base_item_type['Name']
 
     def _conflict_maps(self, infobox, base_item_type):
         id = base_item_type['Id'].replace('Metadata/Items/Maps/', '')
@@ -1367,6 +1365,10 @@ class ItemsParser(SkillParserShared):
                     console('No name conflict handler defined for item class '
                             '"%s"' % cls, msg=Msg.error)
                     continue
+            override = self._NAME_OVERRIDE_BY_ID.get(base_item_type['Id'])
+            if override is not None:
+                name = override
+                infobox['inventory_icon'] = override
 
             # putting this last since it's usually manually added
             if base_item_type['Name'] in self._DROP_DISABLED_ITEMS or \
