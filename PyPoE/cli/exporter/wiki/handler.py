@@ -285,7 +285,7 @@ class ExporterHandler(BaseHandler):
                     if pargs.write:
                         out_path = os.path.join(out_dir, item['out_file'])
                         console('Writing data to "%s"...' % out_path)
-                        with open(out_path, 'w') as f:
+                        with open(out_path, 'w', encoding='utf-8') as f:
                             f.write(text)
 
                 if pargs.wiki:
