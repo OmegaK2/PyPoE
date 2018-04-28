@@ -36,6 +36,7 @@ import warnings
 from collections import OrderedDict, defaultdict
 
 # Self
+from PyPoE.poe.constants import RARITY
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult
 from PyPoE.cli.exporter.wiki.parser import BaseParser
@@ -45,13 +46,6 @@ from PyPoE.cli.exporter.wiki.parser import BaseParser
 # =============================================================================
 
 __all__= ['QuestRewardReader', 'LuaHandler']
-
-rarities = {
-    1: 'Normal',
-    2: 'Magic',
-    3: 'Rare',
-    5: 'Unique',
-}
 
 # =============================================================================
 # Functions
@@ -244,18 +238,34 @@ class QuestRewardReader(BaseParser):
     # TODO find a better way
     # TODO Break with updates
     _ITEM_MAP = {
-        # Though Scared Ground, Normal
+        # A2: Though Scared Ground
         423: "Survival Instincts", # Veridian
         424: "Survival Skills", # Crimson
         425: "Survival Secrets", # Cobalt
-        # Though Scared Ground, Cruel
+        # A5: The King's Feast
         454: "Poacher's Aim", # Verdian
         455: "Warlord's Reach ", # Crimson
         456: "Assassin's Haste", # Cobalt
-        # Though Scared Ground, Merciless
+        #
         457: "Conqueror's Efficiency", # crimson
         458: "Conqueror's Potency", # cobalt
         459: "Conqueror's Longevity", #viridian
+        # A5: Death to Puirty
+        560: "Rapid Expansion",
+        780: "Wildfire",
+        777: "Overwhelming Odds",
+
+        775: "Collateral Damage",
+        779: "Omen on the Winds",
+        781: "Fight Survival",
+        784: "Ring of Blades",
+
+        778: "First Snow",
+        783: "Frozen Trail",
+        786: "Inevitability",
+        788: "Spreading Rot",
+        789: "Violent Dead",
+        790: "Hazardous Research",
     }
 
     _TWO_STONE_MAP = {
@@ -264,14 +274,13 @@ class QuestRewardReader(BaseParser):
         'Ring14': "Two-Stone Ring (ruby and sapphire)",
     }
 
-    def _write_lua(self, outdata, data_type):
-        if data_type == 'vendor':
-            subpage = 'vendor_reward_data'
-        else:
-            subpage = 'data'
+    _UNIT_SEP = '\u001F'
 
+    _CLASSES = {'Witch', 'Scion', 'Duelist', 'Marauder', 'Templar', 'Ranger',
+                'Shadow'}
+
+    def _write_lua(self, outdata, data_type):
         # Pre-sort
-        outdata.sort(key=lambda x: x['class_id'])
         outdata.sort(key=lambda x: x['reward'])
         outdata.sort(key=lambda x: x['quest_id'])
         outdata.sort(key=lambda x: x['act'])
@@ -281,7 +290,7 @@ class QuestRewardReader(BaseParser):
             text=lua_formatter(outdata),
             out_file='%s_rewards.txt' % data_type,
             wiki_page=[{
-                'page': 'Module:QuestReward/%s' % subpage,
+                'page': 'Module:Quest reward/data/%s' % data_type,
                 'condition': None,
             }]
         )
@@ -289,7 +298,7 @@ class QuestRewardReader(BaseParser):
         return r
 
     def read_quest_rewards(self, args):
-        outdata = list()
+        compress = {}
         for row in self.rr['QuestRewards.dat']:
             # Find the corresponding keys
             item = row['BaseItemTypesKey']
@@ -311,27 +320,11 @@ class QuestRewardReader(BaseParser):
                     continue
             data['act'] = quest['Act']
 
-            if itemcls in ['Active Skill Gems', 'Support Skill Gems']: # Skills
-                item_type = 'skill'
-            elif itemcls == 'Hideout Doodads': # can be ignored I guess
-                item_type = 'hideout'
-            else:
-                item_type = 'item'
-
-            # Item is default class
-            if item_type != 'item':
-                data['type'] = item_type
-
             # TODO: Unused class_id atm, only for sorting
-            if character is None:
-                data['class'] = 'All'
-                data['class_id'] = -1
-            else:
-                data['class'] = character['Name']
-                data['class_id'] = character.rowid
+            if character is not None:
+                data['classes'] = character['Name']
 
-            r = row['Rarity']
-            rarity = rarities[r] if r in rarities else '???'
+            rarity = row['RarityKey'].name_upper
 
             sockets = row['SocketGems']
             if sockets:
@@ -341,34 +334,41 @@ class QuestRewardReader(BaseParser):
 
             # Some of unique items follow special rules
             if itemcls == 'Quest Items' and name.startswith('Book of'):
-                data['page_link'] = '%s (%s)' % (name, data['quest'])
+                name = '%s (%s)' % (name, data['quest'])
             # Non non quest items or skill gems have their rarity added
-            if itemcls not in {'Active Skill Gems', 'Support Skill Gems', 'Quest Items'}:
-                data['itemlevel'] = row['ItemLevel']
+            if itemcls not in {'Active Skill Gems', 'Support Skill Gems',
+                               'Quest Items', 'Stackable Currency'}:
+                data['item_level'] = row['ItemLevel']
                 data['rarity'] = rarity
                 # Unique and not a quest item or gem
-                if rarity == 'Unique':
+                if row['RarityKey'] == RARITY.ANY:
                     uid = row['Key0']
                     if uid in self._ITEM_MAP:
                         name = self._ITEM_MAP[uid]
+                        data['rarity'] = RARITY.UNIQUE.name_upper
                     else:
                         warnings.warn('Uncaptured unique item. %s %s %s' % (uid, data['quest'], name))
 
-            data['reward'] = name
-
-            if name == 'Two-Stone Ring':
+            if item['Name'] == 'Two-Stone Ring':
                 itemid = item['ItemVisualIdentityKey']['Id']
                 if itemid in self._TWO_STONE_MAP:
-                    data['page_link'] = self._TWO_STONE_MAP[itemid]
+                    name = self._TWO_STONE_MAP[itemid]
                 else:
                     warnings.warn('Fix ItemID for two-stones')
+            data['reward'] = name
 
             # Add to formatting list
-            outdata.append(data)
+            key = quest['Id'] + item['Id'] + str(row['Key0'])
+            if key in compress:
+                compress[key]['classes'] += self._UNIT_SEP + character['Name']
+            else:
+                compress[key] = data
+
+        outdata = [data for data in compress.values()]
         return self._write_lua(outdata, 'quest')
 
     def read_vendor_rewards(self, args):
-        outdata = []
+        compress = {}
 
         for row in self.rr['QuestVendorRewards.dat']:
             # Find the corresponding keys
@@ -417,18 +417,29 @@ class QuestRewardReader(BaseParser):
                     data['quest_id'] = quest['Id']
                     data['act'] = quest['Act']
                     data['reward'] = item['Name']
-                    # Pretty sure they are all skills...
-                    data['type'] = 'skill'
 
                     data['npc'] = row['NPCKey']['Name']
 
                     if classes:
-                        for cls in classes:
-                            data['class'] = cls['Name']
-                            data['class_id'] = cls.rowid
-                            outdata.append(data)
+                        data['classes'] = '\u001F'.join(
+                            [cls['Name'] for cls in classes]
+                        )
+
+                    key = quest['Id'] + item['Id']
+                    if key in compress:
+                        if 'classes' in data:
+                            compress[key]['classes'] += self._UNIT_SEP + \
+                                                        data['classes']
                     else:
-                        data['class'] = 'All'
-                        data['class_id'] = -1
-                        outdata.append(data)
+                        compress[key] = data
+
+        for k, v in compress.items():
+            if 'classes' not in v:
+                continue
+            classes = set(v['classes'].split(self._UNIT_SEP))
+            if len(self._CLASSES.difference(classes)) == 0:
+                del v['classes']
+            else:
+                v['classes'] = self._UNIT_SEP.join(sorted(classes))
+        outdata = [data for data in compress.values()]
         return self._write_lua(outdata, 'vendor')
