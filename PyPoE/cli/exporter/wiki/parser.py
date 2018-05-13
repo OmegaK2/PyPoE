@@ -803,15 +803,22 @@ class BaseParser(object):
             if not os.path.exists(self._img_path):
                 os.makedirs(self._img_path)
 
-    def _get_stats(self, stats, values, mod, translation_file=None):
+    def _get_stats(self, stats, values, mod=None, translation_file=None):
         if translation_file is None:
-            translation_file = get_translation_file_from_domain(mod['Domain'])
+            if mod is None:
+                raise ValueError(
+                    'Can not automatically determine translation file if mod '
+                    'is not set'
+                )
+            else:
+                translation_file = get_translation_file_from_domain(
+                    mod['Domain'])
 
         result = self.tc[translation_file].get_translation(
             stats, values, full_result=True
         )
 
-        if mod['Domain'] == MOD_DOMAIN.MONSTER:
+        if mod and mod['Domain'] == MOD_DOMAIN.MONSTER:
             default = self.tc['stat_descriptions.txt'].get_translation(
                 result.source_ids, result.source_values, full_result=True
             )
