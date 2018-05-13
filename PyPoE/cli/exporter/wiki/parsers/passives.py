@@ -165,7 +165,7 @@ class PassiveSkillParser(parser.BaseParser):
         'PassiveSkills.dat',
     ]
 
-    _area_column_index_filter = partialmethod(
+    _passive_column_index_filter = partialmethod(
         parser.BaseParser._column_index_filter,
         dat_file_name='PassiveSkills.dat',
         error_msg='Several passives have not been found:\n%s',
@@ -191,6 +191,7 @@ class PassiveSkillParser(parser.BaseParser):
             'template': 'reminder_text',
             'format': lambda value: '<br>'.join([x['Text'] for x in value]),
             'default': '',
+            'condition': lambda passive: passive['Reminder_ClientStringsKeys']
         }),
         ('GrantedBuff_BuffDefinitionsKey', {
             'template': 'buff_id',
@@ -206,24 +207,31 @@ class PassiveSkillParser(parser.BaseParser):
         }),
         ('IsKeystone', {
             'template': 'is_keystone',
+            'default': False,
         }),
         ('IsNotable', {
             'template': 'is_notable',
+            'default': False,
         }),
         ('IsMultipleChoiceOption', {
             'template': 'is_multiple_choice_option',
+            'default': False,
         }),
         ('IsMultipleChoice', {
             'template': 'is_multiple_choice',
+            'default': False,
         }),
         ('IsJustIcon', {
             'template': 'is_icon_only',
+            'default': False,
         }),
         ('IsJewelSocket', {
             'template': 'is_jewel_socket',
+            'default': False,
         }),
         ('IsAscendancyStartingNode', {
             'template': 'is_ascendancy_starting_node',
+            'default': False,
         }),
     ))
 
@@ -234,13 +242,13 @@ class PassiveSkillParser(parser.BaseParser):
         )
 
     def by_id(self, parsed_args):
-        return self.export(parsed_args, self._area_column_index_filter(
-            column_id='Id', arg_list=parsed_args.area_id
+        return self.export(parsed_args, self._passive_column_index_filter(
+            column_id='Id', arg_list=parsed_args.passive_id
         ))
 
     def by_name(self, parsed_args):
-        return self.export(parsed_args, self._area_column_index_filter(
-            column_id='Name', arg_list=parsed_args.area_name
+        return self.export(parsed_args, self._passive_column_index_filter(
+            column_id='Name', arg_list=parsed_args.passive_name
         ))
 
     def by_filter(self, parsed_args):
@@ -293,13 +301,9 @@ class PassiveSkillParser(parser.BaseParser):
                     value = fmt(value)
                 data[copy_data['template']] = value
 
-            node = node_index.get(passive['PassiveSkillGraphId'])
-            if node and node.connections:
-                data['connections'] = ','.join([
-                    self.rr['PassiveSkills.dat'].index['PassiveSkillGraphId'][
-                        psg_id]['Id'] for psg_id in node.connections])
-
             # TODO icon
+            stat_ids = []
+            values = []
 
             for i in range(0, self._MAX_STAT_ID):
                 try:
@@ -307,8 +311,22 @@ class PassiveSkillParser(parser.BaseParser):
                 except IndexError:
                     break
                 j = i + 1
+                stat_ids.append(stat['Id'])
                 data['stat%s_id' % j] = stat['Id']
+                values.append(passive['Stat%sValue' % j])
                 data['stat%s_value' % j] = passive['Stat%sValue' % j]
+
+            data['stat_text'] = '<br>'.join(self._get_stats(
+                stat_ids, values,
+                translation_file='passive_skill_stat_descriptions.txt'
+            ))
+
+            node = node_index.get(passive['PassiveSkillGraphId'])
+            if node and node.connections:
+                data['connections'] = ','.join([
+                    self.rr['PassiveSkills.dat'].index['PassiveSkillGraphId'][
+                        psg_id]['Id'] for psg_id in node.connections])
+
 
             cond = WikiCondition(
                 data=data,

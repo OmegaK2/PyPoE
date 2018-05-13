@@ -257,7 +257,7 @@ class QuestRewardReader(BaseParser):
 
         775: "Collateral Damage",
         779: "Omen on the Winds",
-        781: "Fight Survival",
+        781: "Fight for Survival",
         784: "Ring of Blades",
 
         778: "First Snow",
@@ -335,6 +335,8 @@ class QuestRewardReader(BaseParser):
             # Some of unique items follow special rules
             if itemcls == 'Quest Items' and name.startswith('Book of'):
                 name = '%s (%s)' % (name, data['quest'])
+            elif itemcls == 'Maps':
+                name = '%s (War for the Atlas)' % name
             # Non non quest items or skill gems have their rarity added
             if itemcls not in {'Active Skill Gems', 'Support Skill Gems',
                                'Quest Items', 'Stackable Currency'}:
