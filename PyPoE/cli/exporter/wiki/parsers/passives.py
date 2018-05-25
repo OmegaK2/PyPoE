@@ -28,7 +28,7 @@ Documentation
 Public API
 -------------------------------------------------------------------------------
 
-Interal API
+Internal API
 -------------------------------------------------------------------------------
 """
 
@@ -37,7 +37,6 @@ Interal API
 # =============================================================================
 
 # Python
-import re
 import os.path
 from functools import partialmethod
 from collections import OrderedDict
@@ -78,63 +77,9 @@ class PassiveSkillCommandHandler(ExporterHandler):
         )
         self.parser.set_defaults(func=lambda args: self.parser.print_help())
 
-        sub = self.parser.add_subparsers()
-
-        # By id
-        a_id = sub.add_parser(
-            'id',
-            help='Extract areas by their id.'
-        )
-        self.add_default_parsers(
-            parser=a_id,
+        self.add_default_subparser_filters(
+            sub_parser=self.parser.add_subparsers(),
             cls=PassiveSkillParser,
-            func=PassiveSkillParser.by_id,
-        )
-        a_id.add_argument(
-            'passive_id',
-            help='Id of the passive, can be specified multiple times.',
-            nargs='+',
-        )
-
-        # by name
-        a_name = sub.add_parser(
-            'name',
-            help='Extract areas by their name.'
-        )
-        self.add_default_parsers(
-            parser=a_name,
-            cls=PassiveSkillParser,
-            func=PassiveSkillParser.by_name,
-        )
-        a_name.add_argument(
-            'passive_name',
-            help='Visible name of the passive skill (localized), can be '
-                 'specified multiple times.',
-            nargs='+',
-        )
-
-        # by row ID
-        a_rid = sub.add_parser(
-            'rowid',
-            help='Extract passive skills by rowid.'
-        )
-        self.add_default_parsers(
-            parser=a_rid,
-            cls=PassiveSkillParser,
-            func=PassiveSkillParser.by_rowid,
-        )
-        a_rid.add_argument(
-            'start',
-            help='Starting index',
-            nargs='?',
-            type=int,
-            default=0,
-        )
-        a_rid.add_argument(
-            'end',
-            nargs='?',
-            help='Ending index',
-            type=int,
         )
 
         # filtering
@@ -243,12 +188,12 @@ class PassiveSkillParser(parser.BaseParser):
 
     def by_id(self, parsed_args):
         return self.export(parsed_args, self._passive_column_index_filter(
-            column_id='Id', arg_list=parsed_args.passive_id
+            column_id='Id', arg_list=parsed_args.id
         ))
 
     def by_name(self, parsed_args):
         return self.export(parsed_args, self._passive_column_index_filter(
-            column_id='Name', arg_list=parsed_args.passive_name
+            column_id='Name', arg_list=parsed_args.name
         ))
 
     def by_filter(self, parsed_args):

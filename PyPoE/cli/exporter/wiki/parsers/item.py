@@ -34,6 +34,7 @@ import re
 import warnings
 import os
 from collections import defaultdict, OrderedDict
+from functools import partialmethod
 
 # Self
 from PyPoE.poe.constants import RARITY
@@ -152,34 +153,16 @@ class ItemsHandler(ExporterHandler):
         super(ItemsHandler, self).__init__(self, sub_parser, *args, **kwargs)
         self.parser = sub_parser.add_parser('items', help='Items Exporter')
         self.parser.set_defaults(func=lambda args: self.parser.print_help())
-        sub = self.parser.add_subparsers()
+        core_sub = self.parser.add_subparsers()
 
         #
         # Generic base item export
         #
-        parser = sub.add_parser(
-            'by_name',
-            help='Extracts the item information based on item names'
-        )
-        self.add_default_parsers(
-            parser=parser,
-            cls=ItemsParser,
-            func=ItemsParser.by_name,
-        )
-        self._shared_item_arguments(parser)
+        parser = core_sub.add_parser('item', help='Regular item export')
+        parser.set_defaults(func=lambda args: parser.print_help())
+        sub = parser.add_subparsers()
 
-        parser.add_argument(
-            '-mid', '--is-metadata-id',
-            help='Whether the given item names are metadata ids instead',
-            action='store_true',
-            dest='is_metadata_id',
-        )
-
-        parser.add_argument(
-            'item',
-            help='Name of the item; can be specified multiple times',
-            nargs='+',
-        )
+        self.add_default_subparser_filters(sub, cls=ItemsParser, type='item')
 
         parser = sub.add_parser(
             'by_filter',
@@ -191,8 +174,6 @@ class ItemsHandler(ExporterHandler):
             cls=ItemsParser,
             func=ItemsParser.by_filter,
         )
-        self._shared_item_arguments(parser)
-
         parser.add_argument(
             '-ft-n', '--filter-name',
             help='Filter by item name using regular expression.',
@@ -208,43 +189,139 @@ class ItemsHandler(ExporterHandler):
         #
         # Prophecies
         #
-        parser = sub.add_parser(
-            'prophecy',
-            help='Extracts the prophecy information'
-        )
-        self.add_default_parsers(
-            parser=parser,
-            cls=ItemsParser,
-            func=ItemsParser.prophecy,
-        )
+        parser = core_sub.add_parser('prophecy', help='Prophecy export')
+        parser.set_defaults(func=lambda args: parser.print_help())
+        sub = parser.add_subparsers()
+        self.add_default_subparser_filters(sub, cls=ProphecyParser,
+                                           type='prophecy')
 
-        parser.add_argument(
-            '--allow-disabled',
-            help='Allows disabled prophecies to be exported',
-            action='store_true',
-            dest='allow_disabled',
-            default=False,
-        )
-
-        parser.add_argument(
-            'name',
-            help='Name of the prophecy; can be specified multiple times',
-            nargs='+',
-        )
-
-    def add_default_parsers(self, *args, **kwargs):
+    def add_default_parsers(self, *args, type=None, **kwargs):
         super().add_default_parsers(*args, **kwargs)
-        self.add_format_argument(kwargs['parser'])
+        parser = kwargs['parser']
+        self.add_format_argument(parser)
+        if type == 'item':
+            parser.add_argument(
+                '-ft-c', '--filter-class',
+                help='Filter by item class(es). Case sensitive.',
+                nargs='*',
+                dest='item_class',
+            )
 
-    def _shared_item_arguments(self, parser):
-        parser.add_argument(
-            '-ft-c', '--filter-class',
-            help='Filter by item class(es). Case sensitive.',
-            nargs='*',
-            dest='item_class',
+            self.add_image_arguments(parser)
+        elif type == 'prophecy':
+            parser.add_argument(
+                '--allow-disabled',
+                help='Allows disabled prophecies to be exported',
+                action='store_true',
+                dest='allow_disabled',
+                default=False,
+            )
+
+
+class ProphecyParser(SkillParserShared):
+    _files = [
+        'Prophecies.dat',
+    ]
+
+    _conflict_resolver_prophecy_map = {
+        'MapExtraHaku': ' (Haku)',
+        'MapExtraTora': ' (Tora)',
+        'MapExtraCatarina': ' (Catarina)',
+        'MapExtraVagan': ' (Vagan)',
+        'MapExtraElreon': ' (Elreon)',
+        'MapExtraVorici': ' (Vorici)',
+        'MapExtraZana': ' (Zana)',
+        # The other one is disabled, should be fine
+        'MapSpawnRogueExiles': '',
+        'MysteriousInvadersFire': ' (Fire)',
+        'MysteriousInvadersCold': ' (Cold)',
+        'MysteriousInvadersLightning': ' (Lightning)',
+        'MysteriousInvadersPhysical': ' (Physical)',
+        'MysteriousInvadersChaos': ' (Chaos)',
+
+        'AreaAllRaresAreCloned': ' (prophecy)',
+        'HillockDropsTheAnvil': ' (prophecy)',
+    }
+
+    _prophecy_column_index_filter = partialmethod(
+        parser.BaseParser._column_index_filter,
+        dat_file_name='Prophecies.dat',
+        error_msg='Several prophecies have not been found:\n%s',
+    )
+
+    def by_rowid(self, parsed_args):
+        return self.export(
+            parsed_args,
+            self.rr['Prophecies.dat'][parsed_args.start:parsed_args.end],
         )
 
-        self.add_image_arguments(parser)
+    def by_id(self, parsed_args):
+        return self.export(parsed_args, self._prophecy_column_index_filter(
+            column_id='Id', arg_list=parsed_args.id
+        ))
+
+    def by_name(self, parsed_args):
+        return self.export(parsed_args, self._prophecy_column_index_filter(
+            column_id='Name', arg_list=parsed_args.name
+        ))
+
+    def export(self, parsed_args, prophecies):
+        final = []
+        for prophecy in prophecies:
+            if not prophecy['IsEnabled'] and not parsed_args.allow_disabled:
+                console(
+                    'Prophecy "%s" is disabled - skipping.' % prophecy['Name'],
+                    msg=Msg.error
+                )
+                continue
+
+            final.append(prophecy)
+
+        self.rr['Prophecies.dat'].build_index('Name')
+
+        r = ExporterResult()
+        for prophecy in final:
+            name = prophecy['Name']
+
+            infobox = OrderedDict()
+
+            infobox['rarity'] = 'Normal'
+            infobox['name'] = name
+            infobox['class'] = 'Stackable Currency'
+            infobox['base_item_page'] = 'Prophecy'
+            infobox['flavour_text'] = prophecy['FlavourText']
+            infobox['prophecy_id'] = prophecy['Id']
+            infobox['prediction_text'] = prophecy['PredictionText']
+            infobox['seal_cost'] = prophecy['SealCost']
+
+            if not prophecy['IsEnabled']:
+                infobox['drop_enabled'] = False
+
+            # handle items with duplicate name entries
+            if len(self.rr['Prophecies.dat'].index['Name'][name]) > 1:
+                extra = self._conflict_resolver_prophecy_map.get(prophecy['Id'])
+                if extra is None:
+                    console('Unresolved ambiguous item name "%s" / id "%s". '
+                            'Skipping' % (prophecy['Name'], prophecy['Id']),
+                            msg=Msg.error)
+                    continue
+                name += extra
+            cond = WikiCondition(
+                data=infobox,
+                cmdargs=parsed_args,
+            )
+
+            r.add_result(
+                text=cond,
+                out_file='item_%s.txt' % name,
+                wiki_page=[
+                    {'page': name, 'condition': cond},
+                    {'page': name + ' (prophecy)', 'condition': cond},
+                ],
+                wiki_message='Prophecy exporter',
+            )
+
+        return r
 
 
 class ItemsParser(SkillParserShared):
@@ -267,6 +344,12 @@ class ItemsParser(SkillParserShared):
         'skill_stat_descriptions.txt',
         'active_skill_gem_stat_descriptions.txt',
     ]
+
+    _item_column_index_filter = partialmethod(
+        parser.BaseParser._column_index_filter,
+        dat_file_name='BaseItemTypes.dat',
+        error_msg='Several items have not been found:\n%s',
+    )
 
     _IGNORE_DROP_LEVEL_CLASSES = (
         'Hideout Doodads',
@@ -1197,31 +1280,23 @@ class ItemsParser(SkillParserShared):
         else:
             return []
 
+    def by_rowid(self, parsed_args):
+        return self._export(
+            parsed_args,
+            self.rr['BaseItemTypes.dat'][parsed_args.start:parsed_args.end],
+        )
+
+    def by_id(self, parsed_args):
+        return self._export(parsed_args, self._item_column_index_filter(
+            column_id='Id', arg_list=parsed_args.id
+        ))
+
     def by_name(self, parsed_args):
-        self.rr['BaseItemTypes.dat'].build_index('Name')
-        classes = self._parse_class_filter(parsed_args)
-
-        if parsed_args.is_metadata_id:
-            items = [
-                self.rr['BaseItemTypes.dat'].index['Id'][itemid] for itemid
-                in parsed_args.item
-            ]
-        else:
-            items = []
-            for itemid in parsed_args.item:
-                items.extend(self.rr['BaseItemTypes.dat'].index['Name'][itemid])
-
-        # apply class filter
-        if classes:
-            items = [
-                item for item in items if item['ItemClassesKey'] in classes
-            ]
-
-        return self._export(items, parsed_args)
+        return self._export(parsed_args, self._item_column_index_filter(
+            column_id='Name', arg_list=parsed_args.name
+        ))
 
     def by_filter(self, parsed_args):
-        classes = self._parse_class_filter(parsed_args)
-
         if parsed_args.re_name:
             parsed_args.re_name = re.compile(parsed_args.re_name,
                                              flags=re.UNICODE)
@@ -1231,8 +1306,6 @@ class ItemsParser(SkillParserShared):
         items = []
 
         for item in self.rr['BaseItemTypes.dat']:
-            if classes and not item['ItemClassesKey'] in classes:
-                continue
 
             if parsed_args.re_name and not \
                     parsed_args.re_name.match(item['Name']):
@@ -1246,7 +1319,11 @@ class ItemsParser(SkillParserShared):
 
         return self._export(items, parsed_args)
 
-    def _export(self, items, parsed_args):
+    def _export(self, parsed_args, items):
+        classes = self._parse_class_filter(parsed_args)
+        items = [item for item in items if item['ItemClassesKey'] not in
+                 classes]
+
         self._parsed_args = parsed_args
         console('Found %s items. Removing disabled items...' % len(items))
         items = [
@@ -1409,88 +1486,5 @@ class ItemsParser(SkillParserShared):
                     ),
                     parsed_args=parsed_args,
                 )
-
-        return r
-
-    _conflict_resolver_prophecy_map = {
-        'MapExtraHaku': ' (Haku)',
-        'MapExtraTora': ' (Tora)',
-        'MapExtraCatarina': ' (Catarina)',
-        'MapExtraVagan': ' (Vagan)',
-        'MapExtraElreon': ' (Elreon)',
-        'MapExtraVorici': ' (Vorici)',
-        'MapExtraZana': ' (Zana)',
-        # The other one is disabled, should be fine
-        'MapSpawnRogueExiles': '',
-        'MysteriousInvadersFire': ' (Fire)',
-        'MysteriousInvadersCold': ' (Cold)',
-        'MysteriousInvadersLightning': ' (Lightning)',
-        'MysteriousInvadersPhysical': ' (Physical)',
-        'MysteriousInvadersChaos': ' (Chaos)',
-
-        'AreaAllRaresAreCloned': ' (prophecy)',
-        'HillockDropsTheAnvil': ' (prophecy)',
-    }
-
-    def prophecy(self, parsed_args):
-        self.rr['Prophecies.dat'].build_index('Name')
-        prophecies = []
-        names = defaultdict(list)
-        for prophecy in self.rr['Prophecies.dat']:
-            name = prophecy['Name']
-            names[name].append(prophecy)
-            if name not in parsed_args.name:
-                continue
-
-            if not prophecy['IsEnabled'] and not parsed_args.allow_disabled:
-                console(
-                    'Prophecy "%s" is disabled - skipping.' % name,
-                    msg=Msg.error
-                )
-                continue
-
-            prophecies.append(prophecy)
-
-        r = ExporterResult()
-        for prophecy in prophecies:
-            name = prophecy['Name']
-
-            infobox = OrderedDict()
-
-            infobox['rarity'] = 'Normal'
-            infobox['name'] = name
-            infobox['class'] = 'Stackable Currency'
-            infobox['base_item_page'] = 'Prophecy'
-            infobox['flavour_text'] = prophecy['FlavourText']
-            infobox['prophecy_id'] = prophecy['Id']
-            infobox['prediction_text'] = prophecy['PredictionText']
-            infobox['seal_cost'] = prophecy['SealCost']
-
-            if not prophecy['IsEnabled']:
-                infobox['drop_enabled'] = False
-
-            # handle items with duplicate name entries
-            if len(names[name]) > 1:
-                extra = self._conflict_resolver_prophecy_map.get(prophecy['Id'])
-                if extra is None:
-                    console('Unresolved ambiguous item name "%s" / id "%s". '
-                            'Skipping' % (prophecy['Name'], prophecy['Id']),
-                            msg=Msg.error)
-                    continue
-                name += extra
-            cond = WikiCondition(
-                data=infobox,
-                cmdargs=parsed_args,
-            )
-
-            r.add_result(
-                text=cond,
-                out_file='item_%s.txt' % name,
-                wiki_page=[
-                    {'page': name, 'condition': cond},
-                    {'page': name + ' (prophecy)', 'condition': cond},
-                ],
-                wiki_message='Prophecy exporter',
-            )
 
         return r

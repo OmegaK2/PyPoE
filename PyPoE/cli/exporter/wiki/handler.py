@@ -315,6 +315,86 @@ class ExporterHandler(BaseHandler):
                 return 0
         return wrapper
 
+    def add_default_subparser_filters(self, sub_parser, cls, *args, **kwargs):
+        """
+        Adds default sub parsers for id, name and rowid.
+
+        Parameters
+        ----------
+        sub_parser
+        cls: object
+            Expected to have the methods:
+            by_id    - handling for id based searching
+            by_name  - handling for name based searching
+            by_rowid - handling for rowid based searching
+
+        Returns
+        -------
+
+        """
+        # By id
+        a_id = sub_parser.add_parser(
+            'id',
+            help='Extract via a list of internal ids.'
+        )
+        self.add_default_parsers(
+            parser=a_id,
+            cls=cls,
+            func=cls.by_id,
+            *args,
+            **kwargs
+        )
+        a_id.add_argument(
+            'id',
+            help='Internal id. Can be specified multiple times.',
+            nargs='+',
+        )
+
+        # by name
+        a_name = sub_parser.add_parser(
+            'name',
+            help='Extract via a list of names.'
+        )
+        self.add_default_parsers(
+            parser=a_name,
+            cls=cls,
+            func=cls.by_name,
+            *args,
+            **kwargs
+        )
+        a_name.add_argument(
+            'name',
+            help='Visible name (i.e. the name you see in game). Can be '
+                 'specified multiple times.',
+            nargs='+',
+        )
+
+        # by row ID
+        a_rid = sub_parser.add_parser(
+            'rowid',
+            help='Extract via rowid in the primary dat file.'
+        )
+        self.add_default_parsers(
+            parser=a_rid,
+            cls=cls,
+            func=cls.by_rowid,
+            *args,
+            **kwargs
+        )
+        a_rid.add_argument(
+            'start',
+            help='Starting index',
+            nargs='?',
+            type=int,
+            default=0,
+        )
+        a_rid.add_argument(
+            'end',
+            nargs='?',
+            help='Ending index',
+            type=int,
+        )
+
     def add_default_parsers(self, parser, cls, func=None, handler=None,
                             wiki=True, wiki_handler=None):
         if handler is None:
