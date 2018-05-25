@@ -980,6 +980,21 @@ class ItemsParser(SkillParserShared):
             infobox['inventory_icon'] = base_item_type['Name'] + appendix
             return base_item_type['Name'] + appendix
 
+    _conflict_gloves_map = {
+        # Legion Gloves
+        'Metadata/Items/Armours/Gloves/GlovesStrInt7':
+            '',
+    }
+
+    def _conflict_gloves(self, infobox, base_item_type):
+        appendix = self._conflict_gloves_map.get(
+            base_item_type['Id'])
+        if appendix is None:
+            return
+        else:
+            infobox['inventory_icon'] = base_item_type['Name'] + appendix
+            return base_item_type['Name'] + appendix
+
     _conflict_quivers_map = {
         'Metadata/Items/Quivers/QuiverDescent': ' (Descent)'
     }
@@ -1262,6 +1277,7 @@ class ItemsParser(SkillParserShared):
 
     _conflict_resolver_map = {
         'Boots': _conflict_boots,
+        'Gloves': _conflict_gloves,
         'Quivers': _conflict_quivers,
         'Amulets': _conflict_amulets,
         'Active Skill Gems': _conflict_active_skill_gems,
