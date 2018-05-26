@@ -1183,6 +1183,13 @@ class ItemsParser(SkillParserShared):
 
         return name
 
+    def _conflict_map_fragments(self, infobox, base_item_type):
+        id = base_item_type['Id'].replace('Metadata/Items/MapFragments/', '')
+        if id.startswith('CurrencyVaal'):
+            return base_item_type['Name']
+
+        return
+
     _conflict_microtransactions_map = {
         'Metadata/Items/MicrotransactionCurrency/MysteryBox1x1':
             ' (1x1)',
@@ -1284,6 +1291,7 @@ class ItemsParser(SkillParserShared):
         'Quest Items': _conflict_quest_items,
         'Hideout Doodads': _conflict_hideout_doodad,
         'Maps': _conflict_maps,
+        'Map Fragments': _conflict_map_fragments,
         'Microtransactions': _conflict_microtransactions,
         'Piece': _conflict_piece,
     }
