@@ -38,6 +38,7 @@ FIX the jewel generator (corrupted)
 import re
 import warnings
 from collections import OrderedDict, defaultdict
+from functools import partialmethod
 
 # Self
 from PyPoE.poe.constants import MOD_DOMAIN, MOD_GENERATION_TYPE, MOD_STATS_RANGE
@@ -116,45 +117,9 @@ class ModsHandler(ExporterHandler):
 
         sub = mparser.add_subparsers(help='Method of extracting mods')
 
-        parser = sub.add_parser('modid', help='Use the string mod identifer')
-        parser.add_argument(
-            'modid',
-            help='Ids of the mods to update; can be specified multiple times',
-            nargs='+',
-        )
+        self.add_default_subparser_filters(sub, cls=ModParser)
 
-        self.add_format_argument(parser)
-
-        self.add_default_parsers(
-            parser=parser,
-            cls=ModParser,
-            func=ModParser.modid,
-        )
-
-        parser = sub.add_parser('rowid', help='Use the rowid')
-        parser.add_argument(
-            'start',
-            help='Starting index',
-            nargs='?',
-            type=int,
-            default=0,
-        )
-
-        parser.add_argument(
-            'end',
-            nargs='?',
-            help='Ending index',
-            type=int,
-        )
-
-        self.add_format_argument(parser)
-
-        self.add_default_parsers(
-            parser=parser,
-            cls=ModParser,
-            func=ModParser.rowid,
-        )
-
+        # mods filter
         parser = sub.add_parser('filter', help='Filter mods')
         parser.add_argument(
             '--domain',
@@ -179,7 +144,6 @@ class ModsHandler(ExporterHandler):
         )
 
         # Tempest
-
         parser = lua_sub.add_parser(
             'tempest',
             help='Extract tempest stuff (DEPRECATED).',
@@ -204,6 +168,12 @@ class ModParser(BaseParser):
         'map_stat_descriptions.txt',
     ]
 
+    _mod_column_index_filter = partialmethod(
+        BaseParser._column_index_filter,
+        dat_file_name='WorldAreas.dat',
+        error_msg='Several areas have not been found:\n%s',
+    )
+
     def _append_effect(self, result, mylist, heading):
         mylist.append(heading)
 
@@ -215,7 +185,7 @@ class ModParser(BaseParser):
                 value = '(%s to %s)' % tuple(value)
             mylist.append('* %s %s' % (stat_id, value))
 
-    def modid(self, args):
+    def by_id(self, args):
         return self.mod(args, self._column_index_filter(
             dat_file_name='Mods.dat',
             column_id='Id',
@@ -223,36 +193,21 @@ class ModParser(BaseParser):
             error_msg='Several mods have not been found:\n%s',
         ))
 
-    def rowid(self, args):
-        mods = list(self.rr['Mods.dat'])
-        l = len(mods)
+    def by_rowid(self, parsed_args):
+        return self._export(
+            parsed_args,
+            self.rr['Mods.dat'][parsed_args.start:parsed_args.end],
+        )
 
-        # Warnings only to make it a bit more user friendly
-        if abs(args.start) > len(mods):
-            warnings.warn(
-                'Specified minimum index "%s" is larger then the total '
-                'number of mods (%s).' % (args.start, l),
-                OutOfBoundsWarning,
-            )
+    def by_id(self, parsed_args):
+        return self._export(parsed_args, self._mod_column_index_filter(
+            column_id='Id', arg_list=parsed_args.id
+        ))
 
-        if args.end is not None:
-            if abs(args.end) > len(mods):
-                warnings.warn(
-                    'Specified maximum index "%s" is larger then the total '
-                    'number of mods (%s).' % (args.end, l),
-                    OutOfBoundsWarning,
-                )
-
-            if args.start >=0 and args.end >= 0 and args.start > args.end:
-                warnings.warn(
-                    'Specified maximum index "%s" is smaller then the '
-                    'specified minimum index "%s"' % (args.end, args.start),
-                    OutOfBoundsWarning,
-                )
-
-        mods = mods[args.start:args.end]
-
-        return self.mod(args, mods)
+    def by_name(self, parsed_args):
+        return self._export(parsed_args, self._mod_column_index_filter(
+            column_id='Name', arg_list=parsed_args.name
+        ))
 
     def filter(self, args):
         mods = []
@@ -277,9 +232,9 @@ class ModParser(BaseParser):
             else:
                 mods.append(mod)
 
-        return self.mod(args, mods)
+        return self._export(args, mods)
 
-    def mod(self, parsed_args, mods):
+    def _export(self, parsed_args, mods):
         r = ExporterResult()
 
         if mods:
