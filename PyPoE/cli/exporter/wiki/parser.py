@@ -1083,6 +1083,7 @@ def format_result_rows(parsed_args, ordered_dict, template_name,
                 out.append(('|{0: <%s}= {1}\n' % indent).format(k, v))
         out.append('}}')
     elif parsed_args.format == 'module':
+        ordered_dict['debug_id'] = 1
         out = ['{']
         for k, v in ordered_dict.items():
             if v is not None:
