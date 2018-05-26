@@ -103,6 +103,7 @@ class PassiveSkillCommandHandler(ExporterHandler):
     def add_default_parsers(self, *args, **kwargs):
         super().add_default_parsers(*args, **kwargs)
         self.add_format_argument(kwargs['parser'])
+        self.add_image_arguments(kwargs['parser'])
 
 
 class PassiveSkillParser(parser.BaseParser):
@@ -144,6 +145,11 @@ class PassiveSkillParser(parser.BaseParser):
         ('SkillPointsGranted', {
             'template': 'skill_points',
             'default': 0,
+        }),
+        ('Icon_DDSFile', {
+            'template': 'icon',
+            'format': lambda value: value.replace(
+                'Art/2DArt/SkillIcons/passives/', '').replace('.dds', ''),
         }),
         # icon handled not here
         ('AscendancyKey', {
@@ -225,6 +231,8 @@ class PassiveSkillParser(parser.BaseParser):
                 node_index[node.passive_skill] = node
         self.rr['PassiveSkills.dat'].build_index('PassiveSkillGraphId')
 
+        self._image_init(parsed_args)
+
         console('Found %s, parsing...' % len(passives))
 
         for passive in passives:
@@ -246,7 +254,6 @@ class PassiveSkillParser(parser.BaseParser):
                     value = fmt(value)
                 data[copy_data['template']] = value
 
-            # TODO icon
             stat_ids = []
             values = []
 
@@ -272,6 +279,18 @@ class PassiveSkillParser(parser.BaseParser):
                     self.rr['PassiveSkills.dat'].index['PassiveSkillGraphId'][
                         psg_id]['Id'] for psg_id in node.connections])
 
+            # extract icons if specified
+            if parsed_args.store_images and self.ggpk:
+                fn = data['icon'] + ' passive icon'
+                dds = os.path.join(self._img_path, fn + '.dds')
+                png = os.path.join(self._img_path, fn + '.png')
+                if not (os.path.exists(dds) or os.path.exists(png)):
+                    self._write_dds(
+                        data=self.ggpk[passive['Icon_DDSFile']].record.extract(
+                            ).read(),
+                        out_path=dds,
+                        parsed_args=parsed_args,
+                    )
 
             cond = WikiCondition(
                 data=data,
