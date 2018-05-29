@@ -787,6 +787,9 @@ specification = Specification({
             ('IsBlessing', Field(
                 type='bool',
             )),
+            ('Unknown3', Field(
+                type='int',
+            )),
         )),
         virtual_fields=OrderedDict((
             ('NormalPurchase', VirtualField(
@@ -5668,6 +5671,9 @@ specification = Specification({
             )),
             ('TierText', Field(
                 type='ref|string',
+            )),
+            ('Flag0', Field(
+                type='bool',
             )),
         )),
         virtual_fields=OrderedDict((
