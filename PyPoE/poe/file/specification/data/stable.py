@@ -8338,6 +8338,9 @@ specification = Specification({
             ('IsUniqueMap', Field(
                 type='bool',
             )),
+            ('Flag0', Field(
+                type='bool',
+            )),
         )),
     ),
     'StrDexIntMissionUniqueMaps.dat': File(
