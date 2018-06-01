@@ -384,13 +384,12 @@ class MOD_DOMAIN(IntEnum):
     UNKNOWN1
     UNKNOWN2
     UNKNOWN3
-    STANCE
-        Stance domain, i.e. animation related stance of objects
     MASTER
-        Master domain for Forsaken Master related mods, in particular for
-        master crafting mods
-    JEWEL
-        Jewel domain for modifiers that appear on jewel items
+        See CRAFTED
+    CRAFTED
+        Domain for crafted mods (previously MASTER)
+    MISC
+        Miscellaneous domain for jewel stuff, item limits, corruptions, etc
     ATLAS
         Atlas domain for modifiers that appear when using a sextant orb on the
         atlas
@@ -410,13 +409,18 @@ class MOD_DOMAIN(IntEnum):
     UNKNOWN1 = 6
     UNKNOWN2 = 7
     UNKNOWN3 = 8
-    STANCE = 9
-    MASTER = 10
-    JEWEL = 11
-    ATLAS = 12
-    LEAGUESTONE = 13
-    ABYSS_JEWEL = 14
-    MAP_DEVICE = 15
+    CRAFTED = 9
+    # Corruptions, item limits, jewel mods, other stuff?
+    MISC = 10
+    ATLAS = 11
+    LEAGUESTONE = 12
+    ABYSS_JEWEL = 13
+    MAP_DEVICE = 14
+    DUMMY = 15
+
+    # legacy names
+    MASTER = 9
+    JEWEL = 10
 
 
 class MOD_GENERATION_TYPE(IntEnum):
