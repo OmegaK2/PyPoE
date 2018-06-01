@@ -8519,8 +8519,9 @@ specification = Specification({
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Key0', Field(
+            ('GrantedEffectsKey2', Field(
                 type='ulong',
+                key='GrantedEffects.dat',
             )),
         )),
     ),
