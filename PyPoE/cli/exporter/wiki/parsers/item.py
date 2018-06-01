@@ -173,6 +173,7 @@ class ItemsHandler(ExporterHandler):
             parser=parser,
             cls=ItemsParser,
             func=ItemsParser.by_filter,
+            type='item',
         )
         parser.add_argument(
             '-ft-n', '--filter-name',
@@ -346,7 +347,7 @@ class ItemsParser(SkillParserShared):
     ]
 
     _item_column_index_filter = partialmethod(
-        parser.BaseParser._column_index_filter,
+        SkillParserShared._column_index_filter,
         dat_file_name='BaseItemTypes.dat',
         error_msg='Several items have not been found:\n%s',
     )
@@ -383,8 +384,52 @@ class ItemsParser(SkillParserShared):
 
     # Unreleased or disabled items to avoid exporting to the wiki
     _SKIP_ITEMS_BY_ID = {
+        # Active Skill Gems
+        'Metadata/Items/Gems/SkillGemBackstab',
+        'Metadata/Items/Gems/SkillGemBladeTrap',
+        'Metadata/Items/Gems/SkillGemCaptureMonster',
+        'Metadata/Items/Gems/SkillGemComboStrike',
+        'Metadata/Items/Gems/SkillGemDamageInfusion',
+        'Metadata/Items/Gems/SkillGemDiscorectangleSlam',
+        'Metadata/Items/Gems/SkillGemElementalProjectiles',
+        'Metadata/Items/Gems/SkillGemFireWeapon',
+        'Metadata/Items/Gems/SkillGemHeraldOfBlood',
+        'Metadata/Items/Gems/SkillGemIceFire',
+        'Metadata/Items/Gems/SkillGemIcefire',
+        'Metadata/Items/Gems/SkillGemIgnite',
+        'Metadata/Items/Gems/SkillGemInfernalSwarm',
+        'Metadata/Items/Gems/SkillGemInfernalSweep',
+        'Metadata/Items/Gems/SkillGemLightningChannel',
+        'Metadata/Items/Gems/SkillGemLightningCircle',
         'Metadata/Items/Gems/SkillGemLightningTendrilsChannelled',
+        'Metadata/Items/Gems/SkillGemNewBladeVortex',
+        'Metadata/Items/Gems/SkillGemNewPunishment',
+        'Metadata/Items/Gems/SkillGemNewShockNova',
+        'Metadata/Items/Gems/SkillGemRighteousLightning',
+        'Metadata/Items/Gems/SkillGemRiptide',
+        'Metadata/Items/Gems/SkillGemShadowBlades',
+        'Metadata/Items/Gems/SkillGemSlashTotem',
+        'Metadata/Items/Gems/SkillGemSnipe',
+        'Metadata/Items/Gems/SkillGemSpectralSpinningWeapon',
+        'Metadata/Items/Gems/SkillGemStaticTether',
+        'Metadata/Items/Gems/SkillGemSummonSkeletonsChannelled',
+        'Metadata/Items/Gems/SkillGemTouchOfGod',
+        'Metadata/Items/Gems/SkillGemVaalAncestralWarchief',
+        'Metadata/Items/Gems/SkillGemVaalFireTrap',
+        'Metadata/Items/Gems/SkillGemVaalFleshOffering',
+        'Metadata/Items/Gems/SkillGemVaalHeavyStrike',
+        'Metadata/Items/Gems/SkillGemVaalSweep',
+        'Metadata/Items/Gems/SkillGemVortexMine',
+        'Metadata/Items/Gems/SkillGemWandTeleport',
 
+        # Support Skill Gems
+        'Metadata/Items/Gems/SupportGemCastLinkedCursesOnCurse',
+        'Metadata/Items/Gems/SupportGemSplit',
+        'Metadata/Items/Gems/SupportGemReturn',
+        'Metadata/Items/Gems/SupportGemTemporaryForTutorial',
+        'Metadata/Items/Gems/SupportGemVaalSoulHarvesting',
+
+        # MTX
         'Metadata/Items/MicrotransactionSkillEffects/MicrotransactionSpectralThrowEbony',
         'Metadata/Items/MicrotransactionItemEffects/MicrotransactionFirstBlood',
         'Metadata/Items/MicrotransactionItemEffects/MicrotransactionFirstBloodWeaponEffect',
@@ -1299,7 +1344,7 @@ class ItemsParser(SkillParserShared):
     def _parse_class_filter(self, parsed_args):
         self.rr['ItemClasses.dat'].build_index('Name')
         if parsed_args.item_class:
-            return [self.rr['ItemClasses.dat'].index['Name'][cls][0]
+            return [self.rr['ItemClasses.dat'].index['Name'][cls][0]['Name']
                    for cls in parsed_args.item_class]
         else:
             return []
@@ -1341,12 +1386,13 @@ class ItemsParser(SkillParserShared):
 
             items.append(item)
 
-        return self._export(items, parsed_args)
+        return self._export(parsed_args, items)
 
     def _export(self, parsed_args, items):
         classes = self._parse_class_filter(parsed_args)
-        items = [item for item in items if item['ItemClassesKey'] not in
-                 classes]
+        if classes:
+            items = [item for item in items if item['ItemClassesKey']['Name']
+                     in classes]
 
         self._parsed_args = parsed_args
         console('Found %s items. Removing disabled items...' % len(items))

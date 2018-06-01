@@ -135,8 +135,6 @@ class ModsHandler(ExporterHandler):
             choices=[k.name for k in MOD_GENERATION_TYPE],
         )
 
-        self.add_format_argument(parser)
-
         self.add_default_parsers(
             parser=parser,
             cls=ModParser,
@@ -155,6 +153,11 @@ class ModsHandler(ExporterHandler):
             wiki=False,
         )
 
+    def add_default_parsers(self, *args, **kwargs):
+        super().add_default_parsers(*args, **kwargs)
+        parser = kwargs['parser']
+        self.add_format_argument(parser)
+
 
 class ModParser(BaseParser):
     # Load files in advance
@@ -170,7 +173,7 @@ class ModParser(BaseParser):
 
     _mod_column_index_filter = partialmethod(
         BaseParser._column_index_filter,
-        dat_file_name='WorldAreas.dat',
+        dat_file_name='Mods.dat',
         error_msg='Several areas have not been found:\n%s',
     )
 
@@ -184,14 +187,6 @@ class ModParser(BaseParser):
             if hasattr(value, '__iter__'):
                 value = '(%s to %s)' % tuple(value)
             mylist.append('* %s %s' % (stat_id, value))
-
-    def by_id(self, args):
-        return self.mod(args, self._column_index_filter(
-            dat_file_name='Mods.dat',
-            column_id='Id',
-            arg_list=args.modid,
-            error_msg='Several mods have not been found:\n%s',
-        ))
 
     def by_rowid(self, parsed_args):
         return self._export(

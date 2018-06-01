@@ -736,11 +736,11 @@ class BaseParser(object):
             func = rows.extend
 
         for argument in arg_list:
-            try:
+            if argument in self.rr[dat_file_name].index[column_id]:
                 func(
                     self.rr[dat_file_name].index[column_id][argument]
                 )
-            except KeyError:
+            else:
                 missing.append(argument)
 
         if missing:
