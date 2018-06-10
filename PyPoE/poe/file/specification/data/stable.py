@@ -2210,13 +2210,13 @@ specification = Specification({
                 type='ref|list|ulong',
                 key='ItemClasses.dat',
             )),
-            ('Sockets', Field(
+            ('Links', Field(
                 type='int',
             )),
             ('SocketColours', Field(
                 type='ref|string',
             )),
-            ('Links', Field(
+            ('Sockets', Field(
                 type='int',
             )),
             ('ItemQuantity', Field(
