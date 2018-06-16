@@ -148,7 +148,8 @@ class SkillParserShared(parser.BaseParser):
     _GEPL_COPY = (
         'Level', 'LevelRequirement', 'ManaMultiplier', 'CriticalStrikeChance',
         'ManaCost', 'DamageMultiplier', 'VaalSouls', 'VaalStoredUses',
-        'Cooldown', 'StoredUses', 'DamageEffectiveness'
+        'VaalSoulGainPreventionTime', 'Cooldown', 'StoredUses',
+        'DamageEffectiveness'
     )
 
     _SKILL_COLUMN_MAP = (
@@ -181,6 +182,11 @@ class SkillParserShared(parser.BaseParser):
             'template': 'vaal_stored_uses',
             'default': 0,
             'format': lambda v: '{0:n}'.format(v),
+        }),
+        ('VaalSoulGainPreventionTime', {
+            'template': 'vaal_soul_gain_prevention_time',
+            'default': 0,
+            'format': lambda v: '{0:n}'.format(v/1000),
         }),
         ('CriticalStrikeChance', {
             'template': 'critical_strike_chance',

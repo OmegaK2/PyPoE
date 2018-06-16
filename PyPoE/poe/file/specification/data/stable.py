@@ -4050,8 +4050,9 @@ specification = Specification({
                 type='int',
             )),
             # 3.3
-            ('Unknown1', Field(
+            ('VaalSoulGainPreventionTime', Field(
                 type='int',
+                description='Time in milliseconds',
             )),
             ('Key0', Field(
                 type='ulong',
