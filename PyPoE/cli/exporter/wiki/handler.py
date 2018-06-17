@@ -107,6 +107,15 @@ class WikiHandler(object):
             action='store_true',
         )
 
+        parser.add_argument(
+            '-w-msg', '--wiki-message', '--wiki-edit-message',
+            dest='wiki_message',
+            help='Override the default edit message',
+            action='store',
+            type=str,
+            default='',
+        )
+
     def _error_catcher(self, *args, **kwargs):
         fail = 1
         while fail > 0:
@@ -194,8 +203,10 @@ class WikiHandler(object):
             else:
                 response = page.save(
                     text=text,
-                    summary='PyPoE/ExporterBot/%s: %s' %
-                            (__version__, row['wiki_message'])
+                    summary='PyPoE/ExporterBot/%s: %s' % (
+                        __version__,
+                        self.cmdargs.wiki_message or row['wiki_message']
+                     )
                 )
                 if response['result'] == 'Success':
                     console('Page was edited successfully (time: %s)' %
