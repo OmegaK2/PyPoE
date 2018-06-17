@@ -900,15 +900,98 @@ class ItemsParser(SkillParserShared):
         function=_maps_extra,
     )
 
+    _essence_x = (
+        'Wand',
+        'Bow',
+        'MeleeWeapon',
+        'BodyArmour',
+        'Helmet',
+        'Shield',
+        #'OtherArmour'
+        'Quiver',
+        'Amulet',
+        'Ring',
+        'Belt',
+    )
+
     def _essence_extra(self, infobox, base_item_type, essence):
         infobox['is_essence'] = True
 
-        # ClientString is outdated. They're building the description from the
-        # mod keys it seems.
+        get_str = lambda k: self.rr['ClientStrings.dat'].index['Id'][
+            'EssenceCategory%s' % k]['Text']
 
-        if essence['ClientStringsKey']:
-            infobox['description'] += '<br />' + essence['ClientStringsKey'][
-                'Text'].replace('\n', '<br />').replace('\r', '')
+
+        x = OrderedDict((
+            (None,
+                ('OneHandWeapon', 'TwoHandWeapon'),
+            ),
+            ('MeleeWeapon',
+                (),
+            ),
+            ('RangedWeapon',
+                ('Wand', 'Bow'),
+            ),
+            ('Weapon',
+                ('TwoHandMeleeWeapon', ),
+            ),
+            ('Armour',
+                ('Gloves', 'Boots', 'BodyArmour', 'Helmet', 'Shield')
+            ),
+            ('Quiver',
+                ()
+            ),
+            ('Jewellery',
+                ('Amulet', 'Ring', 'Belt')
+            ),
+        ))
+
+        out = []
+
+        if essence['ItemLevelRestriction'] != 0:
+            out.append(
+                self.rr['ClientStrings.dat'].index['Id'][
+                    'EssenceModLevelRestriction']['Text'].replace(
+                    '%1%', str(essence['ItemLevelRestriction']))
+            )
+            out[-1] += '<br />'
+
+        def add_line(text, mod):
+            nonlocal out
+            out.append('%s: %s' % (
+                text, ''.join(self._get_stats(mod=mod))
+            ))
+
+        item_mod = essence['Display_Items_ModsKey']
+
+        for category, rows in x.items():
+            if category is None:
+                category_mod = None
+            else:
+                category_mod = essence['Display_%s_ModsKey' % category]
+
+            cur = len(out)
+            for row_key in rows:
+                mod = essence['Display_%s_ModsKey' % row_key]
+                if mod is None:
+                    continue
+                if mod == category_mod:
+                    continue
+                if mod == item_mod:
+                    continue
+
+                add_line(get_str(row_key), mod)
+
+            if category_mod is not None and category_mod != item_mod:
+                text = get_str(category)
+                if cur != len(out):
+                    text = get_str('Other').replace('%1%', text)
+                add_line(text, category_mod)
+
+        if item_mod:
+            # TODO: Can't find items in clientstrings
+            add_line(get_str('Other').replace('%1%', 'Items'), item_mod)
+
+        infobox['description'] +='<br />' +  '<br />'.join(out)
 
         return True
 
@@ -926,8 +1009,8 @@ class ItemsParser(SkillParserShared):
                 'template': 'essence_level_restriction',
                 'condition': lambda v: v > 0,
             }),
-            ('Tier', {
-                'template': 'essence_tier',
+            ('Level', {
+                'template': 'essence_level',
                 'condition': lambda v: v > 0,
             }),
             ('Monster_ModsKeys', {
