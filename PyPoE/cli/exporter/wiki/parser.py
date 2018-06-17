@@ -63,7 +63,7 @@ from functools import partial
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter import config
 from PyPoE.cli.exporter.util import get_content_ggpk_path
-from PyPoE.poe.constants import MOD_DOMAIN, WORDLISTS
+from PyPoE.poe.constants import MOD_DOMAIN, WORDLISTS, MOD_STATS_RANGE
 from PyPoE.poe.text import parse_description_tags
 from PyPoE.poe.file.dat import RelationalReader, set_default_spec
 from PyPoE.poe.file.translations import (
@@ -803,7 +803,8 @@ class BaseParser(object):
             if not os.path.exists(self._img_path):
                 os.makedirs(self._img_path)
 
-    def _get_stats(self, stats, values, mod=None, translation_file=None):
+    def _get_stats(self, stats=None, values=None, mod=None,
+                   translation_file=None):
         if translation_file is None:
             if mod is None:
                 raise ValueError(
@@ -813,6 +814,27 @@ class BaseParser(object):
             else:
                 translation_file = get_translation_file_from_domain(
                     mod['Domain'])
+        if stats is None or values is None:
+            if mod is None:
+                raise ValueError(
+                    'Mod must be set if any of stats or values aren\'t set'
+                )
+            else:
+                stats = []
+                values = []
+                for i in MOD_STATS_RANGE:
+                    k = mod['StatsKey%s' % i]
+                    if k is None:
+                        continue
+
+                    stat = k['Id']
+                    value = mod['Stat%sMin' % i], mod['Stat%sMax' % i]
+
+                    if value[0] == 0 and value[1] == 0:
+                        continue
+
+                    stats.append(stat)
+                    values.append(value)
 
         result = self.tc[translation_file].get_translation(
             stats, values, full_result=True
