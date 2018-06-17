@@ -900,28 +900,16 @@ class ItemsParser(SkillParserShared):
         function=_maps_extra,
     )
 
-    _essence_x = (
-        'Wand',
-        'Bow',
-        'MeleeWeapon',
-        'BodyArmour',
-        'Helmet',
-        'Shield',
-        #'OtherArmour'
-        'Quiver',
-        'Amulet',
-        'Ring',
-        'Belt',
-    )
-
     def _essence_extra(self, infobox, base_item_type, essence):
         infobox['is_essence'] = True
 
+        #
+        # Essence description
+        #
         get_str = lambda k: self.rr['ClientStrings.dat'].index['Id'][
             'EssenceCategory%s' % k]['Text']
 
-
-        x = OrderedDict((
+        essence_categories = OrderedDict((
             (None,
                 ('OneHandWeapon', 'TwoHandWeapon'),
             ),
@@ -963,7 +951,7 @@ class ItemsParser(SkillParserShared):
 
         item_mod = essence['Display_Items_ModsKey']
 
-        for category, rows in x.items():
+        for category, rows in essence_categories.items():
             if category is None:
                 category_mod = None
             else:
@@ -992,6 +980,83 @@ class ItemsParser(SkillParserShared):
             add_line(get_str('Other').replace('%1%', 'Items'), item_mod)
 
         infobox['description'] +='<br />' +  '<br />'.join(out)
+
+        #
+        # Upgraded from parameters
+        #
+
+        self.rr['Essences.dat'].build_index('EssenceTypeKey')
+        index = 1
+        et = essence['EssenceTypeKey']
+        # 3->1 vendor recipe and +1 corruption
+        for other_essence in self.rr['Essences.dat'].index['EssenceTypeKey'][
+            et]:
+            if other_essence['Level'] == essence['Level'] - 1:
+                # 3->1 vendor recipe
+                infobox['upgraded_from_set%s_group1_item_id' % index] = \
+                    other_essence['BaseItemTypesKey']['Id']
+                infobox['upgraded_from_set%s_group1_amount' % index] = 3
+                index += 1
+
+                # +1 level corruption
+                infobox['upgraded_from_set%s_text' % index] = \
+                    '+1 level {{c|corrupted|corruption}} outcome'
+
+                infobox['upgraded_from_set%s_group1_item_id' % index] = \
+                    other_essence['BaseItemTypesKey']['Id']
+                infobox['upgraded_from_set%s_group1_amount' % index] = 1
+
+                infobox['upgraded_from_set%s_group2_item_id' % index] = \
+                    'Metadata/Items/Currency/CurrencyCorruptMonolith'
+                infobox['upgraded_from_set%s_group2_amount' % index] = 1
+                index += 1
+
+                break
+
+        self.rr['EssenceType.dat'].build_index('EssenceType')
+        # type change corruption
+        if et['EssenceType'] > 1:
+            for essence_type in self.rr['EssenceType.dat'].index['EssenceType'
+                    ][et['EssenceType']-1]:
+                for other_essence in self.rr['Essences.dat'].index[
+                        'EssenceTypeKey'][essence_type]:
+                    if essence['Level'] != 8 and \
+                                    other_essence['Level'] != essence['Level']:
+                        continue
+                        # +1 level corruption
+                    infobox['upgraded_from_set%s_text' % index] = \
+                        'type change {{c|corrupted|corruption}} outcome'
+
+                    infobox['upgraded_from_set%s_group1_item_id' % index] = \
+                        other_essence['BaseItemTypesKey']['Id']
+                    infobox['upgraded_from_set%s_group1_amount' % index] = 1
+
+                    infobox['upgraded_from_set%s_group2_item_id' % index] = \
+                        'Metadata/Items/Currency/CurrencyCorruptMonolith'
+                    infobox['upgraded_from_set%s_group2_amount' % index] = 1
+                    index += 1
+
+        # Divination cards
+
+        # Harmony of Souls -- Only "Shrieking" essences
+        if essence['Level'] == 6:
+            infobox['upgraded_from_set%s_text' % index] = \
+                        'random {{c|currency|Shrieking Essence}}'
+
+            infobox['upgraded_from_set%s_group1_item_id' % index] = \
+                'Metadata/Items/DivinationCards/DivinationCardHarmonyOfSouls'
+            infobox['upgraded_from_set%s_group1_amount' % index] = 9
+            index += 1
+
+        # Three Voices
+
+        infobox['upgraded_from_set%s_text' % index] = \
+                        'random {{c|currency|Essence}}'
+
+        infobox['upgraded_from_set%s_group1_item_id' % index] = \
+            'Metadata/Items/DivinationCards/DivinationCardThreeVoices'
+        infobox['upgraded_from_set%s_group1_amount' % index] = 3
+        index += 1
 
         return True
 
