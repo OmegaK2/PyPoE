@@ -3222,7 +3222,7 @@ specification = Specification({
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Quiver_ModsKey', Field(
+            ('Display_Quiver_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
@@ -3275,7 +3275,7 @@ specification = Specification({
                 type='ulong',
                 key='EssenceType.dat',
             )),
-            ('Tier', Field(
+            ('Level', Field(
                 type='int',
             )),
             ('Unknown31', Field(
@@ -3285,19 +3285,19 @@ specification = Specification({
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Display_Melee_Weapon_ModsKey', Field(
+            ('Display_MeleeWeapon_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Display_1HandWeapon_ModsKey', Field(
+            ('Display_OneHandWeapon_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Display_2HandWeapon_ModsKey', Field(
+            ('Display_TwoHandWeapon_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Display_2HandMeleeWeapon_ModsKey', Field(
+            ('Display_TwoHandMeleeWeapon_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
@@ -3305,7 +3305,7 @@ specification = Specification({
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Display_Ranged_ModsKey', Field(
+            ('Display_RangedWeapon_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
@@ -3337,15 +3337,15 @@ specification = Specification({
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('2HandSword_ModsKey', Field(
+            ('TwoHandSword_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('2HandAxe_ModsKey', Field(
+            ('TwoHandAxe_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('2HandMace_ModsKey', Field(
+            ('TwoHandMace_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
@@ -3357,19 +3357,19 @@ specification = Specification({
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('1HandSword_ModsKey', Field(
+            ('OneHandSword_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('1HandThrustingSword_ModsKey', Field(
+            ('OneHandThrustingSword_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('1HandAxe_ModsKey', Field(
+            ('OneHandAxe_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('1HandMace_ModsKey', Field(
+            ('OneHandMace_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
@@ -3388,7 +3388,7 @@ specification = Specification({
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Amulet_ModsKey', Field(
+            ('AmuletsModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
@@ -3396,7 +3396,7 @@ specification = Specification({
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Display_Jewellry_ModsKey', Field(
+            ('Display_Jewellery_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
@@ -3404,7 +3404,7 @@ specification = Specification({
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Display_Item_ModsKey', Field(
+            ('Display_Items_ModsKey', Field(
                 type='ulong',
                 key='Mods.dat',
             )),
