@@ -133,7 +133,7 @@ class WikiCondition(parser.WikiCondition):
     )
 
     NAME = 'Skill'
-    INDENT = 36
+    INDENT = 40
     ADD_INCLUDE = False
 
 

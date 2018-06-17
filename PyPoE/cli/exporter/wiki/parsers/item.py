@@ -144,7 +144,7 @@ class WikiCondition(parser.WikiCondition):
         , re.UNICODE)
 
     NAME = 'Item'
-    INDENT = 36
+    INDENT = 40
     ADD_INCLUDE = False
 
 
