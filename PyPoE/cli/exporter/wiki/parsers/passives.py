@@ -37,6 +37,7 @@ Internal API
 # =============================================================================
 
 # Python
+import re
 import os.path
 from functools import partialmethod
 from collections import OrderedDict
@@ -148,8 +149,11 @@ class PassiveSkillParser(parser.BaseParser):
         }),
         ('Icon_DDSFile', {
             'template': 'icon',
-            'format': lambda value: value.replace(
-                'Art/2DArt/SkillIcons/passives/', '').replace('.dds', ''),
+            'format': lambda value: re.sub(
+                r'(?:[^/\\]*[/\\]+)*(.*)\.dds',
+                r'\g<1>',
+                value
+            )
         }),
         # icon handled not here
         ('AscendancyKey', {
@@ -229,6 +233,11 @@ class PassiveSkillParser(parser.BaseParser):
         for group in psg.groups:
             for node in group.nodes:
                 node_index[node.passive_skill] = node
+        # Connections are one-way, make them two way
+        for psg_id, node in node_index.items():
+            for other_psg_id in node.connections:
+                node_index[other_psg_id].connections.append(psg_id)
+
         self.rr['PassiveSkills.dat'].build_index('PassiveSkillGraphId')
 
         self._image_init(parsed_args)
@@ -281,7 +290,7 @@ class PassiveSkillParser(parser.BaseParser):
 
             # extract icons if specified
             if parsed_args.store_images and self.ggpk:
-                fn = data['icon'] + ' passive icon'
+                fn = data['icon'] + ' passive skill icon'
                 dds = os.path.join(self._img_path, fn + '.dds')
                 png = os.path.join(self._img_path, fn + '.png')
                 if not (os.path.exists(dds) or os.path.exists(png)):
