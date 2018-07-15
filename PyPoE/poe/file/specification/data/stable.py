@@ -7394,7 +7394,7 @@ specification = Specification({
             ('Stat5Value', Field(
                 type='int',
             )),
-            ('BuffRelatedUnknown2', Field(
+            ('GrantedBuff_StatValues', Field(
                 type='ref|list|int',
             )),
         )),

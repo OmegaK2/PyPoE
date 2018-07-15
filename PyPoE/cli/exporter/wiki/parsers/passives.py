@@ -142,6 +142,7 @@ class PassiveSkillParser(parser.BaseParser):
         }),
         ('GrantedBuff_BuffDefinitionsKey', {
             'template': 'buff_id',
+            'format': lambda value: value['Id'],
         }),
         ('SkillPointsGranted', {
             'template': 'skill_points',
@@ -266,6 +267,7 @@ class PassiveSkillParser(parser.BaseParser):
             stat_ids = []
             values = []
 
+            j = 0
             for i in range(0, self._MAX_STAT_ID):
                 try:
                     stat = passive['StatsKeys'][i]
@@ -281,6 +283,27 @@ class PassiveSkillParser(parser.BaseParser):
                 stat_ids, values,
                 translation_file='passive_skill_stat_descriptions.txt'
             ))
+
+            # For now this is being added to the stat text
+            if passive['GrantedBuff_BuffDefinitionsKey']:
+                stat_ids = [stat['Id'] for stat in
+                            passive['GrantedBuff_BuffDefinitionsKey'][
+                                'StatsKeys']]
+                values = passive['GrantedBuff_StatValues']
+                for i, (sid, val) in enumerate(zip(stat_ids, values)):
+                    j += 1
+                    data['stat%s_id' % j] = sid
+                    data['stat%s_value' % j] = val
+
+                text = '<br>'.join(self._get_stats(
+                    stat_ids, values,
+                    translation_file='passive_skill_aura_stat_descriptions.txt'
+                ))
+
+                if data['stat_text']:
+                    data['stat_text'] += '<br>' + text
+                else:
+                    data['stat_text'] = text
 
             node = node_index.get(passive['PassiveSkillGraphId'])
             if node and node.connections:
