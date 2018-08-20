@@ -313,8 +313,9 @@ specification = Specification({
                 key='Stats.dat',
                 description='Stat an input stat will be transformed into',
             )),
-            ('Unknown19', Field(
+            ('MinionActiveSkillTypes', Field(
                 type='ref|list|int',
+                description='ActiveSkillTypes of skills of minions summoned by this skill',
             )),
         )),
     ),
@@ -3829,8 +3830,9 @@ specification = Specification({
             ('IsSupport', Field(
                 type='bool',
             )),
-            ('Data0', Field(
+            ('AllowedActiveSkillTypes', Field(
                 type='ref|list|uint',
+                description='This support gem only supports active skills with at least one of these types',
             )),
             # 3.0.0
             ('Multiplier1', Field(
@@ -3847,14 +3849,17 @@ specification = Specification({
             ('Unknown0', Field(
                 type='int',
             )),
-            ('Data1', Field(
+            ('AddedActiveSkillTypes', Field(
                 type='ref|list|uint',
+                description='This support gem adds these types to supported active skills',
             )),
-            ('Data2', Field(
+            ('ExcludedActiveSkillTypes', Field(
                 type='ref|list|uint',
+                description='This support gem does not support active skills with one of these types',
             )),
-            ('Flag0', Field(
+            ('SupportsGemsOnly', Field(
                 type='bool',
+                description='This support gem only supports active skills that come from gem items',
             )),
             ('Unknown1', Field(
                 type='uint',
