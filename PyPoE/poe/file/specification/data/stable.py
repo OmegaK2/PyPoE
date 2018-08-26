@@ -5529,21 +5529,24 @@ specification = Specification({
             ('Shaped_AreaLevel', Field(
                 type='int',
             )),
-            ('MapsKey1', Field(
+            ('UpgradedFrom_MapsKey', Field(
                 type='int',
                 key='Maps.dat',
             )),
+            # TODO upgrades into?
             ('MapsKey2', Field(
                 type='int',
                 key='Maps.dat',
             )),
+            # TODO upgrades into for unique maps?
             ('MapsKey3', Field(
                 type='int',
                 key='Maps.dat',
             )),
-            #3.1.0
-            ('Unknown0', Field(
+            ('MapSeriesKey', Field(
                 type='int',
+                key='MapSeries.dat',
+                key_offset=1,
             )),
             ('Flag0', Field(
                 type='byte',
