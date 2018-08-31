@@ -2709,16 +2709,17 @@ specification = Specification({
                 type='ulong',
                 key='BaseItemTypes.dat',
             )),
-            ('Unknown2', Field(
+            ('SpawnWeight', Field(
                 type='int',
             )),
             ('Cost', Field(
                 type='int',
             )),
-            ('Unknown4', Field(
+            ('MinDepth', Field(
                 type='int',
             )),
-            ('Flag0', Field(
+            # I think whether it is enabled or not
+            ('IsEnabled', Field(
                 type='bool',
             )),
         )),
@@ -2994,10 +2995,10 @@ specification = Specification({
     ),
     'DelveLevelScaling.dat': File(
         fields=OrderedDict((
-            ('Unknown0', Field(
+            ('Depth', Field(
                 type='int',
             )),
-            ('Unknown1', Field(
+            ('MonsterLevel', Field(
                 type='int',
             )),
             ('Unknown2', Field(
@@ -3015,10 +3016,10 @@ specification = Specification({
             ('Unknown6', Field(
                 type='int',
             )),
-            ('Unknown7', Field(
+            ('DarknessResistance', Field(
                 type='int',
             )),
-            ('Unknown8', Field(
+            ('LightRadius', Field(
                 type='int',
             )),
             ('Unknown9', Field(
@@ -3162,11 +3163,12 @@ specification = Specification({
                 type='int',
                 key='DelveUpgradeType.dat',
             )),
-            ('Unknown1', Field(
+            ('UpgradeLevel', Field(
                 type='int',
             )),
             ('StatsKeys', Field(
                 type='ref|list|ulong',
+                key='Stats.dat',
             )),
             ('StatsValues', Field(
                 type='ref|list|int',
