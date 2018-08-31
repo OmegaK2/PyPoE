@@ -414,7 +414,6 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/Gems/SkillGemStaticTether',
         'Metadata/Items/Gems/SkillGemSummonSkeletonsChannelled',
         'Metadata/Items/Gems/SkillGemTouchOfGod',
-        'Metadata/Items/Gems/SkillGemVaalAncestralWarchief',
         'Metadata/Items/Gems/SkillGemVaalFireTrap',
         'Metadata/Items/Gems/SkillGemVaalFleshOffering',
         'Metadata/Items/Gems/SkillGemVaalHeavyStrike',
@@ -630,6 +629,9 @@ class ItemsParser(SkillParserShared):
                         )
                     except ValueError as e:
                         warnings.warn(str(e))
+                    except KeyError:
+                        print(base_item_type['Id'], base_item_type['Name'])
+                        raise
             try:
                 # Index starts at 0 while levels start at 1
                 infobox[prefix + 'experience'] = exp_total[i-1]
@@ -1139,6 +1141,7 @@ class ItemsParser(SkillParserShared):
         # Currency-like items
         'Currency': (_type_currency, ),
         'Stackable Currency': (_type_currency, _type_essence),
+        'Delve Socketable Currency': (_type_currency, ),
         'Hideout Doodads': (_type_currency, _type_hideout_doodad),
         'Microtransactions': (_type_currency, ),
         'Divination Card': (_type_currency, ),

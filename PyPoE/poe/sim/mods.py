@@ -75,6 +75,7 @@ _translation_map = {
     MOD_DOMAIN.AREA: 'map_stat_descriptions.txt',
     MOD_DOMAIN.ATLAS: 'atlas_stat_descriptions.txt',
     MOD_DOMAIN.LEAGUESTONE: 'leaguestone_stat_descriptions.txt',
+    MOD_DOMAIN.DELVE_AREA: 'map_stat_descriptions.txt',
 }
 
 # =============================================================================

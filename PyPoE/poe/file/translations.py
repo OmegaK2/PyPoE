@@ -1902,6 +1902,12 @@ TranslationQuantifier(
 """
 
 TranslationQuantifier(
+    id='30%_of_value',
+    handler=lambda v: v*0.3,
+    reverse_handler=lambda v: v/0.3,
+)
+
+TranslationQuantifier(
     id='60%_of_value',
     handler=lambda v: v*0.6,
     reverse_handler=lambda v: v/0.6,
@@ -1988,6 +1994,12 @@ TranslationQuantifier(
 TranslationQuantifier(
     id='per_minute_to_per_second_0dp',
     handler=lambda v: int(round(v/60, 0)),
+    reverse_handler=lambda v: float(v)*60,
+)
+
+TranslationQuantifier(
+    id='per_minute_to_per_second_1dp',
+    handler=lambda v: int(round(v/60, 1)),
     reverse_handler=lambda v: float(v)*60,
 )
 

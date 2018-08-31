@@ -400,6 +400,10 @@ class MOD_DOMAIN(IntEnum):
     MAP_DEVICE
         For implicit modifiers that can be applied through the map device
         For example, vaal fragments or soul flasks
+    DELVE
+        For delve modifiers
+    DELVE_AREA
+        For modifiers appearing on delve areas
     """
     ITEM = 1
     FLASK = 2
@@ -417,6 +421,8 @@ class MOD_DOMAIN(IntEnum):
     ABYSS_JEWEL = 13
     MAP_DEVICE = 14
     DUMMY = 15
+    DELVE = 16
+    DELVE_AREA = 17
 
     # legacy names
     MASTER = 9
@@ -456,7 +462,10 @@ class MOD_GENERATION_TYPE(IntEnum):
         For the ascendancy/labyrinth enchantment mods that can appear on items
     ESSENCE
         For 'essence' mods that can appear on monsters
-
+    BESTIARY
+        For 'bestiary' modifiers that appear on bestiary monsters
+    DELVE_AERA
+        For modifiers that appear on delve areas
     """
     PREFIX = 1
     SUFFIX = 2
@@ -470,6 +479,7 @@ class MOD_GENERATION_TYPE(IntEnum):
     ENCHANTMENT = 10
     ESSENCE = 11
     BESTIARY = 13
+    DELVE_AREA = 14
 
 
 class WORDLISTS(IntEnum):

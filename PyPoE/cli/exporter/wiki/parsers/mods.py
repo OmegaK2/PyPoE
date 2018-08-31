@@ -298,7 +298,10 @@ class ModParser(BaseParser):
                     mod['GenerationWeight_Values'][i]
 
             if mod['TagsKeys']:
-                data['tags'] = ', '.join([t['Id'] for t in mod['TagsKeys']])
+                data['tags'] = ', '.join(
+                    [t['Id'] for t in mod['ModTypeKey']['TagsKeys']] +
+                    [t['Id'] for t in mod['TagsKeys']]
+                )
 
             if mod['ModTypeKey']:
                 sell_price = defaultdict(int)
