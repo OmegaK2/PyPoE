@@ -1442,6 +1442,9 @@ specification = Specification({
             ('Flag11', Field(
                 type='bool',
             )),
+            ('Flag12', Field(
+                type='bool',
+            )),
         )),
     ),
     'BuffGroups.dat': File(
@@ -2733,8 +2736,9 @@ specification = Specification({
             ('Name', Field(
                 type='ref|string',
             )),
-            ('Keys0', Field(
+            ('WorldAreasKeys', Field(
                 type='ref|list|ulong',
+                key='WorldAreas.dat',
             )),
             ('UIImage', Field(
                 type='ref|string',
@@ -2756,8 +2760,9 @@ specification = Specification({
                 type='ref|string',
                 file_path=True,
             )),
-            ('Keys1', Field(
+            ('AchievementItemsKeys', Field(
                 type='ref|list|ulong',
+                key='AchievementItems.dat',
             )),
         )),
     ),
@@ -2915,11 +2920,12 @@ specification = Specification({
             ('Name', Field(
                 type='ref|string',
             )),
-            ('Unknown2', Field(
+            ('SpawnWeight', Field(
                 type='int',
             )),
-            ('Key', Field(
+            ('WorldAreasKey', Field(
                 type='ulong',
+                key='WorldAreas.dat',
             )),
             ('Image', Field(
                 type='ref|string',
@@ -2929,33 +2935,33 @@ specification = Specification({
                 type='ref|list|ulong',
                 key='AchievementItems.dat'
             )),
-            ('Unknown8', Field(
-                type='ref|list|ulong',
-            )),
-            ('Unknown10', Field(
+            # Not entirely sure
+            ('MinTier', Field(
                 type='int',
+            )),
+            ('Tier', Field(
+                type='int',
+            )),
+            ('MinDepth', Field(
+                type='int',
+            )),
+            ('Description', Field(
+                type='ref|string',
             )),
             ('Unknown11', Field(
                 type='int',
-            )),
-            ('Descriptions', Field(
-                type='ref|string',
             )),
         )),
     ),
     'DelveFeatureRewards.dat': File(
         fields=OrderedDict((
-            ('Unknown0', Field(
-                type='int',
+            ('DelveFeaturesKey', Field(
+                type='ulong',
+                key='DelveFeatures.dat',
             )),
-            ('Unknown1', Field(
-                type='int',
-            )),
-            ('Unknown2', Field(
-                type='int',
-            )),
-            ('Unknown3', Field(
-                type='int',
+            # pretty sure this is a link towards delve specific file
+            ('DelveRewardsKey', Field(
+                type='ref|list|ulong',
             )),
         )),
     ),
@@ -3007,9 +3013,10 @@ specification = Specification({
             ('Unknown3', Field(
                 type='int',
             )),
-            ('Unknown4', Field(
+            ('MonsterLevel2', Field(
                 type='int',
             )),
+            # Probably monster HP/DMG
             ('Unknown5', Field(
                 type='int',
             )),
@@ -8870,6 +8877,10 @@ specification = Specification({
             )),
         )),
     ),
+    'QuestStateCalcuation.dat': File(
+        fields=OrderedDict((
+        )),
+    ),
     'QuestStates.dat': File(
         fields=OrderedDict((
             ('QuestKey', Field(
@@ -8916,7 +8927,7 @@ specification = Specification({
                 file_path=True,
                 file_ext='.ogg',
             )),
-            ('Unknown2', Field(
+            ('Flag1', Field(
                 type='bool',
             )),
             ('Data1', Field(
@@ -8924,6 +8935,9 @@ specification = Specification({
             )),
             ('Data2', Field(
                 type='ref|list|int',
+            )),
+            ('QuestStateCalcuationKey', Field(
+                type='int',
             )),
         )),
     ),
