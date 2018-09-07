@@ -947,9 +947,21 @@ class RelationalReader(AbstractFileCache):
     FILE_TYPE = DatFile
 
     #TODO append doc
-    @doc(doc=AbstractFileCache.__init__)
-    def __init__(self, raise_error_on_missing_relation=False, *args, **kwargs):
+    @doc(doc=AbstractFileCache.__init__, append="""
+    Parameters
+    ----------
+    raise_error_on_missing_relation : bool
+        Raises error instead of issuing an warning when a relation is broken
+    language : str
+        language subdirectory in data directory
+    """)
+    def __init__(self, raise_error_on_missing_relation=False,
+                 language=None, *args, **kwargs):
         self.raise_error_on_missing_relation = raise_error_on_missing_relation
+        if language == 'English' or language is None:
+            self._language = ''
+        else:
+            self._language = language + '/'
         super(RelationalReader, self).__init__(*args, **kwargs)
 
     def __getitem__(self, item):
@@ -962,7 +974,7 @@ class RelationalReader(AbstractFileCache):
         * self['Data/DF.dat'] <==> read_file('Data/DF.dat').reader
         """
         if not item.startswith('Data/'):
-            item = 'Data/' + item
+            item = 'Data/' + self._language + item
 
         return self.get_file(item).reader
 
@@ -1018,7 +1030,7 @@ class RelationalReader(AbstractFileCache):
 
     def _get_file_instance_args(self, file_name, *args, **kwargs):
         opts = super(RelationalReader, self)._get_file_instance_args(file_name)
-        opts['file_name'] = file_name.replace('Data/', '')
+        opts['file_name'] = file_name.replace('Data/' + self._language, '')
         return opts
 
     def get_file(self, file_name):
