@@ -886,6 +886,8 @@ class TranslationQuantifierHandler(TranslationReprMixin):
     reverse_handlers = {
     }
 
+    regex = None
+
     __slots__ = ['index_handlers', 'string_handlers']
 
     def __init__(self):
@@ -933,6 +935,13 @@ class TranslationQuantifierHandler(TranslationReprMixin):
         cls.handlers[quantifier.id] = quantifier
         cls.reverse_handlers[quantifier.id] = quantifier
 
+    @classmethod
+    def init(cls):
+        cls.regex = re.compile(
+            r'(%s)(?!\_)' % '|'.join(cls.handlers.keys()),
+            re.UNICODE
+        )
+
     def diff(self, other):
         if not isinstance(other, TranslationQuantifierHandler):
             raise TypeError
@@ -962,9 +971,12 @@ class TranslationQuantifierHandler(TranslationReprMixin):
         offset : int
             offset this operation is appearing at (to show errors)
         """
-        values = iter(string.strip().split())
+        values = iter(self.regex.split(string))
 
         for partial in values:
+            partial = partial.strip()
+            if partial == '':
+                continue
             handler = self.handlers.get(partial)
             if handler:
                 args = [values.__next__() for i in range(0, handler.arg_size)]
@@ -972,7 +984,7 @@ class TranslationQuantifierHandler(TranslationReprMixin):
                     try:
                         self.index_handlers[handler.id].append(int(args[0]))
                     except ValueError as e:
-                        warnings.warn('Broken quantifier. Error: %s' % e.args[0], TranslationWarning)
+                        warnings.warn('Broken quantifier "%s" - Error: %s' % (string, e.args[0]), TranslationWarning)
                 elif handler.type == TranslationQuantifier.QuantifierTypes.STRING:
                     self.string_handlers[handler.id] = args
             else:
@@ -1056,10 +1068,6 @@ class TranslationQuantifierHandler(TranslationReprMixin):
 
 
 class TranslationQuantifier(TranslationReprMixin):
-    class QuantifierTypes(IntEnum):
-        INT = 1
-        STRING = 2
-
     """
     Attributes
     ----------
@@ -1074,6 +1082,15 @@ class TranslationQuantifier(TranslationReprMixin):
     reverse_handler : function
         function  hat reverses handles the values, if any
     """
+
+    class QuantifierTypes(IntEnum):
+        INT = 1
+        STRING = 2
+
+    __slots__ = [
+        'id', 'arg_size', 'type', 'handler', 'reverse_handler',
+    ]
+
     def __init__(self, id, arg_size=1, type=QuantifierTypes.INT, handler=None,
                  reverse_handler=None):
         self.id = id
@@ -1097,7 +1114,7 @@ class TQReminderString(TranslationQuantifier):
         )
 
     def handle(self, *args):
-        return self.relational_reader['ClientStrings.dat'].index['Id'][args[0]]['Text']
+        return self.relational_reader['ClientStrings.dat'].index['Id'][args[0].strip()]['Text']
 
 
 class TranslationResult(TranslationReprMixin):
@@ -1882,6 +1899,8 @@ def install_data_dependant_quantifiers(relational_reader):
 
     TQReminderString(relational_reader=relational_reader)
 
+    TranslationQuantifierHandler.init()
+
 # =============================================================================
 # Init
 # =============================================================================
@@ -2044,3 +2063,23 @@ TranslationQuantifier(
     type=TranslationQuantifier.QuantifierTypes.STRING,
     arg_size=0,
 )
+
+TranslationQuantifier(
+    id='canonical_stat',
+)
+
+# These will be replaced by install_data_dependant_quantifiers
+TranslationQuantifier(
+    id='mod_value_to_item_class',
+)
+
+TranslationQuantifier(
+    id='tempest_mod_text',
+)
+
+TranslationQuantifier(
+    id='reminderstring',
+    type=TranslationQuantifier.QuantifierTypes.STRING,
+)
+
+TranslationQuantifierHandler.init()
