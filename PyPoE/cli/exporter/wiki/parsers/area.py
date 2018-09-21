@@ -183,7 +183,7 @@ class AreaParser(parser.BaseParser):
             'template': 'act',
         }),
         ('AreaLevel', {
-            'template': 'level',
+            'template': 'area_level',
         }),
         ('MaxLevel', {
             'template': 'level_restriction_max',
