@@ -148,14 +148,6 @@ class PassiveSkillParser(parser.BaseParser):
             'template': 'skill_points',
             'default': 0,
         }),
-        ('Icon_DDSFile', {
-            'template': 'icon',
-            'format': lambda value: re.sub(
-                r'(?:[^/\\]*[/\\]+)*(.*)\.dds',
-                r'\g<1>',
-                value
-            )
-        }),
         # icon handled not here
         ('AscendancyKey', {
             'template': 'ascendancy_class',
@@ -263,6 +255,19 @@ class PassiveSkillParser(parser.BaseParser):
                 if fmt:
                     value = fmt(value)
                 data[copy_data['template']] = value
+
+            if passive['Icon_DDSFile']:
+                icon = passive['Icon_DDSFile'].split('/')
+                if passive['Icon_DDSFile'].startswith(
+                        'Art/2DArt/SkillIcons/passives/'):
+                    if icon[-2] == 'passives':
+                        data['icon'] = icon[-1]
+                    else:
+                        data['icon'] = '%s (%s)' % (icon[-1], icon[-2])
+                else:
+                    data['icon'] = icon[-1]
+
+            data['icon'] = data['icon'].replace('.dds', '')
 
             stat_ids = []
             values = []
