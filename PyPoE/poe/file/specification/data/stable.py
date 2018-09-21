@@ -2744,10 +2744,10 @@ specification = Specification({
                 type='ref|string',
                 file_path=True,
             )),
-            ('Data0', Field(
+            ('SpawnWeight_Depth', Field(
                 type='ref|list|int',
             )),
-            ('Data1', Field(
+            ('SpawnWeight_Values', Field(
                 type='ref|list|int',
             )),
             ('Data2', Field(
@@ -2763,6 +2763,9 @@ specification = Specification({
             ('AchievementItemsKeys', Field(
                 type='ref|list|ulong',
                 key='AchievementItems.dat',
+            )),
+            ('Flag0', Field(
+                type='bool',
             )),
         )),
     ),
@@ -3007,20 +3010,20 @@ specification = Specification({
             ('MonsterLevel', Field(
                 type='int',
             )),
-            ('Unknown2', Field(
+            ('Unknown1', Field(
                 type='int',
             )),
-            ('Unknown3', Field(
+            ('SulphiteCost', Field(
                 type='int',
             )),
             ('MonsterLevel2', Field(
                 type='int',
             )),
             # Probably monster HP/DMG
-            ('Unknown5', Field(
+            ('Unknown2', Field(
                 type='int',
             )),
-            ('Unknown6', Field(
+            ('Unknown3', Field(
                 type='int',
             )),
             ('DarknessResistance', Field(
@@ -3029,17 +3032,26 @@ specification = Specification({
             ('LightRadius', Field(
                 type='int',
             )),
-            ('Unknown9', Field(
+            ('Unknown4', Field(
                 type='int',
             )),
-            ('Unknown10', Field(
+            ('Unknown5', Field(
+                type='int',
+            )),
+            ('Unknown6', Field(
+                type='int',
+            )),
+            ('Unknown7', Field(
+                type='int',
+            )),
+            ('Unknown8', Field(
                 type='int',
             )),
         )),
     ),
     'DelveMonsterSpawners.dat': File(
         fields=OrderedDict((
-            ('Unknown0', Field(
+            ('BaseMetadata', Field(
                 type='ref|string',
             )),
             ('Unknown1', Field(
@@ -3146,8 +3158,9 @@ specification = Specification({
     ),
     'DelveRooms.dat': File(
         fields=OrderedDict((
-            ('Unknown0', Field(
+            ('DelveBiomesKey', Field(
                 type='ulong',
+                key='DelveBiomes.dat',
             )),
             ('DelveFeaturesKey', Field(
                 type='ulong',
@@ -8072,6 +8085,9 @@ specification = Specification({
             # Delve related?
             ('Flag5', Field(
                 type='bool',
+            )),
+            ('String0', Field(
+                type='ref|string',
             )),
         )),
     ),
