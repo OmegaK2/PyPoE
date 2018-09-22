@@ -3047,6 +3047,15 @@ specification = Specification({
             ('Unknown8', Field(
                 type='int',
             )),
+            ('Unknown11', Field(
+                type='int',
+            )),
+            ('Unknown12', Field(
+                type='int',
+            )),
+            ('Unknown13', Field(
+                type='int',
+            )),
         )),
     ),
     'DelveMonsterSpawners.dat': File(
