@@ -3181,7 +3181,8 @@ specification = Specification({
         fields=OrderedDict((
             ('DelveUpgradeTypeKey', Field(
                 type='int',
-                key='DelveUpgradeType.dat',
+                # key='DelveUpgradeType.dat',
+                enum="DELVE_UPGRADE_TYPE",
             )),
             ('UpgradeLevel', Field(
                 type='int',

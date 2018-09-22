@@ -69,6 +69,7 @@ __all__ = [
 
     'MOD_MAX_STATS',
     'MOD_STATS_RANGE',
+    'DELVE_UPGRADE_TYPE',
 ]
 
 MOD_MAX_STATS = 6
@@ -520,6 +521,26 @@ class WORDLISTS(IntEnum):
     STRONGBOX_PREFIX = 7
     STRONGBOX_SUFFIX = 8
     ESSENCE = 9
+
+
+class DELVE_UPGRADE_TYPE(IntEnum):
+    """
+    Representation of delve upgrade type ( DelveUpgradeType.dat )
+    """
+    SULPHITE_CAPACITY = 0
+    FLARE_CAPACITY = 1
+    DYNAMITE_CAPACITY = 2
+    LIGHT_RADIUS = 3
+    FLARE_RADIUS = 4
+    DYNAMITE_RADIUS = 5
+    # 6 is unused atm
+    DYNAMITE_DAMAGE = 7
+    DARKNESS_RESISTANCE = 8
+    FLARE_DURATION = 9
+
+    # Alias
+    SULFITE_CAPACITY = SULPHITE_CAPACITY
+
 
 # =============================================================================
 # Functions
