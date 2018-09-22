@@ -1934,8 +1934,8 @@ TranslationQuantifier(
 
 TranslationQuantifier(
     id='deciseconds_to_seconds',
-    handler=lambda v: v*10,
-    reverse_handler=lambda v: float(v)/10,
+    handler=lambda v: v/10,
+    reverse_handler=lambda v: float(v)*10,
 )
 
 TranslationQuantifier(
