@@ -34,10 +34,10 @@ import sys
 
 # 3rd-party
 import cProfile
-from line_profiler import LineProfiler
+#from line_profiler import LineProfiler
 
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PySide2.QtCore import *
+from PySide2.QtWidgets import *
 
 # self
 from PyPoE.ui.shared.file.handler import DatStyle
@@ -57,11 +57,11 @@ __all__ = []
 # Functions
 # =============================================================================
 if __name__ == '__main__':
-    profiler = LineProfiler(
+    '''profiler = LineProfiler(
         DatStyle.sizeHint,
         DatStyle._get_text,
         DatStyle._show_value,
-    )
+    )'''
     translator = QTranslator()
     translator.load('i18n/en_US')
     app = QApplication(sys.argv)

@@ -32,7 +32,7 @@ See PyPoE/LICENSE
 # Python
 
 # 3rd Party
-from PySide.QtGui import *
+from PySide2.QtWidgets import *
 
 # self
 from PyPoE.poe.file import dat

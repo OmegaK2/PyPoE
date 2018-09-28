@@ -36,9 +36,10 @@ import struct
 from tempfile import TemporaryDirectory
 
 # 3rd Party
-from PySide.QtCore import *
-from PySide.QtGui import *
-from PySide.QtOpenGL import *
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtOpenGL import *
+from PySide2.QtWidgets import *
 try:
     from OpenGL import GL
 except ImportError:
@@ -274,8 +275,8 @@ class DatFrame(QFrame):
         self.table_main.setSortingEnabled(True)
         self.table_main.setItemDelegate(DatStyle(self))
         head = self.table_main.horizontalHeader()
-        head.setResizeMode(QHeaderView.Interactive)
-        #head.setResizeMode(QHeaderView.ResizeToContents)
+        head.setSectionResizeMode(QHeaderView.Interactive)
+        #head.setSectionResizeMode(QHeaderView.ResizeToContents)
         self.layout.addWidget(self.table_main)
 
         self.table_main_filter_menu = FilterMenu(
@@ -294,7 +295,7 @@ class DatFrame(QFrame):
         self.table_data.setSortingEnabled(True)
         self.table_data.setItemDelegate(DatStyle(self, data_style=True))
         head = self.table_data.horizontalHeader()
-        head.setResizeMode(QHeaderView.Interactive)
+        head.setSectionResizeMode(QHeaderView.Interactive)
         self.layout.addWidget(self.table_data)
 
         self.table_data_filter_menu = FilterMenu(

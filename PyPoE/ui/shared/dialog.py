@@ -33,8 +33,8 @@ See PyPoE/LICENSE
 import re
 
 # 3rd Party
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PySide2.QtCore import *
+from PySide2.QtWidgets import *
 
 # self
 from PyPoE.ui.shared.regex_widgets import RegexFlagsBox
