@@ -10,7 +10,9 @@ The docs are occasionally updated until I get a build bot up - however docs can 
 
 Common problems & advisory
 --------
-* Install **Python 3.4** (on windows 86x (32 bit)) to avoid issues with the UI. Pyside support in other versions is currently not available until pyside2 is released.
+* Install **Python 3.6** for maximum compability:
+  * UI: PySide currently only supports versions 3.5, 3.6 and 3.7
+  * GGPK decompression: brotli only comes precompiled for versions 3.4, 3.5 and 3.6 
 * On windows 10 machines there seems to a be bug in the python install that prevents arguments being passed to the command line interface; you can identify this issue if you get a "help" listing if you supplied more then 1 argument. See [this on stack overflow](https://stackoverflow.com/questions/2640971/windows-is-not-passing-command-line-arguments-to-python-programs-executed-from-t) for possible solutions
 
 
@@ -23,8 +25,8 @@ Parts:
 
 Resources
 -------
-IRC Channel: [freenode.net/#PyPoE](http://webchat.freenode.net/?channels=#PyPoE)
-
+* IRC Channel: [freenode.net/#PyPoE](http://webchat.freenode.net/?channels=#PyPoE)
+* Discord: No offical channel, but I can be contacted in #tool-dev in the PoE Discord
 
 Imporant Notes
 --------
@@ -41,8 +43,8 @@ Quick Setup Guide
 --------
 These instructions are for the current development version of PyPoE.
 
-* Install Python 3.4 & git
-* make sure Python 3.4 and python scripts folder is in your %PATH% on windows
+* Install Python 3.6 & git
+* make sure Python 3.6 and python scripts folder is in your %PATH% on windows
 * checkout PyPoE with git
 * go into the PyPoE folder
 * Minimum install: ```pip3 install -e . ```
@@ -62,7 +64,7 @@ Credits
 
 Credits - Libraries
 -------
-* [pyside](https://wiki.qt.io/Category:LanguageBindings::PySide) ([pypi](https://pypi.python.org/pypi/PySide))
+* [pyside2](https://wiki.qt.io/Category:LanguageBindings::PySide) ([pypi](https://pypi.org/project/PySide2/))
 * [configobj](http://www.voidspace.org.uk/python/configobj.html) ([pypi](https://pypi.python.org/pypi/configobj))
 * colorama ([pypi](https://pypi.python.org/pypi/colorama))
 * sphinx ([pypi](https://pypi.python.org/pypi/sphinx))
