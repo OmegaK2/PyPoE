@@ -33,7 +33,7 @@ See PyPoE/LICENSE
 import re
 import warnings
 import os
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict
 from functools import partialmethod
 
 # Self
@@ -143,7 +143,7 @@ class WikiCondition(parser.WikiCondition):
         r'^(upgraded_from_set|implicit[0-9]+_text).*'
         , re.UNICODE)
 
-    NAME = 'Item'
+    NAME = 'Base item'
     INDENT = 40
     ADD_INCLUDE = False
 
@@ -773,7 +773,7 @@ class ItemsParser(SkillParserShared):
                 'template': 'physical_damage_max',
             }),
             ('RangeMax', {
-                'template': 'range',
+                'template': 'weapon_range',
             }),
         ),
         row_index=True,
