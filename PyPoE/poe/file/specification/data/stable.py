@@ -149,6 +149,13 @@ specification = Specification({
             ('Flag0', Field(
                 type='bool',
             )),
+            # Added in ~3.4.x
+            ('Flag1', Field(
+                type='bool',
+            )),
+            ('Flag2', Field(
+                type='bool',
+            )),
         )),
     ),
     'AchievementSetRewards.dat': File(
@@ -6449,15 +6456,31 @@ specification = Specification({
     ),
     'Melee.dat': File(
         fields=OrderedDict((
+            ('Key0', Field(
+                type='ulong',
+            )),
             ('Unknown0', Field(
                 type='int',
+            )),
+            ('Key1', Field(
+                type='ulong',
             )),
             ('Claw_EPKFile', Field(
                 type='ref|string',
                 file_path=True,
                 file_ext='.epk',
             )),
+            ('Claw_EPKFile2', Field(
+                type='ref|string',
+                file_path=True,
+                file_ext='.epk',
+            )),
             ('OneHand_EPKFile', Field(
+                type='ref|string',
+                file_path=True,
+                file_ext='.epk',
+            )),
+            ('OneHand_EPKFile2', Field(
                 type='ref|string',
                 file_path=True,
                 file_ext='.epk',
@@ -6473,19 +6496,6 @@ specification = Specification({
                 file_ext='.epk',
             )),
             ('StaffOffHand_EPKFile', Field(
-                type='ref|string',
-                file_path=True,
-                file_ext='.epk',
-            )),
-            ('Key0', Field(
-                type='ulong',
-            )),
-            ('Claw_EPKFile2', Field(
-                type='ref|string',
-                file_path=True,
-                file_ext='.epk',
-            )),
-            ('OneHand_EPKFile2', Field(
                 type='ref|string',
                 file_path=True,
                 file_ext='.epk',
@@ -10562,6 +10572,17 @@ specification = Specification({
             ('ShopPackagePlatformKey', Field(
                 type='int',
                 enum='SHOP_PACKAGE_PLATFORM',
+            )),
+        )),
+    ),
+    'SurgeTypes.dat': File(
+        fields=OrderedDict((
+            ('Id', Field(
+                type='ref|string',
+                unique=True,
+            )),
+            ('Keys0', Field(
+                type='ref|list|ulong',
             )),
         )),
     ),
