@@ -1042,8 +1042,9 @@ specification = Specification({
     ),
     'BestiaryGroups.dat': File(
         fields=OrderedDict((
-            ('Name', Field(
+            ('Id', Field(
                 type='ref|string',
+                unique=True,
             )),
             ('Description', Field(
                 type='ref|string',
@@ -1051,7 +1052,7 @@ specification = Specification({
             ('Illustraiton', Field(
                 type='ref|string',
             )),
-            ('GroupName', Field(
+            ('Name', Field(
                 type='ref|string',
             )),
             ('Icon', Field(
