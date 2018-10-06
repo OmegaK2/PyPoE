@@ -279,6 +279,14 @@ class QuestRewardReader(BaseParser):
             'Metadata/Items/Rings/Ring13': "Two-Stone Ring (sapphire and topaz)",
             'Metadata/Items/Rings/Ring14': "Two-Stone Ring (ruby and sapphire)",
         },
+        'Russian': {
+            'Metadata/Items/Rings/Ring12':
+                "Кольцо с двумя камнями (рубин и топаз)",
+            'Metadata/Items/Rings/Ring13':
+                "Кольцо с двумя камнями (сапфир и топаз)",
+            'Metadata/Items/Rings/Ring14':
+                "Кольцо с двумя камнями (рубин и сапфир)",
+        },
     }
 
     _UNIT_SEP = '\u001F'
@@ -338,7 +346,8 @@ class QuestRewardReader(BaseParser):
                 name = '%s (%s)' % (name, data['quest'])
             elif itemcls == 'Map':
                 name = '%s (%s)' % (
-                    name, self.rr['MapSeries.dat'].index['Id']['MapWorlds']
+                    name, self.rr['MapSeries.dat'].index['Id']['MapWorlds'][
+                        'Name']
                 )
             # Non non quest items or skill gems have their rarity added
             if itemcls not in {'Active Skill Gem', 'Support Skill Gem',
