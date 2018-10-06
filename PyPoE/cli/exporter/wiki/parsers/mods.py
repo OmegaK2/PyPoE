@@ -43,6 +43,7 @@ from functools import partialmethod
 # Self
 from PyPoE.poe.constants import MOD_DOMAIN, MOD_GENERATION_TYPE, MOD_STATS_RANGE
 from PyPoE.cli.core import console, Msg
+from PyPoE.cli.exporter import config
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult
 from PyPoE.cli.exporter.wiki.parser import BaseParser, format_result_rows
 from PyPoE.shared.decorators import deprecated
@@ -380,13 +381,19 @@ class ModParser(BaseParser):
                     tempest_stats = tempest['BuffDefinitionsKey']['StatKeys']
                     tempest_values = tempest['StatValues']
                     tempest_stat_ids = [st['Id'] for st in tempest_stats]
-                    t = tf.get_translation(tempest_stat_ids, tempest_values, full_result=True)
+                    t = tf.get_translation(
+                        tempest_stat_ids, tempest_values, full_result=True,
+                        lang=config.get_option('language')
+                    )
                     self._append_effect(t, effects, 'The tempest buff provides the following effects:')
                 #if tempest['MonsterVarietiesKey']:
                 #    print(tempest['MonsterVarietiesKey'])
                 #    break
 
-            t = tf.get_translation(stat_ids, stat_values, full_result=True)
+            t = tf.get_translation(
+                stat_ids, stat_values, full_result=True,
+                lang=config.get_option('language')
+            )
             self._append_effect(t, effects, 'The area gets the following modifiers:')
 
             info['effect'] = '\n'.join(effects)

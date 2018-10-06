@@ -41,6 +41,7 @@ from PyPoE.poe.constants import RARITY
 from PyPoE.poe.file.ot import OTFile
 from PyPoE.poe.sim.formula import gem_stat_requirement, GemTypes
 from PyPoE.cli.core import console, Msg
+from PyPoE.cli.exporter import config
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult
 from PyPoE.cli.exporter.wiki import parser
 from PyPoE.cli.exporter.wiki.parsers.skill import SkillParserShared
@@ -712,7 +713,8 @@ class ItemsParser(SkillParserShared):
         if flasks['BuffDefinitionsKey']:
             stats = [s['Id'] for s in flasks['BuffDefinitionsKey']['StatsKeys']]
             tr = self.tc['stat_descriptions.txt'].get_translation(
-                stats, flasks['BuffStatValues'], full_result=True
+                stats, flasks['BuffStatValues'], full_result=True,
+                lang=config.get_option('language'),
             )
             infobox['buff_stat_text'] = '<br>'.join([
                 parser.make_inter_wiki_links(line) for line in tr.lines

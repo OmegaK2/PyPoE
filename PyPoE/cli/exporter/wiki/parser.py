@@ -864,12 +864,13 @@ class BaseParser(object):
                     values.append(value)
 
         result = self.tc[translation_file].get_translation(
-            stats, values, full_result=True
+            stats, values, full_result=True, lang=config.get_option('language')
         )
 
         if mod and mod['Domain'] == MOD_DOMAIN.MONSTER:
             default = self.tc['stat_descriptions.txt'].get_translation(
-                result.source_ids, result.source_values, full_result=True
+                result.source_ids, result.source_values, full_result=True,
+                lang=config.get_option('language')
             )
 
             temp_ids = []
@@ -926,6 +927,7 @@ class BaseParser(object):
                 result.missing_ids,
                 result.missing_values,
                 full_result=True,
+                lang=config.get_option('language'),
             )
 
             if custom_result.missing_ids:

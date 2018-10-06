@@ -39,6 +39,7 @@ from collections import OrderedDict, defaultdict
 
 # Self
 from PyPoE.cli.core import console, Msg
+from PyPoE.cli.exporter import config
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult
 from PyPoE.cli.exporter.wiki import parser
 from PyPoE.poe.file.stat_filters import StatFilterFile
@@ -332,6 +333,7 @@ class SkillParserShared(parser.BaseParser):
                 tags=stats,
                 values=values,
                 full_result=True,
+                lang=config.get_option('language'),
             )
             data['_tr'] = tr
 
@@ -341,6 +343,7 @@ class SkillParserShared(parser.BaseParser):
                 values=[v/50 for v in row['Quality_Values']],
                 full_result=True,
                 use_placeholder=lambda i: "{%s}" % i,
+                lang=config.get_option('language'),
             )
             data['_qtr'] = qtr
 
@@ -531,7 +534,8 @@ class SkillParserShared(parser.BaseParser):
                     tr_values.append((value, stat_dict_max['values'][j]))
 
                 # Should only be one
-                line = tf.get_translation(stat_ids, tr_values)
+                line = tf.get_translation(stat_ids, tr_values,
+                                          lang=config.get_option('language'))
                 line = line[0] if line else ''
 
             if line:
@@ -549,7 +553,8 @@ class SkillParserShared(parser.BaseParser):
             if values[0] != 0 or values[1] != 0:
                 lines.insert(0, tf.get_translation(
                     tags=['active_skill_attack_damage_final_permyriad', ],
-                    values=[values, ]
+                    values=[values, ],
+                    lang=config.get_option('language'),
                 )[0])
 
         infobox['stat_text'] = self._format_lines(lines)
