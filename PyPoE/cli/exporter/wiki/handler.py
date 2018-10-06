@@ -238,7 +238,7 @@ class WikiHandler(object):
             )
             return
         self.site = mwclient.Site(
-            ('https', 'pathofexile.gamepedia.com'),
+            ('https', url),
             path='/'
         )
 
