@@ -38,6 +38,7 @@ from collections import OrderedDict, defaultdict
 # Self
 from PyPoE.poe.constants import RARITY
 from PyPoE.cli.core import console, Msg
+from PyPoE.cli.exporter import config
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult
 from PyPoE.cli.exporter.wiki.parser import BaseParser
 
@@ -123,6 +124,7 @@ class BestiaryParser(BaseParser):
     _files = [
         # pretty much chain loads everything we need
         'BestiaryRecipes.dat',
+        'ClientStrings.dat',
     ]
 
     _COPY_KEYS_BESTIARY = (
@@ -146,10 +148,6 @@ class BestiaryParser(BaseParser):
         }),
         ('MinLevel', {
             'key': 'min_level',
-        }),
-        ('RarityKey', {
-            'key': 'rarity',
-            'value': lambda x: x.name_upper,
         }),
         ('BestiaryFamiliesKey', {
             'key': 'family',
@@ -199,6 +197,10 @@ class BestiaryParser(BaseParser):
             self._copy_from_keys(
                 row, self._COPY_KEYS_BESTIARY_COMPONENTS, components
             )
+            if row['RarityKey'] != RARITY.ANY:
+                components[-1]['rarity'] = self.rr['ClientStrings.dat'].index[
+                    'Id']['ItemDisplayString' + row['RarityKey'].name_upper][
+                    'Text']
 
         recipe_components = []
         for recipe_id, data in recipe_components_temp.items():
@@ -233,51 +235,53 @@ class QuestRewardReader(BaseParser):
         'QuestStates.dat',
         'QuestRewards.dat',
         'QuestVendorRewards.dat',
+        'MapSeries.dat'
     ]
 
     # TODO find a better way
     # TODO Break with updates
     _ITEM_MAP = {
-        # A2: Though Scared Ground
-        423: "Survival Instincts", # Veridian
-        424: "Survival Skills", # Crimson
-        425: "Survival Secrets", # Cobalt
-        # A5: The King's Feast
-        454: "Poacher's Aim", # Verdian
-        455: "Warlord's Reach ", # Crimson
-        456: "Assassin's Haste", # Cobalt
-        #
-        457: "Conqueror's Efficiency", # crimson
-        458: "Conqueror's Potency", # cobalt
-        459: "Conqueror's Longevity", #viridian
-        # A5: Death to Puirty
-        560: "Rapid Expansion",
-        780: "Wildfire",
-        777: "Overwhelming Odds",
+        'English': {
+            # A2: Though Scared Ground
+            423: "Survival Instincts", # Veridian
+            424: "Survival Skills", # Crimson
+            425: "Survival Secrets", # Cobalt
+            # A5: The King's Feast
+            454: "Poacher's Aim", # Verdian
+            455: "Warlord's Reach ", # Crimson
+            456: "Assassin's Haste", # Cobalt
+            #
+            457: "Conqueror's Efficiency", # crimson
+            458: "Conqueror's Potency", # cobalt
+            459: "Conqueror's Longevity", #viridian
+            # A5: Death to Puirty
+            560: "Rapid Expansion",
+            780: "Wildfire",
+            777: "Overwhelming Odds",
 
-        775: "Collateral Damage",
-        779: "Omen on the Winds",
-        781: "Fight for Survival",
-        784: "Ring of Blades",
+            775: "Collateral Damage",
+            779: "Omen on the Winds",
+            781: "Fight for Survival",
+            784: "Ring of Blades",
 
-        778: "First Snow",
-        783: "Frozen Trail",
-        786: "Inevitability",
-        788: "Spreading Rot",
-        789: "Violent Dead",
-        790: "Hazardous Research",
+            778: "First Snow",
+            783: "Frozen Trail",
+            786: "Inevitability",
+            788: "Spreading Rot",
+            789: "Violent Dead",
+            790: "Hazardous Research",
+        },
     }
 
     _TWO_STONE_MAP = {
-        'Ring12': "Two-Stone Ring (ruby and topaz)",
-        'Ring13': "Two-Stone Ring (sapphire and topaz)",
-        'Ring14': "Two-Stone Ring (ruby and sapphire)",
+        'English': {
+            'Metadata/Items/Rings/Ring12': "Two-Stone Ring (ruby and topaz)",
+            'Metadata/Items/Rings/Ring13': "Two-Stone Ring (sapphire and topaz)",
+            'Metadata/Items/Rings/Ring14': "Two-Stone Ring (ruby and sapphire)",
+        },
     }
 
     _UNIT_SEP = '\u001F'
-
-    _CLASSES = {'Witch', 'Scion', 'Duelist', 'Marauder', 'Templar', 'Ranger',
-                'Shadow'}
 
     def _write_lua(self, outdata, data_type):
         # Pre-sort
@@ -304,7 +308,7 @@ class QuestRewardReader(BaseParser):
             item = row['BaseItemTypesKey']
             quest = row['QuestKey']
             character = row['CharactersKey']
-            itemcls = item['ItemClassesKey']['Name']
+            itemcls = item['ItemClassesKey']['Id']
 
             # Format the data
             data = OrderedDict()
@@ -314,17 +318,14 @@ class QuestRewardReader(BaseParser):
             # Quest not implemented or buggy or master stuff
             if not data['quest']:
                 continue
-            # Any of the quest branches gives the reward and disables the other
-            if data['quest'] == 'Victario\'s Secrets':
-                if data['quest_id'] != 'a3q11':
-                    continue
             data['act'] = quest['Act']
 
-            # TODO: Unused class_id atm, only for sorting
             if character is not None:
                 data['classes'] = character['Name']
 
-            rarity = row['RarityKey'].name_upper
+            if row['RarityKey'] != RARITY.ANY:
+                rarity = self.rr['ClientStrings.dat'].index['Id'][
+                    'ItemDisplayString' + row['RarityKey'].name_upper]['Text']
 
             sockets = row['SocketGems']
             if sockets:
@@ -333,30 +334,44 @@ class QuestRewardReader(BaseParser):
             name = item['Name']
 
             # Some of unique items follow special rules
-            if itemcls == 'Quest Items' and name.startswith('Book of'):
+            if itemcls == 'QuestItem' and 'Book' in item['Id']:
                 name = '%s (%s)' % (name, data['quest'])
-            elif itemcls == 'Maps':
-                name = '%s (War for the Atlas)' % name
+            elif itemcls == 'Map':
+                name = '%s (%s)' % (
+                    name, self.rr['MapSeries.dat'].index['Id']['MapWorlds']
+                )
             # Non non quest items or skill gems have their rarity added
-            if itemcls not in {'Active Skill Gems', 'Support Skill Gems',
-                               'Quest Items', 'Stackable Currency'}:
+            if itemcls not in {'Active Skill Gem', 'Support Skill Gem',
+                               'QuestItem', 'StackableCurrency'}:
                 data['item_level'] = row['ItemLevel']
                 data['rarity'] = rarity
                 # Unique and not a quest item or gem
                 if row['RarityKey'] == RARITY.ANY:
                     uid = row['Key0']
-                    if uid in self._ITEM_MAP:
-                        name = self._ITEM_MAP[uid]
-                        data['rarity'] = RARITY.UNIQUE.name_upper
+                    item_map = self._ITEM_MAP.get(config.get_option('language'))
+                    if item_map is None:
+                        warnings.warn(
+                             'No unique item mapping defined for the current '
+                             'language'
+                        )
+                    elif uid in item_map:
+                        name = item_map[uid]
+                        data['rarity'] = self.rr['ClientStrings.dat'].index[
+                            'Id']['ItemDisplayStringUnique']['Text']
                     else:
-                        warnings.warn('Uncaptured unique item. %s %s %s' % (uid, data['quest'], name))
+                        warnings.warn(
+                            'Uncaptured unique item. %s %s %s' % (
+                                uid, data['quest'], name)
+                        )
 
-            if item['Name'] == 'Two-Stone Ring':
-                itemid = item['ItemVisualIdentityKey']['Id']
-                if itemid in self._TWO_STONE_MAP:
-                    name = self._TWO_STONE_MAP[itemid]
-                else:
-                    warnings.warn('Fix ItemID for two-stones')
+            # Two stone rings
+            two_stone_map = self._TWO_STONE_MAP.get(
+                config.get_option('language'))
+            if two_stone_map is None:
+                warnings.warn(
+                    'No two stone ring mapping for the current language')
+            elif item['Id'] in two_stone_map:
+                name = two_stone_map[item['Id']]
             data['reward'] = name
 
             # Add to formatting list
@@ -435,11 +450,13 @@ class QuestRewardReader(BaseParser):
                     else:
                         compress[key] = data
 
+        classes_set = {row['Name'] for row in self.rr['Characters.dat']}
+
         for k, v in compress.items():
             if 'classes' not in v:
                 continue
             classes = set(v['classes'].split(self._UNIT_SEP))
-            if len(self._CLASSES.difference(classes)) == 0:
+            if len(classes_set.difference(classes)) == 0:
                 del v['classes']
             else:
                 v['classes'] = self._UNIT_SEP.join(sorted(classes))

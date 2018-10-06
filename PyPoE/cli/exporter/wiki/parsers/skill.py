@@ -675,7 +675,7 @@ class SkillParser(SkillParserShared):
                         'condition': cond,
                     },
                 ],
-                wiki_message='Area updater',
+                wiki_message='Skill updater',
             )
 
         return r

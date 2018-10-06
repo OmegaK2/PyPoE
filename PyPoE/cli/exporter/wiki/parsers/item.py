@@ -286,10 +286,13 @@ class ProphecyParser(SkillParserShared):
 
             infobox = OrderedDict()
 
-            infobox['rarity'] = 'Normal'
+            infobox['rarity'] = self.rr['ClientStrings.dat'].index['Id'][
+                'ItemDisplayStringNormal']['Text']
             infobox['name'] = name
-            infobox['class'] = 'Stackable Currency'
-            infobox['base_item_page'] = 'Prophecy'
+            infobox['class'] = self.rr['ItemClasses.dat'].index['Id'][
+                'StackableCurrency']['Name']
+            infobox['base_item_id'] = \
+                'Metadata/Items/Currency/CurrencyItemisedProphecy'
             infobox['flavour_text'] = prophecy['FlavourText']
             infobox['prophecy_id'] = prophecy['Id']
             infobox['prediction_text'] = prophecy['PredictionText']
@@ -353,28 +356,29 @@ class ItemsParser(SkillParserShared):
     )
 
     _IGNORE_DROP_LEVEL_CLASSES = (
-        'Hideout Doodads',
-        'Microtransactions',
-        'Labyrinth Item',
-        'Labyrinth Trinket',
-        'Labyrinth Map Item',
+        'HideoutDoodad',
+        'Microtransaction',
+        'LabyrinthItem',
+        'LabyrinthTrinket',
+        'LabyrinthMapItem',
     )
 
-    _IGNORE_DROP_LEVEL_ITEMS = {
-        'Alchemy Shard',
-        'Alteration Shard',
-        'Enchant',
-        'Imprint',
-        'Transmutation Shard',
-        'Scroll Fragment',
-    }
-
-    _DROP_DISABLED_ITEMS = {
-        'Eternal Orb',
+    _IGNORE_DROP_LEVEL_ITEMS_BY_ID = {
+        # Alchemy Shard
+        'Metadata/Items/Currency/CurrencyUpgradeToRareShard',
+        # Alteration Shard
+        'Metadata/Items/Currency/CurrencyRerollMagicShard',
+        'Metadata/Items/Currency/CurrencyLabyrinthEnchant',
+        'Metadata/Items/Currency/CurrencyImprint',
+        # Transmute Shard
+        'Metadata/Items/Currency/CurrencyUpgradeToMagicShard',
+        'Metadata/Items/Currency/CurrencyIdentificationShard'
     }
 
     _DROP_DISABLED_ITEMS_BY_ID = {
         'Metadata/Items/Quivers/QuiverDescent',
+        # Eternal Orb
+        'Metadata/Items/Currency/CurrencyImprintOrb',
     }
 
     _NAME_OVERRIDE_BY_ID = {
@@ -541,9 +545,9 @@ class ItemsParser(SkillParserShared):
     }
 
     _attribute_map = OrderedDict((
-        ('Str', 'Strength'),
-        ('Dex', 'Dexterity'),
-        ('Int', 'Intelligence'),
+        ('Str', 'strength'),
+        ('Dex', 'dexterity'),
+        ('Int', 'intelligence'),
     ))
 
     def __init__(self, *args, **kwargs):
@@ -561,7 +565,7 @@ class ItemsParser(SkillParserShared):
         for attr_short, attr_long in self._attribute_map.items():
             if not skill_gem[attr_short]:
                 continue
-            infobox[attr_long.lower() + '_percent'] = skill_gem[attr_short]
+            infobox[attr_long + '_percent'] = skill_gem[attr_short]
 
         infobox['gem_tags'] = ', '.join(
             [gt['Tag'] for gt in skill_gem['GemTagsKeys'] if gt['Tag']]
@@ -609,9 +613,9 @@ class ItemsParser(SkillParserShared):
             'Dex': 'dexterity_requirement',
         }
 
-        if base_item_type['ItemClassesKey']['Name'] == 'Active Skill Gems':
+        if base_item_type['ItemClassesKey']['Id'] == 'Active Skill Gem':
             gtype = GemTypes.active
-        elif base_item_type['ItemClassesKey']['Name'] == 'Support Skill Gems':
+        elif base_item_type['ItemClassesKey']['Id'] == 'Support Skill Gem':
             gtype = GemTypes.support
 
         # +1 for gem levels starting at 1
@@ -1104,55 +1108,55 @@ class ItemsParser(SkillParserShared):
 
     _cls_map = {
         # Jewellery
-        'Amulets': (_type_amulet, ),
+        'Amulet': (_type_amulet, ),
         # Armour types
         'Gloves': (_type_level, _type_attribute, _type_armour, ),
         'Boots': (_type_level, _type_attribute, _type_armour, ),
-        'Body Armours': (_type_level, _type_attribute, _type_armour, ),
-        'Helmets': (_type_level, _type_attribute, _type_armour, ),
-        'Shields': (_type_level, _type_attribute, _type_armour, _type_shield),
+        'Body Armour': (_type_level, _type_attribute, _type_armour, ),
+        'Helmet': (_type_level, _type_attribute, _type_armour, ),
+        'Shield': (_type_level, _type_attribute, _type_armour, _type_shield),
         # Weapons
-        'Claws': (_type_level, _type_attribute, _type_weapon, ),
-        'Daggers': (_type_level, _type_attribute, _type_weapon, ),
-        'Wands': (_type_level, _type_attribute, _type_weapon, ),
-        'One Hand Swords': (_type_level, _type_attribute, _type_weapon, ),
-        'Thrusting One Hand Swords': (
+        'Claw': (_type_level, _type_attribute, _type_weapon, ),
+        'Dagger': (_type_level, _type_attribute, _type_weapon, ),
+        'Wand': (_type_level, _type_attribute, _type_weapon, ),
+        'One Hand Sword': (_type_level, _type_attribute, _type_weapon, ),
+        'Thrusting One Hand Sword': (
             _type_level, _type_attribute, _type_weapon,
         ),
-        'One Hand Axes': (_type_level, _type_attribute, _type_weapon, ),
-        'One Hand Maces': (_type_level, _type_attribute, _type_weapon, ),
+        'One Hand Axe': (_type_level, _type_attribute, _type_weapon, ),
+        'One Hand Mace': (_type_level, _type_attribute, _type_weapon, ),
         'Bows': (_type_level, _type_attribute, _type_weapon, ),
-        'Staves': (_type_level, _type_attribute, _type_weapon, ),
-        'Two Hand Swords': (_type_level, _type_attribute, _type_weapon, ),
-        'Two Hand Axes': (_type_level, _type_attribute, _type_weapon, ),
-        'Two Hand Maces': (_type_level, _type_attribute, _type_weapon, ),
-        'Sceptres': (_type_level, _type_attribute, _type_weapon, ),
-        'Fishing Rods': (_type_level, _type_attribute, _type_weapon, ),
+        'Staff': (_type_level, _type_attribute, _type_weapon, ),
+        'Two Hand Sword': (_type_level, _type_attribute, _type_weapon, ),
+        'Two Hand Axe': (_type_level, _type_attribute, _type_weapon, ),
+        'Two Hand Mace': (_type_level, _type_attribute, _type_weapon, ),
+        'Sceptre': (_type_level, _type_attribute, _type_weapon, ),
+        'FishingRod': (_type_level, _type_attribute, _type_weapon, ),
         # Flasks
-        'Life Flasks': (_type_level, _type_flask, _type_flask_charges),
-        'Mana Flasks': (_type_level, _type_flask, _type_flask_charges),
-        'Hybrid Flasks': (_type_level, _type_flask, _type_flask_charges),
-        'Utility Flasks': (_type_level, _type_flask, _type_flask_charges),
-        'Critical Utility Flasks': (_type_level, _type_flask,
+        'LifeFlask': (_type_level, _type_flask, _type_flask_charges),
+        'ManaFlask': (_type_level, _type_flask, _type_flask_charges),
+        'HybridFlask': (_type_level, _type_flask, _type_flask_charges),
+        'UtilityFlask': (_type_level, _type_flask, _type_flask_charges),
+        'UtilityFlaskCritical': (_type_level, _type_flask,
                                     _type_flask_charges),
         # Gems
-        'Active Skill Gems': (_skill_gem, ),
-        'Support Skill Gems': (_skill_gem, ),
+        'Active Skill Gem': (_skill_gem, ),
+        'Support Skill Gem': (_skill_gem, ),
         # Currency-like items
         'Currency': (_type_currency, ),
-        'Stackable Currency': (_type_currency, _type_essence),
+        'StackableCurrency': (_type_currency, _type_essence),
         'Delve Socketable Currency': (_type_currency, ),
-        'Hideout Doodads': (_type_currency, _type_hideout_doodad),
-        'Microtransactions': (_type_currency, ),
+        'HideoutDoodad': (_type_currency, _type_hideout_doodad),
+        'Microtransaction': (_type_currency, ),
         'Divination Card': (_type_currency, ),
         # Labyrinth stuff
-        #'Labyrinth Item': (),
-        'Labyrinth Trinket': (_type_labyrinth_trinket, ),
-        #'Labyrinth Map Item': (),
+        #'LabyrinthItem': (),
+        'LabyrinthTrinket': (_type_labyrinth_trinket, ),
+        #'LabyrinthMapItem': (),
         # Misc
-        'Maps': (_type_map,),
-        #'Map Fragments': (_type_,),
-        'Quest Items': (),
+        'Map': (_type_map,),
+        #'MapFragment': (_type_,),
+        'QuestItem': (),
     }
 
     _conflict_boots_map = {
@@ -1481,15 +1485,15 @@ class ItemsParser(SkillParserShared):
     _conflict_resolver_map = {
         'Boots': _conflict_boots,
         'Gloves': _conflict_gloves,
-        'Quivers': _conflict_quivers,
-        'Amulets': _conflict_amulets,
-        'Active Skill Gems': _conflict_active_skill_gems,
-        'Quest Items': _conflict_quest_items,
-        'Hideout Doodads': _conflict_hideout_doodad,
-        'Maps': _conflict_maps,
-        'Map Fragments': _conflict_map_fragments,
-        'Microtransactions': _conflict_microtransactions,
-        'Piece': _conflict_piece,
+        'Quiver': _conflict_quivers,
+        'Amulet': _conflict_amulets,
+        'Active Skill Gem': _conflict_active_skill_gems,
+        'QuestItem': _conflict_quest_items,
+        'HideoutDoodad': _conflict_hideout_doodad,
+        'Map': _conflict_maps,
+        'MapFragment': _conflict_map_fragments,
+        'Microtransaction': _conflict_microtransactions,
+        'UniqueFragment': _conflict_piece,
     }
 
     def _parse_class_filter(self, parsed_args):
@@ -1562,15 +1566,18 @@ class ItemsParser(SkillParserShared):
 
         for base_item_type in items:
             name = base_item_type['Name']
-            cls = base_item_type['ItemClassesKey']['Name']
+            cls_id = base_item_type['ItemClassesKey']['Id']
+            m_id = base_item_type['Id']
 
             infobox = OrderedDict()
 
-            infobox['rarity'] = 'Normal'
+            infobox['rarity'] = self.rr['ClientStrings.dat'].index['Id'][
+                'ItemDisplayStringNormal']['Text']
 
             # BaseItemTypes.dat
             infobox['name'] = name
-            infobox['class'] = cls
+            infobox['class'] = base_item_type['ItemClassesKey']['Name']
+            infobox['class_id'] = base_item_type['ItemClassesKey']['Id']
             infobox['size_x'] = base_item_type['Width']
             infobox['size_y'] = base_item_type['Height']
             if base_item_type['FlavourTextKey']:
@@ -1580,15 +1587,15 @@ class ItemsParser(SkillParserShared):
                         text=base_item_type['FlavourTextKey']['Text'],
                     )
 
-            if cls not in self._IGNORE_DROP_LEVEL_CLASSES and \
-                    name not in self._IGNORE_DROP_LEVEL_ITEMS:
+            if cls_id not in self._IGNORE_DROP_LEVEL_CLASSES and \
+                    m_id not in self._IGNORE_DROP_LEVEL_ITEMS_BY_ID:
                 infobox['drop_level'] = base_item_type['DropLevel']
 
             base_ot = OTFile(parent_or_base_dir_or_ggpk=self.base_path)
             base_ot.read(
                 self.base_path + '/' + base_item_type['InheritsFrom'] + '.ot')
             try:
-                ot = self.ot[base_item_type['Id'] + '.ot']
+                ot = self.ot[m_id + '.ot']
             except FileNotFoundError:
                 pass
             else:
@@ -1598,13 +1605,15 @@ class ItemsParser(SkillParserShared):
 
             if 'enable_rarity' in ot['Mods']:
                 infobox['drop_rarities'] = ', '.join([
-                    n[0].upper() + n[1:] for n in ot['Mods']['enable_rarity']
+                    self.rr['ClientStrings.dat'].index['Id'][
+                        'ItemDisplayString' + n[0].upper() + n[1:]]['Text']
+                    for n in ot['Mods']['enable_rarity']
                 ])
 
             tags = [t['Id'] for t in base_item_type['TagsKeys']]
             infobox['tags'] = ', '.join(tags + list(ot['Base']['tag']))
 
-            infobox['metadata_id'] = base_item_type['Id']
+            infobox['metadata_id'] = m_id
 
             description = ot['Stack'].get('function_text')
             if description:
@@ -1629,15 +1638,15 @@ class ItemsParser(SkillParserShared):
                     infobox[prefix + '_name'] = item['Name']
                     infobox[prefix + '_amount'] = cost
 
-            funcs = self._cls_map.get(cls)
+            funcs = self._cls_map.get(cls_id)
             if funcs:
                 fail = False
                 for f in funcs:
                     if not f(self, infobox, base_item_type):
                         fail = True
                         console(
-                            'Required extra info for item "%s" with class "%s"'
-                            ' not found. Skipping.' % (name, cls),
+                            'Required extra info for item "%s" with class id '
+                            '"%s" not found. Skipping.' % (name, cls_id),
                             msg=Msg.error)
                         break
                 if fail:
@@ -1646,8 +1655,8 @@ class ItemsParser(SkillParserShared):
             # handle items with duplicate name entries
             # Maps must be handled in any case due to unique naming style of
             # pages
-            if cls == 'Maps' or len(self.rr['BaseItemTypes.dat'].index['Name'][name]) > 1:
-                resolver = self._conflict_resolver_map.get(cls)
+            if cls_id == 'Map' or len(self.rr['BaseItemTypes.dat'].index['Name'][name]) > 1:
+                resolver = self._conflict_resolver_map.get(cls_id)
 
                 if resolver:
                     name = resolver(self, infobox, base_item_type)
@@ -1655,22 +1664,21 @@ class ItemsParser(SkillParserShared):
                         console(
                             'Unresolved ambiguous item "%s" with name "%s". '
                             'Skipping' %
-                            (base_item_type['Id'], infobox['name']),
+                            (m_id, infobox['name']),
                             msg=Msg.error
                         )
                         continue
                 else:
-                    console('No name conflict handler defined for item class '
-                            '"%s"' % cls, msg=Msg.error)
+                    console('No name conflict handler defined for item class id'
+                            ' "%s"' % cls_id, msg=Msg.error)
                     continue
-            override = self._NAME_OVERRIDE_BY_ID.get(base_item_type['Id'])
+            override = self._NAME_OVERRIDE_BY_ID.get(m_id)
             if override is not None:
                 name = override
                 infobox['inventory_icon'] = override
 
             # putting this last since it's usually manually added
-            if base_item_type['Name'] in self._DROP_DISABLED_ITEMS or \
-                    base_item_type['Id'] in self._DROP_DISABLED_ITEMS_BY_ID:
+            if m_id in self._DROP_DISABLED_ITEMS_BY_ID:
                 infobox['drop_enabled'] = False
 
             cond = WikiCondition(

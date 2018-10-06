@@ -59,6 +59,13 @@ __all__ = ['ExporterHandler', 'ExporterResult', 'WikiHandler']
 
 
 class WikiHandler(object):
+    _wiki_pages = {
+        'English': 'pathofexile.gamepedia.com',
+        'Russian': 'pathofexile-ru.gamepedia.com',
+        #'German': 'pathofexile-de.gamepedia.com',
+        'French': 'pathofexile-fr.gamepedia.com',
+    }
+
     def add_arguments(self, parser):
         parser.add_argument(
             '-w', '--wiki',
@@ -223,6 +230,13 @@ class WikiHandler(object):
 
     def handle(self, *a, mwclient, result, cmdargs, parser):
         # First row is handled separately to prompt the user for his password
+        url = self._wiki_pages.get(config.get_option('language'))
+        if url is None:
+            console(
+                'There is no wiki defined for language "%s"' % cmdargs.language,
+                msg=Msg.error
+            )
+            return
         self.site = mwclient.Site(
             ('https', 'pathofexile.gamepedia.com'),
             path='/'
