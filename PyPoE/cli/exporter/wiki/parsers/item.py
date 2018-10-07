@@ -141,7 +141,7 @@ class WikiCondition(parser.WikiCondition):
         'prophecy_reward',
     )
     COPY_MATCH = re.compile(
-        r'^(upgraded_from_set|implicit[0-9]+_text).*'
+        r'^(upgraded_from_set|implicit[0-9]+_(?:text|random_list)).*'
         , re.UNICODE)
 
     NAME = 'Base item'
@@ -390,7 +390,9 @@ class ItemsParser(SkillParserShared):
 
     # Unreleased or disabled items to avoid exporting to the wiki
     _SKIP_ITEMS_BY_ID = {
+        #
         # Active Skill Gems
+        #
         'Metadata/Items/Gems/SkillGemBackstab',
         'Metadata/Items/Gems/SkillGemBladeTrap',
         'Metadata/Items/Gems/SkillGemCaptureMonster',
@@ -427,14 +429,18 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/Gems/SkillGemVortexMine',
         'Metadata/Items/Gems/SkillGemWandTeleport',
 
+        #
         # Support Skill Gems
+        #
         'Metadata/Items/Gems/SupportGemCastLinkedCursesOnCurse',
         'Metadata/Items/Gems/SupportGemSplit',
         'Metadata/Items/Gems/SupportGemReturn',
         'Metadata/Items/Gems/SupportGemTemporaryForTutorial',
         'Metadata/Items/Gems/SupportGemVaalSoulHarvesting',
 
+        #
         # MTX
+        #
         'Metadata/Items/MicrotransactionSkillEffects/MicrotransactionSpectralThrowEbony',
         'Metadata/Items/MicrotransactionItemEffects/MicrotransactionFirstBlood',
         'Metadata/Items/MicrotransactionItemEffects/MicrotransactionFirstBloodWeaponEffect',
@@ -544,6 +550,54 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge10_5',
         'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge10_6',
         'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge10_7',
+
+        #
+        # Hideout Doodads
+        #
+
+        # Hideout totem test variants, not needed
+        'Metadata/Items/Hideout/HideoutTotemPoleTest',
+        'Metadata/Items/Hideout/HideoutTotemPole2Test',
+        'Metadata/Items/Hideout/HideoutTotemPole3Test',
+        'Metadata/Items/Hideout/HideoutTotemPole4Test',
+        'Metadata/Items/Hideout/HideoutTotemPole5Test',
+        'Metadata/Items/Hideout/HideoutTotemPole6Test',
+        'Metadata/Items/Hideout/HideoutTotemPole7Test',
+        'Metadata/Items/Hideout/HideoutTotemPole8Test',
+        'Metadata/Items/Hideout/HideoutTotemPole9Test',
+        'Metadata/Items/Hideout/HideoutTotemPole10Test',
+        'Metadata/Items/Hideout/HideoutTotemPole11Test',
+        'Metadata/Items/Hideout/HideoutTotemPole12Test',
+        'Metadata/Items/Hideout/HideoutTotemPole13Test',
+
+        #
+        # Stackable currency
+        #
+
+        # Currency variants of fragments for the stash tab. Not needed
+        'Metadata/Items/MapFragments/CurrencyVaalFragment1_1',
+        'Metadata/Items/MapFragments/CurrencyVaalFragment1_2',
+        'Metadata/Items/MapFragments/CurrencyVaalFragment1_3',
+        'Metadata/Items/MapFragments/CurrencyVaalFragment1_4',
+        'Metadata/Items/MapFragments/CurrencyVaalFragment2_1',
+        'Metadata/Items/MapFragments/CurrencyVaalFragment2_2',
+        'Metadata/Items/MapFragments/CurrencyVaalFragment2_3',
+        'Metadata/Items/MapFragments/CurrencyVaalFragment2_4',
+        'Metadata/Items/MapFragments/CurrencyProphecyFragment1',
+        'Metadata/Items/MapFragments/CurrencyProphecyFragment2',
+        'Metadata/Items/MapFragments/CurrencyProphecyFragment3',
+        'Metadata/Items/MapFragments/CurrencyProphecyFragment4',
+        'Metadata/Items/MapFragments/CurrencyShaperFragment1',
+        'Metadata/Items/MapFragments/CurrencyShaperFragment2',
+        'Metadata/Items/MapFragments/CurrencyShaperFragment3',
+        'Metadata/Items/MapFragments/CurrencyShaperFragment4',
+        'Metadata/Items/MapFragments/CurrencyFragmentPantheonFlask',
+        'Metadata/Items/MapFragments/CurrencyBreachFragmentFire',
+        'Metadata/Items/MapFragments/CurrencyBreachFragmentCold',
+        'Metadata/Items/MapFragments/CurrencyBreachFragmentLightning',
+        'Metadata/Items/MapFragments/CurrencyBreachFragmentPhysical',
+        'Metadata/Items/MapFragments/CurrencyBreachFragmentChaos',
+        'Metadata/Items/MapFragments/CurrencyOfferingToTheGoddess',
     }
 
     _attribute_map = OrderedDict((
@@ -1128,7 +1182,7 @@ class ItemsParser(SkillParserShared):
         ),
         'One Hand Axe': (_type_level, _type_attribute, _type_weapon, ),
         'One Hand Mace': (_type_level, _type_attribute, _type_weapon, ),
-        'Bows': (_type_level, _type_attribute, _type_weapon, ),
+        'Bow': (_type_level, _type_attribute, _type_weapon, ),
         'Staff': (_type_level, _type_attribute, _type_weapon, ),
         'Two Hand Sword': (_type_level, _type_attribute, _type_weapon, ),
         'Two Hand Axe': (_type_level, _type_attribute, _type_weapon, ),
@@ -1148,10 +1202,10 @@ class ItemsParser(SkillParserShared):
         # Currency-like items
         'Currency': (_type_currency, ),
         'StackableCurrency': (_type_currency, _type_essence),
-        'Delve Socketable Currency': (_type_currency, ),
+        'DelveSocketableCurrency': (_type_currency, ),
         'HideoutDoodad': (_type_currency, _type_hideout_doodad),
         'Microtransaction': (_type_currency, ),
-        'Divination Card': (_type_currency, ),
+        'DivinationCard': (_type_currency, ),
         # Labyrinth stuff
         #'LabyrinthItem': (),
         'LabyrinthTrinket': (_type_labyrinth_trinket, ),
@@ -1387,11 +1441,7 @@ class ItemsParser(SkillParserShared):
         return name
 
     def _conflict_map_fragments(self, infobox, base_item_type):
-        id = base_item_type['Id'].replace('Metadata/Items/MapFragments/', '')
-        if id.startswith('CurrencyVaal'):
-            return base_item_type['Name']
-
-        return
+        return base_item_type['Name']
 
     _conflict_microtransactions_map = {
         'Metadata/Items/MicrotransactionCurrency/MysteryBox1x1':
@@ -1485,6 +1535,15 @@ class ItemsParser(SkillParserShared):
             infobox['inventory_icon'] = base_item_type['Name'] + appendix
             return base_item_type['Name'] + appendix
 
+    def _conflict_divination_card(self, infobox, base_item_type):
+        return '%s (divination card)' % base_item_type['Name']
+
+    def _conflict_labyrinth_map_item(self, infobox, base_item_type):
+        return base_item_type['Name']
+
+    def _conflict_misc_map_item(self, infobox, base_item_type):
+        return base_item_type['Name']
+
     _conflict_resolver_map = {
         'Boots': _conflict_boots,
         'Gloves': _conflict_gloves,
@@ -1497,6 +1556,9 @@ class ItemsParser(SkillParserShared):
         'MapFragment': _conflict_map_fragments,
         'Microtransaction': _conflict_microtransactions,
         'UniqueFragment': _conflict_piece,
+        'DivinationCard': _conflict_divination_card,
+        'LabyrinthMapItem': _conflict_labyrinth_map_item,
+        'MiscMapItem': _conflict_misc_map_item,
     }
 
     def _parse_class_filter(self, parsed_args):
@@ -1566,6 +1628,7 @@ class ItemsParser(SkillParserShared):
 
         r = ExporterResult()
         self.rr['BaseItemTypes.dat'].build_index('Name')
+        self.rr['Prophecies.dat'].build_index('Name')
 
         for base_item_type in items:
             name = base_item_type['Name']
@@ -1658,7 +1721,9 @@ class ItemsParser(SkillParserShared):
             # handle items with duplicate name entries
             # Maps must be handled in any case due to unique naming style of
             # pages
-            if cls_id == 'Map' or len(self.rr['BaseItemTypes.dat'].index['Name'][name]) > 1:
+            if cls_id == 'Map' or \
+                    len(self.rr['BaseItemTypes.dat'].index['Name'][name] +
+                        self.rr['Prophecies.dat'].index['Name'][name]) > 1:
                 resolver = self._conflict_resolver_map.get(cls_id)
 
                 if resolver:
