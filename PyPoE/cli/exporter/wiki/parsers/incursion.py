@@ -45,6 +45,7 @@ from collections import OrderedDict
 
 # self
 from PyPoE.cli.core import console, Msg
+from PyPoE.cli.exporter import config
 from PyPoE.cli.exporter.wiki import parser
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult
 from PyPoE.poe.file.ggpk import extract_dds
@@ -151,6 +152,11 @@ class IncursionRoomParser(parser.BaseParser):
         #    'condition': lambda value: value is not None,
         #}),
     ))
+
+    _incursion_room_page_name = {
+        'English': 'incursion room',
+        'Russian': 'комната вмешательства',
+    }
 
     def by_rowid(self, parsed_args):
         return self.export(
@@ -278,7 +284,11 @@ class IncursionRoomParser(parser.BaseParser):
                         'condition': cond,
                     },
                     {
-                        'page': data['name'] + ' (incursion room)',
+                        'page': data['name'] + ' (%s)' % (
+                            self._incursion_room_page_name[
+                                config.get_option('language')
+                            ]
+                        ),
                         'condition': cond,
                     }
                 ],
