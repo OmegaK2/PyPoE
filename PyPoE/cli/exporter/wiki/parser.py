@@ -1050,6 +1050,7 @@ class WikiCondition(object):
     COPY_MATCH = None
 
     NAME = NotImplemented
+    MATCH = None
     INDENT = 33
     ADD_INCLUDE = False
 
@@ -1064,7 +1065,8 @@ class WikiCondition(object):
         if page is not None:
             # Abuse this so it can be called as "text" and "condition"
             if self.template_arguments is None:
-                self.template_arguments = find_template(page.text(), self.NAME)
+                self.template_arguments = find_template(
+                    page.text(), self.MATCH or self.NAME)
                 if len(self.template_arguments['texts']) == 1:
                     self.template_arguments = None
                     return False

@@ -145,6 +145,7 @@ class WikiCondition(parser.WikiCondition):
         , re.UNICODE)
 
     NAME = 'Base item'
+    MATCH = '(?:Item|Base item)'
     INDENT = 40
     ADD_INCLUDE = False
 
@@ -331,9 +332,9 @@ class ProphecyParser(SkillParserShared):
 
 class ItemsParser(SkillParserShared):
     _regex_format = re.compile(
-        '(?P<index>x|y|z)'
-        '(?:[\W]*)'
-        '(?P<tag>%|second)',
+        r'(?P<index>x|y|z)'
+        r'(?:[\W]*)'
+        r'(?P<tag>%|second)',
         re.IGNORECASE
     )
 
