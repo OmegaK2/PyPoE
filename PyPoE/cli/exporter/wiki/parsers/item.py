@@ -23,6 +23,9 @@ Agreement
 ===============================================================================
 
 See PyPoE/LICENSE
+
+# TODO
+Kishara's Star (item)
 """
 
 # =============================================================================
@@ -144,10 +147,17 @@ class WikiCondition(parser.WikiCondition):
         r'^(upgraded_from_set|implicit[0-9]+_(?:text|random_list)).*'
         , re.UNICODE)
 
-    NAME = 'Base item'
     MATCH = '(?:Item|Base item)'
     INDENT = 40
     ADD_INCLUDE = False
+
+
+class ItemWikiCondition(WikiCondition):
+    NAME = 'Base item'
+
+
+class ProphecyWikiCondition(WikiCondition):
+    NAME = 'Item'
 
 
 class ItemsHandler(ExporterHandler):
@@ -291,8 +301,7 @@ class ProphecyParser(SkillParserShared):
             infobox['rarity'] = self.rr['ClientStrings.dat'].index['Id'][
                 'ItemDisplayStringNormal']['Text']
             infobox['name'] = name
-            infobox['class'] = self.rr['ItemClasses.dat'].index['Id'][
-                'StackableCurrency']['Name']
+            infobox['class_id'] = 'StackableCurrency'
             infobox['base_item_id'] = \
                 'Metadata/Items/Currency/CurrencyItemisedProphecy'
             infobox['flavour_text'] = prophecy['FlavourText']
@@ -312,7 +321,7 @@ class ProphecyParser(SkillParserShared):
                             msg=Msg.error)
                     continue
                 name += extra
-            cond = WikiCondition(
+            cond = ProphecyWikiCondition(
                 data=infobox,
                 cmdargs=parsed_args,
             )
@@ -384,8 +393,182 @@ class ItemsParser(SkillParserShared):
     }
 
     _NAME_OVERRIDE_BY_ID = {
-        'Metadata/Items/Hideout/HideoutLightningCoil':
-            'Lightning Coil (Decoration)',
+        'English': {
+            # =================================================================
+            # One Hand Axes
+            # =================================================================
+
+            'Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/OneHandAxe22':
+                '',
+            # =================================================================
+            # Boots
+            # =================================================================
+
+            'Metadata/Items/Armours/Boots/BootsInt4': '',
+            # Legion Boots
+            'Metadata/Items/Armours/Boots/BootsStrInt7': '',
+            'Metadata/Items/Armours/Boots/BootsAtlas1':
+                ' (Cold and Lightning Resistance)',
+            'Metadata/Items/Armours/Boots/BootsAtlas2':
+                ' (Fire and Cold Resistance)',
+            'Metadata/Items/Armours/Boots/BootsAtlas3':
+                ' (Fire and Lightning Resistance)',
+            # =================================================================
+            # Gloves
+            # =================================================================
+
+            # Legion Gloves
+            'Metadata/Items/Armours/Gloves/GlovesStrInt7': '',
+            # =================================================================
+            # Quivers
+            # =================================================================
+
+            'Metadata/Items/Quivers/QuiverDescent': ' (Descent)',
+            # =================================================================
+            # Rings
+            # =================================================================
+
+            'Metadata/Items/Rings/Ring12': " (ruby and topaz)",
+            'Metadata/Items/Rings/Ring13': " (sapphire and topaz)",
+            'Metadata/Items/Rings/Ring14': " (ruby and sapphire)",
+            # =================================================================
+            # Amulets
+            # =================================================================
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_1':
+                ' (Fire Damage taken as Cold Damage)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_2':
+                ' (Fire Damage taken as Lightning Damage)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_3':
+                ' (Cold Damage taken as Fire Damage)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_4':
+                ' (Cold Damage taken as Lightning Damage)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_5':
+                ' (Lightning Damage taken as Cold Damage)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_6':
+                ' (Lightning Damage taken as Fire Damage)',
+            'Metadata/Items/Amulets/Talismans/Talisman3_6_1':
+                '  (Power Charge on Kill)',
+            'Metadata/Items/Amulets/Talismans/Talisman3_6_2':
+                '  (Frenzy Charge on Kill)',
+            'Metadata/Items/Amulets/Talismans/Talisman3_6_3':
+                '  (Endurance Charge on Kill)',
+            # =================================================================
+            # Hideout Doodads
+            # =================================================================
+
+            'Metadata/Items/Hideout/HideoutLightningCoil': " (Decoration)",
+            # =================================================================
+            # Piece
+            # =================================================================
+
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_1':
+                ' (1 of 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_2':
+                ' (2 of 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_3':
+                ' (3 of 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_4':
+                ' (4 of 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_1':
+                ' (1 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_2':
+                ' (2 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_3':
+                ' (3 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_1':
+                ' (1 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_2':
+                ' (2 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_3':
+                ' (3 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_1':
+                ' (1 of 2)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_2':
+                ' (2 of 2)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_1':
+                ' (1 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_2':
+                ' (2 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_3':
+                ' (3 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_1':
+                ' (1 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_2':
+                ' (2 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_3':
+                ' (3 of 3)',
+            #
+            # MTX
+            #
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x1':
+                ' (1x1)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x2':
+                ' (1x2)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x3':
+                ' (1x3)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x4':
+                ' (1x4)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x1':
+                ' (2x1)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x2':
+                ' (2x2)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x3':
+                ' (2x3)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x4':
+                ' (2x4)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox3x2':
+                ' (3x2)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox3x3':
+                ' (3x3)',
+            'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+            'IronMaiden': '',
+            'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+            'InfernalAxe': ' (Weapon Skin)',
+            'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+            'ColossusSword': '',
+            'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+            'LegionBoots': ' (microtransaction)',
+            'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+            'LegionGloves': ' (microtransaction)',
+            'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+            'ScholarBoots': ' (microtransaction)',
+            'Metadata/Items/Pets/DemonLion': ' (Pet)',
+            #
+            # Quest items
+            #
+            'Metadata/Items/QuestItems/GoldenPages/Page1':
+                ' (1 of 4)',
+            'Metadata/Items/QuestItems/GoldenPages/Page2':
+                ' (2 of 4)',
+            'Metadata/Items/QuestItems/GoldenPages/Page3':
+                ' (3 of 4)',
+            'Metadata/Items/QuestItems/GoldenPages/Page4':
+                ' (4 of 4)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_1':
+                ' (1 of 2)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_2':
+                ' (2 of 2)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_1':
+                ' (1 of 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_2':
+                ' (2 of 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_3':
+                ' (3 of 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_1':
+                ' (1 of 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_2':
+                ' (2 of 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_3':
+                ' (3 of 3)',
+        },
+        'Russian': {
+            'Metadata/Items/Rings/Ring12':
+                " (рубин и топаз)",
+            'Metadata/Items/Rings/Ring13':
+                " (сапфир и топаз)",
+            'Metadata/Items/Rings/Ring14':
+                " (рубин и сапфир)",
+        },
     }
 
     # Unreleased or disabled items to avoid exporting to the wiki
@@ -468,7 +651,6 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/MicrotransactionItemEffects/MicrotransactionMarkOfThePhoenixPurple',
         'Metadata/Items/MicrotransactionItemEffects/MicrotransactionWuqiWeaponEffect',
         'Metadata/Items/MicrotransactionItemEffects/MicrotransactionBlackguardCape',
-        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionGhostflameCharacterEffect',
         'Metadata/Items/MicrotransactionItemEffects/MicrotransactionDemonhandClaw',
         'Metadata/Items/MicrotransactionItemEffects/MicrotransactionDivineShield',
         'Metadata/Items/MicrotransactionItemEffects/MicrotransactionEldritchWings',
@@ -551,6 +733,93 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge10_6',
         'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge10_7',
 
+        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionTencentInfernalWeapon',
+        'Metadata/Items/MicrotransactionCurrency/MicrotransactionTencentExpandInventory0to1',
+        'Metadata/Items/MicrotransactionCurrency/MicrotransactionTencentExpandInventory1to2',
+        'Metadata/Items/MicrotransactionCurrency/MicrotransactionTencentExpandInventory2to3',
+        'Metadata/Items/MicrotransactionCurrency/MicrotransactionTencentExpandInventory3to4',
+        'Metadata/Items/MicrotransactionCurrency/MicrotransactionTencentExpandInventory4to5',
+        'Metadata/Items/MicrotransactionCurrency/MicrotransactionTencentExpandInventory5to6',
+
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame1_1',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame1_2',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame1_3',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame1_4',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame1_5',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame1_6',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame1_7',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame2_1',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame2_2',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame2_3',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame2_4',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame2_5',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame2_6',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame2_7',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame3_1',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame3_2',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame3_3',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame3_4',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame3_5',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame3_6',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame3_7',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame4_1',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame4_2',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame4_3',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame4_4',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame4_5',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame4_6',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame4_7',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame5_1',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame5_2',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame5_3',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame5_4',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame5_5',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame5_6',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame5_7',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame6_1',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame6_2',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame6_3',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame6_4',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame6_5',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame6_6',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame6_7',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame7_1',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame7_2',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame7_3',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame7_4',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame7_5',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame7_6',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame7_7',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame8_1',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame8_2',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame8_3',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame8_4',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame8_5',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame8_6',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame8_7',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame9_1',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame9_2',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame9_3',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame9_4',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame9_5',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame9_6',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame9_7',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame10_1',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame10_2',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame10_3',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame10_4',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame10_5',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame10_6',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame10_7',
+
+        'Metadata/Items/MicrotrransactionCharacterEffects/MicrotransactionTencentTopPlayerFrame',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentS3HideOutFrame',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentS3FashionFrame',
+        'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentS3BDMasterFrame',
+
+        'Metadata/Items/MicrotransactionCurrency/TradeMarketTab',
+        'Metadata/Items/MicrotransactionCurrency/TradeMarketBuyoutTab',
+
         #
         # Hideout Doodads
         #
@@ -609,6 +878,7 @@ class ItemsParser(SkillParserShared):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._parsed_args = None
+        self._language = config.get_option('language')
 
     def _skill_gem(self, infobox, base_item_type):
         try:
@@ -769,7 +1039,7 @@ class ItemsParser(SkillParserShared):
             stats = [s['Id'] for s in flasks['BuffDefinitionsKey']['StatsKeys']]
             tr = self.tc['stat_descriptions.txt'].get_translation(
                 stats, flasks['BuffStatValues'], full_result=True,
-                lang=config.get_option('language'),
+                lang=self._language,
             )
             infobox['buff_stat_text'] = '<br>'.join([
                 parser.make_inter_wiki_links(line) for line in tr.lines
@@ -842,8 +1112,8 @@ class ItemsParser(SkillParserShared):
 
     def _currency_extra(self, infobox, base_item_type, currency):
         # Add the "shift click to unstack" stuff to currency-ish items
-        if currency['Stacks'] > 1 and infobox['class'] not in \
-                ('Microtransactions', ):
+        if currency['Stacks'] > 1 and infobox['class_id'] not in \
+                ('Microtransaction', ):
             if 'help_text' in infobox:
                 infobox['help_text'] += '<br>'
             else:
@@ -1216,76 +1486,6 @@ class ItemsParser(SkillParserShared):
         'QuestItem': (),
     }
 
-    _conflict_boots_map = {
-        'Metadata/Items/Armours/Boots/BootsAtlas1':
-            ' (Cold and Lightning Resistance)',
-        'Metadata/Items/Armours/Boots/BootsAtlas2':
-            ' (Fire and Cold Resistance)',
-        'Metadata/Items/Armours/Boots/BootsAtlas3':
-            ' (Fire and Lightning Resistance)',
-        # Legion Boots
-        'Metadata/Items/Armours/Boots/BootsStrInt7':
-            '',
-    }
-
-    def _conflict_boots(self, infobox, base_item_type):
-        appendix = self._conflict_boots_map.get(
-            base_item_type['Id'])
-        if appendix is None:
-            return
-        else:
-            infobox['inventory_icon'] = base_item_type['Name'] + appendix
-            return base_item_type['Name'] + appendix
-
-    _conflict_gloves_map = {
-        # Legion Gloves
-        'Metadata/Items/Armours/Gloves/GlovesStrInt7':
-            '',
-    }
-
-    def _conflict_gloves(self, infobox, base_item_type):
-        appendix = self._conflict_gloves_map.get(
-            base_item_type['Id'])
-        if appendix is None:
-            return
-        else:
-            infobox['inventory_icon'] = base_item_type['Name'] + appendix
-            return base_item_type['Name'] + appendix
-
-    _conflict_quivers_map = {
-        'Metadata/Items/Quivers/QuiverDescent': ' (Descent)'
-    }
-
-    _conflict_quivers = _simple_conflict_factory(_conflict_quivers_map)
-
-    _conflict_amulet_id_map = {
-        'Metadata/Items/Amulets/Talismans/Talisman2_6_1':
-            ' (Fire Damage taken as Cold Damage)',
-        'Metadata/Items/Amulets/Talismans/Talisman2_6_2':
-            ' (Fire Damage taken as Lightning Damage)',
-        'Metadata/Items/Amulets/Talismans/Talisman2_6_3':
-            ' (Cold Damage taken as Fire Damage)',
-        'Metadata/Items/Amulets/Talismans/Talisman2_6_4':
-            ' (Cold Damage taken as Lightning Damage)',
-        'Metadata/Items/Amulets/Talismans/Talisman2_6_5':
-            ' (Lightning Damage taken as Cold Damage)',
-        'Metadata/Items/Amulets/Talismans/Talisman2_6_6':
-            ' (Lightning Damage taken as Fire Damage)',
-        'Metadata/Items/Amulets/Talismans/Talisman3_6_1':
-            '  (Power Charge on Kill)',
-        'Metadata/Items/Amulets/Talismans/Talisman3_6_2':
-            '  (Frenzy Charge on Kill)',
-        'Metadata/Items/Amulets/Talismans/Talisman3_6_3':
-            '  (Endurance Charge on Kill)',
-    }
-
-    def _conflict_amulets(self, infobox, base_item_type):
-        appendix = self._conflict_amulet_id_map.get(base_item_type['Id'])
-        if appendix is None:
-            return base_item_type['Name']
-        else:
-            return base_item_type['Name'] + appendix
-
     _conflict_active_skill_gems_map = {
         'Metadata/Items/Gems/SkillGemArcticArmour': True,
         'Metadata/Items/Gems/SkillGemPhaseRun': True,
@@ -1299,33 +1499,6 @@ class ItemsParser(SkillParserShared):
             return
         else:
             return base_item_type['Name']
-
-    _conflict_quest_item_id_map = {
-        'Metadata/Items/QuestItems/GoldenPages/Page1':
-            ' (1 of 4)',
-        'Metadata/Items/QuestItems/GoldenPages/Page2':
-            ' (2 of 4)',
-        'Metadata/Items/QuestItems/GoldenPages/Page3':
-            ' (3 of 4)',
-        'Metadata/Items/QuestItems/GoldenPages/Page4':
-            ' (4 of 4)',
-        'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_1':
-            ' (1 of 2)',
-        'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_2':
-            ' (2 of 2)',
-        'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_1':
-            ' (1 of 3)',
-        'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_2':
-            ' (2 of 3)',
-        'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_3':
-            ' (3 of 3)',
-        'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_1':
-            ' (1 of 3)',
-        'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_2':
-            ' (2 of 3)',
-        'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_3':
-            ' (3 of 3)',
-    }
 
     def _conflict_quest_items(self, infobox, base_item_type):
         name = base_item_type['Name']
@@ -1368,15 +1541,7 @@ class ItemsParser(SkillParserShared):
         elif 'Shaper\'s Orb' in name:
             infobox['inventory_icon'] = 'Shaper\'s Orb'
 
-
-        appendix = self._conflict_quest_item_id_map.get(base_item_type['Id'])
-        if appendix is None:
-            return
-        else:
-            if not base_item_type['Id'].startswith('Metadata/Items/QuestItems/'
-                                                   'MapUpgrades/'):
-                infobox['inventory_icon'] = base_item_type['Name'] + appendix
-            return base_item_type['Name'] + appendix
+        return
 
     def _conflict_hideout_doodad(self, infobox, base_item_type):
         try:
@@ -1443,98 +1608,6 @@ class ItemsParser(SkillParserShared):
     def _conflict_map_fragments(self, infobox, base_item_type):
         return base_item_type['Name']
 
-    _conflict_microtransactions_map = {
-        'Metadata/Items/MicrotransactionCurrency/MysteryBox1x1':
-            ' (1x1)',
-        'Metadata/Items/MicrotransactionCurrency/MysteryBox1x2':
-            ' (1x2)',
-        'Metadata/Items/MicrotransactionCurrency/MysteryBox1x3':
-            ' (1x3)',
-        'Metadata/Items/MicrotransactionCurrency/MysteryBox1x4':
-            ' (1x4)',
-        'Metadata/Items/MicrotransactionCurrency/MysteryBox2x1':
-            ' (2x1)',
-        'Metadata/Items/MicrotransactionCurrency/MysteryBox2x2':
-            ' (2x2)',
-        'Metadata/Items/MicrotransactionCurrency/MysteryBox2x3':
-            ' (2x3)',
-        'Metadata/Items/MicrotransactionCurrency/MysteryBox2x4':
-            ' (2x4)',
-        'Metadata/Items/MicrotransactionCurrency/MysteryBox3x2':
-            ' (3x2)',
-        'Metadata/Items/MicrotransactionCurrency/MysteryBox3x3':
-            ' (3x3)',
-        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionIronMaiden':
-        '',
-        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionInfernalAxe'
-        : ' (Weapon Skin)',
-        'Metadata/Items/MicrotransactionItemEffects/MicrotransactionColossus'
-        'Sword': '',
-        'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
-        'LegionBoots': ' (microtransaction)',
-        'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
-        'LegionGloves': ' (microtransaction)',
-        'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
-        'ScholarBoots': ' (microtransaction)',
-    }
-
-    def _conflict_microtransactions(self, infobox, base_item_type):
-        appendix = self._conflict_microtransactions_map.get(
-            base_item_type['Id'])
-        if appendix is None:
-            return
-        else:
-            infobox['inventory_icon'] = base_item_type['Name'] + appendix
-            return base_item_type['Name'] + appendix
-
-    _conflict_piece_map = {
-        'Metadata/Items/UniqueFragments/FragmentUniqueShield1_1':
-            ' (1 of 4)',
-        'Metadata/Items/UniqueFragments/FragmentUniqueShield1_2':
-            ' (2 of 4)',
-        'Metadata/Items/UniqueFragments/FragmentUniqueShield1_3':
-            ' (3 of 4)',
-        'Metadata/Items/UniqueFragments/FragmentUniqueShield1_4':
-            ' (4 of 4)',
-        'Metadata/Items/UniqueFragments/FragmentUniqueSword1_1':
-            ' (1 of 3)',
-        'Metadata/Items/UniqueFragments/FragmentUniqueSword1_2':
-            ' (2 of 3)',
-        'Metadata/Items/UniqueFragments/FragmentUniqueSword1_3':
-            ' (3 of 3)',
-        'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_1':
-            ' (1 of 3)',
-        'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_2':
-            ' (2 of 3)',
-        'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_3':
-            ' (3 of 3)',
-        'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_1':
-            ' (1 of 2)',
-        'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_2':
-            ' (2 of 2)',
-        'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_1':
-            ' (1 of 3)',
-        'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_2':
-            ' (2 of 3)',
-        'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_3':
-            ' (3 of 3)',
-        'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_1':
-            ' (1 of 3)',
-        'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_2':
-            ' (2 of 3)',
-        'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_3':
-            ' (3 of 3)',
-    }
-
-    def _conflict_piece(self, infobox, base_item_type):
-        appendix = self._conflict_piece_map.get(
-            base_item_type['Id'])
-        if appendix is None:
-            return
-        else:
-            infobox['inventory_icon'] = base_item_type['Name'] + appendix
-            return base_item_type['Name'] + appendix
-
     def _conflict_divination_card(self, infobox, base_item_type):
         return '%s (divination card)' % base_item_type['Name']
 
@@ -1545,17 +1618,11 @@ class ItemsParser(SkillParserShared):
         return base_item_type['Name']
 
     _conflict_resolver_map = {
-        'Boots': _conflict_boots,
-        'Gloves': _conflict_gloves,
-        'Quiver': _conflict_quivers,
-        'Amulet': _conflict_amulets,
         'Active Skill Gem': _conflict_active_skill_gems,
         'QuestItem': _conflict_quest_items,
         'HideoutDoodad': _conflict_hideout_doodad,
         'Map': _conflict_maps,
         'MapFragment': _conflict_map_fragments,
-        'Microtransaction': _conflict_microtransactions,
-        'UniqueFragment': _conflict_piece,
         'DivinationCard': _conflict_divination_card,
         'LabyrinthMapItem': _conflict_labyrinth_map_item,
         'MiscMapItem': _conflict_misc_map_item,
@@ -1642,7 +1709,6 @@ class ItemsParser(SkillParserShared):
 
             # BaseItemTypes.dat
             infobox['name'] = name
-            infobox['class'] = base_item_type['ItemClassesKey']['Name']
             infobox['class_id'] = base_item_type['ItemClassesKey']['Id']
             infobox['size_x'] = base_item_type['Width']
             infobox['size_y'] = base_item_type['Height']
@@ -1721,7 +1787,11 @@ class ItemsParser(SkillParserShared):
             # handle items with duplicate name entries
             # Maps must be handled in any case due to unique naming style of
             # pages
-            if cls_id == 'Map' or \
+            appendix = self._NAME_OVERRIDE_BY_ID[self._language].get(m_id)
+            if appendix is not None:
+                name += appendix
+                infobox['inventory_icon'] = name
+            elif cls_id == 'Map' or \
                     len(self.rr['BaseItemTypes.dat'].index['Name'][name] +
                         self.rr['Prophecies.dat'].index['Name'][name]) > 1:
                 resolver = self._conflict_resolver_map.get(cls_id)
@@ -1737,19 +1807,21 @@ class ItemsParser(SkillParserShared):
                         )
                         continue
                 else:
+                    console(
+                            'Unresolved ambiguous item "%s" with name "%s". '
+                            'Skipping' %
+                            (m_id, infobox['name']),
+                            msg=Msg.error
+                        )
                     console('No name conflict handler defined for item class id'
                             ' "%s"' % cls_id, msg=Msg.error)
                     continue
-            override = self._NAME_OVERRIDE_BY_ID.get(m_id)
-            if override is not None:
-                name = override
-                infobox['inventory_icon'] = override
 
             # putting this last since it's usually manually added
             if m_id in self._DROP_DISABLED_ITEMS_BY_ID:
                 infobox['drop_enabled'] = False
 
-            cond = WikiCondition(
+            cond = ItemWikiCondition(
                 data=infobox,
                 cmdargs=parsed_args,
             )
