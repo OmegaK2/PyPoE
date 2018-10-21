@@ -453,6 +453,9 @@ class SkillParserShared(parser.BaseParser):
                     c['Name'] if c['Name'] else c['Id'] for c in
                     ae['WeaponRestriction_ItemClassesKeys']
                 ])
+                infobox['item_class_id_restriction'] = ', '.join([
+                    c['Id'] for c in ae['WeaponRestriction_ItemClassesKeys']
+                ])
 
         # From Projectile.dat if available
         # TODO - remap
