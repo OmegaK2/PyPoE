@@ -1100,7 +1100,12 @@ class RelationalReader(AbstractFileCache):
                 const_enum = getattr(constants, spec_row.enum)
                 index = df.reader.table_columns[key]['index']
                 for i, row in enumerate(df.reader.table_data):
-                    df.reader.table_data[i][index] = const_enum(row[index])
+                    df.reader.table_data[i][index] = vf(
+                        value=row[index],
+                        other=const_enum,
+                        key=None,
+                        offset=0
+                    )
 
         return df
 

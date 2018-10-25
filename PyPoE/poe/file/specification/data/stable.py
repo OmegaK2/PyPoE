@@ -4817,10 +4817,10 @@ specification = Specification({
                 type='int',
             )),
             # TODO: 3.0.0 Related to the stats of skills
-            # 1: constants, 2: linear, 3: effectiveness
-            ('StatInterpolationTypes', Field(
+            ('StatInterpolationTypesKeys', Field(
                 type='ref|list|int',
-                # key='StatInterpolationTypes.dat',
+                #key = 'StatInterpolationTypes.dat',
+                enum='STAT_INTERPOLATION_TYPES',
             )),
             ('Unknown0', Field(
                 type='int',
