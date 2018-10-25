@@ -40,6 +40,10 @@ Documentation
 
 .. autoclass:: WORDLISTS
 
+.. autoclass:: DELVE_UPGRADE_TYPE
+
+.. autoclass:: STAT_INTERPOLATION_TYPE
+
 """
 
 # =============================================================================
@@ -48,7 +52,7 @@ Documentation
 
 # Python
 
-from enum import IntEnum, Enum
+from enum import IntEnum, EnumMeta, Enum
 
 # 3rd-party
 
@@ -66,10 +70,11 @@ __all__ = [
     'MOD_DOMAIN',
     'MOD_GENERATION_TYPE',
     'WORDLISTS',
+    'DELVE_UPGRADE_TYPE',
+    'STAT_INTERPOLATION_TYPES',
 
     'MOD_MAX_STATS',
     'MOD_STATS_RANGE',
-    'DELVE_UPGRADE_TYPE',
 ]
 
 MOD_MAX_STATS = 6
@@ -80,7 +85,19 @@ MOD_STATS_RANGE = range(1, MOD_MAX_STATS+1)
 # =============================================================================
 
 
-'''class ACTIVE_SKILL_TARGET_TYPES(IntEnum):
+class IntEnumMetaOverride(EnumMeta):
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            return self(item)
+        else:
+            return IntEnum.__getitem__(self, item)
+
+
+class IntEnumOverride(IntEnum, metaclass=IntEnumMetaOverride):
+    pass
+
+
+'''class ACTIVE_SKILL_TARGET_TYPES(IntEnumOverride):
     """
 
     Attributes
@@ -134,7 +151,7 @@ MOD_STATS_RANGE = range(1, MOD_MAX_STATS+1)
     UNKNOWN7 = 19
 
 
-class ACTIVE_SKILL_TYPES(IntEnum):
+class ACTIVE_SKILL_TYPES(IntEnumOverride):
     """
     Attributes
     ----------
@@ -158,7 +175,7 @@ class ACTIVE_SKILL_TYPES(IntEnum):
     #DUALWIELD_POSSIBLE = 6'''
     
 
-class VERSION(IntEnum):
+class VERSION(IntEnumOverride):
     """
     Used to differentiate between the different release versions of the game,
     i.e. between delpoyment (live/stable) version and temporary betas for
@@ -195,7 +212,7 @@ class VERSION(IntEnum):
     DEFAULT = STABLE
 
 
-class DISTRIBUTOR(IntEnum):
+class DISTRIBUTOR(IntEnumOverride):
     """
     Used to differentiate between the different distributors of the clients.
 
@@ -231,7 +248,7 @@ class DISTRIBUTOR(IntEnum):
     DEFAULT = ALL
 
 
-class SHOP_PACKAGE_PLATFORM(IntEnum):
+class SHOP_PACKAGE_PLATFORM(IntEnumOverride):
     """
     ShopPackagePlatform.dat
 
@@ -293,7 +310,7 @@ class SOCKET_COLOUR(Enum):
         return obj
 
 
-class RARITY(Enum):
+class RARITY(Enum, metaclass=IntEnumMetaOverride):
     """
     Representation of the possible rarities for items and monsters.
 
@@ -342,7 +359,7 @@ class RARITY(Enum):
         return obj
 
 
-class MAP_ITERATION(IntEnum):
+class MAP_ITERATION(IntEnumOverride):
     """
     Representation of map iterations
 
@@ -363,7 +380,7 @@ class MAP_ITERATION(IntEnum):
     ROUND = ATLAS
 
 
-class MOD_DOMAIN(IntEnum):
+class MOD_DOMAIN(IntEnumOverride):
     """
     Representation of mod domains.
 
@@ -430,7 +447,7 @@ class MOD_DOMAIN(IntEnum):
     JEWEL = 10
 
 
-class MOD_GENERATION_TYPE(IntEnum):
+class MOD_GENERATION_TYPE(IntEnumOverride):
     """
     Representation of mod generation types.
 
@@ -483,7 +500,7 @@ class MOD_GENERATION_TYPE(IntEnum):
     DELVE_AREA = 14
 
 
-class WORDLISTS(IntEnum):
+class WORDLISTS(IntEnumOverride):
     """
     Representation of words lists ( Wordlists.dat )
 
@@ -523,7 +540,7 @@ class WORDLISTS(IntEnum):
     ESSENCE = 9
 
 
-class DELVE_UPGRADE_TYPE(IntEnum):
+class DELVE_UPGRADE_TYPE(IntEnumOverride):
     """
     Representation of delve upgrade type ( DelveUpgradeType.dat )
     """
@@ -541,6 +558,36 @@ class DELVE_UPGRADE_TYPE(IntEnum):
     # Alias
     SULFITE_CAPACITY = SULPHITE_CAPACITY
 
+
+class STAT_INTERPOLATION_TYPES(IntEnumOverride):
+    """
+    Representation of stat interpolation types (StatInterpolationTypes.dat)
+
+    Primarily used by GrantedEffects.dat
+
+    Attributes
+    ----------
+    CONSTANT
+        Constant scaling
+    LINEAR
+        Linear scaling
+    EXPONENTIAL
+        Exponential scaling
+
+        skill_base =
+            (
+                GameConstants -> SkillDamageBaseEffectiveness +
+                (GameConstants -> SkillDamageIncrementalEffectiveness * (
+                    MonsterLevel - 1
+                ))
+            ) *
+            GrantedEffects['BaseEffectiveness'] *
+            (1+GrantedEffects['IncrementalEffectiveness') ** (MonsterLevel - 1)
+
+    """
+    CONSTANT = 1
+    LINEAR = 2
+    EXPONENTIAL = 3
 
 # =============================================================================
 # Functions

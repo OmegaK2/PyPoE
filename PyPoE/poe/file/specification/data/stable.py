@@ -4595,11 +4595,11 @@ specification = Specification({
                 description='This support gem only supports active skills with at least one of these types',
             )),
             # 3.0.0
-            ('Multiplier1', Field(
+            ('BaseEffectiveness', Field(
                 type='float',
                 display_type='{0:.6f}',
             )),
-            ('Multiplier2', Field(
+            ('IncrementalEffectiveness', Field(
                 type='float',
                 display_type='{0:.6f}',
             )),
@@ -4811,8 +4811,10 @@ specification = Specification({
                 type='int',
             )),
             # TODO: 3.0.0 Related to the stats of skills
-            ('StatData', Field(
+            ('StatInterpolationTypesKeys', Field(
                 type='ref|list|int',
+                #key = 'StatInterpolationTypes.dat',
+                enum='STAT_INTERPOLATION_TYPES',
             )),
             ('Unknown0', Field(
                 type='int',
