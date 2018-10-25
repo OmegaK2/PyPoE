@@ -2729,8 +2729,7 @@ specification = Specification({
             ('MinDepth', Field(
                 type='int',
             )),
-            # I think whether it is enabled or not
-            ('IsEnabled', Field(
+            ('IsResonator', Field(
                 type='bool',
             )),
         )),
@@ -2772,17 +2771,17 @@ specification = Specification({
                 type='ref|list|ulong',
                 key='AchievementItems.dat',
             )),
-            ('Flag0', Field(
+            ('IsBossArea', Field(
                 type='bool',
             )),
         )),
     ),
     'DelveCatchupDepths.dat': File(
         fields=OrderedDict((
-            ('Unknown0', Field(
+            ('PlayerLevel', Field(
                 type='int',
             )),
-            ('Unknown1', Field(
+            ('CatchupDepth', Field(
                 type='int',
             )),
         )),
@@ -3067,6 +3066,7 @@ specification = Specification({
             )),
             ('Unknown2', Field(
                 type='ref|list|ulong',
+                key='MonsterVarieties.dat',
             )),
             ('Unknown4', Field(
                 type='int',
@@ -4595,27 +4595,31 @@ specification = Specification({
                 description='This support gem only supports active skills with at least one of these types',
             )),
             # 3.0.0
-            ('Multiplier1', Field(
+            ('BaseEffectiveness', Field(
                 type='float',
                 display_type='{0:.6f}',
             )),
-            ('Multiplier2', Field(
+            ('IncrementalEffectiveness', Field(
                 type='float',
                 display_type='{0:.6f}',
             )),
             ('SupportGemLetter', Field(
                 type='ref|string',
             )),
+            # 1: str, 2: dex, 3: int, 4: override to -1
             ('Unknown0', Field(
                 type='int',
+                # key='GemTypes.dat',
             )),
             ('AddedActiveSkillTypes', Field(
                 type='ref|list|uint',
                 description='This support gem adds these types to supported active skills',
+                # key='ActiveSkillType.dat',
             )),
             ('ExcludedActiveSkillTypes', Field(
                 type='ref|list|uint',
                 description='This support gem does not support active skills with one of these types',
+                # key='ActiveSkillType.dat',
             )),
             ('SupportsGemsOnly', Field(
                 type='bool',
@@ -4645,7 +4649,7 @@ specification = Specification({
                 type='bool',
             )),
             # Just for the "LesserShrine" triggered skill
-            ('Flag3', Field(
+            ('IsLesserShrine', Field(
                 type='bool',
             )),
             ('Data4', Field(
@@ -4766,6 +4770,7 @@ specification = Specification({
             # 4 = other skills (out of range)
             ('CooldownBypassType', Field(
                 type='int',
+                # key='CooldownBypassTypes.dat',
                 description='Charge type to expend to bypass cooldown (Endurance, Frenzy, Power, none)',
             )),
             #TODO: 3.0.0 rename to static stats or something like that
@@ -4791,6 +4796,7 @@ specification = Specification({
             # 6 = other skills (out of range)
             ('CooldownGroup', Field(
                 type='int',
+                # key='CooldownGroups.dat',
             )),
             # only > 0 for Blasphemy (to 35)
             ('ManaReservationOverride', Field(
@@ -4811,8 +4817,10 @@ specification = Specification({
                 type='int',
             )),
             # TODO: 3.0.0 Related to the stats of skills
-            ('StatData', Field(
+            # 1: constants, 2: linear, 3: effectiveness
+            ('StatInterpolationTypes', Field(
                 type='ref|list|int',
+                # key='StatInterpolationTypes.dat',
             )),
             ('Unknown0', Field(
                 type='int',
