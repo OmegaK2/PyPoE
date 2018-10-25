@@ -30,7 +30,7 @@ See PyPoE/LICENSE
 # =============================================================================
 
 # 3rd Party
-from PySide.QtCore import *
+from PySide2.QtCore import *
 
 # self
 from PyPoE.poe.file.dat import DatFile, DatValue
@@ -126,7 +126,7 @@ class DatDataModel(DatModelShared):
             self._data.append(last)
             # Remove duplicates for easier reading
             # TODO add option this?
-            for item in self._dat_file.reader.data_parsed[1:]:
+            for item in self._dat_file.reader.data_parsed:
                 #if (last.data_start_offset == item.data_start_offset and
                 #    last.data_end_offset == item.data_end_offset and
                 #    last.data_start_offset == last.data_end_offset):

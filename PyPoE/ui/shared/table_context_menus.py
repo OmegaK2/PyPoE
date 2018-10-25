@@ -32,8 +32,8 @@ See PyPoE/LICENSE
 # Python
 
 # 3rd-party
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PySide2.QtCore import *
+from PySide2.QtWidgets import *
 
 # self
 

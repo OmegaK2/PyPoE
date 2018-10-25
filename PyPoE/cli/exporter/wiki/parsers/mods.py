@@ -38,12 +38,13 @@ FIX the jewel generator (corrupted)
 import re
 import warnings
 from collections import OrderedDict, defaultdict
+from functools import partialmethod
 
 # Self
 from PyPoE.poe.constants import MOD_DOMAIN, MOD_GENERATION_TYPE, MOD_STATS_RANGE
 from PyPoE.cli.core import console, Msg
-from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult, \
-    add_format_argument
+from PyPoE.cli.exporter import config
+from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult
 from PyPoE.cli.exporter.wiki.parser import BaseParser, format_result_rows
 from PyPoE.shared.decorators import deprecated
 
@@ -117,45 +118,9 @@ class ModsHandler(ExporterHandler):
 
         sub = mparser.add_subparsers(help='Method of extracting mods')
 
-        parser = sub.add_parser('modid', help='Use the string mod identifer')
-        parser.add_argument(
-            'modid',
-            help='Ids of the mods to update; can be specified multiple times',
-            nargs='+',
-        )
+        self.add_default_subparser_filters(sub, cls=ModParser)
 
-        add_format_argument(parser)
-
-        self.add_default_parsers(
-            parser=parser,
-            cls=ModParser,
-            func=ModParser.modid,
-        )
-
-        parser = sub.add_parser('rowid', help='Use the rowid')
-        parser.add_argument(
-            'start',
-            help='Starting index',
-            nargs='?',
-            type=int,
-            default=0,
-        )
-
-        parser.add_argument(
-            'end',
-            nargs='?',
-            help='Ending index',
-            type=int,
-        )
-
-        add_format_argument(parser)
-
-        self.add_default_parsers(
-            parser=parser,
-            cls=ModParser,
-            func=ModParser.rowid,
-        )
-
+        # mods filter
         parser = sub.add_parser('filter', help='Filter mods')
         parser.add_argument(
             '--domain',
@@ -171,8 +136,6 @@ class ModsHandler(ExporterHandler):
             choices=[k.name for k in MOD_GENERATION_TYPE],
         )
 
-        add_format_argument(parser)
-
         self.add_default_parsers(
             parser=parser,
             cls=ModParser,
@@ -180,7 +143,6 @@ class ModsHandler(ExporterHandler):
         )
 
         # Tempest
-
         parser = lua_sub.add_parser(
             'tempest',
             help='Extract tempest stuff (DEPRECATED).',
@@ -191,6 +153,11 @@ class ModsHandler(ExporterHandler):
             func=ModParser.tempest,
             wiki=False,
         )
+
+    def add_default_parsers(self, *args, **kwargs):
+        super().add_default_parsers(*args, **kwargs)
+        parser = kwargs['parser']
+        self.add_format_argument(parser)
 
 
 class ModParser(BaseParser):
@@ -205,6 +172,12 @@ class ModParser(BaseParser):
         'map_stat_descriptions.txt',
     ]
 
+    _mod_column_index_filter = partialmethod(
+        BaseParser._column_index_filter,
+        dat_file_name='Mods.dat',
+        error_msg='Several areas have not been found:\n%s',
+    )
+
     def _append_effect(self, result, mylist, heading):
         mylist.append(heading)
 
@@ -216,44 +189,21 @@ class ModParser(BaseParser):
                 value = '(%s to %s)' % tuple(value)
             mylist.append('* %s %s' % (stat_id, value))
 
-    def modid(self, args):
-        return self.mod(args, self._column_index_filter(
-            dat_file_name='Mods.dat',
-            column_id='Id',
-            arg_list=args.modid,
-            error_msg='Several mods have not been found:\n%s',
+    def by_rowid(self, parsed_args):
+        return self._export(
+            parsed_args,
+            self.rr['Mods.dat'][parsed_args.start:parsed_args.end],
+        )
+
+    def by_id(self, parsed_args):
+        return self._export(parsed_args, self._mod_column_index_filter(
+            column_id='Id', arg_list=parsed_args.id
         ))
 
-    def rowid(self, args):
-        mods = list(self.rr['Mods.dat'])
-        l = len(mods)
-
-        # Warnings only to make it a bit more user friendly
-        if abs(args.start) > len(mods):
-            warnings.warn(
-                'Specified minimum index "%s" is larger then the total '
-                'number of mods (%s).' % (args.start, l),
-                OutOfBoundsWarning,
-            )
-
-        if args.end is not None:
-            if abs(args.end) > len(mods):
-                warnings.warn(
-                    'Specified maximum index "%s" is larger then the total '
-                    'number of mods (%s).' % (args.end, l),
-                    OutOfBoundsWarning,
-                )
-
-            if args.start >=0 and args.end >= 0 and args.start > args.end:
-                warnings.warn(
-                    'Specified maximum index "%s" is smaller then the '
-                    'specified minimum index "%s"' % (args.end, args.start),
-                    OutOfBoundsWarning,
-                )
-
-        mods = mods[args.start:args.end]
-
-        return self.mod(args, mods)
+    def by_name(self, parsed_args):
+        return self._export(parsed_args, self._mod_column_index_filter(
+            column_id='Name', arg_list=parsed_args.name
+        ))
 
     def filter(self, args):
         mods = []
@@ -278,9 +228,9 @@ class ModParser(BaseParser):
             else:
                 mods.append(mod)
 
-        return self.mod(args, mods)
+        return self._export(args, mods)
 
-    def mod(self, parsed_args, mods):
+    def _export(self, parsed_args, mods):
         r = ExporterResult()
 
         if mods:
@@ -302,7 +252,7 @@ class ModParser(BaseParser):
                 ('Domain', 'domain'),
                 ('GenerationType', 'generation_type'),
                 ('Level', 'required_level'),
-
+                ('TierText', 'tier_text'),
             ):
                 data[k[1]] = mod[k[0]]
 
@@ -348,8 +298,12 @@ class ModParser(BaseParser):
                 data['generation_weight%s_value' % j] = \
                     mod['GenerationWeight_Values'][i]
 
-            if mod['TagsKeys']:
-                data['tags'] = ', '.join([t['Id'] for t in mod['TagsKeys']])
+            tags = ', '.join(
+                [t['Id'] for t in mod['ModTypeKey']['TagsKeys']] +
+                [t['Id'] for t in mod['TagsKeys']]
+            )
+            if tags:
+                data['tags'] = tags
 
             if mod['ModTypeKey']:
                 sell_price = defaultdict(int)
@@ -427,13 +381,19 @@ class ModParser(BaseParser):
                     tempest_stats = tempest['BuffDefinitionsKey']['StatKeys']
                     tempest_values = tempest['StatValues']
                     tempest_stat_ids = [st['Id'] for st in tempest_stats]
-                    t = tf.get_translation(tempest_stat_ids, tempest_values, full_result=True)
+                    t = tf.get_translation(
+                        tempest_stat_ids, tempest_values, full_result=True,
+                        lang=config.get_option('language')
+                    )
                     self._append_effect(t, effects, 'The tempest buff provides the following effects:')
                 #if tempest['MonsterVarietiesKey']:
                 #    print(tempest['MonsterVarietiesKey'])
                 #    break
 
-            t = tf.get_translation(stat_ids, stat_values, full_result=True)
+            t = tf.get_translation(
+                stat_ids, stat_values, full_result=True,
+                lang=config.get_option('language')
+            )
             self._append_effect(t, effects, 'The area gets the following modifiers:')
 
             info['effect'] = '\n'.join(effects)

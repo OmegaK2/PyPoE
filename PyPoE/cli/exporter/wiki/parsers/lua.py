@@ -33,10 +33,12 @@ See PyPoE/LICENSE
 
 # Python
 import warnings
-from collections import namedtuple
+from collections import OrderedDict, defaultdict
 
 # Self
+from PyPoE.poe.constants import RARITY
 from PyPoE.cli.core import console, Msg
+from PyPoE.cli.exporter import config
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult
 from PyPoE.cli.exporter.wiki.parser import BaseParser
 
@@ -46,58 +48,39 @@ from PyPoE.cli.exporter.wiki.parser import BaseParser
 
 __all__= ['QuestRewardReader', 'LuaHandler']
 
-rarities = {
-    1: 'Normal',
-    2: 'Magic',
-    3: 'Rare',
-    5: 'Unique',
-}
+# =============================================================================
+# Functions
+# =============================================================================
 
-# TODO find a better way
-# TODO Break with updates
-item_map = {
-    # Though Scared Ground, Normal
-    423: "Survival Instincts", # Veridian
-    424: "Survival Skills", # Crimson
-    425: "Survival Secrets", # Cobalt
-    # Though Scared Ground, Cruel
-    454: "Poacher's Aim", # Verdian
-    455: "Warlord's Reach ", # Crimson
-    456: "Assassin's Haste", # Cobalt
-    # Though Scared Ground, Merciless
-    457: "Conqueror's Efficiency", # crimson
-    458: "Conqueror's Potency", # cobalt
-    459: "Conqueror's Longevity", #viridian
-}
 
-two_stone_map = {
-    'Ring12': "Two-Stone Ring (ruby and topaz)",
-    'Ring13': "Two-Stone Ring (sapphire and topaz)",
-    'Ring14': "Two-Stone Ring (ruby and sapphire)",
-}
+def lua_format_value(key, value):
+    if isinstance(value, int):
+        f = '\t\t%s=%s,\n'
+    else:
+        f = '\t\t%s="%s",\n'
+    return f % (key, value)
 
-item_format_order = [
-    'reward', 'type', 'class_name', 'difficulty', 'quest', 'quest_id', 'npc',
-    'act', 'itemlevel', 'rarity', 'sockets', 'page_link'
-]
 
-out_key_map = {
-    'class_name': 'class',
-}
+def lua_formatter(outdata, key_order=None):
+    out = []
+    out.append('local data = {\n')
+    for data in outdata:
+        out.append('\t{\n')
+        for key, value in data.items():
+            if isinstance(value, int):
+                out.append('\t\t%s=%s,\n' % (key, value))
+            else:
+                out.append('\t\t%s="%s",\n' % (key, value.replace('"', '\\"')))
+        out.append('\t},\n')
+    out.append('\n}')
+    out.append('\n')
+    out.append('return data')
+
+    return ''.join(out)
 
 # =============================================================================
 # Classes
 # =============================================================================
-
-# class factory
-RewardDataTuple = namedtuple('RewardDataTuple', [
-    'quest', 'quest_id', 'act', 'type', 'class_name', 'class_id', 'rarity',
-    'difficulty', 'sockets', 'page_link', 'itemlevel', 'reward'
-])
-VendorRewardDataTuple = namedtuple('VendorRewardDataTuple', [
-    'quest', 'quest_id', 'act', 'reward', 'type', 'class_name', 'class_id',
-    'npc'
-])
 
 
 class LuaHandler(ExporterHandler):
@@ -126,6 +109,121 @@ class LuaHandler(ExporterHandler):
             func=QuestRewardReader.read_vendor_rewards,
         )
 
+        parser = lua_sub.add_parser(
+            'bestiary',
+            help='Extract bestiary information',
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=BestiaryParser,
+            func=BestiaryParser.main,
+        )
+
+
+class BestiaryParser(BaseParser):
+    _files = [
+        # pretty much chain loads everything we need
+        'BestiaryRecipes.dat',
+        'ClientStrings.dat',
+    ]
+
+    _COPY_KEYS_BESTIARY = (
+        ('Id', {
+            'key': 'id',
+        }),
+        ('HintText', {
+            'key': 'header',
+        }),
+        ('Description', {
+            'key': 'subheader',
+        }),
+        ('Notes', {
+            'key': 'notes',
+        }),
+    )
+
+    _COPY_KEYS_BESTIARY_COMPONENTS = (
+        ('Id', {
+            'key': 'id',
+        }),
+        ('MinLevel', {
+            'key': 'min_level',
+        }),
+        ('BestiaryFamiliesKey', {
+            'key': 'family',
+            'value': lambda x: x['Name'],
+        }),
+        ('BestiaryGroupsKey', {
+            'key': 'beast_group',
+            'value': lambda x: x['Name'],
+        }),
+        ('BestiaryGenusKey', {
+            'key': 'genus',
+            'value': lambda x: x['Name'],
+        }),
+        ('ModsKey', {
+            'key': 'mod_id',
+            'value': lambda x: x['Id'],
+        }),
+        ('BestiaryCapturableMonstersKey', {
+            'key': 'monster',
+            'value': lambda x: x['Name'],
+        }),
+    )
+
+    def _copy_from_keys(self, row, keys, out_data):
+        copyrow = OrderedDict()
+        for k, copy_data in keys:
+
+            value = row[k]
+            if value:
+                if 'value' in copy_data:
+                    value = copy_data['value'](value)
+                copyrow[copy_data['key']] = value
+
+        out_data.append(copyrow)
+
+    def main(self, parsed_args):
+        recipes = []
+        components = []
+        recipe_components_temp = defaultdict(lambda:defaultdict(int))
+
+        for row in self.rr['BestiaryRecipes.dat']:
+            self._copy_from_keys(row, self._COPY_KEYS_BESTIARY, recipes)
+            for value in row['BestiaryRecipeComponentKeys']:
+                recipe_components_temp[row['Id']][value['Id']] += 1
+
+        for row in self.rr['BestiaryRecipeComponent.dat']:
+            self._copy_from_keys(
+                row, self._COPY_KEYS_BESTIARY_COMPONENTS, components
+            )
+            if row['RarityKey'] != RARITY.ANY:
+                components[-1]['rarity'] = self.rr['ClientStrings.dat'].index[
+                    'Id']['ItemDisplayString' + row['RarityKey'].name_upper][
+                    'Text']
+
+        recipe_components = []
+        for recipe_id, data in recipe_components_temp.items():
+            for component_id, amount in data.items():
+                recipe_components.append(OrderedDict((
+                    ('recipe_id', recipe_id),
+                    ('component_id', component_id),
+                    ('amount', amount)
+                )))
+
+        r = ExporterResult()
+        for k in ('recipes', 'components', 'recipe_components'):
+            r.add_result(
+                text=lua_formatter(locals()[k]),
+                out_file='bestiary_%s.lua' % k,
+                wiki_page=[{
+                    'page': 'Module:Bestiary/%s' % k,
+                    'condition': None,
+                }]
+            )
+
+        return r
+
 
 class QuestRewardReader(BaseParser):
     # Load the files we need
@@ -137,52 +235,104 @@ class QuestRewardReader(BaseParser):
         'QuestStates.dat',
         'QuestRewards.dat',
         'QuestVendorRewards.dat',
+        'MapSeries.dat'
     ]
 
+    # TODO find a better way
+    # TODO Break with updates
+    _ITEM_MAP = {
+        'English': {
+            # A2: Though Scared Ground
+            423: "Survival Instincts", # Veridian
+            424: "Survival Skills", # Crimson
+            425: "Survival Secrets", # Cobalt
+            # A5: The King's Feast
+            454: "Poacher's Aim", # Verdian
+            455: "Warlord's Reach ", # Crimson
+            456: "Assassin's Haste", # Cobalt
+            #
+            457: "Conqueror's Efficiency", # crimson
+            458: "Conqueror's Potency", # cobalt
+            459: "Conqueror's Longevity", #viridian
+            # A5: Death to Puirty
+            560: "Rapid Expansion",
+            780: "Wildfire",
+            777: "Overwhelming Odds",
+
+            775: "Collateral Damage",
+            779: "Omen on the Winds",
+            781: "Fight for Survival",
+            784: "Ring of Blades",
+
+            778: "First Snow",
+            783: "Frozen Trail",
+            786: "Inevitability",
+            788: "Spreading Rot",
+            789: "Violent Dead",
+            790: "Hazardous Research",
+        },
+        'Russian': {
+            # A2: По святой земле
+            423: "Инстинкты выживания", # Бирюзовый
+            424: "Навыки выживания", # Багровый
+            425: "Секреты выживания", # Кобальтовый
+            # A5: Пир вождя
+            454: "Браконьерство", # Бирюзовый
+            455: "Длинные руки ", # Багровый
+            456: "Бойкий убийца", # Кобальтовый
+            #
+            457: "Смекалка победителя", # Багровый
+            458: "Могущество победителя", # Кобальтовый
+            459: "Живучесть победителя", #Бирюзовый
+            # A5: Смерть Чистоте
+            560: "Быстрое расширение",
+            780: "Степной пожар",
+            777: "Подавляющее превосходство",
+
+            775: "Сопутствующий риск",
+            779: "Знамение ветров",
+            781: "Борьба за жизнь",
+            784: "Кольцо клинков",
+
+            778: "Первый снег",
+            783: "Мерзлый путь",
+            786: "Неизбежность",
+            788: "Гангрена",
+            789: "Ярость мертвецов",
+            790: "Опасная наука",
+        },
+    }
+
+    _TWO_STONE_MAP = {
+        'English': {
+            'Metadata/Items/Rings/Ring12': "Two-Stone Ring (ruby and topaz)",
+            'Metadata/Items/Rings/Ring13': "Two-Stone Ring (sapphire and topaz)",
+            'Metadata/Items/Rings/Ring14': "Two-Stone Ring (ruby and sapphire)",
+        },
+        'Russian': {
+            'Metadata/Items/Rings/Ring12':
+                "Кольцо с двумя камнями (рубин и топаз)",
+            'Metadata/Items/Rings/Ring13':
+                "Кольцо с двумя камнями (сапфир и топаз)",
+            'Metadata/Items/Rings/Ring14':
+                "Кольцо с двумя камнями (рубин и сапфир)",
+        },
+    }
+
+    _UNIT_SEP = '\u001F'
+
     def _write_lua(self, outdata, data_type):
-        if data_type == 'vendor':
-            subpage = 'vendor_reward_data'
-        else:
-            subpage = 'data'
-
         # Pre-sort
-        outdata.sort(key=lambda x: x.class_id)
-        outdata.sort(key=lambda x: x.reward)
-        outdata.sort(key=lambda x: x.quest_id)
-        outdata.sort(key=lambda x: x.act)
-
-        out = []
-        out.append('local rewards = {\n')
-        for data in outdata:
-            out.append('\t{\n')
-            for item in item_format_order:
-                if not hasattr(data, item):
-                    continue
-                value = getattr(data, item)
-                if value is None:
-                    continue
-
-                if isinstance(value, int):
-                    f = '\t\t%s=%s,\n'
-                else:
-                    f = '\t\t%s="%s",\n'
-
-                try:
-                    outkey = out_key_map[item]
-                except KeyError:
-                    outkey = item
-                out.append(f % (outkey, value))
-            out.append('\t},\n')
-        out.append('\n}')
-        out.append('\n')
-        out.append('return rewards')
+        outdata.sort(key=lambda x: x['reward'])
+        outdata.sort(key=lambda x: x['quest_id'])
+        outdata.sort(key=lambda x: x['act'])
 
         r = ExporterResult()
         r.add_result(
-            text=''.join(out),
+            text=lua_formatter(outdata),
             out_file='%s_rewards.txt' % data_type,
             wiki_page=[{
-                'page': 'Module:QuestReward/%s' % subpage,
+                'page': 'Module:Quest reward/data/%s' % data_type,
                 'condition': None,
             }]
         )
@@ -190,49 +340,30 @@ class QuestRewardReader(BaseParser):
         return r
 
     def read_quest_rewards(self, args):
-        outdata = set()
+        compress = {}
         for row in self.rr['QuestRewards.dat']:
             # Find the corresponding keys
             item = row['BaseItemTypesKey']
             quest = row['QuestKey']
             character = row['CharactersKey']
-            itemcls = item['ItemClassesKey']['Name']
+            itemcls = item['ItemClassesKey']['Id']
 
             # Format the data
-            data = {}
+            data = OrderedDict()
 
             data['quest'] = quest['Name']
             data['quest_id'] = quest['Id']
             # Quest not implemented or buggy or master stuff
             if not data['quest']:
                 continue
-            # Any of the quest branches gives the reward and disables the other
-            if data['quest'] == 'Victario\'s Secrets':
-                if data['quest_id'] != 'a3q11':
-                    continue
             data['act'] = quest['Act']
 
-            if itemcls in ['Active Skill Gems', 'Support Skill Gems']: # Skills
-                item_type = 'skill'
-            elif itemcls == 'Hideout Doodads': # can be ignored I guess
-                item_type = 'hideout'
-            else:
-                item_type = 'item'
+            if character is not None:
+                data['classes'] = character['Name']
 
-            # Item is default class
-            if item_type != 'item':
-                data['type'] = item_type
-
-            # TODO: Unused class_id atm, only for sorting
-            if character is None:
-                data['class_name'] = 'All'
-                data['class_id'] = -1
-            else:
-                data['class_name'] = character['Name']
-                data['class_id'] = character.rowid
-
-            r = row['Rarity']
-            rarity = rarities[r] if r in rarities else '???'
+            if row['RarityKey'] != RARITY.ANY:
+                rarity = self.rr['ClientStrings.dat'].index['Id'][
+                    'ItemDisplayString' + row['RarityKey'].name_upper]['Text']
 
             sockets = row['SocketGems']
             if sockets:
@@ -241,39 +372,59 @@ class QuestRewardReader(BaseParser):
             name = item['Name']
 
             # Some of unique items follow special rules
-            if itemcls == 'Quest Items' and name.startswith('Book of'):
-                data['page_link'] = '%s (%s)' % (name, data['quest'])
+            if itemcls == 'QuestItem' and 'Book' in item['Id']:
+                name = '%s (%s)' % (name, data['quest'])
+            elif itemcls == 'Map':
+                name = '%s (%s)' % (
+                    name, self.rr['MapSeries.dat'].index['Id']['MapWorlds'][
+                        'Name']
+                )
             # Non non quest items or skill gems have their rarity added
-            if itemcls not in {'Active Skill Gems', 'Support Skill Gems', 'Quest Items'}:
-                data['itemlevel'] = row['ItemLevel']
+            if itemcls not in {'Active Skill Gem', 'Support Skill Gem',
+                               'QuestItem', 'StackableCurrency'}:
+                data['item_level'] = row['ItemLevel']
                 data['rarity'] = rarity
                 # Unique and not a quest item or gem
-                if rarity == 'Unique':
+                if row['RarityKey'] == RARITY.ANY:
                     uid = row['Key0']
-                    if uid in item_map:
+                    item_map = self._ITEM_MAP.get(config.get_option('language'))
+                    if item_map is None:
+                        warnings.warn(
+                             'No unique item mapping defined for the current '
+                             'language'
+                        )
+                    elif uid in item_map:
                         name = item_map[uid]
+                        data['rarity'] = self.rr['ClientStrings.dat'].index[
+                            'Id']['ItemDisplayStringUnique']['Text']
                     else:
-                        warnings.warn('Uncaptured unique item. %s %s %s' % (uid, data['quest'], name))
+                        warnings.warn(
+                            'Uncaptured unique item. %s %s %s' % (
+                                uid, data['quest'], name)
+                        )
 
+            # Two stone rings
+            two_stone_map = self._TWO_STONE_MAP.get(
+                config.get_option('language'))
+            if two_stone_map is None:
+                warnings.warn(
+                    'No two stone ring mapping for the current language')
+            elif item['Id'] in two_stone_map:
+                name = two_stone_map[item['Id']]
             data['reward'] = name
 
-            if name == 'Two-Stone Ring':
-                itemid = item['ItemVisualIdentityKey']['Id']
-                if itemid in two_stone_map:
-                    data['page_link'] = two_stone_map[itemid]
-                else:
-                    warnings.warn('Fix ItemID for two-stones')
-
-            for field in RewardDataTuple._fields:
-                if field not in data:
-                    data[field] = None
-
             # Add to formatting list
-            outdata.add(RewardDataTuple(**data))
-        return self._write_lua(list(outdata), 'quest')
+            key = quest['Id'] + item['Id'] + str(row['Key0'])
+            if key in compress:
+                compress[key]['classes'] += self._UNIT_SEP + character['Name']
+            else:
+                compress[key] = data
+
+        outdata = [data for data in compress.values()]
+        return self._write_lua(outdata, 'quest')
 
     def read_vendor_rewards(self, args):
-        outdata = set()
+        compress = {}
 
         for row in self.rr['QuestVendorRewards.dat']:
             # Find the corresponding keys
@@ -307,7 +458,7 @@ class QuestRewardReader(BaseParser):
             items = row['BaseItemTypesKeys']
 
             if not items:
-                warnings.warn('Row %s: No corressponding items found for given item ids' % row.rowid)
+                warnings.warn('Row %s: No corresponding items found for given item ids' % row.rowid)
                 continue
 
             classes = row['CharactersKeys']
@@ -316,24 +467,37 @@ class QuestRewardReader(BaseParser):
 
             for quest in quests:
                 for item in items:
-                    data = {}
+                    data = OrderedDict()
 
                     data['quest'] = quest['Name']
                     data['quest_id'] = quest['Id']
                     data['act'] = quest['Act']
                     data['reward'] = item['Name']
-                    # Pretty sure they are all skills...
-                    data['type'] = 'skill'
 
                     data['npc'] = row['NPCKey']['Name']
 
                     if classes:
-                        for cls in classes:
-                            data['class_name'] = cls['Name']
-                            data['class_id'] = cls.rowid
-                            outdata.add(VendorRewardDataTuple(**data))
+                        data['classes'] = '\u001F'.join(
+                            [cls['Name'] for cls in classes]
+                        )
+
+                    key = quest['Id'] + item['Id']
+                    if key in compress:
+                        if 'classes' in data:
+                            compress[key]['classes'] += self._UNIT_SEP + \
+                                                        data['classes']
                     else:
-                        data['class_name'] = 'All'
-                        data['class_id'] = -1
-                        outdata.add(VendorRewardDataTuple(**data))
-        return self._write_lua(list(outdata), 'vendor')
+                        compress[key] = data
+
+        classes_set = {row['Name'] for row in self.rr['Characters.dat']}
+
+        for k, v in compress.items():
+            if 'classes' not in v:
+                continue
+            classes = set(v['classes'].split(self._UNIT_SEP))
+            if len(classes_set.difference(classes)) == 0:
+                del v['classes']
+            else:
+                v['classes'] = self._UNIT_SEP.join(sorted(classes))
+        outdata = [data for data in compress.values()]
+        return self._write_lua(outdata, 'vendor')

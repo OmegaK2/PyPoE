@@ -51,8 +51,7 @@ from PyPoE.cli.exporter.util import check_hash
 # Globals
 # =============================================================================
 
-__all__ = ['ExporterHandler', 'ExporterResult', 'WikiHandler',
-           'add_format_argument']
+__all__ = ['ExporterHandler', 'ExporterResult', 'WikiHandler']
 
 # =============================================================================
 # Classes
@@ -60,6 +59,13 @@ __all__ = ['ExporterHandler', 'ExporterResult', 'WikiHandler',
 
 
 class WikiHandler(object):
+    _wiki_pages = {
+        'English': 'pathofexile.gamepedia.com',
+        'Russian': 'pathofexile-ru.gamepedia.com',
+        #'German': 'pathofexile-de.gamepedia.com',
+        'French': 'pathofexile-fr.gamepedia.com',
+    }
+
     def add_arguments(self, parser):
         parser.add_argument(
             '-w', '--wiki',
@@ -106,6 +112,15 @@ class WikiHandler(object):
             dest='only_existing',
             help='Only write to existing pages and do not create new ones',
             action='store_true',
+        )
+
+        parser.add_argument(
+            '-w-msg', '--wiki-message', '--wiki-edit-message',
+            dest='wiki_message',
+            help='Override the default edit message',
+            action='store',
+            type=str,
+            default='',
         )
 
     def _error_catcher(self, *args, **kwargs):
@@ -195,8 +210,10 @@ class WikiHandler(object):
             else:
                 response = page.save(
                     text=text,
-                    summary='PyPoE/ExporterBot/%s: %s' %
-                            (__version__, row['wiki_message'])
+                    summary='PyPoE/ExporterBot/%s: %s' % (
+                        __version__,
+                        self.cmdargs.wiki_message or row['wiki_message']
+                     )
                 )
                 if response['result'] == 'Success':
                     console('Page was edited successfully (time: %s)' %
@@ -213,8 +230,15 @@ class WikiHandler(object):
 
     def handle(self, *a, mwclient, result, cmdargs, parser):
         # First row is handled separately to prompt the user for his password
+        url = self._wiki_pages.get(config.get_option('language'))
+        if url is None:
+            console(
+                'There is no wiki defined for language "%s"' % cmdargs.language,
+                msg=Msg.error
+            )
+            return
         self.site = mwclient.Site(
-            ('https', 'pathofexile.gamepedia.com'),
+            ('https', url),
             path='/'
         )
 
@@ -286,7 +310,7 @@ class ExporterHandler(BaseHandler):
                     if pargs.write:
                         out_path = os.path.join(out_dir, item['out_file'])
                         console('Writing data to "%s"...' % out_path)
-                        with open(out_path, 'w') as f:
+                        with open(out_path, 'w', encoding='utf-8') as f:
                             f.write(text)
 
                 if pargs.wiki:
@@ -315,6 +339,86 @@ class ExporterHandler(BaseHandler):
 
                 return 0
         return wrapper
+
+    def add_default_subparser_filters(self, sub_parser, cls, *args, **kwargs):
+        """
+        Adds default sub parsers for id, name and rowid.
+
+        Parameters
+        ----------
+        sub_parser
+        cls: object
+            Expected to have the methods:
+            by_id    - handling for id based searching
+            by_name  - handling for name based searching
+            by_rowid - handling for rowid based searching
+
+        Returns
+        -------
+
+        """
+        # By id
+        a_id = sub_parser.add_parser(
+            'id',
+            help='Extract via a list of internal ids.'
+        )
+        self.add_default_parsers(
+            parser=a_id,
+            cls=cls,
+            func=cls.by_id,
+            *args,
+            **kwargs
+        )
+        a_id.add_argument(
+            'id',
+            help='Internal id. Can be specified multiple times.',
+            nargs='+',
+        )
+
+        # by name
+        a_name = sub_parser.add_parser(
+            'name',
+            help='Extract via a list of names.'
+        )
+        self.add_default_parsers(
+            parser=a_name,
+            cls=cls,
+            func=cls.by_name,
+            *args,
+            **kwargs
+        )
+        a_name.add_argument(
+            'name',
+            help='Visible name (i.e. the name you see in game). Can be '
+                 'specified multiple times.',
+            nargs='+',
+        )
+
+        # by row ID
+        a_rid = sub_parser.add_parser(
+            'rowid',
+            help='Extract via rowid in the primary dat file.'
+        )
+        self.add_default_parsers(
+            parser=a_rid,
+            cls=cls,
+            func=cls.by_rowid,
+            *args,
+            **kwargs
+        )
+        a_rid.add_argument(
+            'start',
+            help='Starting index',
+            nargs='?',
+            type=int,
+            default=0,
+        )
+        a_rid.add_argument(
+            'end',
+            nargs='?',
+            help='Ending index',
+            type=int,
+        )
 
     def add_default_parsers(self, parser, cls, func=None, handler=None,
                             wiki=True, wiki_handler=None):
@@ -348,6 +452,31 @@ class ExporterHandler(BaseHandler):
             action='store_true',
         )
 
+    def add_image_arguments(self, parser):
+        parser.add_argument(
+            '-im', '--store-images',
+            help='If specified item 2d art images will be extracted. '
+                 'Requires brotli to be installed.',
+            action='store_true',
+            dest='store_images',
+        )
+
+        parser.add_argument(
+            '-im-c', '--convert-images',
+            help='Convert extracted images to png using ImageMagick '
+                 '(requires "magick" command to be executeable)',
+            action='store_true',
+            dest='convert_images',
+        )
+
+    def add_format_argument(self, parser):
+        parser.add_argument(
+            '--format',
+            help='Output format',
+            choices=['template', 'module'],
+            default='template',
+        )
+
 
 class ExporterResult(list):
     def add_result(self, text=None, out_file=None, wiki_page=None,
@@ -366,12 +495,3 @@ class ExporterResult(list):
 # =============================================================================
 # Functions
 # =============================================================================
-
-
-def add_format_argument(parser):
-    parser.add_argument(
-        '--format',
-        help='Output format',
-        choices=['template', 'module'],
-        default='template',
-    )

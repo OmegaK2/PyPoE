@@ -42,6 +42,7 @@ from PyPoE.poe.file import dat
 from PyPoE.poe.file.specification import load
 from PyPoE.poe.file.ggpk import GGPKFile
 from PyPoE.cli.exporter.core import setup_config
+from PyPoE.cli.exporter import config
 
 # =============================================================================
 # Globals
@@ -160,3 +161,4 @@ def rr(ggpkfile):
 @pytest.fixture(scope='session')
 def cli_config():
     setup_config()
+    config.set_option('language', 'English')

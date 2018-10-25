@@ -69,6 +69,7 @@ __all__ = [
 
     'MOD_MAX_STATS',
     'MOD_STATS_RANGE',
+    'DELVE_UPGRADE_TYPE',
 ]
 
 MOD_MAX_STATS = 6
@@ -283,9 +284,13 @@ class SOCKET_COLOUR(Enum):
     BLUE = B
     WHITE = W
 
-    def __init__(self, char, id):
-        self.char = char
-        self.id = id
+    def __new__(cls, char, id):
+        obj = object.__new__(cls)
+        obj._value_ = char
+        obj.char = char
+        obj.id = id
+
+        return obj
 
 
 class RARITY(Enum):
@@ -302,15 +307,17 @@ class RARITY(Enum):
         Rare rarity ("yellow" colour)
     UNIQUE : RARITY
         Unique rarity ("brown" colour)
+    ANY : RARITY
+        Any rarity
     id : int
         When accessing a :class:`RARITY` instance (e.x. :attr:`RARITY.NORMAL`)
         the id attribute denotes the integer that is sometimes used in the game
         files to represent the colour
-    upper : str
+    name_upper : str
         When accessing a :class:`RARITY` instance (e.x. :attr:`RARITY.NORMAL`)
         the upper attribute represents the textual representation with an upper
         case starting letter
-    lower : str
+    name_lower : str
         When accessing a :class:`RARITY` instance (e.x. :attr:`RARITY.NORMAL`)
         the lower attribute represents the textual representation with an lower
         case starting letter
@@ -323,12 +330,16 @@ class RARITY(Enum):
     MAGIC = (2, 'Magic', 'magic', 'blue')
     RARE = (3, 'Rare', 'rare', 'yellow')
     UNIQUE = (4, 'Unique', 'unique', 'brown')
+    ANY = (5, 'Any', 'any', 'any')
 
-    def __init__(self, id, upper, lower, colour):
-        self.id = id
-        self.name_upper = upper
-        self.name_lower = lower
-        self.colour = colour
+    def __new__(cls, id, upper, lower, colour):
+        obj = object.__new__(cls)
+        obj._value_ = id
+        obj.id = id
+        obj.name_upper = upper
+        obj.name_lower = lower
+        obj.colour = colour
+        return obj
 
 
 class MAP_ITERATION(IntEnum):
@@ -374,13 +385,12 @@ class MOD_DOMAIN(IntEnum):
     UNKNOWN1
     UNKNOWN2
     UNKNOWN3
-    STANCE
-        Stance domain, i.e. animation related stance of objects
     MASTER
-        Master domain for Forsaken Master related mods, in particular for
-        master crafting mods
-    JEWEL
-        Jewel domain for modifiers that appear on jewel items
+        See CRAFTED
+    CRAFTED
+        Domain for crafted mods (previously MASTER)
+    MISC
+        Miscellaneous domain for jewel stuff, item limits, corruptions, etc
     ATLAS
         Atlas domain for modifiers that appear when using a sextant orb on the
         atlas
@@ -391,6 +401,10 @@ class MOD_DOMAIN(IntEnum):
     MAP_DEVICE
         For implicit modifiers that can be applied through the map device
         For example, vaal fragments or soul flasks
+    DELVE
+        For delve modifiers
+    DELVE_AREA
+        For modifiers appearing on delve areas
     """
     ITEM = 1
     FLASK = 2
@@ -400,13 +414,20 @@ class MOD_DOMAIN(IntEnum):
     UNKNOWN1 = 6
     UNKNOWN2 = 7
     UNKNOWN3 = 8
-    STANCE = 9
-    MASTER = 10
-    JEWEL = 11
-    ATLAS = 12
-    LEAGUESTONE = 13
-    ABYSS_JEWEL = 14
-    MAP_DEVICE = 15
+    CRAFTED = 9
+    # Corruptions, item limits, jewel mods, other stuff?
+    MISC = 10
+    ATLAS = 11
+    LEAGUESTONE = 12
+    ABYSS_JEWEL = 13
+    MAP_DEVICE = 14
+    DUMMY = 15
+    DELVE = 16
+    DELVE_AREA = 17
+
+    # legacy names
+    MASTER = 9
+    JEWEL = 10
 
 
 class MOD_GENERATION_TYPE(IntEnum):
@@ -442,7 +463,10 @@ class MOD_GENERATION_TYPE(IntEnum):
         For the ascendancy/labyrinth enchantment mods that can appear on items
     ESSENCE
         For 'essence' mods that can appear on monsters
-
+    BESTIARY
+        For 'bestiary' modifiers that appear on bestiary monsters
+    DELVE_AERA
+        For modifiers that appear on delve areas
     """
     PREFIX = 1
     SUFFIX = 2
@@ -456,6 +480,7 @@ class MOD_GENERATION_TYPE(IntEnum):
     ENCHANTMENT = 10
     ESSENCE = 11
     BESTIARY = 13
+    DELVE_AREA = 14
 
 
 class WORDLISTS(IntEnum):
@@ -496,6 +521,26 @@ class WORDLISTS(IntEnum):
     STRONGBOX_PREFIX = 7
     STRONGBOX_SUFFIX = 8
     ESSENCE = 9
+
+
+class DELVE_UPGRADE_TYPE(IntEnum):
+    """
+    Representation of delve upgrade type ( DelveUpgradeType.dat )
+    """
+    SULPHITE_CAPACITY = 0
+    FLARE_CAPACITY = 1
+    DYNAMITE_CAPACITY = 2
+    LIGHT_RADIUS = 3
+    FLARE_RADIUS = 4
+    DYNAMITE_RADIUS = 5
+    # 6 is unused atm
+    DYNAMITE_DAMAGE = 7
+    DARKNESS_RESISTANCE = 8
+    FLARE_DURATION = 9
+
+    # Alias
+    SULFITE_CAPACITY = SULPHITE_CAPACITY
+
 
 # =============================================================================
 # Functions

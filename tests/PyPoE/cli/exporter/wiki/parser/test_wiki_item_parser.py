@@ -283,7 +283,7 @@ class TestBaseParser():
 
     # Also test all the skill gems with a projectile mapping
     items += tuple([(v, None) for v in
-                    item.ItemsParser._skill_gem_to_projectile_map.keys()])
+                    item.ItemsParser._SKILL_ID_TO_PROJECTILE_MAP.keys()])
 
     @pytest.mark.parametrize('item_name,cls', items)
     def test_for_errors(self, item_name, cls, item_parser):

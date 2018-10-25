@@ -117,6 +117,26 @@ class IDLRecord(Record):
             self.y2,
         )
 
+    @property
+    def w(self):
+        """
+        Returns
+        -------
+        int
+            width
+        """
+        return self.x2 - self.x1
+
+    @property
+    def h(self):
+        """
+        Returns
+        -------
+        int
+            height
+        """
+        return self.y2 - self.y1
+
 
 class IDLFile(AbstractFile, TypedList, metaclass=TypedContainerMeta):
     """
@@ -163,3 +183,12 @@ class IDLFile(AbstractFile, TypedList, metaclass=TypedContainerMeta):
             lines.append('\n')
 
         buffer.write(codecs.BOM_UTF16_LE + ''.join(lines).encode('utf-16_le'))
+
+    def as_dict(self):
+        """
+        Returns
+        -------
+        dict[str, IDLRecord]
+            Lookup dictionary mapping the destinations to the records
+        """
+        return {record.destination: record for record in self}
