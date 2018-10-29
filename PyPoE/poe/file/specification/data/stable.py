@@ -2318,6 +2318,9 @@ specification = Specification({
             ('Unknown0', Field(
                 type='ref|list|int',
             )),
+            ('Unknown1', Field(
+                type='uint',
+            )),
         )),
     ),
     'CurrencyItems.dat': File(
