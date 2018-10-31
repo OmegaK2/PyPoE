@@ -2935,7 +2935,7 @@ specification = Specification({
                 type='ref|string',
             )),
             ('SpawnWeight', Field(
-                type='int',
+                type='ref|list|int',
             )),
             ('WorldAreasKey', Field(
                 type='ulong',
@@ -2957,7 +2957,7 @@ specification = Specification({
                 type='int',
             )),
             ('MinDepth', Field(
-                type='int',
+                type='ref|list|int',
             )),
             ('Description', Field(
                 type='ref|string',
