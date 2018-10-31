@@ -2318,6 +2318,9 @@ specification = Specification({
             ('Unknown0', Field(
                 type='ref|list|int',
             )),
+            ('Column19', Field(
+                type='int',
+            )),
         )),
     ),
     'CurrencyItems.dat': File(
@@ -2932,7 +2935,7 @@ specification = Specification({
                 type='ref|string',
             )),
             ('SpawnWeight', Field(
-                type='int',
+                type='ref|list|int',
             )),
             ('WorldAreasKey', Field(
                 type='ulong',
@@ -2954,13 +2957,19 @@ specification = Specification({
                 type='int',
             )),
             ('MinDepth', Field(
-                type='int',
+                type='ref|list|int',
             )),
             ('Description', Field(
                 type='ref|string',
             )),
             ('Unknown11', Field(
                 type='int',
+            )),
+            ('Unknown12', Field(
+                type='ref|list|int',
+            )),
+            ('Unknown13', Field(
+                type='ref|list|int',
             )),
         )),
     ),
@@ -6588,6 +6597,9 @@ specification = Specification({
                 type='ref|string',
                 file_path=True,
                 file_ext='.ao',
+            )),
+            ('Unknown4', Field(
+                type='float',
             )),
         )),
     ),
