@@ -965,7 +965,6 @@ class TagHandler(object):
     """
 
     _IL_FORMAT = '{{il|%s|html=}}'
-    _IL_PAGE_FORMAT = '{{il|page=%s|html=}}'
     _C_FORMAT = '{{c|%s|%s}}'
 
     def __init__(self, rr):
@@ -988,8 +987,8 @@ class TagHandler(object):
         items = self.rr['BaseItemTypes.dat'].index['Name'][string]
         if items:
             if items[0]['ItemClassesKey']['Name'] == 'Maps':
-                string = self._IL_PAGE_FORMAT % string
-            elif string == 'Two-Stone Ring':
+                string = self._IL_FORMAT % string
+            elif len(items) > 1:
                 return '[[%s]]' % string
             else:
                 string = self._IL_FORMAT % string
@@ -1004,7 +1003,12 @@ class TagHandler(object):
     def _unique_handler(self, hstr, parameter):
         words = self.rr['Words.dat'].index['Text'][hstr]
         if words and words[0]['WordlistsKey'] == WORDLISTS.UNIQUE_ITEM:
-            hstr = self._IL_FORMAT % hstr
+            # Check whether unique item name clashes with base item name
+            items = self.rr['BaseItemTypes.dat'].index['Name'][hstr]
+            if len(items) > 0:
+                hstr = '[[%s]]' % hstr
+            else:
+                hstr = self._IL_FORMAT % hstr
         else:
             hstr = self._check_link(hstr)
         return self._C_FORMAT % ('unique', hstr)
