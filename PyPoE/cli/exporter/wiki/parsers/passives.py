@@ -63,6 +63,7 @@ __all__ = []
 
 class WikiCondition(parser.WikiCondition):
     COPY_KEYS = (
+        'main_page'
     )
 
     NAME = 'Passive skill'
