@@ -63,6 +63,7 @@ class WikiCondition(parser.WikiCondition):
     COPY_KEYS = (
         'main_page',
         'release_version',
+        'screenshot_ext',
     )
 
     NAME = 'Area'
