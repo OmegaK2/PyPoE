@@ -534,12 +534,13 @@ class Patch(object):
         Socket file descriptor for connection to patch server
     """
 
-    _SERVER = 'pathofexile.com'
+    _SERVER_IPV4 = '172.65.204.172'
+    _SERVER_IPV6 = '2606:4700:90:0:7976:9369:8e00:f737'
     _PORT = 12995
     # use patch proto 4
     _PROTO = b'\x01\x04'
 
-    def __init__(self, master_server=_SERVER, master_port=_PORT):
+    def __init__(self, master_server=_SERVER_IPV4, master_port=_PORT):
         """
         Automatically fetches patching urls on class creation.
 
