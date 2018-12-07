@@ -151,11 +151,11 @@ regex_translation_string = re.compile(
     re.UNICODE | re.MULTILINE
 )
 
-regex_ids = re.compile('([0-9])(?(1)(.*))', re.UNICODE)
-regex_id_strings = re.compile('([\S]+)', re.UNICODE)
-regex_strings = re.compile('(?:"(.+)")|([\S]+)+', re.UNICODE)
-regex_int = re.compile('[0-9]+', re.UNICODE)
-regex_isnumber = re.compile('^[0-9\-]+$', re.UNICODE)
+regex_ids = re.compile(r'([0-9](?![\w]))(?(1)(.*))', re.UNICODE)
+regex_id_strings = re.compile(r'([\S]+)', re.UNICODE)
+regex_strings = re.compile(r'(?:"(.+)")|([\S]+)+', re.UNICODE)
+regex_int = re.compile(r'[0-9]+', re.UNICODE)
+regex_isnumber = re.compile(r'^[0-9\-]+$', re.UNICODE)
 regex_lang = re.compile(
     r'^[\s]*lang "(?P<language>[\w ]+)"[\s]*$',
     re.UNICODE | re.MULTILINE
@@ -1970,6 +1970,13 @@ TranslationQuantifier(
 
 TranslationQuantifier(
     id='milliseconds_to_seconds_2dp',
+    handler=lambda v: round(v/1000, 2),
+    reverse_handler=lambda v: float(v)*1000,
+)
+
+# TODO: Not exactly sure yet how this one works
+TranslationQuantifier(
+    id='milliseconds_to_seconds_2dp_if_required',
     handler=lambda v: round(v/1000, 2),
     reverse_handler=lambda v: float(v)*1000,
 )

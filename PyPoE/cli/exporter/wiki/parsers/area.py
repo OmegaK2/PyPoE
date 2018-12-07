@@ -302,10 +302,6 @@ class AreaParser(parser.BaseParser):
             'template': 'is_vaal_area',
             'default': False,
         }),
-        ('IsMasterDailyArea', {
-            'template': 'is_master_daily_area',
-            'default': False,
-        }),
         ('IsLabyrinthArea', {
             'template': 'is_labyrinth_area',
             'default': False,
@@ -406,7 +402,7 @@ class AreaParser(parser.BaseParser):
             atlas_node = self.rr['AtlasNode.dat'].index['WorldAreasKey'].get(
                 area)
             if atlas_node:
-                data['flavour_text'] = atlas_node[0]['FlavourText']
+                data['flavour_text'] = atlas_node[0]['FlavourTextKey']['Text']
 
             #
             # Add main-page if possible

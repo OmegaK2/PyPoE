@@ -41,7 +41,8 @@ from collections import OrderedDict, defaultdict
 from functools import partialmethod
 
 # Self
-from PyPoE.poe.constants import MOD_DOMAIN, MOD_GENERATION_TYPE, MOD_STATS_RANGE
+from PyPoE.poe.constants import \
+    MOD_DOMAIN, MOD_GENERATION_TYPE, MOD_STATS_RANGE, MOD_SELL_PRICES
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter import config
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult
@@ -242,6 +243,9 @@ class ModParser(BaseParser):
             )
             return r
 
+        # Needed for localizing sell prices
+        self.rr['BaseItemTypes.dat'].build_index('Id')
+
         for mod in mods:
             data = OrderedDict()
 
@@ -307,9 +311,12 @@ class ModParser(BaseParser):
 
             if mod['ModTypeKey']:
                 sell_price = defaultdict(int)
-                for msp in mod['ModTypeKey']['ModSellPricesKeys']:
-                    for bt in msp['BaseItemTypesKeys']:
-                        sell_price[bt['Name']] += 1
+                for msp in mod['ModTypeKey']['ModSellPriceTypesKeys']:
+                    for i, (item_id, amount) in enumerate(
+                            MOD_SELL_PRICES[msp['Id']].items(), start=1):
+                        data['sell_price%s_name' % i] = self.rr[
+                            'BaseItemTypes.dat'].index['Id'][item_id]['Name']
+                        data['sell_price%s_amount' % i] = amount
 
                 # Make sure this is always the same order
                 sell_price = sorted(sell_price.items(), key=lambda x:x[0])

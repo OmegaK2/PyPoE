@@ -344,8 +344,14 @@ class QuestRewardReader(BaseParser):
         for row in self.rr['QuestRewards.dat']:
             # Find the corresponding keys
             item = row['BaseItemTypesKey']
+
+            # TODO: Skipping random map reward with zana mod here
+            if item is None:
+                continue
             quest = row['QuestKey']
             character = row['CharactersKey']
+
+
             itemcls = item['ItemClassesKey']['Id']
 
             # Format the data

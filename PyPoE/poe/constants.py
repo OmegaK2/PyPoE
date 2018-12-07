@@ -26,21 +26,28 @@ See PyPoE/LICENSE
 Documentation
 ===============================================================================
 
-.. autoclass:: VERSION
+
+.. autoclass:: BETRAYAL_UPGRADE_SLOTS
+
+.. autoclass:: DELVE_UPGRADE_TYPE
 
 .. autoclass:: DISTRIBUTOR
 
-.. autoclass:: SOCKET_COLOUR
-
-.. autoclass:: RARITY
+.. autoclass:: MAP_FRAGMENT_FAMILIES
 
 .. autoclass:: MOD_DOMAIN
 
 .. autoclass:: MOD_GENERATION_TYPE
 
-.. autoclass:: WORDLISTS
+.. autoclass:: RARITY
 
-.. autoclass:: DELVE_UPGRADE_TYPE
+.. autoclass:: SHOP_PACKAGE_PLATFORM
+
+.. autoclass:: SOCKET_COLOUR
+
+.. autoclass:: VERSION
+
+.. autoclass:: WORDLISTS
 
 .. autoclass:: STAT_INTERPOLATION_TYPE
 
@@ -79,6 +86,119 @@ __all__ = [
 
 MOD_MAX_STATS = 6
 MOD_STATS_RANGE = range(1, MOD_MAX_STATS+1)
+
+# Apparently GGG doesnt want us to know this, so they removed it in 3.5.0
+MOD_SELL_PRICES = {
+    'Low': {
+        'Metadata/Items/Currency/CurrencyRerollMagicShard': 1,
+    },
+    'Medium': {
+        'Metadata/Items/Currency/CurrencyRerollMagicShard': 3,
+    },
+    'High': {
+        'Metadata/Items/Currency/CurrencyRerollMagicShard': 5,
+    },
+    'VeryHigh': {
+        'Metadata/Items/Currency/CurrencyRerollMagicShard': 7,
+    },
+    'Special': {
+        'Metadata/Items/Currency/CurrencyUpgradeToRareShard': 1,
+    },
+    'UniqueLow': {
+        'Metadata/Items/Currency/CurrencyUpgradeToRareShard': 2,
+    },
+    'UniqueMedium': {
+        'Metadata/Items/Currency/CurrencyUpgradeToRareShard': 4,
+    },
+    'UniqueHigh': {
+        'Metadata/Items/Currency/CurrencyUpgradeToRareShard': 6,
+    },
+    'UniqueVeryHigh': {
+        'Metadata/Items/Currency/CurrencyUpgradeToRareShard': 8,
+    },
+    'Kingmaker': {
+        'Metadata/Items/Currency/CurrencyUpgradeMagicToRare': 1,
+    },
+    'BreachFire': {
+        'Metadata/Items/Currency/CurrencyBreachFireShard': 3,
+    },
+    'BreachCold': {
+        'Metadata/Items/Currency/CurrencyBreachColdShard': 3,
+    },
+    'BreachLightning': {
+        'Metadata/Items/Currency/CurrencyBreachLightningShard': 3,
+    },
+    'BreachPhysical': {
+        'Metadata/Items/Currency/CurrencyBreachPhysicalShard': 3,
+    },
+    'BreachChaos': {
+        'Metadata/Items/Currency/CurrencyBreachChaosShard': 3,
+    },
+    'BreachFireUnleashed': {
+        'Metadata/Items/Currency/CurrencyBreachFireShard': 10,
+    },
+    'BreachColdUnleashed': {
+        'Metadata/Items/Currency/CurrencyBreachColdShard': 10,
+    },
+    'BreachLightningUnleashed': {
+        'Metadata/Items/Currency/CurrencyBreachLightningShard': 10,
+    },
+    'BreachPhysicalUnleashed': {
+        'Metadata/Items/Currency/CurrencyBreachPhysicalShard': 10,
+    },
+    'BreashChaosUnleashed': {
+        'Metadata/Items/Currency/CurrencyBreachChaosShard': 10,
+    },
+    'DelveFossilSellPrice1': {
+        'Metadata/Items/Currency/CurrencyRerollRare': 3,
+    },
+    'DelveFossilSellPrice2': {
+        'Metadata/Items/Currency/CurrencyAddModToRare': 1,
+    },
+    'DelveFossilSellPrice3': {
+        'Metadata/Items/Currency/CurrencyUpgradeToRare': 5,
+    },
+    'DelveFossilSellPrice4': {
+        'Metadata/Items/DivinationCards/DivinationCardDeck': 3,
+    },
+    'DelveFossilSellPrice5': {
+        'Metadata/Items/Currency/CurrencyIdentification': 5,
+        'Metadata/Items/Currency/CurrencyUpgradeToRare': 5,
+        'Metadata/Items/Currency/CurrencyUpgradeRandomly': 5,
+        'Metadata/Items/Currency/CurrencyUpgradeToMagic': 5,
+        'Metadata/Items/Currency/CurrencyRerollMagic': 5,
+    },
+    'DelveFossilSellPrice6': {
+        'Metadata/Items/Currency/CurrencyRhoaFeather': 5,
+    },
+    'DelveFossilSellPrice7': {
+        'Metadata/Items/Currency/CurrencyWeaponQuality': 1,
+        'Metadata/Items/Currency/CurrencyIdentification': 1,
+        'Metadata/Items/Currency/CurrencyRerollRare': 1,
+        'Metadata/Items/Currency/CurrencyArmourQuality': 1,
+        'Metadata/Items/Currency/CurrencyUpgradeToRare': 1,
+        'Metadata/Items/Currency/CurrencyUpgradeRandomly': 1,
+        'Metadata/Items/Currency/CurrencyPassiveRefund': 1,
+        'Metadata/Items/Currency/CurrencyUpgradeToMagic': 1,
+        'Metadata/Items/Currency/CurrencyRerollMagic': 1,
+        'Metadata/Items/Currency/CurrencyConvertToNormal': 1,
+        'Metadata/Items/Currency/CurrencyAddModToMagic': 1,
+        'Metadata/Items/Currency/CurrencyPortal': 1,
+        'Metadata/Items/Currency/CurrencyFlaskQuality': 1,
+        'Metadata/Items/Currency/CurrencyGemQuality': 1,
+        'Metadata/Items/Currency/CurrencyRerollSocketColours': 1,
+        'Metadata/Items/Currency/CurrencyRerollSocketLinks': 1,
+        'Metadata/Items/Currency/CurrencyRerollSocketNumbers': 1,
+        'Metadata/Items/Currency/CurrencyMapQuality': 1,
+        'Metadata/Items/Currency/CurrencyCorrupt': 1,
+    },
+    'DelveFossilSellPrice8': {
+        'Metadata/Items/Currency/CurrencyDuplicateShard': 2,
+    },
+    'DelveFossilSellPrice9': {
+        'Metadata/Items/Currency/CurrencyCorruptMonolith': 5,
+    },
+}
 
 # =============================================================================
 # Classes
@@ -173,7 +293,38 @@ class ACTIVE_SKILL_TYPES(IntEnumOverride):
     DUALWIELD_ONLY = 4
     BUFF_SELF = 5
     #DUALWIELD_POSSIBLE = 6'''
-    
+
+
+class BETRAYAL_UPGRADE_SLOTS(IntEnumOverride):
+    """
+    Representation of betrayal upgrae slots (BetrayalUpgradeSlots.dat)
+
+    In some places in the game files these colours are referenced either by
+    their id or by a character, so make sure to check which and use the
+    according attribute.
+
+    Attributes
+    ----------
+    HELMET
+        Helmet slot
+    BOOTS
+        Boots slot
+    GLOVES
+        Gloves slot
+    BACK
+        Back slot
+    WEAPON
+        Weapon slot
+    None
+        Unused
+    """
+    HELMET = 0
+    BOOTS = 1
+    GLOVES = 2
+    BACK = 3
+    WEAPON = 4
+    NONE = 5
+
 
 class VERSION(IntEnumOverride):
     """
@@ -258,9 +409,14 @@ class SHOP_PACKAGE_PLATFORM(IntEnumOverride):
         PC
     XBOX
         Microsoft XBox
+    PS
+        Sony Playstation
     """
     PC = 1
     XBOX = 2
+    PS = 3
+    
+    PLAYSTATION = PS
 
 
 class SOCKET_COLOUR(Enum):
@@ -359,25 +515,25 @@ class RARITY(Enum, metaclass=IntEnumMetaOverride):
         return obj
 
 
-class MAP_ITERATION(IntEnumOverride):
+class MAP_FRAGMENT_FAMILIES(IntEnumOverride):
     """
-    Representation of map iterations
-
-    Attributes
-    ----------
-    LEGACY
-        Maps prior to Awakening (2.0)
-    SQUARE
-        Maps after Awakening (2.0), but before Atlas of Worlds (2.4)
-    ATLAS
-        Maps since Atlas of Worlds update (2.4)
+    Representation of map fragment families (MapFragmentFamilies.dat)
     """
+    BESTIARY = 0
+    BREACH = 1
+    CARTOGRAPHY = 2
+    RELIQUARY = 3
+    SHAPER = 4
+    ELDER = 5
+    DIVINATION = 6
+    TORMENT = 7
+    AMBUSH = 8
+    HARBINGER = 9
+    PERANDUS = 10
+    REGULAR = 11
 
-    LEGACY = 1
-    SQUARE = 2
-    ATLAS = 3
-
-    ROUND = ATLAS
+    DEFAULT = REGULAR
+    STANDARD = REGULAR
 
 
 class MOD_DOMAIN(IntEnumOverride):
@@ -550,6 +706,7 @@ class DELVE_UPGRADE_TYPE(IntEnumOverride):
     LIGHT_RADIUS = 3
     FLARE_RADIUS = 4
     DYNAMITE_RADIUS = 5
+    UNKNOWN = 6
     # 6 is unused atm
     DYNAMITE_DAMAGE = 7
     DARKNESS_RESISTANCE = 8

@@ -1159,9 +1159,9 @@ class ItemsParser(SkillParserShared):
     )
 
     _master_hideout_doodad_map = (
-        ('NPCMasterKey', {
+        ('HideoutNPCsKey', {
             'template': 'master',
-            'format': lambda v: v['NPCsKey']['Name'],
+            'format': lambda v: v['Hideout_NPCsKey']['Name'],
             'condition': lambda v: v is not None,
         }),
         ('MasterLevel', {
@@ -1200,6 +1200,13 @@ class ItemsParser(SkillParserShared):
             infobox['map_area_level'] = maps['Regular_WorldAreasKey'][
                 'AreaLevel']
 
+        # Regular items are handled in the main function
+        if maps['Tier'] < 17:
+            self._process_purchase_costs(
+                self.rr['MapPurchaseCosts.dat'].index['Tier'][maps['Tier']],
+                infobox
+            )
+
     _type_map = _type_factory(
         data_file='Maps.dat',
         data_mapping=(
@@ -1231,6 +1238,21 @@ class ItemsParser(SkillParserShared):
         ),
         row_index=True,
         function=_maps_extra,
+    )
+
+    def _map_fragment_extra(self, infobox, base_item_type, map_fragment_mods):
+        if map_fragment_mods['ModsKey']:
+            i = 1
+            while infobox.get('implicit%s' % i) is not None:
+                i += 1
+            infobox['implicit%s' % i] = map_fragment_mods['ModsKey']['Id']
+
+    _type_map_fragment_mods = _type_factory(
+        data_file='MapFragmentMods.dat',
+        data_mapping={},
+        row_index=True,
+        function=_map_fragment_extra,
+        fail_condition=True,
     )
 
     def _essence_extra(self, infobox, base_item_type, essence):
@@ -1482,7 +1504,7 @@ class ItemsParser(SkillParserShared):
         #'LabyrinthMapItem': (),
         # Misc
         'Map': (_type_map,),
-        #'MapFragment': (_type_,),
+        'MapFragment': (_type_map_fragment_mods,),
         'QuestItem': (),
     }
 
@@ -1551,12 +1573,12 @@ class ItemsParser(SkillParserShared):
             return
 
         # This is not perfect, but works currently.
-        if ho['NPCMasterKey']:
+        if ho['HideoutNPCsKey']:
             if base_item_type['Id'].startswith('Metadata/Items/Hideout/Hideout'
                                                'Wounded'):
                 name = '%s (%s %s decoration, %s)' % (
                     base_item_type['Name'],
-                    ho['NPCMasterKey']['NPCsKey']['ShortName'],
+                    ho['HideoutNPCsKey']['Hideout_NPCsKey']['ShortName'],
                     ho['MasterLevel'],
                     base_item_type['Id'].replace('Metadata/Items/Hideout/Hideout'
                                                  'Wounded', '')
@@ -1564,7 +1586,7 @@ class ItemsParser(SkillParserShared):
             else:
                 name = '%s (%s %s decoration)' % (
                     base_item_type['Name'],
-                    ho['NPCMasterKey']['NPCsKey']['ShortName'],
+                    ho['HideoutNPCsKey']['Hideout_NPCsKey']['ShortName'],
                     ho['MasterLevel']
                 )
             infobox['inventory_icon'] = name
@@ -1636,6 +1658,17 @@ class ItemsParser(SkillParserShared):
         else:
             return []
 
+    def _process_purchase_costs(self, source, infobox):
+        for rarity in RARITY:
+            if rarity.id >= 5:
+                break
+            for i, (item, cost) in enumerate(
+                    source[rarity.name_upper + 'Purchase'],
+                    start=1):
+                prefix = 'purchase_cost_%s%s' % (rarity.name_lower, i)
+                infobox[prefix + '_name'] = item['Name']
+                infobox[prefix + '_amount'] = cost
+
     def by_rowid(self, parsed_args):
         return self._export(
             parsed_args,
@@ -1696,6 +1729,7 @@ class ItemsParser(SkillParserShared):
         r = ExporterResult()
         self.rr['BaseItemTypes.dat'].build_index('Name')
         self.rr['Prophecies.dat'].build_index('Name')
+        self.rr['MapPurchaseCosts.dat'].build_index('Tier')
 
         for base_item_type in items:
             name = base_item_type['Name']
@@ -1760,15 +1794,9 @@ class ItemsParser(SkillParserShared):
             for i, mod in enumerate(base_item_type['Implicit_ModsKeys']):
                 infobox['implicit%s' % (i+1)] = mod['Id']
 
-            for rarity in RARITY:
-                if rarity.id >= 5:
-                    break
-                for i, (item, cost) in enumerate(
-                        base_item_type[rarity.name_upper + 'Purchase'],
-                        start=1):
-                    prefix = 'purchase_cost_%s%s' % (rarity.name_lower, i)
-                    infobox[prefix + '_name'] = item['Name']
-                    infobox[prefix + '_amount'] = cost
+            # Maps are handled separately
+            if cls_id != 'Map':
+                self._process_purchase_costs(base_item_type, infobox)
 
             funcs = self._cls_map.get(cls_id)
             if funcs:

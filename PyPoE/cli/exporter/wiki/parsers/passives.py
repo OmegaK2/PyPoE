@@ -141,9 +141,10 @@ class PassiveSkillParser(parser.BaseParser):
             'default': '',
             'condition': lambda passive: passive['Reminder_ClientStringsKeys']
         }),
-        ('GrantedBuff_BuffDefinitionsKey', {
+        ('PassiveSkillBuffsKeys', {
             'template': 'buff_id',
-            'format': lambda value: value['Id'],
+            'format': lambda value: ','.join([x['BuffDefinitionsKey']['Id'] for x in value]),
+            'condition': lambda passive: passive['PassiveSkillBuffsKeys']
         }),
         ('SkillPointsGranted', {
             'template': 'skill_points',
@@ -291,11 +292,10 @@ class PassiveSkillParser(parser.BaseParser):
             ))
 
             # For now this is being added to the stat text
-            if passive['GrantedBuff_BuffDefinitionsKey']:
+            for ps_buff in  passive['PassiveSkillBuffsKeys']:
                 stat_ids = [stat['Id'] for stat in
-                            passive['GrantedBuff_BuffDefinitionsKey'][
-                                'StatsKeys']]
-                values = passive['GrantedBuff_StatValues']
+                            ps_buff['BuffDefinitionsKey']['StatsKeys']]
+                values = ps_buff['Buff_StatValues']
                 for i, (sid, val) in enumerate(zip(stat_ids, values)):
                     j += 1
                     data['stat%s_id' % j] = sid
