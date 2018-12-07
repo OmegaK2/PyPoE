@@ -5363,14 +5363,15 @@ specification = Specification({
                 type='ref|string',
                 file_path=True,
             )),
-            ('Flag0', Field(
+            ('IsEnabled', Field(
                 type='byte',
             )),
-            ('Unknown2', Field(
+            ('Weight', Field(
                 type='int',
             )),
             ('Key0', Field(
                 type='ulong',
+                key='HideoutRarity.dat',
             )),
             ('Flag1', Field(
                 type='bool',
