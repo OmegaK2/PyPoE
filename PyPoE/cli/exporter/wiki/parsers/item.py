@@ -155,6 +155,14 @@ class WikiCondition(parser.WikiCondition):
 class ItemWikiCondition(WikiCondition):
     NAME = 'Base item'
 
+class MapItemWikiCondition(WikiCondition):
+    NAME = 'Base item'
+
+class UniqueMapItemWikiCondition(MapItemWikiCondition):
+    NAME = 'Item'
+    COPY_MATCH = re.compile(
+        r'^(upgraded_from_set|(ex|im)plicit[0-9]+_(?:text|random_list)).*'
+        , re.UNICODE)
 
 class ProphecyWikiCondition(WikiCondition):
     NAME = 'Item'
@@ -208,6 +216,27 @@ class ItemsHandler(ExporterHandler):
         self.add_default_subparser_filters(sub, cls=ProphecyParser,
                                            type='prophecy')
 
+        #
+        # Betrayal and later map series
+        #
+        parser = core_sub.add_parser(
+            'maps', help='Map export (Betrayal and later)')
+        parser.set_defaults(func=lambda args: parser.print_help())
+
+        self.add_default_parsers(
+            parser=parser,
+            cls=ItemsParser,
+            func=ItemsParser.export_map,
+        )
+        self.add_image_arguments(parser)
+
+        parser.add_argument(
+            'name',
+            help='Visible name (i.e. the name you see in game). Can be '
+                 'specified multiple times.',
+            nargs='*',
+        )
+
     def add_default_parsers(self, *args, type=None, **kwargs):
         super().add_default_parsers(*args, **kwargs)
         parser = kwargs['parser']
@@ -231,7 +260,7 @@ class ItemsHandler(ExporterHandler):
             )
 
 
-class ProphecyParser(SkillParserShared):
+class ProphecyParser(parser.BaseParser):
     _files = [
         'Prophecies.dat',
     ]
@@ -596,6 +625,7 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/Gems/SkillGemNewBladeVortex',
         'Metadata/Items/Gems/SkillGemNewPunishment',
         'Metadata/Items/Gems/SkillGemNewShockNova',
+        'Metadata/Items/Gems/SkillGemRendingSteel',
         'Metadata/Items/Gems/SkillGemRighteousLightning',
         'Metadata/Items/Gems/SkillGemRiptide',
         'Metadata/Items/Gems/SkillGemShadowBlades',
@@ -1184,6 +1214,19 @@ class ItemsParser(SkillParserShared):
                 'template': 'is_master_doodad',
                 'format': lambda v: not v,
             }),
+            ('HideoutNPCsKey', {
+                'template': 'master',
+                'format': lambda v: v['Hideout_NPCsKey']['Name'],
+                'condition': lambda v: v,
+            }),
+            ('FavourCost', {
+                'template': 'master_favour_cost',
+                #'condition': lambda v: v,
+            }),
+            ('MasterLevel', {
+                'template': 'master_level_requirement',
+                #'condition': lambda v: v,
+            }),
             ('Variation_AOFiles', {
                 'template': 'variation_count',
                 'format': lambda v: len(v),
@@ -1200,12 +1243,12 @@ class ItemsParser(SkillParserShared):
             infobox['map_area_level'] = maps['Regular_WorldAreasKey'][
                 'AreaLevel']
 
-        # Regular items are handled in the main function
+        '''# Regular items are handled in the main function
         if maps['Tier'] < 17:
             self._process_purchase_costs(
                 self.rr['MapPurchaseCosts.dat'].index['Tier'][maps['Tier']],
                 infobox
-            )
+            )'''
 
     _type_map = _type_factory(
         data_file='Maps.dat',
@@ -1235,6 +1278,10 @@ class ItemsParser(SkillParserShared):
                 'format': lambda v: v['AreaLevel'],
                 'condition': lambda v: v is not None,
             }),
+            ('MapSeriesKey', {
+                'template': 'map_series',
+                'format': lambda v: v['Name'],
+            })
         ),
         row_index=True,
         function=_maps_extra,
@@ -1708,6 +1755,68 @@ class ItemsParser(SkillParserShared):
 
         return self._export(parsed_args, items)
 
+    def _process_base_item_type(self, base_item_type, infobox,
+                                not_new_map=True):
+            m_id = base_item_type['Id']
+
+            infobox['rarity'] = self.rr['ClientStrings.dat'].index['Id'][
+                'ItemDisplayStringNormal']['Text']
+
+            # BaseItemTypes.dat
+            infobox['name'] = base_item_type['Name']
+            infobox['class_id'] = base_item_type['ItemClassesKey']['Id']
+            infobox['size_x'] = base_item_type['Width']
+            infobox['size_y'] = base_item_type['Height']
+            if base_item_type['FlavourTextKey']:
+                infobox['flavour_text'] = \
+                    parser.parse_and_handle_description_tags(
+                        rr=self.rr,
+                        text=base_item_type['FlavourTextKey']['Text'],
+                    )
+
+            if base_item_type['ItemClassesKey']['Id'] not in \
+                    self._IGNORE_DROP_LEVEL_CLASSES and \
+                    m_id not in self._IGNORE_DROP_LEVEL_ITEMS_BY_ID:
+                infobox['drop_level'] = base_item_type['DropLevel']
+
+            base_ot = OTFile(parent_or_base_dir_or_ggpk=self.base_path)
+            base_ot.read(
+                self.base_path + '/' + base_item_type['InheritsFrom'] + '.ot')
+            try:
+                ot = self.ot[m_id + '.ot']
+            except FileNotFoundError:
+                pass
+            else:
+                base_ot.merge(ot)
+            finally:
+                ot = base_ot
+
+            if 'enable_rarity' in ot['Mods']:
+                infobox['drop_rarities'] = ', '.join([
+                    self.rr['ClientStrings.dat'].index['Id'][
+                        'ItemDisplayString' + n[0].upper() + n[1:]]['Text']
+                    for n in ot['Mods']['enable_rarity']
+                ])
+
+            tags = [t['Id'] for t in base_item_type['TagsKeys']]
+            infobox['tags'] = ', '.join(tags + list(ot['Base']['tag']))
+
+            if not_new_map:
+                infobox['metadata_id'] = m_id
+
+            description = ot['Stack'].get('function_text')
+            if description:
+                infobox['description'] = self.rr['ClientStrings.dat'].index[
+                    'Id'][description]['Text']
+
+            help_text = ot['Base'].get('description_text')
+            if help_text:
+                infobox['help_text'] = self.rr['ClientStrings.dat'].index['Id'][
+                    help_text]['Text']
+
+            for i, mod in enumerate(base_item_type['Implicit_ModsKeys']):
+                infobox['implicit%s' % (i+1)] = mod['Id']
+
     def _export(self, parsed_args, items):
         classes = self._parse_class_filter(parsed_args)
         if classes:
@@ -1737,66 +1846,8 @@ class ItemsParser(SkillParserShared):
             m_id = base_item_type['Id']
 
             infobox = OrderedDict()
-
-            infobox['rarity'] = self.rr['ClientStrings.dat'].index['Id'][
-                'ItemDisplayStringNormal']['Text']
-
-            # BaseItemTypes.dat
-            infobox['name'] = name
-            infobox['class_id'] = base_item_type['ItemClassesKey']['Id']
-            infobox['size_x'] = base_item_type['Width']
-            infobox['size_y'] = base_item_type['Height']
-            if base_item_type['FlavourTextKey']:
-                infobox['flavour_text'] = \
-                    parser.parse_and_handle_description_tags(
-                        rr=self.rr,
-                        text=base_item_type['FlavourTextKey']['Text'],
-                    )
-
-            if cls_id not in self._IGNORE_DROP_LEVEL_CLASSES and \
-                    m_id not in self._IGNORE_DROP_LEVEL_ITEMS_BY_ID:
-                infobox['drop_level'] = base_item_type['DropLevel']
-
-            base_ot = OTFile(parent_or_base_dir_or_ggpk=self.base_path)
-            base_ot.read(
-                self.base_path + '/' + base_item_type['InheritsFrom'] + '.ot')
-            try:
-                ot = self.ot[m_id + '.ot']
-            except FileNotFoundError:
-                pass
-            else:
-                base_ot.merge(ot)
-            finally:
-                ot = base_ot
-
-            if 'enable_rarity' in ot['Mods']:
-                infobox['drop_rarities'] = ', '.join([
-                    self.rr['ClientStrings.dat'].index['Id'][
-                        'ItemDisplayString' + n[0].upper() + n[1:]]['Text']
-                    for n in ot['Mods']['enable_rarity']
-                ])
-
-            tags = [t['Id'] for t in base_item_type['TagsKeys']]
-            infobox['tags'] = ', '.join(tags + list(ot['Base']['tag']))
-
-            infobox['metadata_id'] = m_id
-
-            description = ot['Stack'].get('function_text')
-            if description:
-                 infobox['description'] = self.rr['ClientStrings.dat'].index[
-                     'Id'][description]['Text']
-
-            help_text = ot['Base'].get('description_text')
-            if help_text:
-                infobox['help_text'] = self.rr['ClientStrings.dat'].index['Id'][
-                    help_text]['Text']
-
-            for i, mod in enumerate(base_item_type['Implicit_ModsKeys']):
-                infobox['implicit%s' % (i+1)] = mod['Id']
-
-            # Maps are handled separately
-            if cls_id != 'Map':
-                self._process_purchase_costs(base_item_type, infobox)
+            self._process_base_item_type(base_item_type, infobox)
+            self._process_purchase_costs(base_item_type, infobox)
 
             funcs = self._cls_map.get(cls_id)
             if funcs:
@@ -1885,3 +1936,168 @@ class ItemsParser(SkillParserShared):
                 )
 
         return r
+
+    def export_map(self, parsed_args):
+        self.rr['AtlasNode.dat'].build_index('MapsKey')
+        names = set(parsed_args.name)
+        map_creation_information = {}
+        for row in self.rr['MapCreationInformation.dat']:
+            maps = row['MapsKey']
+            for atlas_node in self.rr['AtlasNode.dat'].index['MapsKey'][maps]:
+                # This excludes the unique maps
+                if atlas_node['ItemVisualIdentityKey'][
+                        'IsAtlasOfWorldsMapIcon']:
+                    break
+            else:
+                # Safeguard in case all entries are unique for some reason (???)
+                continue
+            if names and maps['BaseItemTypesKey']['Name'] in names or\
+                    not names:
+                map_creation_information[row] = atlas_node
+
+        #
+        r = ExporterResult()
+        self.rr['MapSeries.dat'].build_index('Id')
+        map_series = self.rr['MapSeries.dat'].index['Id']['Betrayal']
+
+        if parsed_args.store_images:
+            if not parsed_args.convert_images:
+                console(
+                    'Map images need to be processed and require conversion '
+                    'option to be enabled.',
+                        msg=Msg.error)
+                return r
+
+            self._image_init(parsed_args)
+            base_ico = os.path.join(self._img_path, 'Base.dds')
+
+            self._write_dds(
+                data=self.ggpk[map_series['BaseIcon_DDSFile']].record.extract().read(),
+                out_path=base_ico,
+                parsed_args=parsed_args,
+            )
+
+            base_ico = base_ico.replace('.dds', '.png')
+
+        #
+        self.rr['MapCreationInformation.dat'].build_index('MapsKey')
+        self.rr['MapPurchaseCosts.dat'].build_index('Tier')
+        self.rr['UniqueMaps.dat'].build_index('ItemVisualIdentityKey')
+
+        for row, atlas_node in map_creation_information.items():
+            maps = row['MapsKey']
+            base_item_type = maps['BaseItemTypesKey']
+            name = '%s (%s)' % (base_item_type['Name'], map_series['Name'])
+
+
+            # Base info
+            infobox = OrderedDict()
+            self._process_base_item_type(base_item_type, infobox,
+                                         not_new_map=False)
+            self._type_map(infobox, base_item_type)
+
+            # Overrides
+            infobox['map_tier'] = row['Tier']
+            infobox['map_area_level'] = 67 + row['Tier']
+            infobox['unique_map_area_level'] = 67 + row['Tier']
+            infobox['map_series'] = map_series['Name']
+            infobox['inventory_icon'] = name
+
+            infobox['atlas_x'] = atlas_node['X']
+            infobox['atlas_y'] = atlas_node['Y']
+            connections = []
+            for atlas_node2 in atlas_node['AtlasNodeKeys']:
+                ivi = atlas_node2['ItemVisualIdentityKey']
+                if ivi['IsAtlasOfWorldsMapIcon']:
+                    connections.append('%s (%s)' % (
+                        atlas_node2['MapsKey']['BaseItemTypesKey']['Name'],
+                        map_series['Name']
+                    ))
+                else:
+                    connections.append('%s (%s)' % (
+                        self.rr['UniqueMaps.dat'].index[
+                            'ItemVisualIdentityKey'][ivi]['WordsKey']['Text'],
+                        map_series['Name']
+                    ))
+
+            infobox['atlas_connections'] = ', '.join(connections)
+            infobox['flavour_text'] = atlas_node['FlavourTextKey']['Text']
+
+            if maps['Tier'] < 17:
+                self._process_purchase_costs(
+                    self.rr['MapPurchaseCosts.dat'].index['Tier'][maps['Tier']],
+                    infobox
+                )
+
+            i = 1
+            for atlas_sector in atlas_node['AtlasSectorKeys']:
+                for j, tag in enumerate(atlas_sector['SpawnWeight_TagsKeys']):
+                    prefix = 'area_spawn_weight_override'
+                    infobox['%s%s_tag' % (prefix, i)] = tag['Id']
+                    infobox['%s%s_value' % (prefix, i)] = \
+                        atlas_sector['SpawnWeight_Values'][j]
+                    i += 1
+
+            '''if maps['UpgradedFrom_MapsKey']:
+                infobox['upgeaded_from_set1_group1_page'] = '%s (%s)' % (
+                    maps['UpgradedFrom_MapsKey']['BaseItemTypesKey']['Name'],
+                    map_series['Name']
+                )
+                infobox['upgraded_from_set1_group1_amount'] = 3'''
+
+            cond = MapItemWikiCondition(
+                data=infobox,
+                cmdargs=parsed_args,
+            )
+
+            r.add_result(
+                text=cond,
+                out_file='map_%s.txt' % name,
+                wiki_page=[
+                    {
+                        'page': name,
+                        'condition': cond,
+                    }
+                ],
+                wiki_message='Map exporter',
+            )
+
+            if parsed_args.store_images and self.ggpk:
+                if not atlas_node['ItemVisualIdentityKey']['DDSFile']:
+                    warnings.warn(
+                        'Missing 2d art inventory icon for item "%s"' %
+                        base_item_type['Name']
+                    )
+                    continue
+
+                ico = os.path.join(self._img_path, name + ' inventory icon.dds')
+
+                self._write_dds(
+                    data=self.ggpk[atlas_node['ItemVisualIdentityKey'][
+                        'DDSFile']].record.extract().read(),
+                    out_path=ico,
+                    parsed_args=parsed_args,
+                )
+
+                ico = ico.replace('.dds', '.png')
+
+                color = None
+                if 5 < maps['Tier'] <= 10:
+                    color = 'yellow'
+                elif 10 < maps['Tier'] <= 15:
+                    color = 'red'
+                if color:
+                    os.system(
+                        'magick convert "%s" -fill %s -colorize 100 "%s"' % (
+                        ico, color, ico
+                    ))
+
+                os.system(
+                    'magick composite -gravity center "%s" "%s" "%s"' % (
+                    ico, base_ico, ico
+                ))
+
+        return r
+
+    def export_unique_map(self):
+        pass

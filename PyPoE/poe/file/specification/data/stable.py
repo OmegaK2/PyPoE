@@ -745,14 +745,16 @@ specification = Specification({
             ('Tier', Field(
                 type='int',
             )),
-            ('Key0', Field(
+            ('MapsKey', Field(
                 type='ulong',
+                key='Maps.dat',
             )),
             ('Unknown4', Field(
                 type='int',
             )),
-            ('Keys0', Field(
+            ('AtlasSectorKeys', Field(
                 type='ref|list|ulong',
+                key='AtlasSector.dat'
             )),
             ('FlavourTextKey', Field(
                 type='ulong',
@@ -789,10 +791,11 @@ specification = Specification({
                 type='ref|string',
                 unique=True,
             )),
-            ('Unknown1', Field(
-                type='ref|list|int',
+            ('SpawnWeight_TagsKeys', Field(
+                type='ref|list|ulong',
+                key='Tags.dat'
             )),
-            ('Unknown3', Field(
+            ('SpawnWeight_Values', Field(
                 type='ref|list|int',
             )),
         )),
@@ -1881,6 +1884,9 @@ specification = Specification({
             ('Flag14', Field(
                 type='byte',
             )),
+            ('Flag15', Field(
+                type='byte',
+            )),
         )),
     ),
     'BuffGroups.dat': File(
@@ -2768,7 +2774,7 @@ specification = Specification({
             ('Unknown0', Field(
                 type='ref|list|int',
             )),
-            ('Unknown1', Field(
+            ('Tier', Field(
                 type='int',
             )),
             ('ModFamily', Field(
@@ -2778,16 +2784,17 @@ specification = Specification({
                 type='ref|list|ulong',
                 key='CraftingItemClassCategories.dat',
             )),
-            ('Unknown2', Field(
+            ('MaximumMapTier', Field(
                 type='int',
             )),
-            ('Key0', Field(
+            ('CraftingBenchUnlockCategoriesKey', Field(
                 type='ulong',
+                key='CraftingBenchUnlockCategories.dat',
             )),
-            ('Unknown3', Field(
+            ('UnveilsRequired', Field(
                 type='int',
             )),
-            ('Unknown4', Field(
+            ('UnveilsRequired2', Field(
                 type='int',
             )),
             ('AffixType', Field(
@@ -2817,11 +2824,12 @@ specification = Specification({
             ('Unknown2', Field(
                 type='ref|list|int',
             )),
-            ('Unknown4', Field(
+            ('Description', Field(
                 type='ref|string',
             )),
-            ('Keys0', Field(
+            ('CraftingItemClassCategoriesKeys', Field(
                 type='ref|list|ulong',
+                key='CraftingItemClassCategories.dat',
             )),
         )),
     ),
@@ -6002,8 +6010,11 @@ specification = Specification({
             ('Unknown13', Field(
                 type='int',
             )),
-            ('Unknown14', Field(
-                type='short',
+            ('IsAtlasOfWorldsMapIcon', Field(
+                type='bool',
+            )),
+            ('IsTier16Icon', Field(
+                type='bool',
             )),
         )),
     ),
@@ -6577,8 +6588,9 @@ specification = Specification({
     ),
     'MapCreationInformation.dat': File(
         fields=OrderedDict((
-            ('Key0', Field(
+            ('MapsKey', Field(
                 type='ulong',
+                key='Maps.dat'
             )),
             ('Tier', Field(
                 type='int',
@@ -9795,8 +9807,9 @@ specification = Specification({
     ),
     'RecipeUnlockObjects.dat': File(
         fields=OrderedDict((
-            ('Key0', Field(
+            ('WorldAreasKey', Field(
                 type='ulong',
+                key='WorldAreas.dat',
             )),
             ('InheritsFrom', Field(
                 type='ref|string',
@@ -9870,9 +9883,9 @@ specification = Specification({
                 type='ulong',
                 key='BetrayalJobs.dat'
             )),
-            ('BetrayalFortsKey', Field(
+            ('BetrayalRanksKey', Field(
                 type='ulong',
-                key='BetrayalForts.dat',
+                key='BetrayalRanks.dat',
             )),
             ('Currency_Values', Field(
                 type='ref|list|int',
@@ -11374,14 +11387,16 @@ specification = Specification({
             ('ItemVisualIdentityKey', Field(
                 type='ulong',
                 key='ItemVisualIdentity.dat',
+                unique=True,
             )),
             ('WorldAreasKey', Field(
                 type='ulong',
                 key='WorldAreas.dat',
+                unique=True,
             )),
-            # I think this is UniqueItemsKey
-            ('Key0', Field(
+            ('WordsKey', Field(
                 type='ulong',
+                key='Words.dat'
             )),
             ('FlavourTextKey', Field(
                 type='ulong',
