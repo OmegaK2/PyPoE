@@ -1669,8 +1669,9 @@ class ItemsParser(SkillParserShared):
 
         # Each iteration of maps has it's own art
         infobox['inventory_icon'] = name
-        if not id.startswith('MapWorld'):
-            infobox['drop_enabled'] = False
+        # For betrayal map conflict handling is not used, so setting this to
+        # false here should be fine
+        infobox['drop_enabled'] = False
 
         return name
 
@@ -2021,7 +2022,9 @@ class ItemsParser(SkillParserShared):
                     ))
 
             infobox['atlas_connections'] = ', '.join(connections)
-            infobox['flavour_text'] = atlas_node['FlavourTextKey']['Text']
+            infobox['flavour_text'] = \
+                atlas_node['FlavourTextKey']['Text'].replace('\n', '<br>')\
+                .replace('\r', '')
 
             if maps['Tier'] < 17:
                 self._process_purchase_costs(
@@ -2044,6 +2047,8 @@ class ItemsParser(SkillParserShared):
                     map_series['Name']
                 )
                 infobox['upgraded_from_set1_group1_amount'] = 3'''
+
+            infobox['release_version'] = '3.5.0'
 
             cond = MapItemWikiCondition(
                 data=infobox,
@@ -2083,12 +2088,12 @@ class ItemsParser(SkillParserShared):
 
                 color = None
                 if 5 < maps['Tier'] <= 10:
-                    color = 'yellow'
+                    color = "255,210,100"
                 elif 10 < maps['Tier'] <= 15:
-                    color = 'red'
+                    color = "240,30,10"
                 if color:
                     os.system(
-                        'magick convert "%s" -fill %s -colorize 100 "%s"' % (
+                        '''magick convert "%s" -fill rgb(%s) -colorize 100 "%s"''' % (
                         ico, color, ico
                     ))
 
