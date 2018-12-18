@@ -2026,7 +2026,7 @@ class ItemsParser(SkillParserShared):
                 atlas_node['FlavourTextKey']['Text'].replace('\n', '<br>')\
                 .replace('\r', '')
 
-            if maps['Tier'] < 17:
+            if row['Tier'] < 17:
                 self._process_purchase_costs(
                     self.rr['MapPurchaseCosts.dat'].index['Tier'][maps['Tier']],
                     infobox
@@ -2087,9 +2087,9 @@ class ItemsParser(SkillParserShared):
                 ico = ico.replace('.dds', '.png')
 
                 color = None
-                if 5 < maps['Tier'] <= 10:
+                if 5 < row['Tier'] <= 10:
                     color = "255,210,100"
-                elif 10 < maps['Tier'] <= 15:
+                elif 10 < row['Tier'] <= 15:
                     color = "240,30,10"
                 if color:
                     os.system(
