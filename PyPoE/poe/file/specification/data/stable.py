@@ -11414,6 +11414,72 @@ specification = Specification({
         fields=OrderedDict((
         )),
     ),
+    'UniqueStashLayout.dat': File(
+        fields=OrderedDict((
+            ('UniqueItemsKey', Field(
+                type='ulong',
+            )),
+            ('ItemVisualIdentityKey', Field(
+                type='ulong',
+                key='ItemVisualIdentity.dat',
+            )),
+            ('UniqueStashTypesKey', Field(
+                type='ulong',
+                key='UniqueStashTypes.dat',
+            )),
+            ('Key3', Field(
+                type='ulong',
+            )),
+            ('Unknown1', Field(
+                type='int',
+            )),
+            ('Unknown2', Field(
+                type='int',
+            )),
+            ('Flag0', Field(
+                type='bool',
+            )),
+            ('Flag1', Field(
+                type='bool',
+            )),
+        )),
+    ),
+    'UniqueStashTypes.dat': File(
+        fields=OrderedDict((
+            ('Id', Field(
+                type='ref|string',
+                unique=True,
+            )),
+            ('Order', Field(
+                type='int',
+            )),
+            ('Width', Field(
+                type='int',
+            )),
+            ('Height', Field(
+                type='int',
+            )),
+            ('Unknown4', Field(
+                type='int',
+            )),
+            ('Unknown5', Field(
+                type='int',
+            )),
+            ('Name', Field(
+                type='ref|string',
+            )),
+            ('Unknown7', Field(
+                type='int',
+            )),
+            ('Image', Field(
+                type='ref|string',
+                file_path=True,
+            )),
+            ('Unknown9', Field(
+                type='int',
+            )),
+        )),
+    ),
     'VoteState.dat': File(
         fields=OrderedDict((
             ('Id', Field(
