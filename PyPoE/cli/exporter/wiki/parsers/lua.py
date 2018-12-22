@@ -119,6 +119,16 @@ class LuaHandler(ExporterHandler):
             func=BestiaryParser.main,
         )
 
+        parser = lua_sub.add_parser(
+            'delve',
+            help='Extract delve information',
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=DelveParser,
+            func=DelveParser.main,
+        )
+
 
 class BestiaryParser(BaseParser):
     _files = [
@@ -218,6 +228,108 @@ class BestiaryParser(BaseParser):
                 out_file='bestiary_%s.lua' % k,
                 wiki_page=[{
                     'page': 'Module:Bestiary/%s' % k,
+                    'condition': None,
+                }]
+            )
+
+        return r
+
+
+class DelveParser(BaseParser):
+    _files = [
+        'DelveLevelScaling.dat',
+        'DelveResourcePerLevel.dat',
+        'DelveUpgrades.dat',
+    ]
+
+    _COPY_KEYS_DELVE_LEVEL_SCALING = (
+        ('Depth', {
+            'key': 'depth',
+        }),
+        ('MonsterLevel', {
+            'key': 'monster_level',
+        }),
+        ('SulphiteCost', {
+            'key': 'sulphite_copst',
+        }),
+        ('DarknessResistance', {
+            'key': 'darkness_resistance',
+        }),
+        ('LightRadius', {
+            'key': 'light_radius',
+        }),
+        ('MoreMonsterLife', {
+            'key': 'monster_life',
+        }),
+        ('MoreMonsterDamage', {
+            'key': 'monster_damage',
+        }),
+    )
+
+    _COPY_KEYS_DELVE_RESOURCES_PER_LEVEL = (
+        ('AreaLevel', {
+            'key': 'area_level',
+        }),
+        ('Sulphite', {
+            'key': 'sulphite',
+        }),
+    )
+
+    _COPY_KEYS_DELVE_UPGRADES = (
+        ('DelveUpgradeTypeKey', {
+            'key': 'type',
+            'value': lambda x: x.name.lower(),
+        }),
+        ('UpgradeLevel', {
+            'key': 'level',
+        }),
+    )
+
+    def _copy_from_keys(self, row, keys, out_data):
+        copyrow = OrderedDict()
+        for k, copy_data in keys:
+
+            value = row[k]
+            if value is not None:
+                if 'value' in copy_data:
+                    value = copy_data['value'](value)
+                copyrow[copy_data['key']] = value
+
+        out_data.append(copyrow)
+
+    def main(self, parsed_args):
+        delve_level_scaling = []
+        delve_resources_per_level = []
+        delve_upgrades = []
+        delve_upgrade_stats = []
+
+        for row in self.rr['DelveLevelScaling.dat']:
+            self._copy_from_keys(row, self._COPY_KEYS_DELVE_LEVEL_SCALING,
+                                 delve_level_scaling)
+
+        for row in self.rr['DelveResourcePerLevel.dat']:
+            self._copy_from_keys(row, self._COPY_KEYS_DELVE_RESOURCES_PER_LEVEL,
+                                 delve_resources_per_level)
+
+        for row in self.rr['DelveUpgrades.dat']:
+            self._copy_from_keys(row, self._COPY_KEYS_DELVE_UPGRADES,
+                                 delve_upgrades)
+            delve_upgrades[-1]['cost'] = row['Cost']
+
+            for i, (stat, value) in enumerate(row['Stats']):
+                self._copy_from_keys(row, self._COPY_KEYS_DELVE_UPGRADES,
+                                     delve_upgrade_stats)
+                delve_upgrade_stats[-1]['id'] = stat['Id']
+                delve_upgrade_stats[-1]['value'] = value
+
+        r = ExporterResult()
+        for k in ('level_scaling', 'resources_per_level', 'upgrades',
+                  'upgrade_stats'):
+            r.add_result(
+                text=lua_formatter(locals()['delve_' + k]),
+                out_file='delve_%s.lua' % k,
+                wiki_page=[{
+                    'page': 'Module:Delve/delve_%s' % k,
                     'condition': None,
                 }]
             )
