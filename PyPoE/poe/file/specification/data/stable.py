@@ -3683,7 +3683,7 @@ specification = Specification({
                 type='ref|list|ulong',
                 key='Stats.dat',
             )),
-            ('StatsValues', Field(
+            ('StatValues', Field(
                 type='ref|list|int',
             )),
             ('Cost', Field(
