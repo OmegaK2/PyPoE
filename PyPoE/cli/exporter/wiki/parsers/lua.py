@@ -250,7 +250,7 @@ class DelveParser(BaseParser):
             'key': 'monster_level',
         }),
         ('SulphiteCost', {
-            'key': 'sulphite_copst',
+            'key': 'sulphite_cost',
         }),
         ('DarknessResistance', {
             'key': 'darkness_resistance',
