@@ -2771,7 +2771,7 @@ specification = Specification({
                 type='bool',
             )),
             #3.4
-            ('Unknown0', Field(
+            ('RecipeIds', Field(
                 type='ref|list|int',
             )),
             ('Tier', Field(
@@ -3512,10 +3512,10 @@ specification = Specification({
                 type='int',
             )),
             # Probably monster HP/DMG
-            ('Unknown2', Field(
+            ('MoreMonsterLife', Field(
                 type='int',
             )),
-            ('Unknown3', Field(
+            ('MoreMonsterDamage', Field(
                 type='int',
             )),
             ('DarknessResistance', Field(
@@ -3640,10 +3640,10 @@ specification = Specification({
     ),
     'DelveResourcePerLevel.dat': File(
         fields=OrderedDict((
-            ('Level', Field(
+            ('AreaLevel', Field(
                 type='int',
             )),
-            ('Resources', Field(
+            ('Sulphite', Field(
                 type='int',
             )),
         )),
@@ -3698,6 +3698,12 @@ specification = Specification({
             )),
             ('Unknown3', Field(
                 type='int',
+            )),
+        )),
+        virtual_fields=OrderedDict((
+            ('Stats', VirtualField(
+                fields=('StatsKeys', 'StatValues'),
+                zip=True,
             )),
         )),
     ),
