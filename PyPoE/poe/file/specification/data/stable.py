@@ -4635,7 +4635,7 @@ specification = Specification({
                 key='BuffDefinitions.dat',
             )),
             ('BuffStatValues', Field(
-                type='ref|list|uint',
+                type='ref|list|int',
             )),
         )),
     ),
