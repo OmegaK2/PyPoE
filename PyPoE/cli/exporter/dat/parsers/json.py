@@ -151,7 +151,7 @@ class JSONExportHandler(DatExportHandler):
                 if args.include_virtual_fields:
                     out_obj['virtual_header'] = virtual_header
 
-                if args.include_record_length :
+                if args.include_record_length:
                     out_obj['record_length'] = dat_files[file_name].reader.table_record_length
 
                 out.append(out_obj)
