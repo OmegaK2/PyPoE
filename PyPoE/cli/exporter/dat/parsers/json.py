@@ -87,6 +87,13 @@ class JSONExportHandler(DatExportHandler):
             action='store_true',
         )
 
+        self.json.add_argument(
+            '--include-record-length',
+            help='Save the table record length of a DAT file',
+            dest='include_record_length',
+            action='store_true',
+        )
+
         self.add_default_arguments(self.json)
 
     def handle(self, args):
@@ -144,11 +151,14 @@ class JSONExportHandler(DatExportHandler):
                 if args.include_virtual_fields:
                     out_obj['virtual_header'] = virtual_header
 
+                if args.include_record_length:
+                    out_obj['record_length'] = dat_files[file_name].reader.table_record_length
+
                 out.append(out_obj)
 
             console('Dumping data to "%s"...' % args.target)
 
-            dump(out, f, ensure_ascii=args.ascii)
+            dump(out, f, ensure_ascii=args.ascii, indent=4)
 
         console('Done.')
 
