@@ -1270,10 +1270,10 @@ specification = Specification({
                 type='ulong',
                 key='BetrayalChoices.dat',
             )),
-            ('Description', Field(
-                type='ref|string',
-            )),
             ('Unknown0', Field(
+                type='int',
+            )),
+            ('Unknown1', Field(
                 type='int',
             )),
         )),
@@ -4855,6 +4855,9 @@ specification = Specification({
             ('Flag6', Field(
                 type='bool',
             )),
+            ('Unknown23', Field(
+                type='int',
+            )),
         )),
     ),
         'GeometryProjectiles.dat': File(
@@ -7018,19 +7021,6 @@ specification = Specification({
             )),
         )),
     ),
-    'MicrotransactionPeriodicCharacterEffectVariations.dat': File(
-        fields=OrderedDict((
-            ('Id', Field(
-                type='ref|string',
-                unique=True,
-            )),
-            ('AOFile', Field(
-                type='ref|string',
-                file_path=True,
-                file_ext='.ao',
-            )),
-        )),
-    ),
     'MicrotransactionPortalVariations.dat': File(
         fields=OrderedDict((
             ('BaseItemTypesKey', Field(
@@ -8650,9 +8640,8 @@ specification = Specification({
             ('Flag2', Field(
                 type='bool',
             )),
-            # TODO 3.5.0 ... correct string and sometimes jibberish
             ('Unknown23', Field(
-                type='ref|string',
+                type='int',
             )),
             ('Key0', Field(
                 type='ulong',
@@ -9882,29 +9871,6 @@ specification = Specification({
             )),
         )),
     ),
-    'SafehouseCraftingSpree.dat': File(
-        fields=OrderedDict((
-            #TODO 3.5.0 verify
-            ('BetrayalJobsKey', Field(
-                type='ulong',
-                key='BetrayalJobs.dat'
-            )),
-            ('BetrayalRanksKey', Field(
-                type='ulong',
-                key='BetrayalRanks.dat',
-            )),
-            ('Currency_Values', Field(
-                type='ref|list|int',
-            )),
-            ('Chance', Field(
-                type='int',
-            )),
-            ('Currency_SafehouseCraftingSpreeCurrenciesKeys', Field(
-                type='ref|list|ulong',
-                key='SafehouseCraftingSpreeCurrencies.dat',
-            )),
-        )),
-    ),
     'SafehouseCraftingSpreeCurrencies.dat': File(
         fields=OrderedDict((
             ('Id', Field(
@@ -10855,6 +10821,9 @@ specification = Specification({
             ('ShopPackagePlatformKey', Field(
                 type='ref|list|int',
                 enum='SHOP_PACKAGE_PLATFORM',
+            )),
+            ('Unknown1', Field(
+                type='int',
             )),
         )),
     ),
