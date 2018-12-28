@@ -1568,6 +1568,7 @@ specification = Specification({
             ('BetrayalUpgradeSlotsKey', Field(
                 type='int',
                 enum='BETRAYAL_UPGRADE_SLOTS',
+                key='BetrayalUpgradeSlots.dat',
             )),
             ('Unknown7', Field(
                 type='ref|list|int',
@@ -3671,7 +3672,7 @@ specification = Specification({
         fields=OrderedDict((
             ('DelveUpgradeTypeKey', Field(
                 type='int',
-                # key='DelveUpgradeType.dat',
+                key='DelveUpgradeType.dat',
                 enum="DELVE_UPGRADE_TYPE",
             )),
             ('UpgradeLevel', Field(
@@ -9442,6 +9443,7 @@ specification = Specification({
             )),
             ('AchievementItemsKeys', Field(
                 type='ref|list|ulong',
+                key='AchievementItems.dat',
             )),
             ('Keys0', Field(
                 type='ref|list|ulong',
@@ -10094,6 +10096,7 @@ specification = Specification({
             ('ShopPackagePlatformKeys', Field(
                 type='ref|list|int',
                 enum='SHOP_PACKAGE_PLATFORM',
+                key='ShopPackagePlatform.dat',
             )),
             ('Unknown8', Field(
                 type='ref|string',
@@ -10855,6 +10858,7 @@ specification = Specification({
             ('ShopPackagePlatformKey', Field(
                 type='ref|list|int',
                 enum='SHOP_PACKAGE_PLATFORM',
+                key='ShopPackagePlatform.dat',
             )),
             ('Unknown0', Field(
                 type='ref|string',
