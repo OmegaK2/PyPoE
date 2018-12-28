@@ -1203,7 +1203,7 @@ specification = Specification({
                 type='ulong',
                 key='BestiaryCapturableMonsters.dat',
             )),
-            ('RarityKey', Field(
+            ('Rarity', Field(
                 type='int',
                 enum='RARITY',
             )),
@@ -9474,7 +9474,7 @@ specification = Specification({
             ('ItemLevel', Field(
                 type='int',
             )),
-            ('RarityKey', Field(
+            ('Rarity', Field(
                 type='int',
                 enum='RARITY',
             )),
