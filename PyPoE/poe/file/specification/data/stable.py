@@ -1270,11 +1270,9 @@ specification = Specification({
                 type='ulong',
                 key='BetrayalChoices.dat',
             )),
-            ('Description', Field(
-                type='ref|string',
-            )),
-            ('Unknown0', Field(
-                type='int',
+            ('ClientStringsKey', Field(
+                type='ulong',
+                key='ClientStrings.dat',
             )),
         )),
     ),
@@ -4780,11 +4778,8 @@ specification = Specification({
             ('Keys0', Field(
                 type='ref|list|ulong',
             )),
-            ('Unknown3', Field(
-                type='int',
-            )),
-            ('Unknown4', Field(
-                type='int',
+            ('Keys1', Field(
+                type='ref|list|ulong',
             )),
             ('Unknown5', Field(
                 type='int',
@@ -4854,6 +4849,9 @@ specification = Specification({
             )),
             ('Flag6', Field(
                 type='bool',
+            )),
+            ('Unknown23', Field(
+                type='int',
             )),
         )),
     ),
@@ -7029,6 +7027,9 @@ specification = Specification({
                 file_path=True,
                 file_ext='.ao',
             )),
+            ('Key0', Field(
+                type='ulong',
+            )),
         )),
     ),
     'MicrotransactionPortalVariations.dat': File(
@@ -8644,15 +8645,11 @@ specification = Specification({
             ('Unknown21', Field(
                 type='int',
             )),
-            ('Unknown22', Field(
-                type='int',
-            )),
             ('Flag2', Field(
                 type='bool',
             )),
-            # TODO 3.5.0 ... correct string and sometimes jibberish
-            ('Unknown23', Field(
-                type='ref|string',
+            ('Keys0', Field(
+                type='ref|list|ulong',
             )),
             ('Key0', Field(
                 type='ulong',
@@ -9903,6 +9900,9 @@ specification = Specification({
                 type='ref|list|ulong',
                 key='SafehouseCraftingSpreeCurrencies.dat',
             )),
+            ('Data0', Field(
+                type='ref|list|int',
+            )),
         )),
     ),
     'SafehouseCraftingSpreeCurrencies.dat': File(
@@ -10855,6 +10855,9 @@ specification = Specification({
             ('ShopPackagePlatformKey', Field(
                 type='ref|list|int',
                 enum='SHOP_PACKAGE_PLATFORM',
+            )),
+            ('Unknown0', Field(
+                type='ref|string',
             )),
         )),
     ),
