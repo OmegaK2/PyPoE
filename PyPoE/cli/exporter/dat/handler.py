@@ -68,6 +68,13 @@ class DatExportHandler(object):
             nargs='*',
         )
 
+        parser.add_argument(
+            '-lang', '--language',
+            help='Language subdirectory to use',
+            dest='language',
+            default=None,
+        )
+
     def handle(self, args):
         ver = config.get_option('version')
 
@@ -108,7 +115,7 @@ class DatExportHandler(object):
 
         dat_files = {}
         ggpk_data = ggpk['Data']
-        lang = config.get_option('language')
+        lang = args.language or config.get_option('language')
         if lang != 'English':
             ggpk_data = ggpk_data[lang]
         remove = []
