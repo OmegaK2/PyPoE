@@ -364,6 +364,7 @@ class AreaParser(parser.BaseParser):
 
         self.rr['MapPins.dat'].build_index('WorldAreasKeys')
         self.rr['AtlasNode.dat'].build_index('WorldAreasKey')
+        self.rr['MapSeries.dat'].build_index('Id')
 
         console('Found %s areas. Processing...' % len(areas))
 
@@ -420,6 +421,11 @@ class AreaParser(parser.BaseParser):
 
 
             if map_version:
+                if map_version == self.rr['MapSeries.dat'].index['Id'][
+                        'MapWorlds']['Name']:
+                    map_version = self.rr['MapSeries.dat'].index['Id'][
+                    'Betrayal']['Name']
+
                 if 'Unique' in area['Id'] or 'BreachBoss' in area['Id'] or \
                         area['Id'].endswith('ShapersRealm'):
                     data['main_page'] = '%s (%s)' % (area['Name'], map_version)
@@ -429,7 +435,7 @@ class AreaParser(parser.BaseParser):
                         re.sub('^.*Harbinger', '', area['Id']),
                         map_version,
                     )
-                else:
+                elif not area['Id'].startswith('MapWorldsElder'):
                     data['main_page'] = '%s Map (%s)' % (
                         area['Name'], map_version
                     )

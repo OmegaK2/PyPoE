@@ -155,14 +155,17 @@ class WikiCondition(parser.WikiCondition):
 class ItemWikiCondition(WikiCondition):
     NAME = 'Base item'
 
+
 class MapItemWikiCondition(WikiCondition):
     NAME = 'Base item'
+
 
 class UniqueMapItemWikiCondition(MapItemWikiCondition):
     NAME = 'Item'
     COPY_MATCH = re.compile(
         r'^(upgraded_from_set|(ex|im)plicit[0-9]+_(?:text|random_list)).*'
         , re.UNICODE)
+
 
 class ProphecyWikiCondition(WikiCondition):
     NAME = 'Item'
@@ -2000,6 +2003,9 @@ class ItemsParser(SkillParserShared):
             # Overrides
             infobox['map_tier'] = row['Tier']
             infobox['map_area_level'] = 67 + row['Tier']
+            # Map start dropping at one tier lower, with the exception of
+            # tier 1 maps which can drop rather early
+            infobox['drop_level'] = 66 + row['Tier'] if row['Tier'] > 1 else 58
             infobox['unique_map_area_level'] = 67 + row['Tier']
             infobox['map_series'] = map_series['Name']
             infobox['inventory_icon'] = name
