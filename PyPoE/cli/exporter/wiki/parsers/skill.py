@@ -448,11 +448,6 @@ class SkillParserShared(parser.BaseParser):
             infobox['gem_description'] = ae['Description']
             infobox['active_skill_name'] = ae['DisplayedName']
             if ae['WeaponRestriction_ItemClassesKeys']:
-                # The class name may be empty for reason, causing issues
-                infobox['item_class_restriction'] = ', '.join([
-                    c['Name'] if c['Name'] else c['Id'] for c in
-                    ae['WeaponRestriction_ItemClassesKeys']
-                ])
                 infobox['item_class_id_restriction'] = ', '.join([
                     c['Id'] for c in ae['WeaponRestriction_ItemClassesKeys']
                 ])
