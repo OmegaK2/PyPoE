@@ -51,27 +51,36 @@ the keys.
 Related values should be have a prefix which is separated by a underscore.
 For example, if there are two columns one of which provides a list of Ids and
 the other provides a list of Values, you'd do something like:
- MyValue_Ids
- MyValue_Values
 
-Unknown what the field does, replace N:
- Index<N>   - for unknown strings (ref|string)
- Unknown<N> - for unknown values (byte, short, int, long & unsigned variants)
- Data<N>    - for unknown data (ref|list)
- Flag<N>    - for unknown boolean values (bool)
- Key<N>     - for unknown keys (likely to be a key, ulong type)
+* MyValue_Ids
+* MyValue_Values
 
-Known what the key does:
- <WhatAmI>      - use a good name. For example ItemLevel if the key is item
-                  level
- <OtherDat>Key  - If you know this field references another dat file use this
-                  naming; for example WorldAreasKey
- <OtherDat>Keys - Similar to above, but use this for a list of keys
- <EXT>File      - Use this for a ref|string that contains a file path
-                  Replace <EXT> with the extension of the file, for example:
-                  DDSFile for a file with the .dds extension
- Id             - Use this for primary key value. Usually also the first value
-                  in a row
+If it is unknown what the field does, name it after the datatype and replace N:
+    Index<N>
+        for unknown strings (ref|string)
+    Unknown<N>
+        for unknown values (byte, short, int, long & unsigned variants)
+    Data<N>
+        for unknown data (ref|list)
+    Flag<N>
+        for unknown boolean values (bool)
+    Key<N>
+        for unknown keys (likely to be a key, ulong type)
+
+If it is known what the field does
+    <WhatAmI>
+        Use a good name. For example ItemLevel if the key is item level
+    <OtherDat>Key
+        If you know this field references another dat file use this naming;
+        for example WorldAreasKey
+    <OtherDat>Keys
+        Similar to above, but use this for a list of keys
+    <EXT>File
+        Use this for a ref|string that contains a file path
+        Replace <EXT> with the extension of the file, for example:
+        DDSFile for a file with the .dds extension
+    Id
+        Use this for primary key value. Usually also the first value in a row
 
 
 Editing guide
@@ -81,59 +90,84 @@ Use int or uint types if you have a new .dat and fill it up until the data
 size (pad with short/byte if necessary).
 
 Finding out the proper type:
+
 - an int field followed by a all 0 field is usually an ulong reference key
+
   - this also applies to lists, i.e. a ref|list|uint with each entry followed
     by a zero is probably a ref|list|ulong instead (and a key).
+
 - an int field with ever increasing numbers not larger then data section is
   a pointer to the data section. If preceeded by a value > 0, it may be a
   list; otherwise it may be a string
+
   - if the value is increasing but out of bounds, the int may be at the wrong
     position, i.e. preceeded by byte(s) or short.
+
 - list and strings may be empty
+
   - multiple empty lists may point at the same position in the data
   - empty strings will still take up 4 bytes of space (the zero terminator)
+
 - if you see there are gaps or overlapping values in data section, considering
   increasing/decreasing the type accordingly (i.e. from ref|uint to ref|ulong)
+
   - if that doesn't help, the key might not be a reference
 
 Finding out the proper meaning:
+
 - First of all, mind the game! A lot can be deducted from knowing the game
   well.
 - Keep the name of the file in mind;
+
   - it's common for files to have references to other related files (i.e. a
     xxxMasterMission is most likely to contain a reference to Master.dat
     somewhere)
   - the values will usually relate the file name obviously; i.e. will contain
     stats/mods for the items, their visuals, and so on
+
     - often these are supplied as keys (or Key1, Key2, Value1, Value2 ...)
+
 - Look at the minimum and maximum of the values; often they only have a
   specific range which can hint at their meaning
+
   - 0 to 100 can often be Level related
   - Values with a base line of 1000 (or more rarely 100) above 0 are often
     spawn chance or weighting related.
+
 - Values often appear as pairs, for example:
+
   - Spawn Weight
+
     - ref|list|ulong -> Tags.dat keys
     - ref|list|int -> Values
+
   - Stats
+
    - ulong -> Stat key
    - int -> Value (sometimes 2x for min/max rollable range)
 
 
 Regarding references/keys to other files:
+
 - Generally for their type:
+
   - ulong if referencing another file
   - uint if referencing the same file
   - None (0xFEFEFEFE) is a pretty solid giveaway
+
 - Offsets:
+
   - Usually the other dat file, starting at 0 (offset not needed, default)
   - If the file has been blanked or if it referencing a specific column,
     often it uses offset 1
+
 - Finding out what they reference to:
+
   - if the keys is very small it's likely to refer to a file with little
     entries (like difficulty, master, etc), like wise for big keys.
   - based on what the file does related files can often be deducted
   - references to Tags.dat and Mods.dat are very common
+
 - if possible, test the references out and see if they make sense
 
 Lastly, I suppose you could also try to reverse engineer the PathOfExile.exe
@@ -202,6 +236,7 @@ class Specification(dict):
         ------
         SpecificationError
             Raised when any errors occur.
+
             See :py:mod:`PyPoE.poe.file.specification.errors` for details
             on errors and error codes.
 
@@ -431,33 +466,50 @@ class Field(_Common):
     Fields instances are used to tie a specific set of information to a
     column field.
 
-    Type Syntax
-    ---------------------------------------------------------------------------
+    **Type Syntax**
+
     I've mostly adapted the Syntax from VisualGGPK2, but it may be subject to
     change to the python struct data types; for now they'll stay since bool is
     most certainly more readable then ?.
 
     Base types:
-    bool   - 8 bit integer value, first bit is 1 or 0 (cocered to True/False)
-    byte   - 8 bit integer value, signed
-    ubyte  - 8 bit integer value, unsigned
-    short  - 16 bit integer value, signed
-    ushort - 16 bit integer value, unsigned
-    int    - 32 bit integer value, signed
-    uint   - 32 bit integer value, unsigned
-    long   - 64 bit integer value, signed
-    ulong  - 64 bit integer value, unsigned
-    float  - 32 bit floating point value, single precision
-    double - 64 bit floating point value, double precision
+        bool
+            8 bit integer value, first bit is 1 or 0 (cocered to True/False)
+        byte
+            8 bit integer value, signed
+        ubyte
+            8 bit integer value, unsigned
+        short
+            16 bit integer value, signed
+        ushort
+            16 bit integer value, unsigned
+        int
+            32 bit integer value, signed
+        uint
+            32 bit integer value, unsigned
+        long
+            64 bit integer value, signed
+        ulong
+            64 bit integer value, unsigned
+        float
+            32 bit floating point value, single precision
+        double
+            64 bit floating point value, double precision
 
     Variable/Pointer types:
-    ref|<other>      - 32 bit value, unsigned
-                       a pointer to the data section
-    ref|list|<other> - two 32 bit values, unsigned
-                       first value determines the size of the list
-                       second value is the pointer to the data section
-    ref|string       - just like a normal reference, but it will parse as null
-                       terminated utf16_le encoded string
+        ref|<other>
+            32 bit value, unsigned
+
+            a pointer to the data section
+        ref|list|<other>
+            two 32 bit values, unsigned
+
+            first value determines the size of the list
+
+            second value is the pointer to the data section
+        ref|string
+            just like a normal reference, but it will parse as null terminated
+            utf16_le encoded string
 
     """
     __slots__ = [

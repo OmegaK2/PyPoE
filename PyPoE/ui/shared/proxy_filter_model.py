@@ -29,7 +29,7 @@ TODO
 
 - Reset filter
 - Validate that the filter is working properly for the data; possibly disallow
- wrong filters
+  wrong filters
 - Fix the wierd box appearing on the late page if going back
 - Add menu for the generic wizard
 

@@ -65,11 +65,11 @@ results that contain extra information and utility methods.
 
 .. autoclass:: TranslationReverseResult
 
-.. autofunc:: get_custom_translation_file
+.. autofunction:: get_custom_translation_file
 
-.. autofunc:: set_custom_translation_file
+.. autofunction:: set_custom_translation_file
 
-.. autofunc:: install_data_dependant_quantifiers
+.. autofunction:: install_data_dependant_quantifiers
 
 Internal API
 -------------------------------------------------------------------------------
@@ -274,7 +274,7 @@ class Translation(TranslationReprMixin):
         Returns
         -------
         TranslationLanguage
-            Returns the :class:`TranslationLanguage record for the specified
+            Returns the :class:`TranslationLanguage` record for the specified
             language or the English one if not found
         """
         etr = None

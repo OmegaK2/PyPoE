@@ -24,7 +24,8 @@ See PyPoE/LICENSE
 
 
 .. todo::
-* Find out the real function for calculating the stat requirement.
+
+  Find out the real function for calculating the stat requirement.
 
 Documentation
 ===============================================================================

@@ -107,9 +107,9 @@ class TextureRecord(Record):
 
     Attributes
     ----------
-    name :  str
+    'name' :  str
         name (internal path) of the texture
-    records : CoordinateList[CoordinateRecord]
+    'records' : CoordinateList[CoordinateRecord]
         :class:`CoordinateList` of :class:`CoordinateRecord` instances for this
         texture.
     """
@@ -194,7 +194,7 @@ class IDTFile(AbstractFile):
         Optionally data can be specified to initialize the object in memory
         with the given data. The same can be achieved by simply setting the
         relevant attributes.
-        Note that :method:`IDTFile.read` will override any initial data.
+        Note that :meth:`IDTFile.read` will override any initial data.
 
         Parameters
         ----------

@@ -4,10 +4,10 @@ Installing PyPoE
 Prerequisites
 ------------------------------------------------------------------------------
 
-Python 3.4+
+Python 3.5+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The current version of PyPoE requires Python 3.4. It is recommended to use
-Python 3.5 however.
+The current version of PyPoE requires Python 3.5 and higher. It is recommended
+to use the latest python version.
 
 The python commandline, the scripts from the script installation directory as
 well as pip should be accessible after this step from the command line of
@@ -20,7 +20,9 @@ your Operating System.
 * Install and follow the instructions on the installer
 * Make sure the python executable and the python scripts folder are located
   within your %PATH% environment variable
+
 .. note::
+
     If Python is not in your %PATH% it can be manually added in your system
     control panel (System -> Advanced -> Envrionment Variables -> System
     Variables)
@@ -102,15 +104,15 @@ However, there are additional packages available:
 +-----------+-----------------------------------------------------------------+
 |cli        |Basic CLI support                                                |
 +-----------+-----------------------------------------------------------------+
-|cli-sql    |Support for exporting .dat files to SQL from the CLI             |
-+-----------+-----------------------------------------------------------------+
-|cli-wikibot|Support for editing the Path of Exile wiki from CLI              |
-+-----------+-----------------------------------------------------------------+
 |cli-full   |Meta-Package for all CLI packages                                |
 +-----------+-----------------------------------------------------------------+
 |dev        |Support for development utilities (documentation & testing)      |
 +-----------+-----------------------------------------------------------------+
 |ui         |Support for the graphical user interface                         |
++-----------+-----------------------------------------------------------------+
+|ui-extra   |Support for rendering DDS via OpenGL                             |
++-----------+-----------------------------------------------------------------+
+|ui-full    |Meta-Package for all UI packages                                 |
 +-----------+-----------------------------------------------------------------+
 |full       |Meta-Package for all packages (recommended)                      |
 +-----------+-----------------------------------------------------------------+
@@ -121,7 +123,7 @@ The minimum installation would be:
 
 To install specific packages add them separated by a comma in brackets:
 
-:command:`pip install -e .[cli,cli-sql]`
+:command:`pip install -e .[ui,ui-extra]`
 
 For the full installation use:
 

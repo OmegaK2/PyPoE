@@ -40,8 +40,8 @@ See PyPoE/LICENSE
 
 .. todo::
 
-    * DatValue.get_value might hit the python recursion limit, but is not a problem
-      for any of the actual dat file.
+    * DatValue.get_value might hit the python recursion limit, but it is not a
+      problem for any of the actual dat files.
     * Update RR with the new indexing
 
 Documentation
@@ -60,9 +60,6 @@ Internal API
 -------------------------------------------------------------------------------
 
 .. autoclass:: DatReader
-
-.. autoclass:: RecordList
-    :exclude-members: append, clear, copy, count, extend, index, insert, pop, remove, reverse, sort
 
 .. autoclass:: DatValue
 """
@@ -518,8 +515,8 @@ class DatReader(ReprMixin):
             reading.
 
         Raises
-        -------
-        SpecificationError
+        ------
+        errors.SpecificationError
             if the dat file is not in the specification
         """
         self.auto_build_index = auto_build_index
@@ -946,7 +943,6 @@ class DatFile(AbstractFileReadOnly):
 class RelationalReader(AbstractFileCache):
     FILE_TYPE = DatFile
 
-    #TODO append doc
     @doc(doc=AbstractFileCache.__init__, append="""
     Parameters
     ----------

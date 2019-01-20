@@ -98,9 +98,9 @@ class ItemSocket(object):
 
     Attributes
     ----------
-    index : int
+    'index' : int
         Index (position) of the socket
-    colour : SOCKET_COLOUR
+    'colour' : SOCKET_COLOUR
         Colour of the socket
     """
 
@@ -135,90 +135,90 @@ class ItemParser(object):
 
     Attributes
     ----------
-    base_item_name : str
+    'base_item_name' : str
         Name of the base item
-    name : str
+    'name' : str
         Name of the item. This may equal the base item name (i.e white items)
         or be different (e.x. unique items)
-    description : str
+    'description' : str
         Description of the item if any
-    flavour_text : str
+    'flavour_text' : str
         Flavour text (orange text) if any
-    help_text : str
+    'help_text' : str
         Help text (grey text, "tooltip") if any
-    implicit_stats : list[str]
+    'implicit_stats' : list[str]
         List of implicit stat text lines
-    stats : list[str]
+    'stats' : list[str]
         List of explicit stat text lines
-    prefix : str
+    'prefix' : str
         Prefix name of this item if any
-    suffix : str
+    'suffix' : str
         Suffix name of this item if any
-    rarity : RARITY
+    'rarity' : RARITY
         rarity of the item
-    sockets : list[ItemSocket]
+    'sockets' : list[ItemSocket]
         list of item sockets
-    links : list[ItemSocket]
+    'links' : list[ItemSocket]
         list of linked sockets
-    is_corrupted : bool
+    'is_corrupted' : bool
         Whether the item is corrupted
 
-    required_level : int
+    'required_level' : int
         Required level to use the item
-    required_str : int
+    'required_str' : int
         Required strength to use the item
-    required_int : int
+    'required_int' : int
         Required intelligence to use the item
-    required_dex : int
+    'required_dex' : int
         Required dexterity to use the item
 
-    map_tier : int
+    'map_tier' : int
         Map tier
         (found on maps)
-    item_quantity : int
+    'item_quantity' : int
         How much item quantity the item grants
         (found on maps)
-    item_rarity : int
+    'item_rarity' : int
         How much item rarity the item grants
         (found on maps)
-    pack_size : int
+    'pack_size' : int
         How much pack size the item grants
         (found on maps)
 
-    quality : int
+    'quality' : int
         Quality of the item.
         (found on all kinds of equipment and maps)
-    armour : int
+    'armour' : int
         Armour rating of the item
         (found on armour)
-    evasion : int
+    'evasion' : int
         Evasion rating of the item
         (found on armour)
-    energy_shield : int
+    'energy_shield' : int
         Energy shield of the item
         (found on armour)
-    physical_damage : list[int, int]
+    'physical_damage' : list[int, int]
         2 element list containing the minimum/maximum physical damage of the
         item
         (found on weapons)
-    elemental_damage: list[[int, int], [int, int], [int, int]]
+    'elemental_damage' : list[[int, int], [int, int], [int, int]]
         A 3 element list containing lists with 2 elements each.
         The top level list with 3 elements represents the elemental damage
         types as provided in the description.
         The bottom level list with 2 elements represents the minimum and
         maximum damage.
         (found on weapons)
-    chaos_damage : list[int, int]
+    'chaos_damage' : list[int, int]
         2 element list containing the minimum/maximum chaos damage of the
         item
         (found on weapons)
-    critical_strike_chance : float
+    'critical_strike_chance' : float
         Critical strike chance of the item
         (found on weapons)
-    attacks_per_second : float
+    'attacks_per_second' : float
         Attacks per second of the item
         (found on weapons)
-    item_class : str
+    'item_class' : str
         The item class of the item.
 
         .. warning::
@@ -226,34 +226,34 @@ class ItemParser(object):
             even though all items have an item class, this is only present on
             weapons
 
-    gem_level : int
+    'gem_level' : int
         Current skill gem level
-    mana_cost : int
+    'mana_cost' : int
         Mana cost of the skill gem
-    mana_reserved : int
+    'mana_reserved' : int
         Mana reservation cost of the skill gem
-    mana_multiplier : int
+    'mana_multiplier' : int
         mana multiplier of the skill gem
-    souls_per_use : int
+    'souls_per_use' : int
         Souls used when he skill gem is triggered
         (found on vaal skill gems)
-    stored_uses : int
+    'stored_uses' : int
         Number of stored uses
         (found on vaal skills, traps, mines, etc)
-    cooldown_time : float
+    'cooldown_time' : float
         Cooldown in seconds of the skill gem
         (found on traps, mines, etc)
-    cast_time : float
+    'cast_time' : float
         Cast time in second of the skill gem
     critical_stike_chance: float
         Critical strike chance in percent of the skill gem
-    damage_effectiveness : int
+    'damage_effectiveness' : int
         Damage effectiveness in percent of the skill gem
-    experience : list[int, int]
+    'experience' : list[int, int]
         2 Elemental list containing the current gem experience and the required
         experience for the next level respectively
 
-    stack_size : int
+    'stack_size' : int
         Current stack size of the item
         (found on currency and other stackables)
 

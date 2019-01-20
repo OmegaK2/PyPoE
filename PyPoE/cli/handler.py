@@ -96,7 +96,7 @@ class ConfigHandler(BaseHandler):
         """
         Parameters
         ----------
-        sub_parser : :py:meth:`argparse.ArgumentParser.add_subparsers'
+        sub_parser : :py:meth:`argparse.ArgumentParser.add_subparsers`
             sub parsers object
         config : ConfigHelper
             config instance
@@ -266,7 +266,7 @@ class SetupHandler(BaseHandler):
         """
         Parameters
         ----------
-        sub_parser : :py:meth:`argparse.ArgumentParser.add_subparsers'
+        sub_parser : :py:meth:`argparse.ArgumentParser.add_subparsers`
             sub parsers object
         config : ConfigHelper
             config instance

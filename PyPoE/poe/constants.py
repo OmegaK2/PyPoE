@@ -45,12 +45,11 @@ Documentation
 
 .. autoclass:: SOCKET_COLOUR
 
+.. autoclass:: STAT_INTERPOLATION_TYPES
+
 .. autoclass:: VERSION
 
 .. autoclass:: WORDLISTS
-
-.. autoclass:: STAT_INTERPOLATION_TYPE
-
 """
 
 # =============================================================================
@@ -70,18 +69,22 @@ from enum import IntEnum, EnumMeta, Enum
 # =============================================================================
 
 __all__ = [
+    'BETRAYAL_UPGRADE_SLOTS',
+    'DELVE_UPGRADE_TYPE',
     'DISTRIBUTOR',
-    'VERSION',
-    'SOCKET_COLOUR',
-    'RARITY',
+    'MAP_FRAGMENT_FAMILIES',
     'MOD_DOMAIN',
     'MOD_GENERATION_TYPE',
-    'WORDLISTS',
-    'DELVE_UPGRADE_TYPE',
+    'RARITY',
+    'SHOP_PACKAGE_PLATFORM',
+    'SOCKET_COLOUR',
     'STAT_INTERPOLATION_TYPES',
+    'VERSION',
+    'WORDLISTS',
 
     'MOD_MAX_STATS',
     'MOD_STATS_RANGE',
+    'MOD_SELL_PRICES',
 ]
 
 MOD_MAX_STATS = 6
@@ -731,15 +734,17 @@ class STAT_INTERPOLATION_TYPES(IntEnumOverride):
     EXPONENTIAL
         Exponential scaling
 
-        skill_base =
-            (
-                GameConstants -> SkillDamageBaseEffectiveness +
-                (GameConstants -> SkillDamageIncrementalEffectiveness * (
-                    MonsterLevel - 1
-                ))
-            ) *
-            GrantedEffects['BaseEffectiveness'] *
-            (1+GrantedEffects['IncrementalEffectiveness') ** (MonsterLevel - 1)
+        .. code-block:: none
+
+            skill_base =
+                (
+                    GameConstants -> SkillDamageBaseEffectiveness +
+                    (GameConstants -> SkillDamageIncrementalEffectiveness * (
+                        MonsterLevel - 1
+                    ))
+                ) *
+                GrantedEffects['BaseEffectiveness'] *
+                (1+GrantedEffects['IncrementalEffectiveness') ** (MonsterLevel - 1)
 
     """
     CONSTANT = 1

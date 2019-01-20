@@ -18,12 +18,10 @@ Description
 Contains the specification for the beta version of the game.
 
 Please see the following for more details:
-|------------------------------------------------------+----------------------+
-| :py:mod:`PyPoE.poe.file.specification.fields`        | Information about the|
-|                                                      | Field classes        |
-|------------------------------------------------------+----------------------+
-| :py:mod:`PyPoE.poe.file.specification.__init__`      | Specification loader |
-|------------------------------------------------------+----------------------+
+    :py:mod:`PyPoE.poe.file.specification.fields`
+        Information about the Field classes
+    :py:mod:`PyPoE.poe.file.specification`
+        Specification loader
 
 Agreement
 ===============================================================================

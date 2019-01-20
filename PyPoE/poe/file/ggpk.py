@@ -495,7 +495,8 @@ class DirectoryNode(object):
     Attributes
     ----------
     children : list[DirectoryNode]
-        list of parent :class:`DirectoryNode`s (i.e. files and directories)
+        list of parent :class:`DirectoryNode` instances (i.e. files and
+        directories)
     parent : DirectoryNode
         parent :class:`DirectoryNode` or None if this is the root node
     record : :class:`DirectoryRecord` or :class:`FileRecord`
@@ -523,7 +524,8 @@ class DirectoryNode(object):
         Since the each node supports the same syntax, all these calls are
         equivalent:
 
-        .. code-block::
+        .. code-block:: python
+
             self['directory1']['directory2']['file.ext']
             self['directory1']['directory2/file.ext']
             self['directory1/directory2']['file.ext']
@@ -620,7 +622,7 @@ class DirectoryNode(object):
         Returns
         -------
         list[DirectoryNode]
-            List of matching :class:`DirectoryNode`s
+            List of matching :class:`DirectoryNode` instances
         """
         if isinstance(regex, str):
             regex = re.compile(regex)
