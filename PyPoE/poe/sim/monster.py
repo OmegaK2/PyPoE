@@ -30,7 +30,7 @@ Documentation
 Public API
 -------------------------------------------------------------------------------
 
-Interal API
+Internal API
 -------------------------------------------------------------------------------
 """
 
@@ -45,7 +45,8 @@ from collections import Iterable
 
 # self
 from PyPoE.poe.constants import RARITY
-from PyPoE.poe.file import RelationalReader, OTFileCache
+from PyPoE.poe.file.dat import RelationalReader
+from PyPoE.poe.file.ot import OTFileCache
 
 # =============================================================================
 # Globals

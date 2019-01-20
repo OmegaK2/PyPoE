@@ -15,7 +15,6 @@ here = path.abspath(path.dirname(__file__))
 extras_require = {
     'dev': ['sphinx', 'pytest'],
     'cli': ['colorama', 'graphviz', 'tqdm', 'mwclient'],
-    'cli-sql': ['sqlalchemy', 'pymysql'],
     'ui': ['pyside2==5.11.2'],
     'ui-extra': ['PyOpenGL'],
 }

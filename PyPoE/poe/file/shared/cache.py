@@ -66,11 +66,11 @@ class AbstractFileCache(ReprMixin):
     """
     Attributes
     ----------
-    _ggpk : GGPKFile
+    '_ggpk' : GGPKFile
 
-    _path : str
+    '_path' : str
 
-    files : dict[str, AbstractFileReadOnly]
+    'files' : dict[str, AbstractFileReadOnly]
         Dictionary of loaded file instances and their related path
     """
 

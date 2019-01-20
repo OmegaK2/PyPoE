@@ -17,7 +17,7 @@ The dat json export is used to export .dat files to json format.
 
 The resulting json will roughly look like this:
 
-.. code-block:: json
+.. code-block:: none
 
     [
         {
@@ -43,14 +43,3 @@ The resulting json will roughly look like this:
 For details on what the extra fields mean in the headers, please see
 the dat specification file:
 https://github.com/OmegaK2/PyPoE/blob/dev/PyPoE/_data/dat.specification.ini
-
-dat sql
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-:command:`dat sql [--url URL] [--skip-data] [--skip-child-data]`
-:command:`[--files FILE [FILE ...]]`
-
-http://docs.sqlalchemy.org/en/latest/core/engines.html#sqlalchemy.create_engine
-
-.. warning::
-    Only the MySQL driver is supported
