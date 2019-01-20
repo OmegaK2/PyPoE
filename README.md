@@ -10,9 +10,8 @@ The docs are occasionally updated until I get a build bot up - however docs can 
 
 Common problems & advisory
 --------
-* Install **Python 3.6** for maximum compability:
+* Install **Python 3.7** for maximum compability:
   * UI: PySide currently only supports versions 3.5, 3.6 and 3.7
-  * GGPK decompression: brotli only comes precompiled for versions 3.4, 3.5 and 3.6 
 * On windows 10 machines there seems to a be bug in the python install that prevents arguments being passed to the command line interface; you can identify this issue if you get a "help" listing if you supplied more then 1 argument. See [this on stack overflow](https://stackoverflow.com/questions/2640971/windows-is-not-passing-command-line-arguments-to-python-programs-executed-from-t) for possible solutions
 
 
