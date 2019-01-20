@@ -276,6 +276,10 @@ class ProphecyParser(parser.BaseParser):
         'MapExtraElreon': ' (Elreon)',
         'MapExtraVorici': ' (Vorici)',
         'MapExtraZana': ' (Zana)',
+        'MapExtraEinhar': ' (Einhar)',
+        'MapExtraAlva': ' (Alva)',
+        'MapExtraNiko': ' (Niko)',
+        'MapExtraJun': ' (Jun)',
         # The other one is disabled, should be fine
         'MapSpawnRogueExiles': '',
         'MysteriousInvadersFire': ' (Fire)',
@@ -330,8 +334,7 @@ class ProphecyParser(parser.BaseParser):
 
             infobox = OrderedDict()
 
-            infobox['rarity'] = self.rr['ClientStrings.dat'].index['Id'][
-                'ItemDisplayStringNormal']['Text']
+            infobox['rarity_id'] = 'normal'
             infobox['name'] = name
             infobox['class_id'] = 'StackableCurrency'
             infobox['base_item_id'] = \
@@ -600,6 +603,12 @@ class ItemsParser(SkillParserShared):
                 " (сапфир и топаз)",
             'Metadata/Items/Rings/Ring14':
                 " (рубин и сапфир)",
+        },
+        'German': {
+            # Schleifstein
+            'Metadata/Items/Currency/CurrencyWeaponQuality': '',
+            'Metadata/Items/HideoutInteractables/StrDexCraftingBench':
+                ' (hideout doodad)',
         },
     }
 
@@ -1763,8 +1772,7 @@ class ItemsParser(SkillParserShared):
                                 not_new_map=True):
             m_id = base_item_type['Id']
 
-            infobox['rarity'] = self.rr['ClientStrings.dat'].index['Id'][
-                'ItemDisplayStringNormal']['Text']
+            infobox['rarity_id'] = 'normal'
 
             # BaseItemTypes.dat
             infobox['name'] = base_item_type['Name']
@@ -1796,11 +1804,7 @@ class ItemsParser(SkillParserShared):
                 ot = base_ot
 
             if 'enable_rarity' in ot['Mods']:
-                infobox['drop_rarities'] = ', '.join([
-                    self.rr['ClientStrings.dat'].index['Id'][
-                        'ItemDisplayString' + n[0].upper() + n[1:]]['Text']
-                    for n in ot['Mods']['enable_rarity']
-                ])
+                infobox['drop_rarities_ids'] = ', '.join(ot['Mods']['enable_rarity'])
 
             tags = [t['Id'] for t in base_item_type['TagsKeys']]
             infobox['tags'] = ', '.join(tags + list(ot['Base']['tag']))

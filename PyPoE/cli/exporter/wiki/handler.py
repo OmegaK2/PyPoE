@@ -62,7 +62,7 @@ class WikiHandler(object):
     _wiki_pages = {
         'English': 'pathofexile.gamepedia.com',
         'Russian': 'pathofexile-ru.gamepedia.com',
-        #'German': 'pathofexile-de.gamepedia.com',
+        'German': 'pathofexile-de.gamepedia.com',
         'French': 'pathofexile-fr.gamepedia.com',
     }
 
