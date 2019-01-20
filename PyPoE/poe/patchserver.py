@@ -674,7 +674,7 @@ class Patch(object):
         ValueError
             if the HTTP status code is not 200 (and it wasn't raised by urllib)
         """
-        hosts = [self.patch_cdn_url, self.patch_url]
+        hosts = [self.patch_url]
         for index, host in enumerate(hosts):
             try:
                 with request.urlopen(
