@@ -41,6 +41,7 @@ from collections import OrderedDict, defaultdict
 from functools import partialmethod
 
 # Self
+from PyPoE.poe import text
 from PyPoE.poe.constants import \
     MOD_DOMAIN, MOD_GENERATION_TYPE, MOD_STATS_RANGE, MOD_SELL_PRICES
 from PyPoE.cli.core import console, Msg
@@ -251,14 +252,23 @@ class ModParser(BaseParser):
 
             for k in (
                 ('Id', 'id'),
-                ('Name', 'name'),
                 ('CorrectGroup', 'mod_group'),
                 ('Domain', 'domain'),
                 ('GenerationType', 'generation_type'),
                 ('Level', 'required_level'),
                 ('TierText', 'tier_text'),
             ):
-                data[k[1]] = mod[k[0]]
+                v = mod[k[0]]
+                if v:
+                    data[k[1]] = v
+
+            if mod['Name']:
+                root = text.parse_description_tags(mod['Name'])
+
+                def handler(hstr, parameter):
+                    return hstr if parameter == 'MS' else ''
+
+                data['name'] = root.handle_tags({'if': handler, 'elif': handler})
 
             if mod['BuffDefinitionsKey']:
                 data['granted_buff_id'] = mod['BuffDefinitionsKey']['Id']
