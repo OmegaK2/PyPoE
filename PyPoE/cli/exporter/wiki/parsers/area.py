@@ -45,6 +45,7 @@ from collections import OrderedDict
 
 # self
 from PyPoE.cli.core import console, Msg
+from PyPoE.cli.exporter import config
 from PyPoE.cli.exporter.wiki import parser
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult
 
@@ -157,7 +158,16 @@ class AreaCommandHandler(ExporterHandler):
 
     def add_default_parsers(self, *args, **kwargs):
         super().add_default_parsers(*args, **kwargs)
-        self.add_format_argument(kwargs['parser'])
+        parser = kwargs['parser']
+        self.add_format_argument(parser)
+
+        parser.add_argument(
+            '--skip-main-page',
+            help='Skip adding main_page argument to the template',
+            action='store_true',
+            default=False,
+            dest='skip_main_page',
+        )
 
 
 class AreaParser(parser.BaseParser):
@@ -320,6 +330,24 @@ class AreaParser(parser.BaseParser):
         }),
     ))
 
+    _LANG = {
+        'English': {
+            'Low': 'Low Tier',
+            'Mid': 'Mid Tier',
+            'High': 'High Tier',
+        },
+        'German': {
+            'Low': 'Niedrige Stufe',
+            'Mid': 'Mittlere Stufe',
+            'High': 'Hohe Stufe',
+        },
+        'Russian': {
+            'Low': 'низкий уровень',
+            'Mid': 'средний уровень',
+            'High': 'высокий уровень',
+        },
+    }
+
     def by_rowid(self, parsed_args):
         return self.export(
             parsed_args,
@@ -365,8 +393,13 @@ class AreaParser(parser.BaseParser):
         self.rr['MapPins.dat'].build_index('WorldAreasKeys')
         self.rr['AtlasNode.dat'].build_index('WorldAreasKey')
         self.rr['MapSeries.dat'].build_index('Id')
+        if not parsed_args.skip_main_page:
+            self.rr['Maps.dat'].build_index('Regular_WorldAreasKey')
+            self.rr['UniqueMaps.dat'].build_index('WorldAreasKey')
 
         console('Found %s areas. Processing...' % len(areas))
+
+        lang = self._LANG[config.get_option('language')]
 
         for area in areas:
             data = OrderedDict()
@@ -408,37 +441,52 @@ class AreaParser(parser.BaseParser):
             #
             # Add main-page if possible
             #
+            if not parsed_args.skip_main_page:
+                map = self.rr['Maps.dat'].index['Regular_WorldAreasKey'].get(
+                    area)
+                if map:
+                    map = map[0]
+                    if map['MapSeriesKey']['Id'] == 'MapWorld':
+                        map_version = self.rr['MapSeries.dat'].index['Id'][
+                            'Betrayal']['Name']
+                    else:
+                        map_version = map['MapSeriesKey']['Name']
 
-            # TODO: Harbinger maps are not handled correctly atm
-
-            # Double legacy maps, pre 2.0
-            map_version = None
-            if data.get('tags') and 'map' in data['tags']:
-                for row in self.rr['MapSeries.dat']:
-                    if not area['Id'].startswith(row['Id']):
-                        continue
-                    map_version = row['Name']
-
-
-            if map_version:
-                if map_version == self.rr['MapSeries.dat'].index['Id'][
-                        'MapWorlds']['Name']:
-                    map_version = self.rr['MapSeries.dat'].index['Id'][
-                    'Betrayal']['Name']
-
-                if 'Unique' in area['Id'] or 'BreachBoss' in area['Id'] or \
-                        area['Id'].endswith('ShapersRealm'):
-                    data['main_page'] = '%s (%s)' % (area['Name'], map_version)
-                elif 'Harbinger' in area['Id']:
-                    data['main_page'] = '%s (%s Tier) (%s)' % (
-                        area['Name'],
-                        re.sub('^.*Harbinger', '', area['Id']),
-                        map_version,
+                    data['main_page'] = '%s (%s)' % (
+                        map['BaseItemTypesKey']['Name'],
+                        map_version
                     )
-                elif not area['Id'].startswith('MapWorldsElder'):
-                    data['main_page'] = '%s Map (%s)' % (
-                        area['Name'], map_version
-                    )
+                elif data.get('tags') and 'map' in data['tags']:
+                    map_version = None
+                    for row in self.rr['MapSeries.dat']:
+                        if not area['Id'].startswith(row['Id']):
+                            continue
+                        map_version = row['Name']
+
+                    if map_version:
+                        if map_version == self.rr['MapSeries.dat'].index['Id'][
+                                'MapWorlds']['Name']:
+                            map_version = self.rr['MapSeries.dat'].index['Id'][
+                            'Betrayal']['Name']
+
+                        if 'Unique' in area['Id'] or 'BreachBoss' in area['Id']\
+                                or area['Id'].endswith('ShapersRealm'):
+                            data['main_page'] = '%s (%s)' % (
+                                area['Name'], map_version
+                            )
+                        elif 'Harbinger' in area['Id']:
+                            tier = re.sub('^.*Harbinger', '', area['Id'])
+                            if tier:
+                                data['main_page'] = '%s (%s) (%s)' % (
+                                    area['Name'],
+                                    lang[tier],
+                                    map_version,
+                                )
+                            else:
+                                data['main_page'] = '%s (%s)' % (
+                                    area['Name'],
+                                    map_version,
+                                )
 
             cond = WikiCondition(
                 data=data,
