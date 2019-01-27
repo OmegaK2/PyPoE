@@ -268,28 +268,88 @@ class ProphecyParser(parser.BaseParser):
         'Prophecies.dat',
     ]
 
-    _conflict_resolver_prophecy_map = {
-        'MapExtraHaku': ' (Haku)',
-        'MapExtraTora': ' (Tora)',
-        'MapExtraCatarina': ' (Catarina)',
-        'MapExtraVagan': ' (Vagan)',
-        'MapExtraElreon': ' (Elreon)',
-        'MapExtraVorici': ' (Vorici)',
-        'MapExtraZana': ' (Zana)',
-        'MapExtraEinhar': ' (Einhar)',
-        'MapExtraAlva': ' (Alva)',
-        'MapExtraNiko': ' (Niko)',
-        'MapExtraJun': ' (Jun)',
-        # The other one is disabled, should be fine
-        'MapSpawnRogueExiles': '',
-        'MysteriousInvadersFire': ' (Fire)',
-        'MysteriousInvadersCold': ' (Cold)',
-        'MysteriousInvadersLightning': ' (Lightning)',
-        'MysteriousInvadersPhysical': ' (Physical)',
-        'MysteriousInvadersChaos': ' (Chaos)',
+    _LANG = {
+        'English': {
+            'prophecy': ' (prophecy)',
+        },
+        'Russian': {
+            'prophecy': ' (пророчество)',
+        },
+        'German': {
+            'prophecy': ' (Prophezeiung)',
+        },
+    }
 
-        'AreaAllRaresAreCloned': ' (prophecy)',
-        'HillockDropsTheAnvil': ' (prophecy)',
+    _conflict_resolver_prophecy_map = {
+        'English': {
+            'MapExtraHaku': ' (Хаку)',
+            'MapExtraTora': ' (Тора)',
+            'MapExtraCatarina': ' (Катарина)',
+            'MapExtraVagan': ' (Ваган)',
+            'MapExtraElreon': ' (Элреон)',
+            'MapExtraVorici': ' (Воричи)',
+            'MapExtraZana': ' (Зана)',
+            'MapExtraEinhar': ' (Эйнар)',
+            'MapExtraAlva': ' (Альва)',
+            'MapExtraNiko': ' (Нико)',
+            'MapExtraJun': ' (Джун)',
+            # The other one is disabled, should be fine
+            'MapSpawnRogueExiles': '',
+            'MysteriousInvadersFire': ' (огонь)',
+            'MysteriousInvadersCold': ' (холод)',
+            'MysteriousInvadersLightning': ' (молния)',
+            'MysteriousInvadersPhysical': ' (физический)',
+            'MysteriousInvadersChaos': ' (хаос)',
+
+            'AreaAllRaresAreCloned': ' (пророчество)',
+            'HillockDropsTheAnvil': ' (пророчество)',
+        },
+        'Russian': {
+            'MapExtraHaku': ' (Haku)',
+            'MapExtraTora': ' (Tora)',
+            'MapExtraCatarina': ' (Catarina)',
+            'MapExtraVagan': ' (Vagan)',
+            'MapExtraElreon': ' (Elreon)',
+            'MapExtraVorici': ' (Vorici)',
+            'MapExtraZana': ' (Zana)',
+            'MapExtraEinhar': ' (Einhar)',
+            'MapExtraAlva': ' (Alva)',
+            'MapExtraNiko': ' (Niko)',
+            'MapExtraJun': ' (Jun)',
+            # The other one is disabled, should be fine
+            'MapSpawnRogueExiles': '',
+            'MysteriousInvadersFire': ' (Fire)',
+            'MysteriousInvadersCold': ' (Cold)',
+            'MysteriousInvadersLightning': ' (Lightning)',
+            'MysteriousInvadersPhysical': ' (Physical)',
+            'MysteriousInvadersChaos': ' (Chaos)',
+
+            'AreaAllRaresAreCloned': ' (пророчество)',
+            'HillockDropsTheAnvil': ' (пророчество)',
+        },
+        'German': {
+            'MapExtraHaku': ' (Haku)',
+            'MapExtraTora': ' (Tora)',
+            'MapExtraCatarina': ' (Catarina)',
+            'MapExtraVagan': ' (Vagan)',
+            'MapExtraElreon': ' (Elreon)',
+            'MapExtraVorici': ' (Vorici)',
+            'MapExtraZana': ' (Zana)',
+            'MapExtraEinhar': ' (Einhar)',
+            'MapExtraAlva': ' (Alva)',
+            'MapExtraNiko': ' (Niko)',
+            'MapExtraJun': ' (Jun)',
+            # The other one is disabled, should be fine
+            'MapSpawnRogueExiles': '',
+            'MysteriousInvadersFire': ' (Feuer)',
+            'MysteriousInvadersCold': ' (Kälte)',
+            'MysteriousInvadersLightning': ' (Blitz)',
+            'MysteriousInvadersPhysical': ' (Physisch)',
+            'MysteriousInvadersChaos': ' (Chaos)',
+
+            'AreaAllRaresAreCloned': ' (Prophezeiung)',
+            'HillockDropsTheAnvil': ' (Prophezeiung)',
+        },
     }
 
     _prophecy_column_index_filter = partialmethod(
@@ -297,6 +357,10 @@ class ProphecyParser(parser.BaseParser):
         dat_file_name='Prophecies.dat',
         error_msg='Several prophecies have not been found:\n%s',
     )
+
+    def __init__(self, *args, **kwargs):
+        parser.BaseParser.__init__(self, *args, **kwargs)
+        self.lang = config.get_option('language')
 
     def by_rowid(self, parsed_args):
         return self.export(
@@ -349,7 +413,8 @@ class ProphecyParser(parser.BaseParser):
 
             # handle items with duplicate name entries
             if len(self.rr['Prophecies.dat'].index['Name'][name]) > 1:
-                extra = self._conflict_resolver_prophecy_map.get(prophecy['Id'])
+                extra = self._conflict_resolver_prophecy_map[self.lang].get(
+                    prophecy['Id'])
                 if extra is None:
                     console('Unresolved ambiguous item name "%s" / id "%s". '
                             'Skipping' % (prophecy['Name'], prophecy['Id']),
@@ -366,7 +431,10 @@ class ProphecyParser(parser.BaseParser):
                 out_file='item_%s.txt' % name,
                 wiki_page=[
                     {'page': name, 'condition': cond},
-                    {'page': name + ' (prophecy)', 'condition': cond},
+                    {
+                        'page': name + self._LANG[self.lang]['prophecy'],
+                        'condition': cond
+                    },
                 ],
                 wiki_message='Prophecy exporter',
             )
@@ -491,7 +559,7 @@ class ItemsParser(SkillParserShared):
             # Hideout Doodads
             # =================================================================
 
-            'Metadata/Items/Hideout/HideoutLightningCoil': " (Decoration)",
+            'Metadata/Items/Hideout/HideoutLightningCoil': " (hideout doodad)",
             # =================================================================
             # Piece
             # =================================================================
@@ -532,9 +600,9 @@ class ItemsParser(SkillParserShared):
                 ' (2 of 3)',
             'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_3':
                 ' (3 of 3)',
-            #
+            # =================================================================
             # MTX
-            #
+            # =================================================================
             'Metadata/Items/MicrotransactionCurrency/MysteryBox1x1':
                 ' (1x1)',
             'Metadata/Items/MicrotransactionCurrency/MysteryBox1x2':
@@ -568,9 +636,9 @@ class ItemsParser(SkillParserShared):
             'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
             'ScholarBoots': ' (microtransaction)',
             'Metadata/Items/Pets/DemonLion': ' (Pet)',
-            #
+            # =================================================================
             # Quest items
-            #
+            # =================================================================
             'Metadata/Items/QuestItems/GoldenPages/Page1':
                 ' (1 of 4)',
             'Metadata/Items/QuestItems/GoldenPages/Page2':
@@ -597,18 +665,353 @@ class ItemsParser(SkillParserShared):
                 ' (3 of 3)',
         },
         'Russian': {
+            # =================================================================
+            # One Hand Axes
+            # =================================================================
+
+            'Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/OneHandAxe22':
+                '',
+            # =================================================================
+            # Boots
+            # =================================================================
+
+            'Metadata/Items/Armours/Boots/BootsInt4': '',
+            # Legion Boots
+            'Metadata/Items/Armours/Boots/BootsStrInt7': '',
+            'Metadata/Items/Armours/Boots/BootsAtlas1':
+                ' (сопротивление холоду и молнии)',
+            'Metadata/Items/Armours/Boots/BootsAtlas2':
+                ' (сопротивление огню и холоду)',
+            'Metadata/Items/Armours/Boots/BootsAtlas3':
+                ' (сопротивление огню и молнии)',
+            # =================================================================
+            # Gloves
+            # =================================================================
+
+            # Legion Gloves
+            'Metadata/Items/Armours/Gloves/GlovesStrInt7': '',
+            # =================================================================
+            # Quivers
+            # =================================================================
+
+            'Metadata/Items/Quivers/QuiverDescent': ' (Спуск)',
+            # =================================================================
+            # Rings
+            # =================================================================
             'Metadata/Items/Rings/Ring12':
                 " (рубин и топаз)",
             'Metadata/Items/Rings/Ring13':
                 " (сапфир и топаз)",
             'Metadata/Items/Rings/Ring14':
                 " (рубин и сапфир)",
+            # =================================================================
+            # Amulets
+            # =================================================================
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_1':
+                ' (получаемый урон от огня становится уроном от холода)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_2':
+                ' (получаемый урон от огня становится уроном от молнии)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_3':
+                ' (получаемый урон от холода становится уроном от огня)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_4':
+                ' (получаемый урон от холода становится уроном от молнии)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_5':
+                ' (получаемый урон от молнии становится уроном от холода)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_6':
+                ' (получаемый урон от молнии становится уроном от огня)',
+            'Metadata/Items/Amulets/Talismans/Talisman3_6_1':
+                ' (заряд энергии при убийстве)',
+            'Metadata/Items/Amulets/Talismans/Talisman3_6_2':
+                ' (заряд ярости при убийстве)',
+            'Metadata/Items/Amulets/Talismans/Talisman3_6_3':
+                ' (заряд выносливости при убийстве)',
+            # =================================================================
+            # Hideout Doodads
+            # =================================================================
+
+            'Metadata/Items/Hideout/HideoutLightningCoil': " (Предмет убежища)",
+            # =================================================================
+            # Piece
+            # =================================================================
+
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_1':
+                ' (1 из 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_2':
+                ' (2 из 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_3':
+                ' (3 из 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_4':
+                ' (4 из 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_1':
+                ' (1 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_2':
+                ' (2 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_3':
+                ' (3 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_1':
+                ' (1 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_2':
+                ' (2 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_3':
+                ' (3 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_1':
+                ' (1 из 2)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_2':
+                ' (2 из 2)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_1':
+                ' (1 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_2':
+                ' (2 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_3':
+                ' (3 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_1':
+                ' (1 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_2':
+                ' (2 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_3':
+                ' (3 из 3)',
+            # =================================================================
+            # MTX
+            # =================================================================
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x1':
+                ' (1x1)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x2':
+                ' (1x2)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x3':
+                ' (1x3)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x4':
+                ' (1x4)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x1':
+                ' (2x1)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x2':
+                ' (2x2)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x3':
+                ' (2x3)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x4':
+                ' (2x4)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox3x2':
+                ' (3x2)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox3x3':
+                ' (3x3)',
+            'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+            'IronMaiden': '',
+            'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+            'InfernalAxe': ' (Weapon Skin)',
+            'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+            'ColossusSword': '',
+            'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+            'LegionBoots': ' (микротранзакция))',
+            'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+            'LegionGloves': ' (микротранзакция)',
+            'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+            'ScholarBoots': ' (микротранзакция)',
+            'Metadata/Items/Pets/DemonLion': ' (питомец)',
+            # =================================================================
+            # Quest items
+            # =================================================================
+            'Metadata/Items/QuestItems/GoldenPages/Page1':
+                ' (1 из 4)',
+            'Metadata/Items/QuestItems/GoldenPages/Page2':
+                ' (2 из 4)',
+            'Metadata/Items/QuestItems/GoldenPages/Page3':
+                ' (3 из 4)',
+            'Metadata/Items/QuestItems/GoldenPages/Page4':
+                ' (4 из 4)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_1':
+                ' (1 из 2)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_2':
+                ' (2 из 2)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_1':
+                ' (1 из 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_2':
+                ' (2 из 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_3':
+                ' (3 из 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_1':
+                ' (1 из 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_2':
+                ' (2 из 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_3':
+                ' (3 из 3)',
         },
         'German': {
+            # =================================================================
+            # One Hand Axes
+            # =================================================================
+
+            'Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/OneHandAxe22':
+                '',
+            # =================================================================
+            # Boots
+            # =================================================================
+
+            'Metadata/Items/Armours/Boots/BootsInt4': '',
+            # Legion Boots
+            'Metadata/Items/Armours/Boots/BootsStrInt7': '',
+            'Metadata/Items/Armours/Boots/BootsAtlas1':
+                ' (Kälte und Blitz Resistenzen)',
+            'Metadata/Items/Armours/Boots/BootsAtlas2':
+                ' (Feuer und Kälte Resistenzen)',
+            'Metadata/Items/Armours/Boots/BootsAtlas3':
+                ' (Feuer und Blitz Resistenzen)',
+            # =================================================================
+            # Gloves
+            # =================================================================
+
+            # Legion Gloves
+            'Metadata/Items/Armours/Gloves/GlovesStrInt7': '',
+            # =================================================================
+            # Quivers
+            # =================================================================
+
+            'Metadata/Items/Quivers/QuiverDescent': ' (Descent)',
+            # =================================================================
+            # Rings
+            # =================================================================
+
+            'Metadata/Items/Rings/Ring12': " (Rubin und Topas)",
+            'Metadata/Items/Rings/Ring13': " (Saphir und Topas)",
+            'Metadata/Items/Rings/Ring14': " (Rubin und Saphir)",
+            # =================================================================
+            # Amulets
+            # =================================================================
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_1':
+                ' (Feuerschaden erlitten als Kälteschaden)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_2':
+                ' (Feuerschaden erlitten als Blitzschaden)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_3':
+                ' (Kälteschaden erlitten als Feuerschaden)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_4':
+                ' (Kälteschaden erlitten als Blitzschaden)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_5':
+                ' (Blitzschaden erlitten als Kälteschaden)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_6':
+                ' (Blitzschaden erlitten als Feuerschaden)',
+            'Metadata/Items/Amulets/Talismans/Talisman3_6_1':
+                ' (Energie-Ladung bei Tötung)',
+            'Metadata/Items/Amulets/Talismans/Talisman3_6_2':
+                ' (Raserei-Ladung bei Tötung)',
+            'Metadata/Items/Amulets/Talismans/Talisman3_6_3':
+                ' (Widerstands-Ladung bei Tötung)',
+            # =================================================================
+            # Hideout Doodads
+            # =================================================================
+
+            'Metadata/Items/Hideout/HideoutLightningCoil':
+                " (Dinge fürs Versteck)",
+            # =================================================================
+            # Piece
+            # =================================================================
+
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_1':
+                ' (1 von 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_2':
+                ' (2 von 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_3':
+                ' (3 von 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_4':
+                ' (4 von 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_1':
+                ' (1 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_2':
+                ' (2 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_3':
+                ' (3 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_1':
+                ' (1 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_2':
+                ' (2 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_3':
+                ' (3 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_1':
+                ' (1 von 2)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_2':
+                ' (2 von 2)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_1':
+                ' (1 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_2':
+                ' (2 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_3':
+                ' (3 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_1':
+                ' (1 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_2':
+                ' (2 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_3':
+                ' (3 von 3)',
+            # =================================================================
+            # MTX
+            # =================================================================
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x1':
+                ' (1x1)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x2':
+                ' (1x2)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x3':
+                ' (1x3)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x4':
+                ' (1x4)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x1':
+                ' (2x1)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x2':
+                ' (2x2)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x3':
+                ' (2x3)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x4':
+                ' (2x4)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox3x2':
+                ' (3x2)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox3x3':
+                ' (3x3)',
+            'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+            'IronMaiden': '',
+            'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+            'InfernalAxe': ' (Weapon Skin)',
+            'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+            'ColossusSword': '',
+            'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+            'LegionBoots': ' (Mikrotransaktion)',
+            'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+            'LegionGloves': ' (Mikrotransaktion)',
+            'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+            'ScholarBoots': ' (Mikrotransaktion)',
+            'Metadata/Items/Pets/DemonLion': ' (Haustier)',
+            # =================================================================
+            # Quest items
+            # =================================================================
+            'Metadata/Items/QuestItems/GoldenPages/Page1':
+                ' (1 von 4)',
+            'Metadata/Items/QuestItems/GoldenPages/Page2':
+                ' (2 von 4)',
+            'Metadata/Items/QuestItems/GoldenPages/Page3':
+                ' (3 von 4)',
+            'Metadata/Items/QuestItems/GoldenPages/Page4':
+                ' (4 von 4)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_1':
+                ' (1 von 2)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_2':
+                ' (2 von 2)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_1':
+                ' (1 von 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_2':
+                ' (2 von 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_3':
+                ' (3 von 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_1':
+                ' (1 von 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_2':
+                ' (2 von 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_3':
+                ' (3 von 3)',
+
+            # =================================================================
+            # =================================================================
+            # ==================== Germany only conflicts =====================
+            # =================================================================
+            # =================================================================
             # Schleifstein
             'Metadata/Items/Currency/CurrencyWeaponQuality': '',
             'Metadata/Items/HideoutInteractables/StrDexCraftingBench':
-                ' (hideout doodad)',
+                ' (Dinge fürs Versteck)',
         },
     }
 
