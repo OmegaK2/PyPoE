@@ -729,7 +729,7 @@ class ItemsParser(SkillParserShared):
             # Hideout Doodads
             # =================================================================
 
-            'Metadata/Items/Hideout/HideoutLightningCoil': " (Предмет убежища)",
+            'Metadata/Items/Hideout/HideoutLightningCoil': " (предмет убежища)",
             # =================================================================
             # Piece
             # =================================================================
@@ -796,11 +796,11 @@ class ItemsParser(SkillParserShared):
             'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
             'IronMaiden': '',
             'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
-            'InfernalAxe': ' (Weapon Skin)',
+            'InfernalAxe': ' (внешний вид оружия)',
             'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
             'ColossusSword': '',
             'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
-            'LegionBoots': ' (микротранзакция))',
+            'LegionBoots': ' (микротранзакция)',
             'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
             'LegionGloves': ' (микротранзакция)',
             'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
