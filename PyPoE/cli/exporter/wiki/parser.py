@@ -862,15 +862,17 @@ class BaseParser(object):
 
                     stats.append(stat)
                     values.append(value)
+                    
+        lang = config.get_option('language')
 
         result = self.tc[translation_file].get_translation(
-            stats, values, full_result=True, lang=config.get_option('language')
+            stats, values, full_result=True, lang=lang
         )
 
         if mod and mod['Domain'] == MOD_DOMAIN.MONSTER:
             default = self.tc['stat_descriptions.txt'].get_translation(
                 result.source_ids, result.source_values, full_result=True,
-                lang=config.get_option('language')
+                lang=lang
             )
 
             temp_ids = []
@@ -881,8 +883,8 @@ class BaseParser(object):
                     if tr.ids != tr2.ids:
                         continue
 
-                    r1 = tr.get_language().get_string(default.values[i])
-                    r2 = tr2.get_language().get_string(result.values[j])
+                    r1 = tr.get_language(lang).get_string(default.values[i])
+                    r2 = tr2.get_language(lang).get_string(result.values[j])
                     if r1 and r2 and r1[0] != r2[0]:
                         temp_trans.append(self._format_detailed(r1[0], r2[0]))
                     elif r2 and r2[0]:
@@ -896,7 +898,8 @@ class BaseParser(object):
                 if not is_missing:
                     continue
 
-                r1 = tr.get_language().get_string(default.values[i])
+                r1 = tr.get_language(lang).\
+                    get_string(default.values[i])
                 if r1 and r1[0]:
                     temp_trans.append(self._format_hidden(r1[0]))
                     temp_ids.append(tr.ids)
@@ -913,7 +916,8 @@ class BaseParser(object):
                 except ValueError:
                     temp_ids.insert(index, tr.ids)
                     temp_trans.insert(index, make_inter_wiki_links(
-                        tr.get_language().get_string(result.values[i])[0]
+                        tr.get_language(lang).\
+                            get_string(result.values[i])[0]
                     ))
                 else:
                     pass
@@ -927,7 +931,7 @@ class BaseParser(object):
                 result.missing_ids,
                 result.missing_values,
                 full_result=True,
-                lang=config.get_option('language'),
+                lang=lang,
             )
 
             if custom_result.missing_ids:
