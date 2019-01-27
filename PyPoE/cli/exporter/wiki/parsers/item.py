@@ -282,29 +282,6 @@ class ProphecyParser(parser.BaseParser):
 
     _conflict_resolver_prophecy_map = {
         'English': {
-            'MapExtraHaku': ' (Хаку)',
-            'MapExtraTora': ' (Тора)',
-            'MapExtraCatarina': ' (Катарина)',
-            'MapExtraVagan': ' (Ваган)',
-            'MapExtraElreon': ' (Элреон)',
-            'MapExtraVorici': ' (Воричи)',
-            'MapExtraZana': ' (Зана)',
-            'MapExtraEinhar': ' (Эйнар)',
-            'MapExtraAlva': ' (Альва)',
-            'MapExtraNiko': ' (Нико)',
-            'MapExtraJun': ' (Джун)',
-            # The other one is disabled, should be fine
-            'MapSpawnRogueExiles': '',
-            'MysteriousInvadersFire': ' (огонь)',
-            'MysteriousInvadersCold': ' (холод)',
-            'MysteriousInvadersLightning': ' (молния)',
-            'MysteriousInvadersPhysical': ' (физический)',
-            'MysteriousInvadersChaos': ' (хаос)',
-
-            'AreaAllRaresAreCloned': ' (пророчество)',
-            'HillockDropsTheAnvil': ' (пророчество)',
-        },
-        'Russian': {
             'MapExtraHaku': ' (Haku)',
             'MapExtraTora': ' (Tora)',
             'MapExtraCatarina': ' (Catarina)',
@@ -323,6 +300,29 @@ class ProphecyParser(parser.BaseParser):
             'MysteriousInvadersLightning': ' (Lightning)',
             'MysteriousInvadersPhysical': ' (Physical)',
             'MysteriousInvadersChaos': ' (Chaos)',
+
+            'AreaAllRaresAreCloned': ' (prophecy)',
+            'HillockDropsTheAnvil': ' (prophecy)',
+        },
+        'Russian': {
+            'MapExtraHaku': ' (Хаку)',
+            'MapExtraTora': ' (Тора)',
+            'MapExtraCatarina': ' (Катарина)',
+            'MapExtraVagan': ' (Ваган)',
+            'MapExtraElreon': ' (Элреон)',
+            'MapExtraVorici': ' (Воричи)',
+            'MapExtraZana': ' (Зана)',
+            'MapExtraEinhar': ' (Эйнар)',
+            'MapExtraAlva': ' (Альва)',
+            'MapExtraNiko': ' (Нико)',
+            'MapExtraJun': ' (Джун)',
+            # The other one is disabled, should be fine
+            'MapSpawnRogueExiles': '',
+            'MysteriousInvadersFire': ' (огонь)',
+            'MysteriousInvadersCold': ' (холод)',
+            'MysteriousInvadersLightning': ' (молния)',
+            'MysteriousInvadersPhysical': ' (физический)',
+            'MysteriousInvadersChaos': ' (хаос)',
 
             'AreaAllRaresAreCloned': ' (пророчество)',
             'HillockDropsTheAnvil': ' (пророчество)',
