@@ -41,6 +41,7 @@ from functools import partialmethod
 
 # Self
 from PyPoE.poe.constants import RARITY
+from PyPoE.poe.file.dat import RelationalReader
 from PyPoE.poe.file.ot import OTFile
 from PyPoE.poe.sim.formula import gem_stat_requirement, GemTypes
 from PyPoE.cli.core import console, Msg
@@ -244,6 +245,15 @@ class ItemsHandler(ExporterHandler):
         super().add_default_parsers(*args, **kwargs)
         parser = kwargs['parser']
         self.add_format_argument(parser)
+        parser.add_argument(
+            '--disable-english-file-links',
+            help='Disables putting english file links in inventory icon for non'
+                 ' English languages',
+            action='store_false',
+            dest='english_file_link',
+            default=True,
+        )
+
         if type == 'item':
             parser.add_argument(
                 '-ft-c', '--filter-class',
@@ -1015,6 +1025,36 @@ class ItemsParser(SkillParserShared):
         },
     }
 
+    _LANG = {
+        'English': {
+            'Low': 'Low Tier',
+            'Mid': 'Mid Tier',
+            'High': 'High Tier',
+            'decoration': '%s (%s %s decoration)',
+            'decoration_wounded': '%s (%s %s decoration, Wounded)',
+            'of': '%s of %s',
+            'descent': 'Descent',
+        },
+        'German': {
+            'Low': 'Niedrige Stufe',
+            'Mid': 'Mittlere Stufe',
+            'High': 'Hohe Stufe',
+            'decoration': '%s (%s %s Dekoration)',
+            'decoration_wounded': '%s (%s %s Dekoration, verletzt)',
+            'of': '%s von %s',
+            'descent': 'Descent',
+        },
+        'Russian': {
+            'Low': 'низкий уровень',
+            'Mid': 'средний уровень',
+            'High': 'высокий уровень',
+            'decoration': '%s (%s %s decoration)',
+            'decoration_wounded': '%s (%s %s decoration, Wounded)',
+            'of': '%s из %s',
+            'descent': 'Descent',
+        },
+    }
+
     # Unreleased or disabled items to avoid exporting to the wiki
     _SKIP_ITEMS_BY_ID = {
         #
@@ -1324,6 +1364,19 @@ class ItemsParser(SkillParserShared):
         super().__init__(*args, **kwargs)
         self._parsed_args = None
         self._language = config.get_option('language')
+        if self._language != 'English':
+            self.rr2 = RelationalReader(
+                path_or_ggpk=self.base_path,
+                files=['BaseItemTypes.dat', 'Prophecies.dat'],
+                read_options={
+                    'use_dat_value': False,
+                    'auto_build_index': True,
+                },
+                raise_error_on_missing_relation=False,
+                language='English',
+            )
+        else:
+            self.rr2 = None
 
     def _skill_gem(self, infobox, base_item_type):
         try:
@@ -1976,7 +2029,8 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/Gems/SkillGemLightningTendrils': True,
     }
 
-    def _conflict_active_skill_gems(self, infobox, base_item_type):
+    def _conflict_active_skill_gems(self, infobox, base_item_type, rr,
+                                    language):
         appendix = self._conflict_active_skill_gems_map.get(
             base_item_type['Id'])
         if appendix is None:
@@ -1984,52 +2038,55 @@ class ItemsParser(SkillParserShared):
         else:
             return base_item_type['Name']
 
-    def _conflict_quest_items(self, infobox, base_item_type):
-        name = base_item_type['Name']
-        if name in ('Book of Skill', 'Book of Regrets', 'Book of Reform'):
-            qid = base_item_type['Id'].replace('Metadata/Items/QuestItems/', '')
-            # Regular quest skill books
-            match = re.match(r'(?:SkillBooks|Act[0-9]+)/Book-(?P<id>.*)', qid)
-            if match:
-                qid = match.group('id')
-                ver = re.findall(r'v[0-9]$', qid)
-                # Only need one of the skill books from "choice" quets
-                if ver:
-                    if ver[0] != 'v0':
-                        return
-                    qid = qid.replace(ver[0], '')
+    def _conflict_quest_items(self, infobox, base_item_type, rr, language):
+        qid = base_item_type['Id'].replace('Metadata/Items/QuestItems/', '')
+        match = re.match(r'(?:SkillBooks|Act[0-9]+)/Book-(?P<id>.*)', qid)
+        if match:
+            qid = match.group('id')
+            ver = re.findall(r'v[0-9]$', qid)
+            # Only need one of the skill books from "choice" quets
+            if ver:
+                if ver[0] != 'v0':
+                    return
+                qid = qid.replace(ver[0], '')
 
-                try:
-                    return base_item_type['Name'] + ' (%s)' % \
-                           self.rr['Quest.dat'].index['Id'][qid]['Name']
-                except KeyError:
-                    console('Quest %s not found' % qid, msg=Msg.error)
-
+            try:
+                return base_item_type['Name'] + ' (%s)' % \
+                       rr['Quest.dat'].index['Id'][qid]['Name']
+            except KeyError:
+                console('Quest %s not found' % qid, msg=Msg.error)
+        else:
             # Descent skill books
             match = re.match(r'SkillBooks/Descent2_(?P<id>[0-9]+)', qid)
             if match:
-                return base_item_type['Name'] + ' (Descent %s)' % match.group('id')
-
-            # Bandit respec
-            match = re.match(r'SkillBooks/BanditRespec(?P<id>.+)', qid)
-            if match:
-                return base_item_type['Name'] + ' (%s)' % match.group('id')
-        elif name == 'Firefly':
-            match = re.match(
-                r'Metadata/Items/QuestItems/Act7/Firefly(?P<id>[0-9]+)$',
-                base_item_type['Id']
-            )
-            pageid = base_item_type['Name'] + ' (%s of 7)' % match.group('id')
-            infobox['inventory_icon'] = pageid
-            return pageid
-        elif 'Shaper\'s Orb' in name:
-            infobox['inventory_icon'] = 'Shaper\'s Orb'
+                return base_item_type['Name'] + ' (%s %s)' % (
+                    self._LANG[language]['descent'], match.group('id')
+                )
+            else:
+                # Bandit respec
+                match = re.match(r'SkillBooks/BanditRespec(?P<id>.+)', qid)
+                if match:
+                    return base_item_type['Name'] + ' (%s)' % match.group('id')
+                else:
+                    match = re.match(
+                        r'Metadata/Items/QuestItems/Act7/Firefly(?P<id>[0-9]+)$',
+                        base_item_type['Id']
+                    )
+                    if match:
+                        pageid = '%s (%s)' % (
+                            base_item_type['Name'],
+                             self._LANG[language]['of'] % (
+                                 match.group('id'), 7
+                             ),
+                        )
+                        infobox['inventory_icon'] = pageid
+                        return pageid
 
         return
 
-    def _conflict_hideout_doodad(self, infobox, base_item_type):
+    def _conflict_hideout_doodad(self, infobox, base_item_type, rr, language):
         try:
-            ho = self.rr['HideoutDoodads.dat'].index[
+            ho = rr['HideoutDoodads.dat'].index[
                 'BaseItemTypesKey'][base_item_type.rowid]
         except KeyError:
             return
@@ -2038,19 +2095,14 @@ class ItemsParser(SkillParserShared):
         if ho['HideoutNPCsKey']:
             if base_item_type['Id'].startswith('Metadata/Items/Hideout/Hideout'
                                                'Wounded'):
-                name = '%s (%s %s decoration, %s)' % (
-                    base_item_type['Name'],
-                    ho['HideoutNPCsKey']['Hideout_NPCsKey']['ShortName'],
-                    ho['MasterLevel'],
-                    base_item_type['Id'].replace('Metadata/Items/Hideout/Hideout'
-                                                 'Wounded', '')
-                )
+                name_fmt = self._LANG[self._language]['decoration_wounded']
             else:
-                name = '%s (%s %s decoration)' % (
-                    base_item_type['Name'],
-                    ho['HideoutNPCsKey']['Hideout_NPCsKey']['ShortName'],
-                    ho['MasterLevel']
-                )
+                name_fmt = self._LANG[self._language]['decoration']
+            name = name_fmt % (
+                base_item_type['Name'],
+                ho['HideoutNPCsKey']['Hideout_NPCsKey']['ShortName'],
+                ho['MasterLevel']
+            )
             infobox['inventory_icon'] = name
             return name
         elif base_item_type['Id'].startswith(
@@ -2061,19 +2113,19 @@ class ItemsParser(SkillParserShared):
 
             return base_item_type['Name']
 
-    def _conflict_maps(self, infobox, base_item_type):
+    def _conflict_maps(self, infobox, base_item_type, rr, language):
         id = base_item_type['Id'].replace('Metadata/Items/Maps/', '')
         # Legacy maps
         map_version = None
-        for row in self.rr['MapSeries.dat']:
+        for row in rr['MapSeries.dat']:
             if not id.startswith(row['Id']):
                 continue
             map_version = row['Name']
 
         if 'Harbinger' in id:
-            name = '%s (%s Tier) (%s)' % (
+            name = '%s (%s) (%s)' % (
                 base_item_type['Name'],
-                re.sub(r'^.*Harbinger', '', id),
+                self._LANG[language][re.sub(r'^.*Harbinger', '', id)],
                 map_version,
             )
         else:
@@ -2090,16 +2142,20 @@ class ItemsParser(SkillParserShared):
 
         return name
 
-    def _conflict_map_fragments(self, infobox, base_item_type):
+    def _conflict_map_fragments(self, infobox, base_item_type, rr, language):
         return base_item_type['Name']
 
-    def _conflict_divination_card(self, infobox, base_item_type):
-        return '%s (divination card)' % base_item_type['Name']
+    def _conflict_divination_card(self, infobox, base_item_type, rr, language):
+        return '%s (%s)' % (
+            base_item_type['Name'],
+            base_item_type['ItemClassesKey']['Name'].lower()
+        )
 
-    def _conflict_labyrinth_map_item(self, infobox, base_item_type):
+    def _conflict_labyrinth_map_item(self, infobox, base_item_type, rr,
+                                     language):
         return base_item_type['Name']
 
-    def _conflict_misc_map_item(self, infobox, base_item_type):
+    def _conflict_misc_map_item(self, infobox, base_item_type, rr, language):
         return base_item_type['Name']
 
     _conflict_resolver_map = {
@@ -2228,6 +2284,48 @@ class ItemsParser(SkillParserShared):
             for i, mod in enumerate(base_item_type['Implicit_ModsKeys']):
                 infobox['implicit%s' % (i+1)] = mod['Id']
 
+    def _process_name_conflicts(self, infobox, base_item_type, language):
+        rr = self.rr2 if language != self._language else self.rr
+        # Get the base item of other language
+        base_item_type = rr['BaseItemTypes.dat'][base_item_type.rowid]
+
+        name = base_item_type['Name']
+        cls_id = base_item_type['ItemClassesKey']['Id']
+        m_id = base_item_type['Id']
+        appendix = self._NAME_OVERRIDE_BY_ID[language].get(m_id)
+
+
+        if appendix is not None:
+            name += appendix
+            infobox['inventory_icon'] = name
+        elif cls_id == 'Map' or \
+                len(rr['BaseItemTypes.dat'].index['Name'][name] +
+                    rr['Prophecies.dat'].index['Name'][name]) > 1:
+            resolver = self._conflict_resolver_map.get(cls_id)
+
+            if resolver:
+                name = resolver(self, infobox, base_item_type, rr, language)
+                if name is None:
+                    console(
+                        'Unresolved ambiguous item "%s" with name "%s". '
+                        'Skipping' %
+                        (m_id, infobox['name']),
+                        msg=Msg.error
+                    )
+                    return
+            else:
+                console(
+                        'Unresolved ambiguous item "%s" with name "%s". '
+                        'Skipping' %
+                        (m_id, infobox['name']),
+                        msg=Msg.error
+                    )
+                console('No name conflict handler defined for item class id'
+                        ' "%s"' % cls_id, msg=Msg.error)
+                return
+
+        return name
+
     def _export(self, parsed_args, items):
         classes = self._parse_class_filter(parsed_args)
         if classes:
@@ -2242,14 +2340,19 @@ class ItemsParser(SkillParserShared):
         ]
         console('%s items left for processing.' % len(items))
 
-        console('Additional files may be loaded. Processing information - this '
-                'may take a while...')
+        console('Loading additional files - this may take a while...')
         self._image_init(parsed_args)
 
         r = ExporterResult()
         self.rr['BaseItemTypes.dat'].build_index('Name')
         self.rr['Prophecies.dat'].build_index('Name')
         self.rr['MapPurchaseCosts.dat'].build_index('Tier')
+
+        if self._language != 'English' and parsed_args.english_file_link:
+            self.rr2['BaseItemTypes.dat'].build_index('Name')
+            self.rr2['Prophecies.dat'].build_index('Name')
+
+        console('Processing item information...')
 
         for base_item_type in items:
             name = base_item_type['Name']
@@ -2277,35 +2380,21 @@ class ItemsParser(SkillParserShared):
             # handle items with duplicate name entries
             # Maps must be handled in any case due to unique naming style of
             # pages
-            appendix = self._NAME_OVERRIDE_BY_ID[self._language].get(m_id)
-            if appendix is not None:
-                name += appendix
-                infobox['inventory_icon'] = name
-            elif cls_id == 'Map' or \
-                    len(self.rr['BaseItemTypes.dat'].index['Name'][name] +
-                        self.rr['Prophecies.dat'].index['Name'][name]) > 1:
-                resolver = self._conflict_resolver_map.get(cls_id)
-
-                if resolver:
-                    name = resolver(self, infobox, base_item_type)
-                    if name is None:
-                        console(
-                            'Unresolved ambiguous item "%s" with name "%s". '
-                            'Skipping' %
-                            (m_id, infobox['name']),
-                            msg=Msg.error
-                        )
-                        continue
+            page = self._process_name_conflicts(
+                infobox, base_item_type, self._language
+            )
+            if page is None:
+                page = name
+            if self._language != 'English' and parsed_args.english_file_link:
+                icon = self._process_name_conflicts(
+                    infobox, base_item_type, 'English'
+                )
+                if icon:
+                    infobox['inventory_icon'] = icon
                 else:
-                    console(
-                            'Unresolved ambiguous item "%s" with name "%s". '
-                            'Skipping' %
-                            (m_id, infobox['name']),
-                            msg=Msg.error
-                        )
-                    console('No name conflict handler defined for item class id'
-                            ' "%s"' % cls_id, msg=Msg.error)
-                    continue
+                    infobox['inventory_icon'] = \
+                        self.rr2['BaseItemTypes.dat'][base_item_type.rowid][
+                            'Name']
 
             # putting this last since it's usually manually added
             if m_id in self._DROP_DISABLED_ITEMS_BY_ID:
@@ -2318,10 +2407,10 @@ class ItemsParser(SkillParserShared):
 
             r.add_result(
                 text=cond,
-                out_file='item_%s.txt' % name,
+                out_file='item_%s.txt' % page,
                 wiki_page=[
                     {
-                        'page': name,
+                        'page': page,
                         'condition': cond,
                     }
                 ],
@@ -2340,7 +2429,7 @@ class ItemsParser(SkillParserShared):
                     data=self.ggpk[base_item_type['ItemVisualIdentityKey'][
                         'DDSFile']].record.extract().read(),
                     out_path=os.path.join(self._img_path, (
-                        infobox.get('inventory_icon') or name) +
+                        infobox.get('inventory_icon') or page) +
                         ' inventory icon.dds',
                     ),
                     parsed_args=parsed_args,
