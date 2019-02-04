@@ -3282,11 +3282,11 @@ specification = Specification({
                 type='ref|list|ulong',
                 key='Mods.dat',
             )),
-            ('Unknown_TagsKeys', Field(
+            ('NegativeWeight_TagsKeys', Field(
                 type='ref|list|ulong',
                 key='Tags.dat',
             )),
-            ('Unknown_Values', Field(
+            ('NegativeWeight_Values', Field(
                 type='ref|list|int',
             )),
             ('Mods_Keys1', Field(
