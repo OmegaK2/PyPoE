@@ -3336,6 +3336,9 @@ specification = Specification({
             )),
             ('BlockedDelveCraftingModifierDescriptionsKeys', Field(
                 type='ref|list|ulong',
+                key='DelveCraftingModifierDescriptions.dat',
+            )),
+
             )),
         )),
     ),
