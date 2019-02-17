@@ -76,6 +76,9 @@ _translation_map = {
     MOD_DOMAIN.ATLAS: 'atlas_stat_descriptions.txt',
     MOD_DOMAIN.LEAGUESTONE: 'leaguestone_stat_descriptions.txt',
     MOD_DOMAIN.DELVE_AREA: 'map_stat_descriptions.txt',
+    MOD_DOMAIN.MAP_DEVICE: 'map_stat_descriptions.txt',
+    # To properly support zana's innate IIQ
+    MOD_DOMAIN.CRAFTED: 'map_stat_descriptions.txt',
 }
 
 # =============================================================================
