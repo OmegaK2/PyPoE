@@ -106,6 +106,12 @@ class PassiveSkillCommandHandler(ExporterHandler):
         super().add_default_parsers(*args, **kwargs)
         self.add_format_argument(kwargs['parser'])
         self.add_image_arguments(kwargs['parser'])
+        kwargs['parser'].add_argument(
+            '-ft-id', '--filter-id', '--filter-metadata-id',
+            help='Regular expression on the id',
+            type=str,
+            dest='re_id',
+        )
 
 
 class PassiveSkillParser(parser.BaseParser):
@@ -185,6 +191,23 @@ class PassiveSkillParser(parser.BaseParser):
         }),
     ))
 
+    def _apply_filter(self, parsed_args, passives):
+        if parsed_args.re_id:
+            parsed_args.re_id = re.compile(parsed_args.re_id, flags=re.UNICODE)
+        else:
+            return passives
+
+        new = []
+
+        for passive in passives:
+            if parsed_args.re_id and not \
+                    parsed_args.re_id.match(passive['Id']):
+                continue
+
+            new.append(passive)
+
+        return new
+
     def by_rowid(self, parsed_args):
         return self.export(
             parsed_args,
@@ -201,12 +224,10 @@ class PassiveSkillParser(parser.BaseParser):
             column_id='Name', arg_list=parsed_args.name
         ))
 
-    def by_filter(self, parsed_args):
-        out = []
-        return self.export(parsed_args, out)
-
     def export(self, parsed_args, passives):
         r = ExporterResult()
+
+        passives = self._apply_filter(parsed_args, passives)
 
         if not passives:
             console(
@@ -292,10 +313,14 @@ class PassiveSkillParser(parser.BaseParser):
             ))
 
             # For now this is being added to the stat text
-            for ps_buff in  passive['PassiveSkillBuffsKeys']:
+            for ps_buff in passive['PassiveSkillBuffsKeys']:
                 stat_ids = [stat['Id'] for stat in
                             ps_buff['BuffDefinitionsKey']['StatsKeys']]
                 values = ps_buff['Buff_StatValues']
+                if passive['Id'] == 'AscendancyChampion7':
+                    index = stat_ids.index('damage_taken_+%_from_hits')
+                    del stat_ids[index]
+                    del values[index]
                 for i, (sid, val) in enumerate(zip(stat_ids, values)):
                     j += 1
                     data['stat%s_id' % j] = sid

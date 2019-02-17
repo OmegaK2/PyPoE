@@ -712,7 +712,12 @@ class BaseParser(object):
     """
 
     _DETAILED_FORMAT = '<abbr title="%s">%s</abbr>'
-    _HIDDEN_FORMAT = '%s (Hidden)'
+
+    _HIDDEN_FORMAT = {
+        'English': '%s (Hidden)',
+        'German': '%s (nicht sichtbar)',
+        'Russian': '%s (скрытый)',
+    }
     _MISSING_MSG = 'Several arguments have not been found:\n%s'
 
     _files = []
@@ -749,6 +754,7 @@ class BaseParser(object):
 
         self.ggpk = None
         self._img_path = None
+        self.lang = config.get_option('language')
 
     def _column_index_filter(self, dat_file_name, column_id, arg_list,
                              error_msg=_MISSING_MSG):
@@ -784,7 +790,7 @@ class BaseParser(object):
         return title.replace('_', '~').replace('~~~', '_~~_~~_')
 
     def _format_hidden(self, custom):
-        return self._HIDDEN_FORMAT % make_inter_wiki_links(custom)
+        return self._HIDDEN_FORMAT[self.lang] % make_inter_wiki_links(custom)
 
     def _format_detailed(self, custom, ingame):
         return self._DETAILED_FORMAT % (
@@ -862,19 +868,16 @@ class BaseParser(object):
 
                     stats.append(stat)
                     values.append(value)
-                    
-        lang = config.get_option('language')
 
         result = self.tc[translation_file].get_translation(
-            stats, values, full_result=True, lang=lang
+            stats, values, full_result=True, lang=self.lang
         )
 
         if mod and mod['Domain'] == MOD_DOMAIN.MONSTER:
             default = self.tc['stat_descriptions.txt'].get_translation(
                 result.source_ids, result.source_values, full_result=True,
-                lang=lang
+                lang=self.lang
             )
-
             temp_ids = []
             temp_trans = []
 
@@ -883,29 +886,34 @@ class BaseParser(object):
                     if tr.ids != tr2.ids:
                         continue
 
-                    r1 = tr.get_language(lang).get_string(default.values[i])
-                    r2 = tr2.get_language(lang).get_string(result.values[j])
+                    r1 = tr.get_language(self.lang).get_string(default.values[i])
+                    r2 = tr2.get_language(self.lang).get_string(result.values[j])
                     if r1 and r2 and r1[0] != r2[0]:
                         temp_trans.append(self._format_detailed(r1[0], r2[0]))
                     elif r2 and r2[0]:
                         temp_trans.append(self._format_hidden(r2[0]))
                     temp_ids.append(tr.ids)
 
-                is_missing = True
+                is_missing = False
                 for tid in tr.ids:
-                    is_missing = is_missing and (tid in result.missing_ids)
+                    if tid in result.missing_ids:
+                        is_missing = True
+                        break
 
                 if not is_missing:
                     continue
 
-                r1 = tr.get_language(lang).\
+                r1 = tr.get_language(self.lang).\
                     get_string(default.values[i])
                 if r1 and r1[0]:
                     temp_trans.append(self._format_hidden(r1[0]))
                     temp_ids.append(tr.ids)
 
                 for tid in tr.ids:
-                    i = result.missing_ids.index(tid)
+                    try:
+                        i = result.missing_ids.index(tid)
+                    except ValueError:
+                        continue
                     del result.missing_ids[i]
                     del result.missing_values[i]
 
@@ -916,7 +924,7 @@ class BaseParser(object):
                 except ValueError:
                     temp_ids.insert(index, tr.ids)
                     temp_trans.insert(index, make_inter_wiki_links(
-                        tr.get_language(lang).\
+                        tr.get_language(self.lang).\
                             get_string(result.values[i])[0]
                     ))
                 else:
@@ -931,7 +939,7 @@ class BaseParser(object):
                 result.missing_ids,
                 result.missing_values,
                 full_result=True,
-                lang=lang,
+                lang=self.lang,
             )
 
             if custom_result.missing_ids:
@@ -943,7 +951,7 @@ class BaseParser(object):
 
             for line in custom_result.lines:
                 if line:
-                    out.append(self._HIDDEN_FORMAT % line)
+                    out.append(self._HIDDEN_FORMAT[self.lang] % line)
 
         finalout = []
         for line in out:

@@ -429,6 +429,11 @@ class QuestRewardReader(BaseParser):
             'Metadata/Items/Rings/Ring14':
                 "Кольцо с двумя камнями (рубин и сапфир)",
         },
+        'German': {
+            'Metadata/Items/Rings/Ring12': "Zweisteinring (Rubin und Topas)",
+            'Metadata/Items/Rings/Ring13': "Zweisteinring (Saphir und Topas)",
+            'Metadata/Items/Rings/Ring14': "Zweisteinring (Rubin und Saphir)",
+        }
     }
 
     _UNIT_SEP = '\u001F'

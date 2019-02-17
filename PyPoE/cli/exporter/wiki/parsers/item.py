@@ -148,7 +148,7 @@ class WikiCondition(parser.WikiCondition):
         r'^(upgraded_from_set|implicit[0-9]+_(?:text|random_list)).*'
         , re.UNICODE)
 
-    MATCH = '(?:Item|Base item)'
+    MATCH = 'Base item'
     INDENT = 40
     ADD_INCLUDE = False
 
@@ -500,9 +500,18 @@ class ItemsParser(SkillParserShared):
     }
 
     _DROP_DISABLED_ITEMS_BY_ID = {
+        'Metadata/Items/Quivers/Quiver1',
+        'Metadata/Items/Quivers/Quiver2',
+        'Metadata/Items/Quivers/Quiver3',
+        'Metadata/Items/Quivers/Quiver4',
+        'Metadata/Items/Quivers/Quiver5',
         'Metadata/Items/Quivers/QuiverDescent',
+        'Metadata/Items/Rings/RingVictor1',
         # Eternal Orb
         'Metadata/Items/Currency/CurrencyImprintOrb',
+        # Demigod items
+        'Metadata/Items/Belts/BeltDemigods1',
+        'Metadata/Items/Rings/RingDemigods1',
     }
 
     _NAME_OVERRIDE_BY_ID = {
@@ -1034,6 +1043,14 @@ class ItemsParser(SkillParserShared):
             'decoration_wounded': '%s (%s %s decoration, Wounded)',
             'of': '%s of %s',
             'descent': 'Descent',
+            'upgraded_from_+1':
+                '+1 level {{c|corrupted|corruption}} outcome',
+            'upgraded_from_type_change':
+                'type change {{c|corrupted|corruption}} outcome',
+            'upgraded_from_shrieking_essence':
+                'random {{c|currency|Shrieking Essence}}',
+            'upgraded_from_random_essence':
+                'random {{c|currency|Essence}}',
         },
         'German': {
             'Low': 'Niedrige Stufe',
@@ -1043,15 +1060,31 @@ class ItemsParser(SkillParserShared):
             'decoration_wounded': '%s (%s %s Dekoration, verletzt)',
             'of': '%s von %s',
             'descent': 'Descent',
+            'upgraded_from_+1':
+                '+1 zur Stufe als Resultat von {{c|corrupted|Verderben}}',
+            'upgraded_from_type_change':
+                'Änderung des Typs als Resultat von {{c|corrupted|Verderben}}',
+            'upgraded_from_shrieking_essence':
+                'zufällige {{c|currency|Kreischende Essenz}}',
+            'upgraded_from_random_essence':
+                'zufällige {{c|currency|Essenz}}',
         },
         'Russian': {
             'Low': 'низкий уровень',
             'Mid': 'средний уровень',
             'High': 'высокий уровень',
-            'decoration': '%s (%s %s decoration)',
-            'decoration_wounded': '%s (%s %s decoration, Wounded)',
+            'decoration': '%s (%s %s предмет убежища)',
+            'decoration_wounded': '%s (%s %s предмет убежища, Раненый)',
             'of': '%s из %s',
-            'descent': 'Descent',
+            'descent': 'Спуск',
+            'upgraded_from_+1':
+                '+1 уровень в результате {{c|corrupted|осквернения}}',
+            'upgraded_from_type_change':
+                'изменение типа в результате {{c|corrupted|осквернения}}',
+            'upgraded_from_shrieking_essence':
+                'случайная {{c|currency|Визжащая Сущность}}',
+            'upgraded_from_random_essence':
+                'случайная {{c|currency|Сущность}}',
         },
     }
 
@@ -1870,7 +1903,7 @@ class ItemsParser(SkillParserShared):
 
                 # +1 level corruption
                 infobox['upgraded_from_set%s_text' % index] = \
-                    '+1 level {{c|corrupted|corruption}} outcome'
+                    self._LANG[self._language]['upgraded_from_+1']
 
                 infobox['upgraded_from_set%s_group1_item_id' % index] = \
                     other_essence['BaseItemTypesKey']['Id']
@@ -1895,7 +1928,7 @@ class ItemsParser(SkillParserShared):
                         continue
                         # +1 level corruption
                     infobox['upgraded_from_set%s_text' % index] = \
-                        'type change {{c|corrupted|corruption}} outcome'
+                        self._LANG[self._language]['upgraded_from_type_change']
 
                     infobox['upgraded_from_set%s_group1_item_id' % index] = \
                         other_essence['BaseItemTypesKey']['Id']
@@ -1911,7 +1944,7 @@ class ItemsParser(SkillParserShared):
         # Harmony of Souls -- Only "Shrieking" essences
         if essence['Level'] == 6:
             infobox['upgraded_from_set%s_text' % index] = \
-                        'random {{c|currency|Shrieking Essence}}'
+                self._LANG[self._language]['upgraded_from_shrieking_essence']
 
             infobox['upgraded_from_set%s_group1_item_id' % index] = \
                 'Metadata/Items/DivinationCards/DivinationCardHarmonyOfSouls'
@@ -1921,7 +1954,7 @@ class ItemsParser(SkillParserShared):
         # Three Voices
 
         infobox['upgraded_from_set%s_text' % index] = \
-                        'random {{c|currency|Essence}}'
+            self._LANG[self._language]['upgraded_from_random_essence']
 
         infobox['upgraded_from_set%s_group1_item_id' % index] = \
             'Metadata/Items/DivinationCards/DivinationCardThreeVoices'
