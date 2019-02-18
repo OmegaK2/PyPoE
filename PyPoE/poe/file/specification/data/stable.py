@@ -874,8 +874,9 @@ specification = Specification({
                 key='Tags.dat',
             )),
             # Relating displaystyle it seems
-            ('Unknown2', Field(
+            ('ModDomainKey', Field(
                 type='int',
+		key='ModDomains.dat'
             )),
             ('Flag0', Field(
                 type='bool',
