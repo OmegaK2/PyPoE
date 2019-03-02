@@ -2422,10 +2422,15 @@ class ItemsParser(SkillParserShared):
                 icon = self._process_name_conflicts(
                     infobox, base_item_type, 'English'
                 )
-                if icon:
-                    infobox['inventory_icon'] = icon
+                if cls_id == 'DivinationCard':
+                    key = 'card_art'
                 else:
-                    infobox['inventory_icon'] = \
+                    key = 'inventory_icon'
+
+                if icon:
+                    infobox[key] = icon
+                else:
+                    infobox[key] = \
                         self.rr2['BaseItemTypes.dat'][base_item_type.rowid][
                             'Name']
 
