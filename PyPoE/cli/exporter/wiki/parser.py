@@ -1070,9 +1070,11 @@ class WikiCondition(object):
     INDENT = 33
     ADD_INCLUDE = False
 
-    def __init__(self, data, cmdargs):
+    def __init__(self, data, cmdargs, handler=None):
         self.data = data
         self.cmdargs = cmdargs
+        if handler is None:
+            self.handler = self._handler
         self.template_arguments = None
 
     def __call__(self, *args, **kwargs):
@@ -1105,11 +1107,14 @@ class WikiCondition(object):
                     page.text():
                 prefix = '<onlyinclude></onlyinclude>'
 
-            return prefix + self.template_arguments['texts'][0] + \
+            return self.handler(prefix + self.template_arguments['texts'][0] + \
                    self._get_text() + \
-                   ''.join(self.template_arguments['texts'][1:])
+                   ''.join(self.template_arguments['texts'][1:]))
         else:
-            return self._get_text()
+            return self.handler(self._get_text())
+
+    def _handler(self, text):
+        return text
 
     def _get_text(self):
         return format_result_rows(
