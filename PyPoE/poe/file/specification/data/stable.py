@@ -874,8 +874,9 @@ specification = Specification({
                 key='Tags.dat',
             )),
             # Relating displaystyle it seems
-            ('Unknown2', Field(
+            ('ModDomainKey', Field(
                 type='int',
+		key='ModDomains.dat'
             )),
             ('Flag0', Field(
                 type='bool',
@@ -3278,7 +3279,7 @@ specification = Specification({
                 type='ulong',
                 key='BaseItemTypes.dat',
             )),
-            ('Mods_Keys0', Field(
+            ('AddedModKeys', Field(
                 type='ref|list|ulong',
                 key='Mods.dat',
             )),
@@ -3289,38 +3290,38 @@ specification = Specification({
             ('NegativeWeight_Values', Field(
                 type='ref|list|int',
             )),
-            ('Mods_Keys1', Field(
+            ('ForcedAddModKeys', Field(
                 type='ref|list|ulong',
                 key='Mods.dat',
             )),
-            ('DelveCraftingTagsKeys0', Field(
+            ('ForbiddenDelveCraftingTagsKeys', Field(
                 type='ref|list|ulong',
                 key='DelveCraftingTags.dat',
             )),
-            ('DelveCraftingTagsKeys1', Field(
+            ('AllowedDelveCraftingTagsKeys', Field(
                 type='ref|list|ulong',
                 key='DelveCraftingTags.dat',
             )),
-            ('Flag0', Field(
+            ('MirrorsItem', Field(
                 type='bool',
             )),
-            ('Unknown0', Field(
+            ('CorruptedEssenceChance', Field(
                 type='int',
             )),
-            ('Flag1', Field(
+            ('RollQuality', Field(
                 type='bool',
             )),
-            ('Flag2', Field(
+            ('Enchant', Field(
                 type='bool',
             )),
-            ('Flag3', Field(
+            ('LuckyRolls', Field(
                 type='bool',
             )),
             ('SellPrice_ModsKeys', Field(
                 type='ref|list|ulong',
                 key='Mods.dat',
             )),
-            ('Flag4', Field(
+            ('RollWhiteSockets', Field(
                 type='bool',
             )),
             ('Weight_TagsKeys', Field(
@@ -3334,8 +3335,11 @@ specification = Specification({
                 type='ref|list|ulong',
                 key='DelveCraftingModifierDescriptions.dat',
             )),
-            ('Keys9', Field(
+            ('BlockedDelveCraftingModifierDescriptionsKeys', Field(
                 type='ref|list|ulong',
+                key='DelveCraftingModifierDescriptions.dat',
+            )),
+
             )),
         )),
     ),
