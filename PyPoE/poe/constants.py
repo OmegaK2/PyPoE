@@ -600,6 +600,7 @@ class MOD_DOMAIN(IntEnumOverride):
     DUMMY = 15
     DELVE = 16
     DELVE_AREA = 17
+    UNDEFINED = 18
 
     # legacy names
     MASTER = 9

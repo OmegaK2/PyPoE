@@ -874,9 +874,10 @@ specification = Specification({
                 key='Tags.dat',
             )),
             # Relating displaystyle it seems
-            ('ModDomainKey', Field(
+            ('ModDomainsKey', Field(
                 type='int',
-		key='ModDomains.dat'
+                enum='MOD_DOMAIN',
+                #key='ModDomains.dat',
             )),
             ('Flag0', Field(
                 type='bool',
@@ -3302,26 +3303,26 @@ specification = Specification({
                 type='ref|list|ulong',
                 key='DelveCraftingTags.dat',
             )),
-            ('MirrorsItem', Field(
+            ('CanMirrorItem', Field(
                 type='bool',
             )),
             ('CorruptedEssenceChance', Field(
                 type='int',
             )),
-            ('RollQuality', Field(
+            ('CanImproveQuality', Field(
                 type='bool',
             )),
-            ('Enchant', Field(
+            ('CanRollEnchant', Field(
                 type='bool',
             )),
-            ('LuckyRolls', Field(
+            ('HasLuckyRolls', Field(
                 type='bool',
             )),
             ('SellPrice_ModsKeys', Field(
                 type='ref|list|ulong',
                 key='Mods.dat',
             )),
-            ('RollWhiteSockets', Field(
+            ('CanRollWhiteSockets', Field(
                 type='bool',
             )),
             ('Weight_TagsKeys', Field(
@@ -3338,8 +3339,6 @@ specification = Specification({
             ('BlockedDelveCraftingModifierDescriptionsKeys', Field(
                 type='ref|list|ulong',
                 key='DelveCraftingModifierDescriptions.dat',
-            )),
-
             )),
         )),
     ),
@@ -10707,6 +10706,9 @@ specification = Specification({
             ('Key6', Field(
                 type='ulong',
             )),
+            ('Flag3', Field(
+                type='byte',
+            )),
         )),
     ),
     'Strongboxes.dat': File(
@@ -10942,18 +10944,20 @@ specification = Specification({
             ('Flag4', Field(
                 type='byte',
             )),
-            # TODO 3.5.0: this is a list but errors
             ('Unknown18', Field(
                 type='int',
             )),
-            ('Unknown19', Field(
-                type='int',
+            ('Script1', Field(
+                type='ref|string',
             )),
             ('Flag5', Field(
                 type='byte',
             )),
             ('Flag6', Field(
                 type='byte',
+            )),
+            ('Script2', Field(
+                type='ref|string',
             )),
         )),
     ),
@@ -11451,6 +11455,17 @@ specification = Specification({
                 type='bool',
             )),
             ('Flag1', Field(
+                type='bool',
+            )),
+            ('UniqueStashLayoutKey', Field(
+                type='int',
+                key='UniqueStashLayout.dat',
+            )),
+            ('UniqueStashLayoutKey2', Field(
+                type='int',
+                key='UniqueStashLayout.dat',
+            )),
+            ('Flag2', Field(
                 type='bool',
             )),
         )),
