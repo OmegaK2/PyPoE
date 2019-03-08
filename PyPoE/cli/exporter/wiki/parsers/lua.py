@@ -69,6 +69,14 @@ def lua_formatter(outdata, key_order=None):
         for key, value in data.items():
             if isinstance(value, int):
                 out.append('\t\t%s=%s,\n' % (key, value))
+            elif isinstance(value, (tuple, set, list)):
+                values = []
+                for v in value:
+                    k = '%s' if isinstance(v, int) else '"%s"'
+                    values.append(k % v)
+
+                    values.append
+                out.append('\t\t%s={%s},\n' % (key, ', '.join(values)))
             else:
                 out.append('\t\t%s="%s",\n' % (key, value.replace('"', '\\"')))
         out.append('\t},\n')
@@ -81,6 +89,19 @@ def lua_formatter(outdata, key_order=None):
 # =============================================================================
 # Classes
 # =============================================================================
+
+class GenericLuaParser(BaseParser):
+    def _copy_from_keys(self, row, keys, out_data):
+        copyrow = OrderedDict()
+        for k, copy_data in keys:
+
+            value = row[k]
+            if value is not None:
+                if 'value' in copy_data:
+                    value = copy_data['value'](value)
+                copyrow[copy_data['key']] = value
+
+        out_data.append(copyrow)
 
 
 class LuaHandler(ExporterHandler):
@@ -129,8 +150,18 @@ class LuaHandler(ExporterHandler):
             func=DelveParser.main,
         )
 
+        parser = lua_sub.add_parser(
+            'synthesis',
+            help='Extract synthesis information',
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=SynthesisParser,
+            func=SynthesisParser.main,
+        )
 
-class BestiaryParser(BaseParser):
+
+class BestiaryParser(GenericLuaParser):
     _files = [
         # pretty much chain loads everything we need
         'BestiaryRecipes.dat',
@@ -181,18 +212,6 @@ class BestiaryParser(BaseParser):
         }),
     )
 
-    def _copy_from_keys(self, row, keys, out_data):
-        copyrow = OrderedDict()
-        for k, copy_data in keys:
-
-            value = row[k]
-            if value:
-                if 'value' in copy_data:
-                    value = copy_data['value'](value)
-                copyrow[copy_data['key']] = value
-
-        out_data.append(copyrow)
-
     def main(self, parsed_args):
         recipes = []
         components = []
@@ -235,7 +254,7 @@ class BestiaryParser(BaseParser):
         return r
 
 
-class DelveParser(BaseParser):
+class DelveParser(GenericLuaParser):
     _files = [
         'DelveLevelScaling.dat',
         'DelveResourcePerLevel.dat',
@@ -284,18 +303,6 @@ class DelveParser(BaseParser):
             'key': 'level',
         }),
     )
-
-    def _copy_from_keys(self, row, keys, out_data):
-        copyrow = OrderedDict()
-        for k, copy_data in keys:
-
-            value = row[k]
-            if value is not None:
-                if 'value' in copy_data:
-                    value = copy_data['value'](value)
-                copyrow[copy_data['key']] = value
-
-        out_data.append(copyrow)
 
     def main(self, parsed_args):
         delve_level_scaling = []
@@ -624,3 +631,122 @@ class QuestRewardReader(BaseParser):
                 v['classes'] = self._UNIT_SEP.join(sorted(classes))
         outdata = [data for data in compress.values()]
         return self._write_lua(outdata, 'vendor')
+
+
+class SynthesisParser(GenericLuaParser):
+
+    _DATA = (
+        {
+            'file': 'ItemSynthesisCorruptedMods.dat',
+            'key': 'synthesis_corrupted_mods',
+            'data': (
+                ('ItemClassesKey', {
+                    'key': 'item_class_id',
+                    'value': lambda v: v['Id'],
+                }),
+                ('ModsKeys', {
+                    'key': 'mod_ids',
+                    'value': lambda v: [m['Id'] for m in v],
+                }),
+            ),
+        },
+        {
+            'file': 'ItemSynthesisMods.dat',
+            'key': 'synthesis_mods',
+            'data': (
+                ('StatsKey', {
+                    'key': 'stat_id',
+                    'value': lambda v: v['Id'],
+                }),
+                ('StatValue', {
+                    'key': 'stat_value',
+                }),
+                ('ItemClassesKeys', {
+                    'key': 'item_class_ids',
+                    'value': lambda v: [ic['Id'] for ic in v],
+                }),
+                ('ModsKeys', {
+                    'key': 'mod_ids',
+                    'value': lambda v: [m['Id'] for m in v],
+                }),
+            ),
+        },
+        {
+            'file': 'SynthesisAreas.dat',
+            'key': 'synthesis_areas',
+            'data': (
+                ('Id', {
+                    'key': 'id',
+                }),
+                ('MinLevel', {
+                    'key': 'min_level',
+                }),
+                ('MaxLevel', {
+                    'key': 'max_level',
+                }),
+                ('Weight', {
+                    'key': 'weight',
+                }),
+                ('Name', {
+                    'key': 'name',
+                }),
+                ('SynthesisAreaSizeKey', {
+                    'key': 'size',
+                    'value': lambda v: v.rowid,
+                }),
+            ),
+        },
+        {
+            'file': 'SynthesisGlobalMods.dat',
+            'key': 'synthesis_global_mods',
+            'data': (
+                ('ModsKey', {
+                    'key': 'mod_id',
+                    'value': lambda v: v['Id'],
+                }),
+                ('MinLevel', {
+                    'key': 'min_level',
+                }),
+                ('MaxLevel', {
+                    'key': 'max_level',
+                }),
+                ('Weight', {
+                    'key': 'weight',
+                }),
+            ),
+        },
+    )
+
+    _files = [row['file'] for row in _DATA]
+
+    def main(self, parsed_args):
+        data = {}
+        for definition in self._DATA:
+            data[definition['key']] = []
+            for row in self.rr[definition['file']]:
+                self._copy_from_keys(
+                    row, definition['data'], data[definition['key']]
+                )
+
+        for row in data['synthesis_mods']:
+            row['stat_text'] = \
+                '<br>'.join(self.tc['stat_descriptions.txt'].get_translation(
+                    tags=(row['stat_id'], ),
+                    values=(row['stat_value'], ),
+                    lang=self.lang,
+                ))
+
+
+        r = ExporterResult()
+        for definition in self._DATA:
+            key = definition['key']
+            r.add_result(
+                text=lua_formatter(data[key]),
+                out_file='%s.lua' % key,
+                wiki_page=[{
+                    'page': 'Module:Synthesis/%s' % key,
+                    'condition': None,
+                }]
+            )
+
+        return r

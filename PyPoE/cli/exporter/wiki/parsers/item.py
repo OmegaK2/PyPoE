@@ -234,6 +234,19 @@ class ItemsHandler(ExporterHandler):
         )
         self.add_image_arguments(parser)
 
+        group = parser.add_mutually_exclusive_group(required=False)
+        group.add_argument(
+            '-ms', '--map-series', '--filter-map-series',
+            help='Filter by map series name (localized)',
+            dest='map_series',
+        )
+
+        group.add_argument(
+            '-msid', '--map-series-id', '--filter-map-series-id',
+            help='Filter by internal map series id',
+            dest='map_series_id',
+        )
+
         parser.add_argument(
             'name',
             help='Visible name (i.e. the name you see in game). Can be '
@@ -478,6 +491,11 @@ class ItemsParser(SkillParserShared):
         dat_file_name='BaseItemTypes.dat',
         error_msg='Several items have not been found:\n%s',
     )
+
+    _MAP_RELEASE_VERSION = {
+        'Betrayal': '3.5.0',
+        'Synthesis': '3.6.0',
+    }
 
     _IGNORE_DROP_LEVEL_CLASSES = (
         'HideoutDoodad',
@@ -1548,6 +1566,10 @@ class ItemsParser(SkillParserShared):
                 'template': 'energy_shield',
                 'condition': lambda v: v > 0,
             }),
+            ('IncreasedMovementSpeed', {
+                'template': 'movement_speed',
+                'condition': lambda v: v != 0,
+            }),
         ),
         row_index=False,
     )
@@ -2476,10 +2498,51 @@ class ItemsParser(SkillParserShared):
         return r
 
     def export_map(self, parsed_args):
+        r = ExporterResult()
+
+        self.rr['MapSeries.dat'].build_index('Id')
+        self.rr['MapSeries.dat'].build_index('Name')
+        if parsed_args.map_series_id is not None:
+            try:
+                map_series = self.rr['MapSeries.dat'].index['Id'][
+                    parsed_args.map_series_id]
+            except IndexError:
+                console(
+                    'Invalid map series id',
+                        msg=Msg.error)
+                return r
+        elif parsed_args.map_series is not None:
+            try:
+                map_series = self.rr['MapSeries.dat'].index['Name'][
+                    parsed_args.map_series][0]
+            except IndexError:
+                console(
+                    'Invalid map series name',
+                        msg=Msg.error)
+                return r
+        else:
+            map_series = self.rr['MapSeries.dat'][-1]
+            console(
+                'No map series specified. Using latest series "%s".' % (
+                    map_series['Name'],
+                ), msg=Msg.warning
+            )
+
+        if map_series.rowid <= 3:
+            console(
+                'Only Betrayal and newer map series are supported by this '
+                'function',
+                    msg=Msg.error)
+            return r
+
+        # Store whether this is the latest map series to determine later whether
+        # atlas info should be stored
+        latest = map_series == self.rr['MapSeries.dat'][-1]
+
         self.rr['AtlasNode.dat'].build_index('MapsKey')
         names = set(parsed_args.name)
-        map_creation_information = {}
-        for row in self.rr['MapCreationInformation.dat']:
+        map_series_tiers = {}
+        for row in self.rr['MapSeriesTiers.dat']:
             maps = row['MapsKey']
             for atlas_node in self.rr['AtlasNode.dat'].index['MapsKey'][maps]:
                 # This excludes the unique maps
@@ -2489,14 +2552,9 @@ class ItemsParser(SkillParserShared):
             else:
                 # Safeguard in case all entries are unique for some reason (???)
                 continue
-            if names and maps['BaseItemTypesKey']['Name'] in names or\
+            if names and maps['BaseItemTypesKey']['Name'] in names or \
                     not names:
-                map_creation_information[row] = atlas_node
-
-        #
-        r = ExporterResult()
-        self.rr['MapSeries.dat'].build_index('Id')
-        map_series = self.rr['MapSeries.dat'].index['Id']['Betrayal']
+                map_series_tiers[row] = atlas_node
 
         if parsed_args.store_images:
             if not parsed_args.convert_images:
@@ -2518,14 +2576,15 @@ class ItemsParser(SkillParserShared):
             base_ico = base_ico.replace('.dds', '.png')
 
         #
-        self.rr['MapCreationInformation.dat'].build_index('MapsKey')
+        self.rr['MapSeriesTiers.dat'].build_index('MapsKey')
         self.rr['MapPurchaseCosts.dat'].build_index('Tier')
         self.rr['UniqueMaps.dat'].build_index('ItemVisualIdentityKey')
 
-        for row, atlas_node in map_creation_information.items():
+        for row, atlas_node in map_series_tiers.items():
             maps = row['MapsKey']
             base_item_type = maps['BaseItemTypesKey']
             name = '%s (%s)' % (base_item_type['Name'], map_series['Name'])
+            tier = row['%sTier' % map_series['Id']]
 
 
             # Base info
@@ -2535,38 +2594,39 @@ class ItemsParser(SkillParserShared):
             self._type_map(infobox, base_item_type)
 
             # Overrides
-            infobox['map_tier'] = row['Tier']
-            infobox['map_area_level'] = 67 + row['Tier']
+            infobox['map_tier'] = tier
+            infobox['map_area_level'] = 67 + tier
             # Map start dropping at one tier lower, with the exception of
             # tier 1 maps which can drop rather early
-            infobox['drop_level'] = 66 + row['Tier'] if row['Tier'] > 1 else 58
-            infobox['unique_map_area_level'] = 67 + row['Tier']
+            infobox['drop_level'] = 66 + tier if tier > 1 else 58
+            infobox['unique_map_area_level'] = 67 + tier
             infobox['map_series'] = map_series['Name']
             infobox['inventory_icon'] = name
 
-            infobox['atlas_x'] = atlas_node['X']
-            infobox['atlas_y'] = atlas_node['Y']
-            connections = []
-            for atlas_node2 in atlas_node['AtlasNodeKeys']:
-                ivi = atlas_node2['ItemVisualIdentityKey']
-                if ivi['IsAtlasOfWorldsMapIcon']:
-                    connections.append('%s (%s)' % (
-                        atlas_node2['MapsKey']['BaseItemTypesKey']['Name'],
-                        map_series['Name']
-                    ))
-                else:
-                    connections.append('%s (%s)' % (
-                        self.rr['UniqueMaps.dat'].index[
-                            'ItemVisualIdentityKey'][ivi]['WordsKey']['Text'],
-                        map_series['Name']
-                    ))
+            if latest:
+                infobox['atlas_x'] = atlas_node['X']
+                infobox['atlas_y'] = atlas_node['Y']
+                connections = []
+                for atlas_node2 in atlas_node['AtlasNodeKeys']:
+                    ivi = atlas_node2['ItemVisualIdentityKey']
+                    if ivi['IsAtlasOfWorldsMapIcon']:
+                        connections.append('%s (%s)' % (
+                            atlas_node2['MapsKey']['BaseItemTypesKey']['Name'],
+                            map_series['Name']
+                        ))
+                    else:
+                        connections.append('%s (%s)' % (
+                            self.rr['UniqueMaps.dat'].index[
+                                'ItemVisualIdentityKey'][ivi]['WordsKey']['Text'],
+                            map_series['Name']
+                        ))
 
-            infobox['atlas_connections'] = ', '.join(connections)
+                infobox['atlas_connections'] = ', '.join(connections)
             infobox['flavour_text'] = \
                 atlas_node['FlavourTextKey']['Text'].replace('\n', '<br>')\
                 .replace('\r', '')
 
-            if row['Tier'] < 17:
+            if tier < 17:
                 self._process_purchase_costs(
                     self.rr['MapPurchaseCosts.dat'].index['Tier'][maps['Tier']],
                     infobox
@@ -2588,7 +2648,8 @@ class ItemsParser(SkillParserShared):
                 )
                 infobox['upgraded_from_set1_group1_amount'] = 3'''
 
-            infobox['release_version'] = '3.5.0'
+            infobox['release_version'] = self._MAP_RELEASE_VERSION[
+                map_series['Id']]
 
             cond = MapItemWikiCondition(
                 data=infobox,
@@ -2627,9 +2688,9 @@ class ItemsParser(SkillParserShared):
                 ico = ico.replace('.dds', '.png')
 
                 color = None
-                if 5 < row['Tier'] <= 10:
+                if 5 < tier <= 10:
                     color = "255,210,100"
-                elif 10 < row['Tier'] <= 15:
+                elif 10 < tier <= 15:
                     color = "240,30,10"
                 if color:
                     os.system(

@@ -2066,6 +2066,12 @@ TranslationQuantifier(
 )
 
 TranslationQuantifier(
+    id='times_twenty',
+    handler=lambda v: v*20,
+    reverse_handler=lambda v: int(v)//20,
+)
+
+TranslationQuantifier(
     id='canonical_line',
     type=TranslationQuantifier.QuantifierTypes.STRING,
     arg_size=0,

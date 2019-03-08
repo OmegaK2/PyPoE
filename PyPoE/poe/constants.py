@@ -581,6 +581,10 @@ class MOD_DOMAIN(IntEnumOverride):
         For delve modifiers
     DELVE_AREA
         For modifiers appearing on delve areas
+    SYNTHESIS_GLOBALS
+        Synthesis global modifiers for areas
+    SYNTHESIS_BONUS
+        Synthesis modifiers that grant a bonus to other modifiers
     """
     ITEM = 1
     FLASK = 2
@@ -600,11 +604,14 @@ class MOD_DOMAIN(IntEnumOverride):
     DUMMY = 15
     DELVE = 16
     DELVE_AREA = 17
-    UNDEFINED = 18
+    SYNTHESIS_A = 18
+    SYNTHESIS_GLOBALS = 19
+    SYNTHESIS_BONUS = 20
+    UNDEFINED = 21
 
     # legacy names
-    MASTER = 9
-    JEWEL = 10
+    MASTER = CRAFTED
+    JEWEL = MISC
 
 
 class MOD_GENERATION_TYPE(IntEnumOverride):
@@ -658,6 +665,9 @@ class MOD_GENERATION_TYPE(IntEnumOverride):
     ESSENCE = 11
     BESTIARY = 13
     DELVE_AREA = 14
+    SYNTHESIS_A = 15
+    SYNTHESIS_GLOBALS = 16
+    SYNTHESIS_BONUS = 17
 
 
 class WORDLISTS(IntEnumOverride):
