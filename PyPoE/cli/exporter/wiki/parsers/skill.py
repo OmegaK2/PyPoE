@@ -315,7 +315,8 @@ class SkillParserShared(parser.BaseParser):
         for i, row in enumerate(gepl):
             data = defaultdict()
 
-            stats = [r['Id'] for r in row['StatsKeys']] + \
+            stats = [r['Id'] for j, r in enumerate(row['StatsKeys'])
+                     if j < len(row['StatValues'])] + \
                     [r['Id'] for r in row['StatsKeys2']]
             values = row['StatValues'] + ([1, ] * len(row['StatsKeys2']))
 

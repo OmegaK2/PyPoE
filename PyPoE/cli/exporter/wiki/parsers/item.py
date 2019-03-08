@@ -182,30 +182,30 @@ class ItemsHandler(ExporterHandler):
         #
         # Generic base item export
         #
-        parser = core_sub.add_parser('item', help='Regular item export')
-        parser.set_defaults(func=lambda args: parser.print_help())
-        sub = parser.add_subparsers()
+        item_parser = core_sub.add_parser('item', help='Regular item export')
+        item_parser.set_defaults(func=lambda args: parser.print_help())
+        sub = item_parser.add_subparsers()
 
         self.add_default_subparser_filters(sub, cls=ItemsParser, type='item')
 
-        parser = sub.add_parser(
+        item_filter_parser = sub.add_parser(
             'by_filter',
             help='Extracts all items matching various filters',
         )
 
         self.add_default_parsers(
-            parser=parser,
+            parser=item_filter_parser,
             cls=ItemsParser,
             func=ItemsParser.by_filter,
             type='item',
         )
-        parser.add_argument(
+        item_filter_parser.add_argument(
             '-ft-n', '--filter-name',
             help='Filter by item name using regular expression.',
             dest='re_name',
         )
 
-        parser.add_argument(
+        item_filter_parser.add_argument(
             '-ft-id', '--filter-id', '--filter-metadata-id',
             help='Filter by item metadata id using regular expression',
             dest='re_id',
