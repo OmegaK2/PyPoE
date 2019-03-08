@@ -75,6 +75,11 @@ class TestTags():
             '<bold><title><size attr="45">test</size></title></bold>',
             ['bold', 'title', 'size'],
         ),
+        (
+            'Test <<TEST>>',
+            'Test <<TEST>>',
+            [],
+        )
     ]
 
     @pytest.mark.parametrize('input,output,handler_ids', sample_strings)

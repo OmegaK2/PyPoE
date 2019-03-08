@@ -173,12 +173,14 @@ def parse_description_tags(text):
         return tid, scanner.match, result
 
     scanner = re.Scanner([
-        (r'<', partial(f, tid='lt')),
-        (r'>', partial(f, tid='gt')),
+        (r'(?<!<)<(?!<)', partial(f, tid='lt')),
+        (r'(?<!>)>(?!>)', partial(f, tid='gt')),
         (r'\{', partial(f, tid='lbrace')),
         (r'\}', partial(f, tid='rbrace')),
         (r':', partial(f, tid='colon')),
         (r'[^<>\{\}:]+', partial(f, tid='text')),
+        # Harbinger stuff
+        (r'<<[^<>\{\}:]+>>', partial(f, tid='text')),
 
     ], re.UNICODE | re.MULTILINE)
 
