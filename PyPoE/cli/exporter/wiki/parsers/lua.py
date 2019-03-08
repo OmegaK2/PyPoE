@@ -96,7 +96,7 @@ class GenericLuaParser(BaseParser):
         for k, copy_data in keys:
 
             value = row[k]
-            if value is not None:
+            if value is not None and value != "":
                 if 'value' in copy_data:
                     value = copy_data['value'](value)
                 copyrow[copy_data['key']] = value
@@ -734,7 +734,7 @@ class SynthesisParser(GenericLuaParser):
                     tags=(row['stat_id'], ),
                     values=(row['stat_value'], ),
                     lang=self.lang,
-                ))
+                )).replace('\n', '')
 
 
         r = ExporterResult()
