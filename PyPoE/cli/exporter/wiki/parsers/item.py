@@ -2651,6 +2651,9 @@ class ItemsParser(SkillParserShared):
             infobox['release_version'] = self._MAP_RELEASE_VERSION[
                 map_series['Id']]
 
+            if not latest:
+                infobox['drop_enabled'] = 'False'
+
             cond = MapItemWikiCondition(
                 data=infobox,
                 cmdargs=parsed_args,

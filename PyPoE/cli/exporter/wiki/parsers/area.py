@@ -446,47 +446,56 @@ class AreaParser(parser.BaseParser):
                     area)
                 if map:
                     map = map[0]
-                    if map['MapSeriesKey']['Id'] == 'MapWorld':
-                        map_version = self.rr['MapSeries.dat'].index['Id'][
-                            'Betrayal']['Name']
+                    if map['MapSeriesKey']['Id'] == 'MapWorlds':
+                        data['main_page'] = map['BaseItemTypesKey']['Name']
                     else:
-                        map_version = map['MapSeriesKey']['Name']
-
-                    data['main_page'] = '%s (%s)' % (
-                        map['BaseItemTypesKey']['Name'],
-                        map_version
-                    )
+                        data['main_page'] = '%s (%s)' % (
+                            map['BaseItemTypesKey']['Name'],
+                            map['MapSeriesKey']['Name']
+                        )
                 elif data.get('tags') and 'map' in data['tags']:
                     map_version = None
                     for row in self.rr['MapSeries.dat']:
                         if not area['Id'].startswith(row['Id']):
                             continue
                         map_version = row['Name']
+                        break
 
                     if map_version:
                         if map_version == self.rr['MapSeries.dat'].index['Id'][
                                 'MapWorlds']['Name']:
-                            map_version = self.rr['MapSeries.dat'].index['Id'][
-                            'Betrayal']['Name']
+                            map_version = None
 
                         if 'Unique' in area['Id'] or 'BreachBoss' in area['Id']\
                                 or area['Id'].endswith('ShapersRealm'):
-                            data['main_page'] = '%s (%s)' % (
-                                area['Name'], map_version
-                            )
+                            if map_version is None:
+                                data['main_page'] = area['Name']
+                            else:
+                                data['main_page'] = '%s (%s)' % (
+                                    area['Name'], map_version
+                                )
                         elif 'Harbinger' in area['Id']:
                             tier = re.sub('^.*Harbinger', '', area['Id'])
                             if tier:
-                                data['main_page'] = '%s (%s) (%s)' % (
-                                    area['Name'],
-                                    lang[tier],
-                                    map_version,
-                                )
+                                if map_version is None:
+                                    data['main_page'] = '%s (%s)' % (
+                                        area['Name'],
+                                        lang[tier],
+                                    )
+                                else:
+                                    data['main_page'] = '%s (%s) (%s)' % (
+                                        area['Name'],
+                                        lang[tier],
+                                        map_version,
+                                    )
                             else:
-                                data['main_page'] = '%s (%s)' % (
-                                    area['Name'],
-                                    map_version,
-                                )
+                                if map_version is None:
+                                    data['main_page'] = area['Name']
+                                else:
+                                    data['main_page'] = '%s (%s)' % (
+                                        area['Name'],
+                                        map_version,
+                                    )
 
             cond = WikiCondition(
                 data=data,
