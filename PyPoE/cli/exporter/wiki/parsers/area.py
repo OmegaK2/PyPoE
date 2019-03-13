@@ -459,7 +459,6 @@ class AreaParser(parser.BaseParser):
                         if not area['Id'].startswith(row['Id']):
                             continue
                         map_version = row['Name']
-                        break
 
                     if map_version:
                         if map_version == self.rr['MapSeries.dat'].index['Id'][
