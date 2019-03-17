@@ -2586,7 +2586,6 @@ class ItemsParser(SkillParserShared):
             name = '%s (%s)' % (base_item_type['Name'], map_series['Name'])
             tier = row['%sTier' % map_series['Id']]
 
-
             # Base info
             infobox = OrderedDict()
             self._process_base_item_type(base_item_type, infobox,
@@ -2602,6 +2601,14 @@ class ItemsParser(SkillParserShared):
             infobox['unique_map_area_level'] = 67 + tier
             infobox['map_series'] = map_series['Name']
             infobox['inventory_icon'] = name
+
+            if self._language != 'English' and parsed_args.english_file_link:
+                infobox['inventory_icon'] = '%s (%s)' % (
+                    self.rr2['BaseItemTypes.dat'][base_item_type.rowid]['Name'],
+                    self.rr2['MapSeries.dat'][map_series.rowid]['Name']
+                )
+            else:
+                infobox['inventory_icon'] = name
 
             if latest:
                 infobox['atlas_x'] = atlas_node['X']
