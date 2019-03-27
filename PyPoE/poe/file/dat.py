@@ -500,7 +500,7 @@ class DatReader(ReprMixin):
         'double': ['d', 8],
     }
 
-    def __init__(self, file_name, *_args, use_dat_value=True, specification=None,
+    def __init__(self, file_name, *args, use_dat_value=True, specification=None,
                  auto_build_index=False):
         """
         Parameters
