@@ -72,7 +72,8 @@ Internal API
 import struct
 import warnings
 from io import BytesIO
-from collections import OrderedDict, Iterable, defaultdict
+from collections import OrderedDict, defaultdict
+from collections.abc import Iterable
 
 # 3rd-party
 
@@ -157,7 +158,7 @@ class DatValue(object):
         self.child = None
 
     def __repr__(self):
-        #TODO: iterative vs recursive?
+        # TODO: iterative vs recursive?
         if self.is_pointer:
             return repr(self.child)
         elif self.is_list:
@@ -733,8 +734,8 @@ class DatReader(ReprMixin):
                         value.append(self._cast_from_spec(specification, casts[1:], value, data_offset+i*casts[1:][0][1]))
                 elif casts[0][0] == 4:
                     value = self._cast_from_spec(specification, casts[1:], None, data_offset)
-        # TODO
-        #if parent:
+        # TODO:
+        # if parent:
         #    self._data_offset_current = offset
         #    self.data_parsed.append(value)
 
@@ -794,7 +795,7 @@ class DatReader(ReprMixin):
         elif self.table_rows == 0 and self.table_length == 0:
             self.table_record_length = 0
         else:
-            #TODO
+            # TODO
             raise ValueError("WTF")
 
         if self.specification is None:
@@ -897,7 +898,7 @@ class DatFile(AbstractFileReadOnly):
     reader : DatReader
         reference to the DatReader instance once :meth:`read` has been called
     """
-    
+
     def __init__(self, file_name):
         """
         Parameters
@@ -1131,5 +1132,5 @@ def set_default_spec(version=constants.VERSION.DEFAULT, reload=False):
 # Init
 # =============================================================================
 
-set_default_spec()
 
+set_default_spec()
