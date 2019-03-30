@@ -2900,12 +2900,15 @@ specification = Specification({
             ('Unknown2', Field(
                 type='ref|list|int',
             )),
-            ('Description', Field(
+            ('UnlockType', Field(
                 type='ref|string',
             )),
             ('CraftingItemClassCategoriesKeys', Field(
                 type='ref|list|ulong',
                 key='CraftingItemClassCategories.dat',
+            )),
+            ('ObtainingDescription', Field(
+                type='ref|string',
             )),
         )),
     ),
@@ -8177,6 +8180,9 @@ specification = Specification({
             )),
             ('Keys0', Field(
                 type='ref|list|ulong',
+            )),
+            ('Unknown3', Field(
+                type='int',
             )),
         )),
     ),
