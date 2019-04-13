@@ -2042,15 +2042,27 @@ TranslationQuantifier(
 )
 
 TranslationQuantifier(
+    id='divide_by_two_0dp',
+    handler=lambda v: v//2,
+    reverse_handler=lambda v: int(v)*2,
+)
+
+TranslationQuantifier(
+    id='divide_by_six',
+    handler=lambda v: v/6,
+    reverse_handler=lambda v: int(v)*6,
+)
+
+TranslationQuantifier(
     id='divide_by_ten_0dp',
     handler=lambda v: v//10,
     reverse_handler=lambda v: int(v)*10,
 )
 
 TranslationQuantifier(
-    id='divide_by_two_0dp',
-    handler=lambda v: v//2,
-    reverse_handler=lambda v: int(v)*2,
+    id='divide_by_twelve',
+    handler=lambda v: v/12,
+    reverse_handler=lambda v: int(v)*12,
 )
 
 TranslationQuantifier(

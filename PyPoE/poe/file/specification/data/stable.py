@@ -11180,7 +11180,7 @@ specification = Specification({
                 type='int',
             )),
             ('Unknown2', Field(
-                type='ref|list|int',
+                type='ref|list|ref|string',
             )),
             ('Key0', Field(
                 type='ulong',
