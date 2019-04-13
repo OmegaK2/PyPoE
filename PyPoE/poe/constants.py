@@ -272,6 +272,7 @@ class IntEnumOverride(IntEnum, metaclass=IntEnumMetaOverride):
     # 18 and 19 both Scorching Ray only
     UNKNOWN6 = 18
     UNKNOWN7 = 19
+'''
 
 
 class ACTIVE_SKILL_TYPES(IntEnumOverride):
@@ -280,22 +281,88 @@ class ACTIVE_SKILL_TYPES(IntEnumOverride):
     ----------
     ATTACK
         Is an attack and uses the weapons on the entity
-    CAST
+    SPELL
         Is casted and does not use the weapon
     PROJECTILE
         Creates an projectile
-    DUALWIELD_ONLY
+    DUAL_WIELD
         Uses both hand slots
-    BUFF_SELF
+    BUFF
         Buff that applies to the entity itself
     """
     ATTACK = 1
-    CAST = 2
+    SPELL = 2
     PROJECTILE = 3
-    # Why is a monster being dual-wield only?
-    DUALWIELD_ONLY = 4
-    BUFF_SELF = 5
-    #DUALWIELD_POSSIBLE = 6'''
+    DUAL_WIELD = 4
+    BUFF = 5
+    MINION = 6
+    AREA = 8
+    DURATION = 9
+    SHIELD = 10
+    PROJECTILE_DAMAGE = 11
+    MANA_COST_RESERVED = 12
+    MANA_COST_PERCENT = 13
+    SKILL_CAN_TRAP = 14
+    SKILL_CAN_TOTEM = 15
+    SKILL_CAN_MINE = 16
+    CAUSE_ELEMENTAL_STATUS = 17
+    CREATE_MINION = 18
+    CHAINING = 19
+    MELEE = 20
+    MELEE_SINGLE_TARGET = 21
+    SPELL_CAN_REPEAT = 22
+    UNKNOWN1 = 23
+    ATTACK_CAN_REPEAT = 24
+    CAUSES_BURNING = 25
+    TOTEM = 26
+    UNKNOWN2 = 27
+    CURSE = 28
+    FIRE_SKILL = 29
+    COLD_SKILL = 30
+    LIGHTNING_SKILL = 31
+    TRIGGERABLE = 32
+    TRAP = 33
+    MOVEMENT_SKILL = 34
+    DAMAGE_OVER_TIME = 35
+    MINE = 36
+    TRIGGERED = 37
+    VAAL = 38
+    AURA = 39
+    UNKNOWN3 = 40
+    PROJECTILE_ATTACK = 41
+    CHAOS_SKLL = 42
+    UNKNOWN5 = 43
+    UNKNOWN6 = 44
+    UNKNOWN7 = 45
+    UNKNOWN8 = 46
+    UNKNOWN9 = 47
+    CHANNELLED = 48
+    UNKNOWN10 = 49
+    TRIGGERED_GRANTED_SKILL = 50
+    GOLEM = 51
+    HERALD = 52
+    AURA_DEBUFF = 53
+    UNKNOWN11 = 54
+    UNKNOWN12 = 55
+    SPELL_CAN_CASCADE = 56
+    SPELL_CAN_VOLLEY = 57
+    SPELL_CAN_MIRAGE_ARGER = 58
+    UNKNOWN13 = 59
+    UNKNOWN14 = 60
+    UNKNOWN15 = 61
+    UNKNOWN16 = 62
+    WARCRY = 63
+    INSTANT = 64
+    BRAND = 65
+    DESTROYS_CORPSE = 66
+    NON_HIT_CHILL = 67
+    APPLIES_CURSE = 69
+    CAN_RAPID_FIRE = 70
+    AURA_DURATION = 71
+    AREA_SPELL = 72
+    OR = 73
+    AND = 74
+    NOT = 75
 
 
 class BETRAYAL_UPGRADE_SLOTS(IntEnumOverride):
