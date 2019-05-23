@@ -671,6 +671,7 @@ specification = Specification({
         fields=OrderedDict((
             ('Id', Field(
                 type='ref|string',
+                unique=True,
             )),
             ('ClassNo', Field(
                 type='int',
@@ -5272,6 +5273,9 @@ specification = Specification({
             ('Key0', Field(
                 type='ulong',
             )),
+            ('Flag4', Field(
+                type='bool',
+            )),
         )),
     ),
     'GrantedEffectsPerLevel.dat': File(
@@ -5608,6 +5612,12 @@ specification = Specification({
                 key='NPCMaster.dat',
             )),
             ('Unknown0', Field(
+                type='int',
+            )),
+            ('Unknown1', Field(
+                type='int',
+            )),
+            ('Unknown2', Field(
                 type='int',
             )),
         )),
@@ -8722,6 +8732,9 @@ specification = Specification({
             )),
             ('Keys2', Field(
                 type='ref|list|ulong',
+            )),
+            ('Flag3', Field(
+                type='byte',
             )),
         )),
     ),
