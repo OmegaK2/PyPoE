@@ -703,6 +703,12 @@ class ItemsParser(SkillParserShared):
         },
         'Russian': {
             # =================================================================
+            # Active Skill Gems
+            # =================================================================
+
+            'Metadata/Items/Gems/SkillGemPortal':
+                ' (камень умения)',
+            # =================================================================
             # One Hand Axes
             # =================================================================
 
@@ -766,7 +772,24 @@ class ItemsParser(SkillParserShared):
             # Hideout Doodads
             # =================================================================
 
-            'Metadata/Items/Hideout/HideoutLightningCoil': " (предмет убежища)",
+            'Metadata/Items/Hideout/HideoutMalachaiHeart':
+                ' (предмет убежища)',
+            'Metadata/Items/Hideout/HideoutVaalWhispySmoke':
+                ' (предмет убежища)',
+            'Metadata/Items/Hideout/HideoutChestVaal':
+                ' (предмет убежища)',
+            'Metadata/Items/Hideout/HideoutEncampmentFireplace':
+                ' (предмет убежища)',
+            'Metadata/Items/Hideout/HideoutEncampmentLetters':
+                ' (предмет убежища)',
+            'Metadata/Items/Hideout/HideoutIncaPyramid':
+                ' (предмет убежища)',
+            'Metadata/Items/Hideout/HideoutDarkSoulercoaster':
+                ' (предмет убежища)',
+            'Metadata/Items/Hideout/HideoutVaalMechanism':
+                ' (предмет убежища)',
+            'Metadata/Items/Hideout/HideoutCharredSkeleton':
+                ' (предмет убежища)',
             # =================================================================
             # Piece
             # =================================================================
@@ -840,9 +863,13 @@ class ItemsParser(SkillParserShared):
             'LegionBoots': ' (микротранзакция)',
             'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
             'LegionGloves': ' (микротранзакция)',
+            'Metadata/Items/MicrotransactionItemEffects/MasterArmour1Boots':
+                ' (микротранзакция)',
             'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
-            'ScholarBoots': ' (микротранзакция)',
+            'SinFootprintsEffect': ' (микротранзакция)',
             'Metadata/Items/Pets/DemonLion': ' (питомец)',
+            'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
+            'HeartWeapon2014': ' (2014)',
             # =================================================================
             # Quest items
             # =================================================================
@@ -870,6 +897,16 @@ class ItemsParser(SkillParserShared):
                 ' (2 из 3)',
             'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_3':
                 ' (3 из 3)',
+            'Metadata/Items/QuestItems/RibbonSpool':
+                ' (предмет)',
+            'Metadata/Items/QuestItems/Act7/SilverLocket':
+                ' (предмет)',
+            'Metadata/Items/QuestItems/Act7/KisharaStar':
+                ' (предмет)',
+            'Metadata/Items/QuestItems/Act8/WingsOfVastiri':
+                ' (предмет)',
+            'Metadata/Items/QuestItems/Act9/StormSword':
+                ' (предмет)',
         },
         'German': {
             # =================================================================
@@ -1102,7 +1139,7 @@ class ItemsParser(SkillParserShared):
             'upgraded_from_shrieking_essence':
                 'случайная {{c|currency|Визжащая Сущность}}',
             'upgraded_from_random_essence':
-                'случайная {{c|currency|Сущность}}',
+                'случайная {{c|currency|сущность}}',
         },
     }
 
@@ -1147,6 +1184,8 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/Gems/SkillGemVaalSweep',
         'Metadata/Items/Gems/SkillGemVortexMine',
         'Metadata/Items/Gems/SkillGemWandTeleport',
+        'Metadata/Items/Gems/SkillGemNewPhaseRun',
+        'Metadata/Items/Gems/SkillGemNewArcticArmour',
 
         #
         # Support Skill Gems
@@ -1374,6 +1413,8 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/Hideout/HideoutTotemPole11Test',
         'Metadata/Items/Hideout/HideoutTotemPole12Test',
         'Metadata/Items/Hideout/HideoutTotemPole13Test',
+        'Metadata/Items/Hideout/HideoutTotemPole14Test',
+        'Metadata/Items/Hideout/HideoutTotemPole15Test',
 
         #
         # Stackable currency
