@@ -300,6 +300,14 @@ class TestTranslationResults:
             },
             None,
         ),
+        (
+            ['test_leading_value', ],
+            [50, ],
+            ['50 to value'],
+            'string starting with value',
+            {},
+            {},
+        ),
         #
         # Quantifier tests
         #

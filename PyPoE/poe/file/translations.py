@@ -707,18 +707,18 @@ class TranslationString(TranslationReprMixin):
         """
         index = 0
         values_indexes = []
-        for partial in self.strings:
+        for i, partial in enumerate(self.strings):
             match = string.find(partial, index)
             if match == -1:
                 return None
             # Matched at the start of string, no preceeding value
 
+            # Fix for TR strings starting with value
+            if i == 1 and self.strings[0] == '':
+                values_indexes.append(match)
             index = match + len(partial)
             values_indexes.append(index)
 
-        # Fix for TR strings starting with value
-        if self.strings[0] == '':
-            values_indexes.append(None)
         # Fix for TR strings ending with value
         if self.strings[-1] == '':
             values_indexes[-1] = None
@@ -762,7 +762,6 @@ class TranslationString(TranslationReprMixin):
                     )
 
                 values[i] = val
-
         return self.quantifier.handle_reverse(values)
 
 
