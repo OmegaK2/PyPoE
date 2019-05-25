@@ -148,7 +148,7 @@ class WikiCondition(parser.WikiCondition):
         r'^(upgraded_from_set|implicit[0-9]+_(?:text|random_list)).*'
         , re.UNICODE)
 
-    MATCH = 'Base item'
+    NAME = 'Base item'
     INDENT = 40
     ADD_INCLUDE = False
 
