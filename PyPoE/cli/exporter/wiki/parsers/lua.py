@@ -67,7 +67,7 @@ def lua_formatter(outdata, key_order=None):
     for data in outdata:
         out.append('\t{\n')
         for key, value in data.items():
-            if isinstance(value, int):
+            if isinstance(value, (int, float)):
                 out.append('\t\t%s=%s,\n' % (key, value))
             elif isinstance(value, (tuple, set, list)):
                 values = []
@@ -90,8 +90,9 @@ def lua_formatter(outdata, key_order=None):
 # Classes
 # =============================================================================
 
+
 class GenericLuaParser(BaseParser):
-    def _copy_from_keys(self, row, keys, out_data):
+    def _copy_from_keys(self, row, keys, out_data, index=None):
         copyrow = OrderedDict()
         for k, copy_data in keys:
 
@@ -101,7 +102,13 @@ class GenericLuaParser(BaseParser):
                     value = copy_data['value'](value)
                 copyrow[copy_data['key']] = value
 
-        out_data.append(copyrow)
+        if index is not None:
+            try:
+                out_data[index].update(copyrow)
+            except IndexError:
+                out_data.append(copyrow)
+        else:
+            out_data.append(copyrow)
 
 
 class LuaHandler(ExporterHandler):
@@ -158,6 +165,16 @@ class LuaHandler(ExporterHandler):
             parser=parser,
             cls=SynthesisParser,
             func=SynthesisParser.main,
+        )
+
+        parser = lua_sub.add_parser(
+            'monster',
+            help='Extract monster information',
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=MonsterParser,
+            func=MonsterParser.main,
         )
 
 
@@ -745,6 +762,184 @@ class SynthesisParser(GenericLuaParser):
                 out_file='%s.lua' % key,
                 wiki_page=[{
                     'page': 'Module:Synthesis/%s' % key,
+                    'condition': None,
+                }]
+            )
+
+        return r
+
+
+class MonsterParser(GenericLuaParser):
+    _DATA = (
+        {
+            'key': 'monster_types',
+            'file': 'MonsterTypes.dat',
+            'data': (
+                ('Id', {
+                    'key': 'id',
+                }),
+                ('TagsKeys', {
+                    'key': 'tags',
+                    'value': lambda v: ', '.join([r['Id'] for r in v]),
+                }),
+                ('MonsterResistancesKey', {
+                    'key': 'monster_resistance_id',
+                    'value': lambda v: v['Id'],
+                }),
+                ('Armour', {
+                    'key': 'armour_multiplier',
+                    'value': lambda v: v/100,
+                }),
+                ('Evasion', {
+                    'key': 'evasion_multiplier',
+                    'value': lambda v: v/100,
+                }),
+                ('EnergyShieldFromLife', {
+                    'key': 'energy_shield_multiplier',
+                    'value': lambda v: v/100,
+                }),
+                ('DamageSpread', {
+                    'key': 'damage_spread',
+                    'value': lambda v: v/100,
+                }),
+            ),
+        },
+        {
+            'key': 'monster_resistances',
+            'file': 'MonsterResistances.dat',
+            'data': (
+                ('Id', {
+                    'key': 'id',
+                }),
+                ('FireNormal', {
+                    'key': 'part1_fire',
+                }),
+                ('ColdNormal', {
+                    'key': 'part1_cold',
+                }),
+                ('LightningNormal', {
+                    'key': 'part1_lightning',
+                }),
+                ('ChaosNormal', {
+                    'key': 'part1_chaos',
+                }),
+                ('FireCruel', {
+                    'key': 'part2_fire',
+                }),
+                ('ColdCruel', {
+                    'key': 'part2_cold',
+                }),
+                ('LightningCruel', {
+                    'key': 'part2_lightning',
+                }),
+                ('ChaosCruel', {
+                    'key': 'part2_chaos',
+                }),
+                ('FireMerciless', {
+                    'key': 'maps_fire',
+                }),
+                ('ColdMerciless', {
+                    'key': 'maps_cold',
+                }),
+                ('LightningMerciless', {
+                    'key': 'maps_lightning',
+                }),
+                ('ChaosMerciless', {
+                    'key': 'maps_chaos',
+                }),
+            ),
+        },
+        {
+            'key': 'monster_base_stats',
+            'file': 'DefaultMonsterStats.dat',
+            'data': (
+                ('DisplayLevel', {
+                    'key': 'level',
+                    'value': lambda v: int(v),
+                }),
+                ('Damage', {
+                    'key': 'damage',
+                }),
+                ('Evasion', {
+                    'key': 'evasion',
+                }),
+                ('Accuracy', {
+                    'key': 'accuracy',
+                }),
+                ('Life', {
+                    'key': 'life',
+                }),
+                ('Experience', {
+                    'key': 'experience',
+                }),
+                ('AllyLife', {
+                    'key': 'summon_life',
+                }),
+            ),
+        },
+    )
+
+    _DIFFICULTY_DATA = {
+        'MonsterMapDifficulty.dat': (
+            ('MapLevel', {
+                'key': 'level',
+            }),
+            # stat1Key -> map_hidden_monster_life_+%_final
+            ('Stat1Value', {
+                'key': 'life',
+            }),
+            # stat2key -> map_hidden_monster_damage_+%_final
+            ('Stat2Value', {
+                'key': 'damage',
+            }),
+        ),
+        'MonsterMapBossDifficulty.dat': (
+            # stat1Key -> map_hidden_monster_life_+%_final
+            ('Stat1Value', {
+                'key': 'boss_life',
+            }),
+            # stat2key -> map_hidden_monster_damage_+%_final
+            ('Stat2Value', {
+                'key': 'boss_damage',
+            }),
+            # stat1Key -> monster_dropped_item_quantity_+%
+            ('Stat3Value', {
+                'key': 'boss_item_quantity',
+            }),
+            # stat2key -> monster_dropped_item_rarity_+%
+            ('Stat4Value', {
+                'key': 'boss_item_rarity',
+            }),
+        ),
+    }
+
+    #_files = [row['files'].keys() in _DATA]
+
+    def main(self, parsed_args):
+        data = {}
+        for definition in self._DATA:
+            data[definition['key']] = []
+            for row in self.rr[definition['file']]:
+                self._copy_from_keys(
+                    row, definition['data'], data[definition['key']]
+                )
+
+        map_multi = []
+        for file_name, definition in self._DIFFICULTY_DATA.items():
+            for i, row in enumerate(self.rr[file_name]):
+                self._copy_from_keys(
+                    row, definition, map_multi, i
+                )
+
+        data['monster_map_multipliers'] = map_multi
+
+        r = ExporterResult()
+        for key, v in data.items():
+            r.add_result(
+                text=lua_formatter(v),
+                out_file='%s.lua' % key,
+                wiki_page=[{
+                    'page': 'Module:Monster/%s' % key,
                     'condition': None,
                 }]
             )
