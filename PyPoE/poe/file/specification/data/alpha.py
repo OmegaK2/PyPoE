@@ -7287,6 +7287,9 @@ specification = Specification({
                 key='MapSeries.dat',
                 key_offset=1,
             )),
+            ('Flag1', Field(
+                type='bool',
+            )),
         )),
     ),
     'MasterHideoutLevels.dat': File(
