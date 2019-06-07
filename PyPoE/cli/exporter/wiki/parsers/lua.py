@@ -879,38 +879,55 @@ class MonsterParser(GenericLuaParser):
         },
     )
 
-    _DIFFICULTY_DATA = {
-        'MonsterMapDifficulty.dat': (
-            ('MapLevel', {
-                'key': 'level',
-            }),
-            # stat1Key -> map_hidden_monster_life_+%_final
-            ('Stat1Value', {
-                'key': 'life',
-            }),
-            # stat2key -> map_hidden_monster_damage_+%_final
-            ('Stat2Value', {
-                'key': 'damage',
-            }),
-        ),
-        'MonsterMapBossDifficulty.dat': (
-            # stat1Key -> map_hidden_monster_life_+%_final
-            ('Stat1Value', {
-                'key': 'boss_life',
-            }),
-            # stat2key -> map_hidden_monster_damage_+%_final
-            ('Stat2Value', {
-                'key': 'boss_damage',
-            }),
-            # stat1Key -> monster_dropped_item_quantity_+%
-            ('Stat3Value', {
-                'key': 'boss_item_quantity',
-            }),
-            # stat2key -> monster_dropped_item_rarity_+%
-            ('Stat4Value', {
-                'key': 'boss_item_rarity',
-            }),
-        ),
+    _ENUM_DATA = {
+        'monster_map_multipliers': {
+            'MonsterMapDifficulty.dat': (
+                ('MapLevel', {
+                    'key': 'level',
+                }),
+                # stat1Key -> map_hidden_monster_life_+%_final
+                ('Stat1Value', {
+                    'key': 'life',
+                }),
+                # stat2key -> map_hidden_monster_damage_+%_final
+                ('Stat2Value', {
+                    'key': 'damage',
+                }),
+            ),
+            'MonsterMapBossDifficulty.dat': (
+                # stat1Key -> map_hidden_monster_life_+%_final
+                ('Stat1Value', {
+                    'key': 'boss_life',
+                }),
+                # stat2key -> map_hidden_monster_damage_+%_final
+                ('Stat2Value', {
+                    'key': 'boss_damage',
+                }),
+                # stat1Key -> monster_dropped_item_quantity_+%
+                ('Stat3Value', {
+                    'key': 'boss_item_quantity',
+                }),
+                # stat2key -> monster_dropped_item_rarity_+%
+                ('Stat4Value', {
+                    'key': 'boss_item_rarity',
+                }),
+            ),
+        },
+        'monster_life_scaling': {
+            'MagicMonsterLifeScalingPerLevel.dat': (
+                ('Level', {
+                    'key': 'level',
+                }),
+                ('Life', {
+                    'key': 'magic',
+                }),
+            ),
+            'RareMonsterLifeScalingPerLevel.dat': (
+                ('Life', {
+                    'key': 'rare',
+                }),
+            ),
+        },
     }
 
     #_files = [row['files'].keys() in _DATA]
@@ -924,14 +941,15 @@ class MonsterParser(GenericLuaParser):
                     row, definition['data'], data[definition['key']]
                 )
 
-        map_multi = []
-        for file_name, definition in self._DIFFICULTY_DATA.items():
-            for i, row in enumerate(self.rr[file_name]):
-                self._copy_from_keys(
-                    row, definition, map_multi, i
-                )
+        for key, data_map in self._ENUM_DATA.items():
+            map_multi = []
+            for file_name, definition in data_map.items():
+                for i, row in enumerate(self.rr[file_name]):
+                    self._copy_from_keys(
+                        row, definition, map_multi, i
+                    )
 
-        data['monster_map_multipliers'] = map_multi
+            data[key] = map_multi
 
         r = ExporterResult()
         for key, v in data.items():

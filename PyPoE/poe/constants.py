@@ -85,6 +85,8 @@ __all__ = [
     'MOD_MAX_STATS',
     'MOD_STATS_RANGE',
     'MOD_SELL_PRICES',
+
+    'PASSIVE_TYPES',
 ]
 
 MOD_MAX_STATS = 6
@@ -200,6 +202,21 @@ MOD_SELL_PRICES = {
     },
     'DelveFossilSellPrice9': {
         'Metadata/Items/Currency/CurrencyCorruptMonolith': 5,
+    },
+    'VaalLegionJewel': {
+
+    },
+    'KaruiLegionJewel': {
+
+    },
+    'MarakethLegionJewel': {
+
+    },
+    'TemplarLegionJewel': {
+
+    },
+    'EternalEmpireLegionJewel': {
+
     },
 }
 
@@ -828,6 +845,13 @@ class STAT_INTERPOLATION_TYPES(IntEnumOverride):
     CONSTANT = 1
     LINEAR = 2
     EXPONENTIAL = 3
+
+
+class PASSIVE_TYPES(IntEnumOverride):
+    REGULAR1 = 1
+    REGULAR2 = 2
+    NOTABLE = 3
+    KEYSTONE = 4
 
 # =============================================================================
 # Functions

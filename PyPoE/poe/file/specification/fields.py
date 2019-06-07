@@ -519,7 +519,7 @@ class Field(_Common):
 
     def __init__(self, type, key=None, key_id=None, key_offset=0, enum=None,
                  unique=False, file_path=False, file_ext=None, display=None,
-                 display_type='{0}', description=None):
+                 display_type=None, description=None):
         """
         All parameters except type are optional.
 
@@ -572,6 +572,14 @@ class Field(_Common):
         self.display = display
         self.display_type = display_type
         self.description = description
+
+        if display_type is None:
+            if type == 'float':
+                self.display_type = '{0:.6f}'
+            else:
+                self.display_type = '{0}'
+        else:
+            self.display_type = display_type
 
     def __getitem__(self, item):
         return getattr(self, item)

@@ -495,6 +495,7 @@ class ItemsParser(SkillParserShared):
     _MAP_RELEASE_VERSION = {
         'Betrayal': '3.5.0',
         'Synthesis': '3.6.0',
+        'Legion': '3.7.0',
     }
 
     _IGNORE_DROP_LEVEL_CLASSES = (
@@ -1150,6 +1151,7 @@ class ItemsParser(SkillParserShared):
         #
         'Metadata/Items/Gems/SkillGemBackstab',
         'Metadata/Items/Gems/SkillGemBladeTrap',
+        'Metadata/Items/Gems/SkillGemBlitz',
         'Metadata/Items/Gems/SkillGemCaptureMonster',
         'Metadata/Items/Gems/SkillGemComboStrike',
         'Metadata/Items/Gems/SkillGemDamageInfusion',
@@ -1168,11 +1170,14 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/Gems/SkillGemNewBladeVortex',
         'Metadata/Items/Gems/SkillGemNewPunishment',
         'Metadata/Items/Gems/SkillGemNewShockNova',
+        'Metadata/Items/Gems/SkillGemQuickBlock',
         'Metadata/Items/Gems/SkillGemRendingSteel',
+        'Metadata/Items/Gems/SkillGemReplicate',
         'Metadata/Items/Gems/SkillGemRighteousLightning',
         'Metadata/Items/Gems/SkillGemRiptide',
         'Metadata/Items/Gems/SkillGemShadowBlades',
         'Metadata/Items/Gems/SkillGemSlashTotem',
+        'Metadata/Items/Gems/SkillGemSliceAndDice',
         'Metadata/Items/Gems/SkillGemSnipe',
         'Metadata/Items/Gems/SkillGemSpectralSpinningWeapon',
         'Metadata/Items/Gems/SkillGemStaticTether',
@@ -1191,6 +1196,7 @@ class ItemsParser(SkillParserShared):
         # Support Skill Gems
         #
         'Metadata/Items/Gems/SupportGemCastLinkedCursesOnCurse',
+        'Metadata/Items/Gems/SupportGemHandcastRapidFire',
         'Metadata/Items/Gems/SupportGemSplit',
         'Metadata/Items/Gems/SupportGemReturn',
         'Metadata/Items/Gems/SupportGemTemporaryForTutorial',
@@ -2066,6 +2072,17 @@ class ItemsParser(SkillParserShared):
         row_index=True
     )
 
+    _type_incubator = _type_factory(
+        data_file='Incubators.dat',
+        data_mapping=(
+            ('Description', {
+                'template': 'incubator_effect',
+                'format': lambda v: v,
+            }),
+        ),
+        row_index=True
+    )
+
     _cls_map = {
         # Jewellery
         'Amulet': (_type_amulet, ),
@@ -2109,6 +2126,7 @@ class ItemsParser(SkillParserShared):
         'HideoutDoodad': (_type_currency, _type_hideout_doodad),
         'Microtransaction': (_type_currency, ),
         'DivinationCard': (_type_currency, ),
+        'Incubator': (_type_currency, _type_incubator),
         # Labyrinth stuff
         #'LabyrinthItem': (),
         'LabyrinthTrinket': (_type_labyrinth_trinket, ),

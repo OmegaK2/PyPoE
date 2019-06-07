@@ -47,7 +47,7 @@ from PyPoE.poe.constants import \
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter import config
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult
-from PyPoE.cli.exporter.wiki.parser import BaseParser, format_result_rows
+from PyPoE.cli.exporter.wiki.parser import BaseParser, WikiCondition
 from PyPoE.shared.decorators import deprecated
 
 # =============================================================================
@@ -65,44 +65,12 @@ class OutOfBoundsWarning(UserWarning):
     pass
 
 
-class WikiCondition(object):
-    _regex = re.compile(
-        '{{Mod[^}]*}}',
-        re.UNICODE | re.MULTILINE | re.DOTALL
+class ModWikiCondition(WikiCondition):
+    COPY_KEYS = (
+        'tier_text',
     )
 
-    INDENT = 33
-
-    def __init__(self, data, cmdargs):
-        self.data = data
-        self.cmdargs = cmdargs
-        self.match = None
-
-    def __call__(self, *args, **kwargs):
-        page = kwargs.get('page')
-
-        if page:
-            # Abuse this so it can be called as "text" and "condition"
-            if self.match is None:
-                self.match = self._regex.search(page.text())
-                if self.match is None:
-                    return False
-
-                return True
-
-            # I need the +1 offset or it adds a space everytime for some reason.
-            return (page.text()[:self.match.start()] +
-                    ''.join(self._get_text()) + page.text()[self.match.end():]
-                    ).strip('\n')
-        else:
-            return self._get_text()
-
-    def _get_text(self):
-        return format_result_rows(
-            parsed_args=self.cmdargs,
-            template_name='Mod',
-            ordered_dict=self.data,
-        )
+    NAME = 'Mod'
 
 
 class ModsHandler(ExporterHandler):
@@ -256,7 +224,6 @@ class ModParser(BaseParser):
                 ('Domain', 'domain'),
                 ('GenerationType', 'generation_type'),
                 ('Level', 'required_level'),
-                ('TierText', 'tier_text'),
             ):
                 v = mod[k[0]]
                 if v:
@@ -274,8 +241,10 @@ class ModParser(BaseParser):
                 data['granted_buff_id'] = mod['BuffDefinitionsKey']['Id']
                 data['granted_buff_value'] = mod['BuffValue']
             # todo ID for GEPL
-            if mod['GrantedEffectsPerLevelKey']:
-                data['granted_skill'] = mod['GrantedEffectsPerLevelKey']['GrantedEffectsKey']['Id']
+            if mod['GrantedEffectsPerLevelKeys']:
+                data['granted_skill'] = ', '.join(
+                    [k['GrantedEffectsKey']['Id'] for k in
+                     mod['GrantedEffectsPerLevelKeys']])
             data['mod_type'] = mod['ModTypeKey']['Name']
 
             stats = []
@@ -337,7 +306,7 @@ class ModParser(BaseParser):
 
             # 3+ tildes not allowed
             page_name = 'Modifier:' + self._format_wiki_title(mod['Id'])
-            cond = WikiCondition(data, parsed_args)
+            cond = ModWikiCondition(data, parsed_args)
 
             r.add_result(
                 text=cond,

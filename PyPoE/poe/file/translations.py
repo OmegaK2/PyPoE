@@ -151,7 +151,7 @@ regex_translation_string = re.compile(
     re.UNICODE | re.MULTILINE
 )
 
-regex_ids = re.compile(r'([0-9](?![\w]))(?(1)(.*))', re.UNICODE)
+regex_ids = re.compile(r'.*(?!\s[0-9]+)', re.UNICODE | re.MULTILINE)
 regex_id_strings = re.compile(r'([\S]+)', re.UNICODE)
 regex_strings = re.compile(r'(?:"(.+)")|([\S]+)+', re.UNICODE)
 regex_int = re.compile(r'[0-9]+', re.UNICODE)
@@ -164,7 +164,7 @@ regex_tokens = re.compile(
     r'(?:^"(?P<header>.*)"$)'
     r'|(?:^include "(?P<include>.*)")'
     r'|(?:^no_description (?P<no_description>[\w+%]*)$)'
-    r'|(?P<description>^description)',
+    r'|(?P<description>^description([ ]*[\S]*))',
     re.UNICODE | re.MULTILINE
 )
 
@@ -1319,19 +1319,38 @@ class TranslationFile(AbstractFileReadOnly):
                 translation = Translation()
 
                 # Parse the IDs for the translations
-                ids = regex_ids.search(data, offset, offset_max)
-                if ids is None:
-                    warnings.warning('Missing ID after description')
+                id_count = regex_int.search(data, offset, offset_max)
+                if id_count is None:
+                    raise ValueError(
+                        'Couldn\'t find id count between offset %s and %s' % (
+                            offset, offset_max
+                        )
+                    )
+                offset = id_count.end()
+                id_count = int(id_count.group())
 
-                offset = ids.end()
+                id_string = regex_ids.search(data, offset, offset_max)
+                if id_string is None:
+                    raise ValueError(
+                        'Couldn\'t find id count between offset %s and %s' % (
+                            offset, offset_max
+                        )
+                    )
 
-                ids = ids.group().split(maxsplit=1)
-                id_count = int(ids[0])
-                ids = re.findall(regex_id_strings, ids[1])
+                # Actually extract the individual ids
+                translation.ids = regex_id_strings.findall(id_string.group(0))
 
-                if len(ids) != id_count:
-                    warnings.warn('Length mismatch for %s' % ids)
-                translation.ids = ids
+                if len(translation.ids) != id_count:
+                    print(data[offset:offset_max])
+                    raise ValueError(
+                        'Mismatched number of id strings found (%s found vs %s '
+                        'expected) between offset %s and %s' % (
+                            len(translation.ids), id_count, offset, offset_max
+                        )
+                    )
+
+                offset = id_string.end()
+
                 t = True
                 language = 'English'
                 while t:
@@ -1964,6 +1983,11 @@ TranslationQuantifier(
 TranslationQuantifier(
     id='milliseconds_to_seconds_0dp',
     handler=lambda v: int(round(v/1000, 0)),
+    reverse_handler=lambda v: float(v)*1000,
+)
+TranslationQuantifier(
+    id='milliseconds_to_seconds_1dp',
+    handler=lambda v: int(round(v/1000, 1)),
     reverse_handler=lambda v: float(v)*1000,
 )
 

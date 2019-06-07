@@ -202,6 +202,10 @@ class SkillParserShared(parser.BaseParser):
             'template': 'damage_multiplier',
             'format': lambda v: '{0:n}'.format(v/100+100),
         }),
+        ('AttackSpeedMultiplier', {
+            'template': 'attack_speed_multiplier',
+            'format': lambda v: '{0:n}'.format(v),
+        }),
     )
 
     # Values without the Metadata/Projectiles/ prefix
