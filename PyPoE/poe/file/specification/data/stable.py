@@ -2136,6 +2136,12 @@ specification = Specification({
             ('Unknown7', Field(
                 type='int',
             )),
+            ('Unknown8', Field(
+                type='int',
+            )),
+            ('Unknown9', Field(
+                type='int',
+            )),
         )),
     ),
     'BuffGroups.dat': File(
@@ -6673,6 +6679,12 @@ specification = Specification({
             )),
             ('IsTier16Icon', Field(
                 type='bool',
+            )),
+            ('Unknown14', Field(
+                type='int',
+            )),
+            ('Unknown15', Field(
+                type='int',
             )),
         )),
     ),
