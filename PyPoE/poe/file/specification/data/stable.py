@@ -7,7 +7,7 @@ Overview
 +----------+------------------------------------------------------------------+
 | Version  | 1.0.0a0                                                          |
 +----------+------------------------------------------------------------------+
-| Revision | $Id$                  |
+| Revision | $Id: 2c9d3c7a9c274ac88a12d46a80c1a0d137b9c8dc $                  |
 +----------+------------------------------------------------------------------+
 | Author   | Omega_K2                                                         |
 +----------+------------------------------------------------------------------+
@@ -2134,6 +2134,13 @@ specification = Specification({
             )),
             # 3.7
             ('Unknown7', Field(
+                type='int',
+            )),
+			# 3.7.2
+			('Unknown8', Field(
+                type='int',
+            )),
+			('Unknown9', Field(
                 type='int',
             )),
         )),
@@ -6673,6 +6680,13 @@ specification = Specification({
             )),
             ('IsTier16Icon', Field(
                 type='bool',
+            )),
+			#3.7.2
+            ('Unknown14', Field(
+                type='int',
+            )),
+			('Unknown15', Field(
+                type='int',
             )),
         )),
     ),
