@@ -473,7 +473,7 @@ class QuestRewardReader(BaseParser):
             text=lua_formatter(outdata),
             out_file='%s_rewards.txt' % data_type,
             wiki_page=[{
-                'page': 'Module:Quest reward/data/%s' % data_type,
+                'page': 'Module:Quest reward/data/%s_rewards' % data_type,
                 'condition': None,
             }]
         )
