@@ -3057,6 +3057,8 @@ specification = Specification({
             #3.4
             ('RecipeIds', Field(
                 type='ref|list|int',
+                key='RecipeUnlockDisplay.dat',
+                key_id='RecipeId',
             )),
             ('Tier', Field(
                 type='int',
@@ -11146,6 +11148,7 @@ specification = Specification({
         fields=OrderedDict((
             ('RecipeId', Field(
                 type='int',
+                unique=True,
             )),
             ('Description', Field(
                 type='ref|string',

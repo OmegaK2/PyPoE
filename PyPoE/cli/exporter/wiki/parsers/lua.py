@@ -100,6 +100,10 @@ class GenericLuaParser(BaseParser):
             if value is not None and value != "":
                 if 'value' in copy_data:
                     value = copy_data['value'](value)
+
+                if value == copy_data.get('default'):
+                    continue
+
                 copyrow[copy_data['key']] = value
 
         if index is not None:
@@ -175,6 +179,16 @@ class LuaHandler(ExporterHandler):
             parser=parser,
             cls=MonsterParser,
             func=MonsterParser.main,
+        )
+
+        parser = lua_sub.add_parser(
+            'crafting_bench',
+            help='Extract crafting bench information',
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=CraftingBenchParser,
+            func=CraftingBenchParser.main,
         )
 
 
@@ -958,6 +972,116 @@ class MonsterParser(GenericLuaParser):
                 out_file='%s.lua' % key,
                 wiki_page=[{
                     'page': 'Module:Monster/%s' % key,
+                    'condition': None,
+                }]
+            )
+
+        return r
+
+
+class CraftingBenchParser(GenericLuaParser):
+    _DATA = (
+        ('HideoutNPCsKey', {
+            'key': 'npc',
+            'value': lambda v: v['NPCMasterKey']['Id'],
+        }),
+        ('Order', {
+            'key': 'ordinal',
+        }),
+        ('ModsKey', {
+            'key': 'mod_id',
+            'value': lambda v: v['Id'],
+        }),
+        ('RequiredLevel', {
+            'key': 'required_level',
+            'default': 0,
+        }),
+        ('Name', {
+            'key': 'name',
+        }),
+        ('ItemClassesKeys', {
+            'key': 'item_classes',
+            'value': lambda v: [k['Name'] for k in v],
+            'default': [],
+        }),
+        ('ItemClassesKeys', {
+            'key': 'item_classes_ids',
+            'value': lambda v: [k['Id'] for k in v],
+            'default': [],
+        }),
+        ('Links', {
+            'key': 'links',
+            'default': 0,
+        }),
+        ('SocketColours', {
+            'key': 'socket_colours',
+        }),
+        ('Sockets', {
+            'key': 'sockets',
+            'default': 0,
+        }),
+        ('Description', {
+            'key': 'description',
+        }),
+        ('RecipeIds', {
+            'key': 'recipe_unlock_location',
+            'value': lambda v: '<br>'.join([k['UnlockDescription'] for k in v]),
+            'default': '',
+        }),
+        ('Tier', {
+            'key': 'rank',
+        }),
+        ('ModFamily', {
+            'key': 'mod_group',
+        }),
+        ('CraftingItemClassCategoriesKeys', {
+            'key': 'crafting_item_class_categories',
+            'value': lambda v: [k['Text'] for k in v],
+        }),
+        ('CraftingBenchUnlockCategoriesKey', {
+            'key': 'crafting_bench_unlock_category',
+            'value': lambda v: v['UnlockType'],
+        }),
+        ('CraftingBenchUnlockCategoriesKey', {
+            'key': 'crafting_bench_unlock_category_description',
+            'value': lambda v: v['ObtainingDescription'],
+        }),
+        ('UnveilsRequired', {
+            'key': 'unveils_required',
+            'default': 0,
+        }),
+        ('AffixType', {
+            'key': 'affix_type',
+        }),
+    )
+
+    _files = ['CraftingBenchOptions.dat']
+
+    def main(self, parsed_args):
+        data = {
+            'crafting_bench_options': [],
+            'crafting_bench_options_costs': [],
+        }
+        for row in self.rr['CraftingBenchOptions.dat']:
+            self._copy_from_keys(
+                row, self._DATA, data['crafting_bench_options'])
+            data['crafting_bench_options'][-1]['id'] = row.rowid
+
+            for i, base_item in enumerate(row['Cost_BaseItemTypesKeys']):
+                data['crafting_bench_options_costs'].append(OrderedDict((
+                    ('option_id', row.rowid),
+                    ('name', base_item['Name']),
+                    ('amount', row['Cost_Values'][i])
+                )))
+
+
+        r = ExporterResult()
+        for key, data in data.items():
+            r.add_result(
+                text=lua_formatter(data),
+                out_file='%s.lua' % key,
+                wiki_page=[{
+                    'page': 'Module:Crafting bench/%s' % key,
                     'condition': None,
                 }]
             )
