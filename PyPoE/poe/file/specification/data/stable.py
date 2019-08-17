@@ -5141,6 +5141,9 @@ specification = Specification({
             ('SizeY', Field(
                 type='int',
             )),
+            ('Unknown0', Field(
+                type='byte',
+            )),
         )),
     ),
     'GameConstants.dat': File(
@@ -8670,6 +8673,9 @@ specification = Specification({
             ('Unknown6', Field(
                 type='ref|list|int',
             )),
+            ('Unknown7', Field(
+                type='int',
+            )),
         )),
     ),
     'MonsterFleeConditions.dat': File(
@@ -9484,6 +9490,9 @@ specification = Specification({
                 type='byte',
             )),
             ('Flag4', Field(
+                type='byte',
+            )),
+            ('Unknown102', Field(
                 type='byte',
             )),
         )),
@@ -10559,6 +10568,9 @@ specification = Specification({
             )),
             ('Unknown1', Field(
                 type='int',
+            )),
+            ('Unknown5', Field(
+                type='short',
             )),
         )),
     ),
