@@ -35,10 +35,6 @@ See PyPoE/LICENSE
 
 # self
 from PyPoE.cli.exporter.dat.parsers.json import JSONExportHandler
-try:
-    from PyPoE.cli.exporter.dat.parsers.sql import SQLExportHandler
-except ImportError:
-    SQLExportHandler = None
 
 # =============================================================================
 # Globals
@@ -49,6 +45,7 @@ __all__ = ['DatHandler']
 # =============================================================================
 # Classes
 # =============================================================================
+
 
 class DatHandler(object):
     """
@@ -68,8 +65,6 @@ class DatHandler(object):
 
         sub = parser.add_subparsers(help='Export type')
         JSONExportHandler(sub)
-        if SQLExportHandler:
-            SQLExportHandler(sub)
 
 # =============================================================================
 # Functions
