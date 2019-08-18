@@ -150,7 +150,7 @@ class SkillParserShared(parser.BaseParser):
         'Level', 'LevelRequirement', 'ManaMultiplier', 'CriticalStrikeChance',
         'ManaCost', 'DamageMultiplier', 'VaalSouls', 'VaalStoredUses',
         'VaalSoulGainPreventionTime', 'Cooldown', 'StoredUses',
-        'DamageEffectiveness'
+        'DamageEffectiveness', 'DamageMultiplier', 'AttackSpeedMultiplier',
     )
 
     _SKILL_COLUMN_MAP = (
@@ -204,7 +204,7 @@ class SkillParserShared(parser.BaseParser):
         }),
         ('AttackSpeedMultiplier', {
             'template': 'attack_speed_multiplier',
-            'format': lambda v: '{0:n}'.format(v),
+            'format': lambda v: '{0:n}'.format(v+100),
         }),
     )
 
