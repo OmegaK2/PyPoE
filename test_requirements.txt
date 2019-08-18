@@ -4,6 +4,8 @@ colorama
 graphviz
 tqdm
 mwclient
+mwparserfromhell
+fuzzywuzzy
 sqlalchemy
 pymysql
 PyOpenGL
