@@ -17,8 +17,8 @@ Overview
 Description
 ===============================================================================
 
-Automatically all ExporterHandlers in the package files and import them into
-WIKI_HANDLERS.
+Automatically finds all ExporterHandlers in the package files and import them
+into WIKI_HANDLERS.
 
 Agreement
 ===============================================================================

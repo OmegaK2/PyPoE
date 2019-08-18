@@ -39,6 +39,7 @@ from PyPoE.cli.handler import BaseHandler
 from PyPoE.cli.exporter import config
 from PyPoE.cli.exporter.util import get_content_ggpk_hash, get_content_ggpk_path
 from PyPoE.cli.exporter.wiki.parsers import WIKI_HANDLERS
+from PyPoE.cli.exporter.wiki.admin import ADMIN_HANDLERS
 
 # =============================================================================
 # Globals
@@ -67,6 +68,9 @@ class WikiHandler(BaseHandler):
         wiki_sub = self.parser.add_subparsers()
 
         for handler in WIKI_HANDLERS:
+            handler(wiki_sub)
+
+        for handler in ADMIN_HANDLERS:
             handler(wiki_sub)
 
     def _ver_dist_changed(self, key, value, old_value):

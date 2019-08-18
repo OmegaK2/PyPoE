@@ -723,7 +723,8 @@ class BaseParser(object):
     _files = []
     _translations = []
 
-    def __init__(self, base_path):
+    def __init__(self, base_path, parsed_args):
+        self.parsed_args = parsed_args
         # Make sure to load the appropriate version of the specification
         set_default_spec(version=config.get_option('version'))
 
