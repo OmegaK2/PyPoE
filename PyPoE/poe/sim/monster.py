@@ -39,7 +39,7 @@ Internal API
 # =============================================================================
 
 # Python
-from collections import Iterable
+from collections.abc import Iterable
 
 # 3rd-party
 

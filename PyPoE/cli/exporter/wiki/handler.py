@@ -31,7 +31,7 @@ See PyPoE/LICENSE
 
 # Python
 import os
-from collections import Iterable
+from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor
 
 # 3rd Party
