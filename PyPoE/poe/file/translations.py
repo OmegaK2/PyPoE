@@ -165,7 +165,7 @@ regex_tokens = re.compile(
     r'(?:^"(?P<header>.*)"$)'
     r'|(?:^include "(?P<include>.*)")'
     r'|(?:^no_description (?P<no_description>[\w+%]*)$)'
-    r'|(?P<description>^description([\s]*[\S]*)$)',
+    r'|(?P<description>^description[\s]*(?P<identifier>[\S]*)[\s]*$)',
     re.UNICODE | re.MULTILINE
 )
 
@@ -221,17 +221,20 @@ class Translation(TranslationReprMixin):
         :class:`Translation`
     ids : list[str]
         List of ids associated with this translation
+    identifier : str
+        Identifier if present else None
     """
 
-    __slots__ = ['languages', 'ids']
+    __slots__ = ['languages', 'ids', 'identifier']
 
     _REPR_EXTRA_ATTRIBUTES = OrderedDict((
         ('ids', None),
     ))
 
-    def __init__(self):
+    def __init__(self, identifier=None):
         self.languages = []
         self.ids = []
+        self.identifier = identifier
 
     def __eq__(self, other):
         if not isinstance(other, Translation):
@@ -1317,7 +1320,7 @@ class TranslationFile(AbstractFileReadOnly):
             match_next = regex_tokens.search(data, offset)
             offset_max = match_next.start() if match_next else len(data)
             if match.group('description'):
-                translation = Translation()
+                translation = Translation(identifier=match.group('identifier'))
 
                 # Parse the IDs for the translations
                 id_count = regex_int.search(data, offset, offset_max)
