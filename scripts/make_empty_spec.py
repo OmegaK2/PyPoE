@@ -70,6 +70,7 @@ def spec_unknown(size, i=0):
     out = []
     while size > 4:
         out.append(spec % i)
+        out.append("    name='Unknown%s'," % i)
         out.append("    type='int',")
         out.append(")),")
         size -= 4
@@ -77,6 +78,7 @@ def spec_unknown(size, i=0):
 
     out.append(spec % i)
     mod = size % 4
+    out.append("    name='Unknown%s'," % i)
     if mod == 0:
         out.append("    type='int',")
     elif mod == 1:
@@ -88,6 +90,7 @@ def spec_unknown(size, i=0):
         out.append(")),")
         i+=1
         out.append(spec % i)
+        out.append("    name='Unknown%s'," % i)
         out.append("    type='byte',")
     out.append(")),")
 
