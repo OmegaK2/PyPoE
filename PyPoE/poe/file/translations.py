@@ -115,7 +115,8 @@ import os
 import warnings
 from enum import IntEnum
 from string import ascii_letters
-from collections import Iterable, OrderedDict, defaultdict
+from collections.abc import Iterable
+from collections import OrderedDict, defaultdict
 
 # self
 from PyPoE import DATA_DIR
@@ -164,7 +165,7 @@ regex_tokens = re.compile(
     r'(?:^"(?P<header>.*)"$)'
     r'|(?:^include "(?P<include>.*)")'
     r'|(?:^no_description (?P<no_description>[\w+%]*)$)'
-    r'|(?P<description>^description([ ]*[\S]*))',
+    r'|(?P<description>^description([\s]*[\S]*)$)',
     re.UNICODE | re.MULTILINE
 )
 
@@ -1396,7 +1397,11 @@ class TranslationFile(AbstractFileReadOnly):
                                 max = int(minmax[1]) if minmax[1] != '#' else None
                                 TranslationRange(min, max, parent=ts)
                             else:
-                                raise Exception(matchstr)
+                                TranslationRange(None, None, parent=ts)
+                                warnings.warn(
+                                    'Malformed quantifier string "%s" near index %s (parent %s). Assuming # instead.' % (
+                                        matchstr, ts_match.start('minmax'), translation.ids
+                                    ), TranslationWarning)
 
                         ts._set_string(ts_match.group('description'))
 
