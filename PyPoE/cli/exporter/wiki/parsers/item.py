@@ -2066,6 +2066,17 @@ class ItemsParser(SkillParserShared):
         fail_condition=True,
     )
 
+    _type_blight_item = _type_factory(
+        data_file='BlightCraftingItems.dat',
+        data_mapping=(
+            ('Tier', {
+                'template': 'blight_item_tier',
+            }),
+        ),
+        row_index=True,
+        fail_condition=True,
+    )
+
     _type_labyrinth_trinket = _type_factory(
         data_file='LabyrinthTrinkets.dat',
         data_mapping=(
@@ -2129,7 +2140,7 @@ class ItemsParser(SkillParserShared):
         'Support Skill Gem': (_skill_gem, ),
         # Currency-like items
         'Currency': (_type_currency, ),
-        'StackableCurrency': (_type_currency, _type_essence),
+        'StackableCurrency': (_type_currency, _type_essence, _type_blight_item),
         'DelveSocketableCurrency': (_type_currency, ),
         'DelveStackableSocketableCurrency': (_type_currency,),
         'HideoutDoodad': (_type_currency, _type_hideout_doodad),

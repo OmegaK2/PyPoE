@@ -172,6 +172,16 @@ class LuaHandler(ExporterHandler):
         )
 
         parser = lua_sub.add_parser(
+            'blight',
+            help='Extract blight information',
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=BlightParser,
+            func=BlightParser.main,
+        )
+
+        parser = lua_sub.add_parser(
             'monster',
             help='Extract monster information',
         )
@@ -278,6 +288,94 @@ class BestiaryParser(GenericLuaParser):
                 out_file='bestiary_%s.lua' % k,
                 wiki_page=[{
                     'page': 'Module:Bestiary/%s' % k,
+                    'condition': None,
+                }]
+            )
+
+        return r
+
+
+class BlightParser(GenericLuaParser):
+    _files = [
+        'BlightCraftingRecipes.dat',
+        'BlightTowers.dat',
+    ]
+
+    _COPY_KEYS_CRAFTING_RECIPES = (
+        ('Id', {
+            'key': 'id',
+        }),
+        ('BlightCraftingResultsKey', {
+            'key': 'modifier_id',
+            'value': lambda v: v['ModsKey']['Id'] if v['ModsKey'] else None,
+        }),
+        ('BlightCraftingResultsKey', {
+            'key': 'passive_id',
+            'value': lambda v: v['PassiveSkillsKey']['Id'] if
+                v['PassiveSkillsKey'] else None,
+        }),
+        ('BlightCraftingTypesKey', {
+            'key': 'type',
+            'value': lambda v: v['Id'],
+        }),
+    )
+
+    _COPY_KEYS_BLIGHT_TOWERS = (
+        ('Id', {
+            'key': 'id',
+        }),
+        ('Name', {
+            'key': 'name',
+        }),
+        ('Description', {
+            'key': 'description',
+            'value': lambda v: v.replace('\n', '<br>').replace('\r', ''),
+        }),
+        ('Tier', {
+            'key': 'tier',
+        }),
+        ('Cost', {
+            'key': 'cost',
+        }),
+        ('Icon', {
+            'key': 'icon',
+            'value': lambda v: (
+                v.replace(
+                    'Art/2DArt/UIImages/InGame/Blight/Tower Icons/Icon',
+                    'TowerIcon'
+                ) if v.startswith(
+                    'Art/2DArt/UIImages/InGame/Blight/Tower Icons'
+                ) else None
+            ),
+        }),
+    )
+
+    def main(self, parsed_args):
+        blight_crafting_recipes = []
+        blight_crafting_recipes_items = []
+        blight_towers = []
+
+        for row in self.rr['BlightCraftingRecipes.dat']:
+            self._copy_from_keys(row, self._COPY_KEYS_CRAFTING_RECIPES,
+                                 blight_crafting_recipes)
+
+            for blight_crafting_item in row['BlightCraftingItemsKeys']:
+                blight_crafting_recipes_items.append(OrderedDict((
+                    ('recipe_id', row['Id']),
+                    ('item_id', blight_crafting_item['BaseItemTypesKey']['Id']),
+                )))
+
+        for row in self.rr['BlightTowers.dat']:
+            self._copy_from_keys(row, self._COPY_KEYS_BLIGHT_TOWERS,
+                                 blight_towers)
+
+        r = ExporterResult()
+        for k in ('crafting_recipes', 'crafting_recipes_items', 'towers'):
+            r.add_result(
+                text=lua_formatter(locals()['blight_' + k]),
+                out_file='blight_%s.lua' % k,
+                wiki_page=[{
+                    'page': 'Module:Blight/blight_%s' % k,
                     'condition': None,
                 }]
             )

@@ -2483,9 +2483,10 @@ specification = Specification({
                 name='BaseItemTypesKey',
                 type='ulong',
                 key='BaseItemTypes.dat',
+                unique=True,
             )),
-            ('Unknown1', Field(
-                name='Unknown1',
+            ('Tier', Field(
+                name='Tier',
                 type='int',
             )),
             ('AcheivementItemsKeys', Field(
@@ -2507,9 +2508,10 @@ specification = Specification({
                 type='ref|list|ulong',
                 key='BlightCraftingItems.dat',
             )),
-            ('Key1', Field(
-                name='Key1',
+            ('BlightCraftingResultsKey', Field(
+                name='BlightCraftingResultsKey',
                 type='ulong',
+                key='BlightCraftingResults.dat',
             )),
             ('BlightCraftingTypesKey', Field(
                 name='BlightCraftingTypesKey',
@@ -2548,9 +2550,9 @@ specification = Specification({
                 name='Unknown1',
                 type='int',
             )),
-            ('Unknown2', Field(
-                name='Unknown2',
-                type='byte',
+            ('Flag0', Field(
+                name='Flag0',
+                type='bool',
             )),
         )),
     ),
