@@ -390,6 +390,7 @@ class SkillParserShared(parser.BaseParser):
                         'line': '',
                         'stats': [stat, ],
                         'values': [value, ],
+                        'values_parsed': [value, ],
                     }
 
             for stat_dict in data['qstats'].values():

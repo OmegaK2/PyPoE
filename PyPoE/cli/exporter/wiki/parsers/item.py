@@ -496,6 +496,7 @@ class ItemsParser(SkillParserShared):
         'Betrayal': '3.5.0',
         'Synthesis': '3.6.0',
         'Legion': '3.7.0',
+        'Blight': '3.8.0',
     }
 
     _IGNORE_DROP_LEVEL_CLASSES = (
@@ -1152,7 +1153,9 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/Gems/SkillGemBackstab',
         'Metadata/Items/Gems/SkillGemBladeTrap',
         'Metadata/Items/Gems/SkillGemBlitz',
+        'Metadata/Items/Gems/SkillGemBoneArmour',
         'Metadata/Items/Gems/SkillGemCaptureMonster',
+        'Metadata/Items/Gems/SkillGemCoilingAssault',
         'Metadata/Items/Gems/SkillGemComboStrike',
         'Metadata/Items/Gems/SkillGemDamageInfusion',
         'Metadata/Items/Gems/SkillGemDiscorectangleSlam',
@@ -1858,11 +1861,13 @@ class ItemsParser(SkillParserShared):
     )
 
     def _map_fragment_extra(self, infobox, base_item_type, map_fragment_mods):
-        if map_fragment_mods['ModsKey']:
+        if map_fragment_mods['ModsKeys']:
             i = 1
             while infobox.get('implicit%s' % i) is not None:
                 i += 1
-            infobox['implicit%s' % i] = map_fragment_mods['ModsKey']['Id']
+            for mod in map_fragment_mods['ModsKeys']:
+                infobox['implicit%s' % i] = mod['Id']
+                i += 1
 
     _type_map_fragment_mods = _type_factory(
         data_file='MapFragmentMods.dat',
@@ -2095,6 +2100,7 @@ class ItemsParser(SkillParserShared):
         # Weapons
         'Claw': (_type_level, _type_attribute, _type_weapon, ),
         'Dagger': (_type_level, _type_attribute, _type_weapon, ),
+        'Rune Dagger': (_type_level, _type_attribute, _type_weapon,),
         'Wand': (_type_level, _type_attribute, _type_weapon, ),
         'One Hand Sword': (_type_level, _type_attribute, _type_weapon, ),
         'Thrusting One Hand Sword': (
@@ -2102,12 +2108,14 @@ class ItemsParser(SkillParserShared):
         ),
         'One Hand Axe': (_type_level, _type_attribute, _type_weapon, ),
         'One Hand Mace': (_type_level, _type_attribute, _type_weapon, ),
+        'Sceptre': (_type_level, _type_attribute, _type_weapon,),
+
         'Bow': (_type_level, _type_attribute, _type_weapon, ),
         'Staff': (_type_level, _type_attribute, _type_weapon, ),
         'Two Hand Sword': (_type_level, _type_attribute, _type_weapon, ),
         'Two Hand Axe': (_type_level, _type_attribute, _type_weapon, ),
         'Two Hand Mace': (_type_level, _type_attribute, _type_weapon, ),
-        'Sceptre': (_type_level, _type_attribute, _type_weapon, ),
+        'Warstaff': (_type_level, _type_attribute, _type_weapon,),
         'FishingRod': (_type_level, _type_attribute, _type_weapon, ),
         # Flasks
         'LifeFlask': (_type_level, _type_flask, _type_flask_charges),
@@ -2123,6 +2131,7 @@ class ItemsParser(SkillParserShared):
         'Currency': (_type_currency, ),
         'StackableCurrency': (_type_currency, _type_essence),
         'DelveSocketableCurrency': (_type_currency, ),
+        'DelveStackableSocketableCurrency': (_type_currency,),
         'HideoutDoodad': (_type_currency, _type_hideout_doodad),
         'Microtransaction': (_type_currency, ),
         'DivinationCard': (_type_currency, ),
@@ -2272,6 +2281,14 @@ class ItemsParser(SkillParserShared):
     def _conflict_misc_map_item(self, infobox, base_item_type, rr, language):
         return base_item_type['Name']
 
+    def _conflict_delve_socketable_currency(
+            self, infobox, base_item_type, rr, language):
+        return
+
+    def _conflict_delve_stackable_socketable_currency(
+            self, infobox, base_item_type, rr, language):
+        return base_item_type['Name']
+
     _conflict_resolver_map = {
         'Active Skill Gem': _conflict_active_skill_gems,
         'QuestItem': _conflict_quest_items,
@@ -2281,6 +2298,9 @@ class ItemsParser(SkillParserShared):
         'DivinationCard': _conflict_divination_card,
         'LabyrinthMapItem': _conflict_labyrinth_map_item,
         'MiscMapItem': _conflict_misc_map_item,
+        'DelveSocketableCurrency': _conflict_delve_socketable_currency,
+        'DelveStackableSocketableCurrency':
+            _conflict_delve_stackable_socketable_currency,
     }
 
     def _parse_class_filter(self, parsed_args):
@@ -2498,7 +2518,7 @@ class ItemsParser(SkillParserShared):
                 infobox, base_item_type, self._language
             )
             if page is None:
-                page = name
+                continue
             if self._language != 'English' and parsed_args.english_file_link:
                 icon = self._process_name_conflicts(
                     infobox, base_item_type, 'English'
