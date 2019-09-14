@@ -2770,8 +2770,8 @@ specification = Specification({
                 name='Tier',
                 type='ref|string',
             )),
-            ('Cost', Field(
-                name='Cost',
+            ('Radius', Field(
+                name='Radius',
                 type='int',
             )),
             ('Unknown8', Field(
@@ -2819,8 +2819,8 @@ specification = Specification({
                 type='ulong',
                 key='MonsterVarieties.dat',
             )),
-            ('Unknown3', Field(
-                name='Unknown3',
+            ('Cost', Field(
+                name='Cost',
                 type='int',
             )),
             ('Unknown4', Field(

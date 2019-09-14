@@ -334,15 +334,15 @@ class BlightParser(GenericLuaParser):
         ('Tier', {
             'key': 'tier',
         }),
-        ('Cost', {
-            'key': 'cost',
+        ('Radius', {
+            'key': 'radius',
         }),
         ('Icon', {
             'key': 'icon',
             'value': lambda v: (
-                v.replace(
+                'File:%s tower icon.png' % v.replace(
                     'Art/2DArt/UIImages/InGame/Blight/Tower Icons/Icon',
-                    'TowerIcon'
+                    ''
                 ) if v.startswith(
                     'Art/2DArt/UIImages/InGame/Blight/Tower Icons'
                 ) else None
@@ -354,6 +354,8 @@ class BlightParser(GenericLuaParser):
         blight_crafting_recipes = []
         blight_crafting_recipes_items = []
         blight_towers = []
+
+        self.rr['BlightTowersPerLevel.dat'].build_index('BlightTowersKey')
 
         for row in self.rr['BlightCraftingRecipes.dat']:
             self._copy_from_keys(row, self._COPY_KEYS_CRAFTING_RECIPES,
@@ -368,6 +370,7 @@ class BlightParser(GenericLuaParser):
         for row in self.rr['BlightTowers.dat']:
             self._copy_from_keys(row, self._COPY_KEYS_BLIGHT_TOWERS,
                                  blight_towers)
+            blight_towers[-1]['cost'] = self.rr['BlightTowersPerLevel.dat'].index['BlightTowersKey'][row][0]['Cost']
 
         r = ExporterResult()
         for k in ('crafting_recipes', 'crafting_recipes_items', 'towers'):

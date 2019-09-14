@@ -153,12 +153,12 @@ class IDLFile(AbstractFile, TypedList, metaclass=TypedContainerMeta):
 
     _regex_parse = re.compile(
         r'^'
-        r'"(?P<destination>[\w\./_]+)"[ ]+'
-        r'"(?P<source>[\w\./_]+)"[ ]+'
+        r'"(?P<destination>[\w\./_ ]+)"[ ]+'
+        r'"(?P<source>[\w\./_ ]+)"[ ]+'
         r'(?P<x1>[0-9]+)[ ]+'
         r'(?P<y1>[0-9]+)[ ]+'
         r'(?P<x2>[0-9]+)[ ]+'
-        r'(?P<y2>[0-9]+)[ ]*'
+        r'(?P<y2>[0-9]+)[ \r\n]*'
         r'$',
         re.UNICODE | re.MULTILINE
     )
