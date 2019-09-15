@@ -11008,7 +11008,7 @@ specification = Specification({
                 name='Flag2',
                 type='bool',
             )),
-            ('Unknown4', Field(
+            ('MinimapIconPointerMaxDistance', Field(
                 name='Unknown4',
                 type='int',
             )),
