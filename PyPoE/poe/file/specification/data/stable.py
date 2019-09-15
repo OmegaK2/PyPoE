@@ -10988,11 +10988,11 @@ specification = Specification({
                 name='Id',
                 type='ref|string',
             )),
-            ('Unknown2', Field(
+            ('MinimapIconRadius', Field(
                 name='Unknown2',
                 type='int',
             )),
-            ('Unknown3', Field(
+            ('LargemapIconRadius', Field(
                 name='Unknown3',
                 type='int',
             )),
