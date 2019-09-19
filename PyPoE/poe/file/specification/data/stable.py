@@ -10989,11 +10989,11 @@ specification = Specification({
                 type='ref|string',
             )),
             ('MinimapIconRadius', Field(
-                name='Unknown2',
+                name='MinimapIconRadius',
                 type='int',
             )),
             ('LargemapIconRadius', Field(
-                name='Unknown3',
+                name='LargemapIconRadius',
                 type='int',
             )),
             ('Flag0', Field(
@@ -11009,7 +11009,7 @@ specification = Specification({
                 type='bool',
             )),
             ('MinimapIconPointerMaxDistance', Field(
-                name='Unknown4',
+                name='MinimapIconPointerMaxDistance',
                 type='int',
             )),
             ('Unknown5', Field(
