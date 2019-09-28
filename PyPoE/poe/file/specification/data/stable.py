@@ -13684,16 +13684,12 @@ specification = Specification({
     ),
     'PCBangRewardMicros.dat': File(
         fields=OrderedDict((
+            ('BaseItemTypesKey', Field(
+                name='BaseItemTypesKey',
+                type='ulong',
+            )),
             ('Unknown0', Field(
                 name='Unknown0',
-                type='ref|string',
-            )),
-            ('Unknown1', Field(
-                name='Unknown1',
-                type='int',
-            )),
-            ('Unknown2', Field(
-                name='Unknown2',
                 type='int',
             )),
         )),
