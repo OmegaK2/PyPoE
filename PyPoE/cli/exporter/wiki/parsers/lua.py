@@ -361,8 +361,10 @@ class BlightParser(GenericLuaParser):
             self._copy_from_keys(row, self._COPY_KEYS_CRAFTING_RECIPES,
                                  blight_crafting_recipes)
 
-            for blight_crafting_item in row['BlightCraftingItemsKeys']:
+            for i, blight_crafting_item in enumerate(
+                    row['BlightCraftingItemsKeys'], start=1):
                 blight_crafting_recipes_items.append(OrderedDict((
+                    ('ordinal', i),
                     ('recipe_id', row['Id']),
                     ('item_id', blight_crafting_item['BaseItemTypesKey']['Id']),
                 )))

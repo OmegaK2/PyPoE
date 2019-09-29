@@ -1100,14 +1100,6 @@ class ItemsParser(SkillParserShared):
             'decoration_wounded': '%s (%s %s decoration, Wounded)',
             'of': '%s of %s',
             'descent': 'Descent',
-            'upgraded_from_+1':
-                '+1 level {{c|corrupted|corruption}} outcome',
-            'upgraded_from_type_change':
-                'type change {{c|corrupted|corruption}} outcome',
-            'upgraded_from_shrieking_essence':
-                'random {{c|currency|Shrieking Essence}}',
-            'upgraded_from_random_essence':
-                'random {{c|currency|Essence}}',
         },
         'German': {
             'Low': 'Niedrige Stufe',
@@ -1117,14 +1109,6 @@ class ItemsParser(SkillParserShared):
             'decoration_wounded': '%s (%s %s Dekoration, verletzt)',
             'of': '%s von %s',
             'descent': 'Descent',
-            'upgraded_from_+1':
-                '+1 zur Stufe als Resultat von {{c|corrupted|Verderben}}',
-            'upgraded_from_type_change':
-                'Änderung des Typs als Resultat von {{c|corrupted|Verderben}}',
-            'upgraded_from_shrieking_essence':
-                'zufällige {{c|currency|Kreischende Essenz}}',
-            'upgraded_from_random_essence':
-                'zufällige {{c|currency|Essenz}}',
         },
         'Russian': {
             'Low': 'низкий уровень',
@@ -1134,14 +1118,6 @@ class ItemsParser(SkillParserShared):
             'decoration_wounded': '%s (%s %s предмет убежища, Раненый)',
             'of': '%s из %s',
             'descent': 'Спуск',
-            'upgraded_from_+1':
-                '+1 уровень в результате {{c|corrupted|осквернения}}',
-            'upgraded_from_type_change':
-                'изменение типа в результате {{c|corrupted|осквернения}}',
-            'upgraded_from_shrieking_essence':
-                'случайная {{c|currency|Визжащая Сущность}}',
-            'upgraded_from_random_essence':
-                'случайная {{c|currency|сущность}}',
         },
     }
 
@@ -1958,83 +1934,6 @@ class ItemsParser(SkillParserShared):
 
         infobox['description'] +='<br />' +  '<br />'.join(out)
 
-        #
-        # Upgraded from parameters
-        #
-
-        self.rr['Essences.dat'].build_index('EssenceTypeKey')
-        index = 1
-        et = essence['EssenceTypeKey']
-        # 3->1 vendor recipe and +1 corruption
-        for other_essence in self.rr['Essences.dat'].index['EssenceTypeKey'][
-            et]:
-            if other_essence['Level'] == essence['Level'] - 1:
-                # 3->1 vendor recipe
-                infobox['upgraded_from_set%s_group1_item_id' % index] = \
-                    other_essence['BaseItemTypesKey']['Id']
-                infobox['upgraded_from_set%s_group1_amount' % index] = 3
-                index += 1
-
-                # +1 level corruption
-                infobox['upgraded_from_set%s_text' % index] = \
-                    self._LANG[self._language]['upgraded_from_+1']
-
-                infobox['upgraded_from_set%s_group1_item_id' % index] = \
-                    other_essence['BaseItemTypesKey']['Id']
-                infobox['upgraded_from_set%s_group1_amount' % index] = 1
-
-                infobox['upgraded_from_set%s_group2_item_id' % index] = \
-                    'Metadata/Items/Currency/CurrencyCorruptMonolith'
-                infobox['upgraded_from_set%s_group2_amount' % index] = 1
-                index += 1
-
-                break
-
-        self.rr['EssenceType.dat'].build_index('EssenceType')
-        # type change corruption
-        if et['EssenceType'] > 1:
-            for essence_type in self.rr['EssenceType.dat'].index['EssenceType'
-                    ][et['EssenceType']-1]:
-                for other_essence in self.rr['Essences.dat'].index[
-                        'EssenceTypeKey'][essence_type]:
-                    if essence['Level'] != 8 and \
-                                    other_essence['Level'] != essence['Level']:
-                        continue
-                        # +1 level corruption
-                    infobox['upgraded_from_set%s_text' % index] = \
-                        self._LANG[self._language]['upgraded_from_type_change']
-
-                    infobox['upgraded_from_set%s_group1_item_id' % index] = \
-                        other_essence['BaseItemTypesKey']['Id']
-                    infobox['upgraded_from_set%s_group1_amount' % index] = 1
-
-                    infobox['upgraded_from_set%s_group2_item_id' % index] = \
-                        'Metadata/Items/Currency/CurrencyCorruptMonolith'
-                    infobox['upgraded_from_set%s_group2_amount' % index] = 1
-                    index += 1
-
-        # Divination cards
-
-        # Harmony of Souls -- Only "Shrieking" essences
-        if essence['Level'] == 6:
-            infobox['upgraded_from_set%s_text' % index] = \
-                self._LANG[self._language]['upgraded_from_shrieking_essence']
-
-            infobox['upgraded_from_set%s_group1_item_id' % index] = \
-                'Metadata/Items/DivinationCards/DivinationCardHarmonyOfSouls'
-            infobox['upgraded_from_set%s_group1_amount' % index] = 9
-            index += 1
-
-        # Three Voices
-
-        infobox['upgraded_from_set%s_text' % index] = \
-            self._LANG[self._language]['upgraded_from_random_essence']
-
-        infobox['upgraded_from_set%s_group1_item_id' % index] = \
-            'Metadata/Items/DivinationCards/DivinationCardThreeVoices'
-        infobox['upgraded_from_set%s_group1_amount' % index] = 3
-        index += 1
-
         return True
 
     _type_essence = _type_factory(
@@ -2054,6 +1953,14 @@ class ItemsParser(SkillParserShared):
             ('Level', {
                 'template': 'essence_level',
                 'condition': lambda v: v > 0,
+            }),
+            ('EssenceTypeKey', {
+                'template': 'essence_type',
+                'format': lambda v: v['EssenceType'],
+            }),
+            ('EssenceTypeKey', {
+                'template': 'essence_category',
+                'format': lambda v: v['WordsKey']['Text'],
             }),
             ('Monster_ModsKeys', {
                 'template': 'essence_monster_modifier_ids',
