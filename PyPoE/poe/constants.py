@@ -761,6 +761,7 @@ class MOD_GENERATION_TYPE(IntEnumOverride):
     SYNTHESIS_GLOBALS = 16
     SYNTHESIS_BONUS = 17
     BLIGHT = 18
+    BLIGHT_TOWER = 19
 
 
 class WORDLISTS(IntEnumOverride):
