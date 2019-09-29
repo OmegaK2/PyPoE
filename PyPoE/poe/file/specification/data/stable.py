@@ -14035,9 +14035,10 @@ specification = Specification({
                 type='ref|list|ulong',
                 key='PassiveSkillBuffs.dat',
             )),
-            ('Key0', Field(
-                name='Key0',
+            ('GrantedEffectsPerLevelKey', Field(
+                name='GrantedEffectsPerLevelKey',
                 type='ulong',
+                key='GrantedEffectsPerLevel.dat',
             )),
             ('Flag0', Field(
                 name='Flag0',
