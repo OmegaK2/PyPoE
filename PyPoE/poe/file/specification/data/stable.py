@@ -10988,12 +10988,12 @@ specification = Specification({
                 name='Id',
                 type='ref|string',
             )),
-            ('Unknown2', Field(
-                name='Unknown2',
+            ('MinimapIconRadius', Field(
+                name='MinimapIconRadius',
                 type='int',
             )),
-            ('Unknown3', Field(
-                name='Unknown3',
+            ('LargemapIconRadius', Field(
+                name='LargemapIconRadius',
                 type='int',
             )),
             ('Flag0', Field(
@@ -11008,8 +11008,8 @@ specification = Specification({
                 name='Flag2',
                 type='bool',
             )),
-            ('Unknown4', Field(
-                name='Unknown4',
+            ('MinimapIconPointerMaxDistance', Field(
+                name='MinimapIconPointerMaxDistance',
                 type='int',
             )),
             ('Unknown5', Field(
@@ -13684,16 +13684,12 @@ specification = Specification({
     ),
     'PCBangRewardMicros.dat': File(
         fields=OrderedDict((
+            ('BaseItemTypesKey', Field(
+                name='BaseItemTypesKey',
+                type='ulong',
+            )),
             ('Unknown0', Field(
                 name='Unknown0',
-                type='ref|string',
-            )),
-            ('Unknown1', Field(
-                name='Unknown1',
-                type='int',
-            )),
-            ('Unknown2', Field(
-                name='Unknown2',
                 type='int',
             )),
         )),
