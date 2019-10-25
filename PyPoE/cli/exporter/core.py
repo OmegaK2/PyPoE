@@ -85,8 +85,9 @@ def setup_config():
     )
     config.add_option('language',
                       'option("English", "French", "German", "Portuguese",'
-                      '"Russian", "Spanish", "Thai", default="English")')
-
+                      '"Russian", "Spanish", "Thai", "Simplified Chinese", default="English")')
+    config.add_option('ignore_files',
+                      'is_list(default="", allow_empty=True)')
 
 def main():
     """
