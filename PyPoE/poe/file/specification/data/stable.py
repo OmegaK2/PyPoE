@@ -3306,6 +3306,14 @@ specification = Specification({
                 type='ref|string',
                 file_path=True,
             )),
+            ('Unknown1', Field(
+                name='Unknown1',
+                type='int',
+            )),
+            ('Unknown2', Field(
+                name='Unknown2',
+                type='int',
+            )),
         )),
     ),
     'CharacterAudioEvents.dat': File(
@@ -7782,8 +7790,8 @@ specification = Specification({
                 type='ulong',
             )),
             # 3.4
-            ('Unknown1', Field(
-                name='Unknown1',
+            ('Stat9Value', Field(
+                name='Stat9Value',
                 type='int',
             )),
             ('AttackSpeedMultiplier', Field(
@@ -7794,13 +7802,16 @@ specification = Specification({
         virtual_fields=OrderedDict((
             ('StatValues', VirtualField(
                 fields=(
-                    'Stat1Value', 'Stat2Value', 'Stat3Value', 'Stat4Value', 'Stat5Value', 'Stat6Value', 'Stat7Value',
-                    'Stat8Value'),
+                    'Stat1Value', 'Stat2Value', 'Stat3Value', 'Stat4Value',
+                    'Stat5Value', 'Stat6Value', 'Stat7Value', 'Stat8Value',
+                    'Stat9Value',
+                ),
             )),
             ('StatFloats', VirtualField(
                 fields=(
-                    'Stat1Float', 'Stat2Float', 'Stat3Float', 'Stat4Float', 'Stat5Float', 'Stat6Float', 'Stat7Float',
-                    'Stat8Float'),
+                    'Stat1Float', 'Stat2Float', 'Stat3Float', 'Stat4Float',
+                    'Stat5Float', 'Stat6Float', 'Stat7Float', 'Stat8Float'
+                ),
             )),
             ('Stats', VirtualField(
                 fields=('StatsKeys', 'StatValues'),

@@ -1154,6 +1154,7 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/Gems/SkillGemReplicate',
         'Metadata/Items/Gems/SkillGemRighteousLightning',
         'Metadata/Items/Gems/SkillGemRiptide',
+        'Metadata/Items/Gems/SkillGemSerpentStrike',
         'Metadata/Items/Gems/SkillGemShadowBlades',
         'Metadata/Items/Gems/SkillGemSlashTotem',
         'Metadata/Items/Gems/SkillGemSliceAndDice',
