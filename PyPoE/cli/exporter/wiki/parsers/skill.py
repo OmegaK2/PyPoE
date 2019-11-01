@@ -151,6 +151,7 @@ class SkillParserShared(parser.BaseParser):
         'ManaCost', 'DamageMultiplier', 'VaalSouls', 'VaalStoredUses',
         'VaalSoulGainPreventionTime', 'Cooldown', 'StoredUses',
         'DamageEffectiveness', 'DamageMultiplier', 'AttackSpeedMultiplier',
+        'BaseDuration',
     )
 
     _SKILL_COLUMN_MAP = (
@@ -205,6 +206,11 @@ class SkillParserShared(parser.BaseParser):
         ('AttackSpeedMultiplier', {
             'template': 'attack_speed_multiplier',
             'format': lambda v: '{0:n}'.format(v+100),
+        }),
+        ('BaseDuration', {
+            'template': 'duration',
+            'default': 0,
+            'format': lambda v: '{0:n}'.format(v / 1000),
         }),
     )
 
@@ -549,17 +555,32 @@ class SkillParserShared(parser.BaseParser):
 
         # Add the attack damage stat from the game data
         if ae:
-            values = (
-                level_data[0]['DamageMultiplier'],
-                level_data[max_level]['DamageMultiplier'],
+            field_stats = (
+                (
+                    ('DamageMultiplier', ),
+                    ('active_skill_attack_damage_final_permyriad', ),
+                ),
+                (
+                    ('BaseDuration', ),
+                    ('base_skill_effect_duration', ),
+                )
             )
-            # Account for default (0 = 100%)
-            if values[0] != 0 or values[1] != 0:
-                lines.insert(0, tf.get_translation(
-                    tags=['active_skill_attack_damage_final_permyriad', ],
-                    values=[values, ],
-                    lang=config.get_option('language'),
-                )[0])
+            added = []
+            for value_keys, tags in field_stats:
+                values = [
+                    (level_data[0][key], level_data[max_level][key])
+                    for key in value_keys
+                ]
+                # Account for default (0 = 100%)
+                if values[0] != 0 or values[1] != 0:
+                    added.append(tf.get_translation(
+                        tags=tags,
+                        values=values,
+                        lang=config.get_option('language'),
+                    )[0])
+
+            if added:
+                lines = added + lines
 
         infobox['stat_text'] = self._format_lines(lines)
 

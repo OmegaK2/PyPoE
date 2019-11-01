@@ -7785,8 +7785,8 @@ specification = Specification({
                 type='int',
                 description='Time in milliseconds',
             )),
-            ('Key0', Field(
-                name='Key0',
+            ('BaseDuration', Field(
+                name='BaseDuration',
                 type='ulong',
             )),
             # 3.4
