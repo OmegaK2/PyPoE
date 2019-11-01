@@ -573,11 +573,11 @@ class SkillParserShared(parser.BaseParser):
                 ]
                 # Account for default (0 = 100%)
                 if values[0] != 0 or values[1] != 0:
-                    added.append(tf.get_translation(
+                    added.extend(tf.get_translation(
                         tags=tags,
                         values=values,
                         lang=config.get_option('language'),
-                    )[0])
+                    ))
 
             if added:
                 lines = added + lines
