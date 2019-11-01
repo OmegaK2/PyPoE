@@ -405,7 +405,7 @@ class TranslationLanguage(TranslationReprMixin):
         temp.sort(key=lambda x: -x[0])
         rating, ts = temp[0]
 
-        if rating == 0:
+        if rating <= 0:
             return None
 
         return ts.format_string(short_values, is_range, use_placeholder, only_values)
@@ -827,8 +827,8 @@ class TranslationRange(TranslationReprMixin):
         -------
         int
             Returns the rating of the value
-            -100 if mismatch (out of range)
-            0 if no match
+            -10000 if mismatch (out of range)
+            -100 if no match
             1 if any range is accepted
             2 if either minimum or maximum is specified
             3 if both minimum and maximum is specified
@@ -841,21 +841,21 @@ class TranslationRange(TranslationReprMixin):
             if value <= self.max:
                 return 2
             else:
-                return -100
+                return -10000
 
         if self.max is None:
             if value >= self.min:
                 return 2
             else:
-                return -100
+                return -10000
 
         if self.min is not None and self.max is not None:
             if self.min <= value <= self.max:
                 return 3
             else:
-                return -100
+                return -10000
 
-        return 0
+        return -100
 
 
 class TranslationQuantifierHandler(TranslationReprMixin):
@@ -1995,7 +1995,7 @@ TranslationQuantifier(
 )
 TranslationQuantifier(
     id='milliseconds_to_seconds_1dp',
-    handler=lambda v: int(round(v/1000, 1)),
+    handler=lambda v: round(v/1000, 1),
     reverse_handler=lambda v: float(v)*1000,
 )
 

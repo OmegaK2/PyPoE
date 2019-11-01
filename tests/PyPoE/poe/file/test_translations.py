@@ -321,7 +321,8 @@ class TestTranslationResults:
         ),
     )
 
-    live_functionality_tests = (
+    live_functionality_test = ()
+    '''live_functionality_tests = (
         # File, Tags, values, result, message, trr, reverse keyargs
         (
             'skill_stat_descriptions.txt',
@@ -333,7 +334,7 @@ class TestTranslationResults:
             {},
             None,
         ),
-    )
+    )'''
 
     test_data = []
     for size, unique_id, values in data['base']:

@@ -374,11 +374,23 @@ class SkillParserShared(parser.BaseParser):
                     while True:
                         try:
                             index = values.index(0)
-                            del values[index]
-                            del values_parsed[index]
-                            del stats[index]
                         except ValueError:
                             break
+
+                        try:
+                            del values[index]
+                        except IndexError:
+                            pass
+
+                        try:
+                            del values_parsed[index]
+                        except IndexError:
+                            pass
+
+                        try:
+                            del stats[index]
+                        except IndexError:
+                            pass
                     if result.values[j] == 0:
                         continue
                     k = '__'.join(stats)
