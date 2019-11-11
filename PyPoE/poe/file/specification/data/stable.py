@@ -15570,8 +15570,8 @@ specification = Specification({
                 type='ref|string',
                 unique=True,
             )),
-            ('Unknown0', Field(
-                name='Unknown0',
+            ('TimeoutInSeconds', Field(
+                name='TimeoutInSeconds',
                 type='int',
             )),
             ('Name', Field(
