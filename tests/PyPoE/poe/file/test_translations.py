@@ -321,7 +321,7 @@ class TestTranslationResults:
         ),
     )
 
-    live_functionality_test = ()
+    live_functionality_tests = ()
     '''live_functionality_tests = (
         # File, Tags, values, result, message, trr, reverse keyargs
         (
