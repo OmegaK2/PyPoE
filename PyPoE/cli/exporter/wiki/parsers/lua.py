@@ -68,11 +68,13 @@ def lua_formatter(outdata, key_order=None):
         out.append('\t{\n')
         for key, value in data.items():
             if isinstance(value, (int, float)):
+                if isinstance(value, bool):
+                    value = str(value).lower()
                 out.append('\t\t%s=%s,\n' % (key, value))
             elif isinstance(value, (tuple, set, list)):
                 values = []
                 for v in value:
-                    k = '%s' if isinstance(v, int) else '"%s"'
+                    k = '%s' if isinstance(v, (int, float)) else '"%s"'
                     values.append(k % v)
 
                     values.append
@@ -92,7 +94,7 @@ def lua_formatter(outdata, key_order=None):
 
 
 class GenericLuaParser(BaseParser):
-    def _copy_from_keys(self, row, keys, out_data, index=None):
+    def _copy_from_keys(self, row, keys, out_data=None, index=None, rtr=False):
         copyrow = OrderedDict()
         for k, copy_data in keys:
 
@@ -106,13 +108,16 @@ class GenericLuaParser(BaseParser):
 
                 copyrow[copy_data['key']] = value
 
-        if index is not None:
-            try:
-                out_data[index].update(copyrow)
-            except IndexError:
-                out_data.append(copyrow)
+        if rtr:
+            return copyrow
         else:
-            out_data.append(copyrow)
+            if index is not None:
+                try:
+                    out_data[index].update(copyrow)
+                except IndexError:
+                    out_data.append(copyrow)
+            else:
+                out_data.append(copyrow)
 
 
 class LuaHandler(ExporterHandler):
@@ -189,6 +194,16 @@ class LuaHandler(ExporterHandler):
             parser=parser,
             cls=MonsterParser,
             func=MonsterParser.main,
+        )
+
+        parser = lua_sub.add_parser(
+            'pantheon',
+            help='Extract pantheon information',
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=PantheonParser,
+            func=PantheonParser.main,
         )
 
         parser = lua_sub.add_parser(
@@ -471,6 +486,95 @@ class DelveParser(GenericLuaParser):
                 out_file='delve_%s.lua' % k,
                 wiki_page=[{
                     'page': 'Module:Delve/delve_%s' % k,
+                    'condition': None,
+                }]
+            )
+
+        return r
+
+
+class PantheonParser(GenericLuaParser):
+    _files = [
+        'PantheonPanelLayout.dat',
+        'PantheonSouls.dat',
+    ]
+
+    _COPY_KEYS_PANTHEON = (
+        ('Id', {
+            'key': 'id',
+        }),
+        ('IsMajorGod', {
+            'key': 'is_major_god',
+        }),
+    )
+
+    _COPY_KEYS_PANTHEON_SOULS = (
+        ('WorldAreasKey', {
+            'key': 'target_area_id',
+            'value': lambda v: v['Id'],
+        }),
+        ('MonsterVarietiesKey', {
+            'key': 'target_monster_id',
+            'value': lambda v: v['Id'],
+        }),
+        ('BaseItemTypesKey', {
+            'key': 'item_id',
+            'value': lambda v: v['Id'],
+        }),
+    )
+
+    def main(self, parsed_args):
+        self.rr['PantheonSouls.dat'].build_index('PantheonPanelLayoutKey')
+
+        pantheon = []
+        pantheon_souls = []
+        pantheon_stats = []
+
+        for row in self.rr['PantheonPanelLayout.dat']:
+            if row['IsDisabled']:
+                continue
+
+            self._copy_from_keys(row, self._COPY_KEYS_PANTHEON, pantheon)
+            for i in range(1, 5):
+                values = row['Effect%s_Values' % i]
+                if not values:
+                    continue
+                stats = [s['Id'] for s in row['Effect%s_StatsKeys' % i]]
+                tr = self.tc['stat_descriptions.txt'].get_translation(
+                    tags=stats, values=values, full_result=True)
+
+                od = OrderedDict()
+                od['id'] = row['Id']
+                od['ordinal'] = i
+                od['name'] = row['GodName%s' % i]
+                od['stat_text'] = '<br>'.join(tr.lines).replace('\n', '<br>')
+
+                # The first entry is the god itself
+                if i > 1:
+                    souls = self.rr['PantheonSouls.dat'].index[
+                        'PantheonPanelLayoutKey'][row][i-2]
+
+                    od.update(self._copy_from_keys(
+                        souls, self._COPY_KEYS_PANTHEON_SOULS, rtr=True
+                    ))
+                pantheon_souls.append(od)
+
+                for j, (stat, value) in enumerate(zip(stats, values), start=1):
+                    pantheon_stats.append(OrderedDict((
+                        ('pantheon_id', row['Id']),
+                        ('pantheon_ordinal', i,),
+                        ('ordinal', j),
+                        ('stat', stat),
+                        ('value', value),
+                    )))
+
+        r = ExporterResult()
+        for k in ('', '_souls', '_stats'):
+            r.add_result(
+                text=lua_formatter(locals()['pantheon' + k]),
+                out_file='pantheon%s.lua' % k,
+                wiki_page=[{
+                    'page': 'Module:Pantheon/pantheon%s' % k,
                     'condition': None,
                 }]
             )
