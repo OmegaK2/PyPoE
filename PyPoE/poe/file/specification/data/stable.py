@@ -13709,19 +13709,19 @@ specification = Specification({
         fields=OrderedDict((
         )),
     ),
-    # 3.0.0 TODO
     'PantheonPanelLayout.dat': File(
         fields=OrderedDict((
-            ('Name', Field(
-                name='Name',
+            ('Id', Field(
+                name='Id',
                 type='ref|string',
+                unique=True,
             )),
-            ('Unknown1', Field(
-                name='Unknown1',
+            ('X', Field(
+                name='X',
                 type='int',
             )),
-            ('Unknown2', Field(
-                name='Unknown2',
+            ('Y', Field(
+                name='Y',
                 type='int',
             )),
             ('IsMajorGod', Field(
@@ -13737,9 +13737,10 @@ specification = Specification({
                 name='GodName2',
                 type='ref|string',
             )),
-            ('Unknown5', Field(
-                name='Unknown5',
-                type='int',
+            ('SelectionImage', Field(
+                name='SelectionImage',
+                type='ref|string',
+                file_path=True,
             )),
             ('Effect1_StatsKeys', Field(
                 name='Effect1_StatsKeys',
@@ -13805,17 +13806,18 @@ specification = Specification({
                 name='QuestState4',
                 type='int',
             )),
-            ('IsEnabled', Field(
-                name='IsEnabled',
+            ('IsDisabled', Field(
+                name='IsDisabled',
                 type='bool',
             )),
         )),
     ),
     'PantheonSouls.dat': File(
         fields=OrderedDict((
-            ('Key0', Field(
-                name='Key0',
+            ('WorldAreasKey', Field(
+                name='WorldAreasKey',
                 type='ulong',
+                key='WorldAreas.dat',
             )),
             ('BaseItemTypesKey', Field(
                 name='BaseItemTypesKey',
@@ -13826,13 +13828,15 @@ specification = Specification({
                 name='Unknown0',
                 type='int',
             )),
-            ('Key1', Field(
-                name='Key1',
+            ('MonsterVarietiesKey', Field(
+                name='MonsterVarietiesKey',
                 type='ulong',
+                key='MonsterVarieties.dat',
             )),
-            ('Key2', Field(
-                name='Key2',
+            ('PantheonPanelLayoutKey', Field(
+                name='PantheonPanelLayoutKey',
                 type='ulong',
+                key='PantheonPanelLayout.dat',
             )),
         )),
     ),
