@@ -405,6 +405,7 @@ class BlightParser(GenericLuaParser):
 
 class DelveParser(GenericLuaParser):
     _files = [
+        'DelveCraftingModifiers.dat',
         'DelveLevelScaling.dat',
         'DelveResourcePerLevel.dat',
         'DelveUpgrades.dat',
@@ -453,11 +454,58 @@ class DelveParser(GenericLuaParser):
         }),
     )
 
+    _COPY_KEYS_DELVE_CRAFTING_MODIFIERS = (
+        ('BaseItemTypesKey', {
+            'key': 'base_item_id',
+            'value': lambda x: x['Id'],
+        }),
+        ('AddedModsKeys', {
+            'key': 'added_modifier_ids',
+            'value': lambda x: [v['Id'] for v in x],
+        }),
+        ('ForcedAddModsKeys', {
+            'key': 'forced_modifier_ids',
+            'value': lambda x: [v['Id'] for v in x],
+        }),
+        ('SellPrice_ModsKeys', {
+            'key': 'sell_price_modifier_ids',
+            'value': lambda x: [v['Id'] for v in x],
+        }),
+        ('ForbiddenDelveCraftingTagsKeys', {
+            'key': 'forbidden_tags',
+            'value': lambda x: [v['TagsKey']['Id'] for v in x],
+        }),
+        ('AllowedDelveCraftingTagsKeys', {
+            'key': 'allowed_tags',
+            'value': lambda x: [v['TagsKey']['Id'] for v in x],
+        }),
+        ('CorruptedEssenceChance', {
+            'key': 'corrupted_essence_chance',
+        }),
+        ('CanMirrorItem', {
+            'key': 'can_mirror',
+        }),
+        ('CanRollEnchant', {
+            'key': 'can_enchant',
+        }),
+        ('CanImproveQuality', {
+            'key': 'can_quality',
+        }),
+        ('CanRollWhiteSockets', {
+            'key': 'can_roll_white_sockets',
+        }),
+        ('HasLuckyRolls', {
+            'key': 'is_lucky',
+        }),
+    )
+
     def main(self, parsed_args):
         delve_level_scaling = []
         delve_resources_per_level = []
         delve_upgrades = []
         delve_upgrade_stats = []
+        fossils = []
+        fossil_weights = []
 
         for row in self.rr['DelveLevelScaling.dat']:
             self._copy_from_keys(row, self._COPY_KEYS_DELVE_LEVEL_SCALING,
@@ -478,14 +526,32 @@ class DelveParser(GenericLuaParser):
                 delve_upgrade_stats[-1]['id'] = stat['Id']
                 delve_upgrade_stats[-1]['value'] = value
 
+        for row in self.rr['DelveCraftingModifiers.dat']:
+            self._copy_from_keys(row, self._COPY_KEYS_DELVE_CRAFTING_MODIFIERS,
+                                 fossils)
+
+            for data_prefix, data_type in (
+                    ('NegativeWeight', 'override'),
+                    ('Weight', 'added'),
+                ):
+                for i, tag in enumerate(row['%s_TagsKeys' % data_prefix]):
+                    entry = OrderedDict()
+                    entry['base_item_id'] = row['BaseItemTypesKey']['Id']
+                    entry['type'] = data_type
+                    entry['ordinal'] = i
+                    entry['tag'] = tag['Id']
+                    entry['weight'] = row['%s_Values' % data_prefix][i]
+                    fossil_weights.append(entry)
+
         r = ExporterResult()
-        for k in ('level_scaling', 'resources_per_level', 'upgrades',
-                  'upgrade_stats'):
+        for k in ('delve_level_scaling', 'delve_resources_per_level',
+                  'delve_upgrades', 'delve_upgrade_stats', 'fossils',
+                  'fossil_weights'):
             r.add_result(
-                text=lua_formatter(locals()['delve_' + k]),
-                out_file='delve_%s.lua' % k,
+                text=lua_formatter(locals()[ k]),
+                out_file='%s.lua' % k,
                 wiki_page=[{
-                    'page': 'Module:Delve/delve_%s' % k,
+                    'page': 'Module:Delve/%s' % k,
                     'condition': None,
                 }]
             )
