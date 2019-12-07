@@ -443,7 +443,7 @@ specification = Specification({
     'AddBuffToTargetVarieties.dat': File(
         fields=OrderedDict((
             ('Key0', Field(
-                name='Unknown0',
+                name='Key0',
                 type='ulong',
             )),
             ('Unknown1', Field(
@@ -2489,7 +2489,7 @@ specification = Specification({
                 name='Tier',
                 type='int',
             )),
-            ('AcheivementItemsKeys', Field(
+            ('AchievementItemsKeys', Field(
                 name='AchievementItemsKeys',
                 type='ref|list|ulong',
                 key='AchievementItems.dat',
@@ -2590,7 +2590,7 @@ specification = Specification({
     'BlightEncounterWaves.dat': File(
         fields=OrderedDict((
             ('MonsterSpawnerId', Field(
-                name='MonsterSpwanerId',
+                name='MonsterSpawnerId',
                 type='ref|string',
             )),
             ('Key0', Field(
@@ -5032,8 +5032,8 @@ specification = Specification({
                 type='ulong',
                 key='BaseItemTypes.dat',
             )),
-            ('AddedModKeys', Field(
-                name='AddedModKeys',
+            ('AddedModsKeys', Field(
+                name='AddedModsKeys',
                 type='ref|list|ulong',
                 key='Mods.dat',
             )),
@@ -5046,8 +5046,8 @@ specification = Specification({
                 name='NegativeWeight_Values',
                 type='ref|list|int',
             )),
-            ('ForcedAddModKeys', Field(
-                name='ForcedAddModKeys',
+            ('ForcedAddModsKeys', Field(
+                name='ForcedAddModsKeys',
                 type='ref|list|ulong',
                 key='Mods.dat',
             )),
@@ -6907,7 +6907,7 @@ specification = Specification({
                 key='HideoutDoodads.dat',
             )),
             ('BaseTypeHideoutDoodadsKey', Field(
-                name='HideoutDoodadsKey',
+                name='BaseTypeHideoutDoodadsKey',
                 type='ulong',
                 key='HideoutDoodads.dat',
             )),
@@ -10321,7 +10321,7 @@ specification = Specification({
                 unique=True,
             )),
             ('ModsKeys', Field(
-                name='ModsKey',
+                name='ModsKeys',
                 type='ref|list|ulong',
                 key='Mods.dat'
             )),
@@ -11679,7 +11679,7 @@ specification = Specification({
                 type='byte',
             )),
             ('Flag2', Field(
-                name='Flag1',
+                name='Flag2',
                 type='byte',
             )),
             ('Unknown8', Field(
@@ -11761,7 +11761,7 @@ specification = Specification({
                 type='int',
             )),
             ('Flag2', Field(
-                name='Flag1',
+                name='Flag2',
                 type='byte',
             )),
             ('Unknown6', Field(
