@@ -443,7 +443,7 @@ specification = Specification({
     'AddBuffToTargetVarieties.dat': File(
         fields=OrderedDict((
             ('Key0', Field(
-                name='Unknown0',
+                name='Key0',
                 type='ulong',
             )),
             ('Unknown1', Field(
@@ -2483,12 +2483,13 @@ specification = Specification({
                 name='BaseItemTypesKey',
                 type='ulong',
                 key='BaseItemTypes.dat',
+                unique=True,
             )),
-            ('Unknown1', Field(
-                name='Unknown1',
+            ('Tier', Field(
+                name='Tier',
                 type='int',
             )),
-            ('AcheivementItemsKeys', Field(
+            ('AchievementItemsKeys', Field(
                 name='AchievementItemsKeys',
                 type='ref|list|ulong',
                 key='AchievementItems.dat',
@@ -2507,9 +2508,10 @@ specification = Specification({
                 type='ref|list|ulong',
                 key='BlightCraftingItems.dat',
             )),
-            ('Key1', Field(
-                name='Key1',
+            ('BlightCraftingResultsKey', Field(
+                name='BlightCraftingResultsKey',
                 type='ulong',
+                key='BlightCraftingResults.dat',
             )),
             ('BlightCraftingTypesKey', Field(
                 name='BlightCraftingTypesKey',
@@ -2548,9 +2550,9 @@ specification = Specification({
                 name='Unknown1',
                 type='int',
             )),
-            ('Unknown2', Field(
-                name='Unknown2',
-                type='byte',
+            ('Flag0', Field(
+                name='Flag0',
+                type='bool',
             )),
         )),
     ),
@@ -2588,7 +2590,7 @@ specification = Specification({
     'BlightEncounterWaves.dat': File(
         fields=OrderedDict((
             ('MonsterSpawnerId', Field(
-                name='MonsterSpwanerId',
+                name='MonsterSpawnerId',
                 type='ref|string',
             )),
             ('Key0', Field(
@@ -2768,8 +2770,8 @@ specification = Specification({
                 name='Tier',
                 type='ref|string',
             )),
-            ('Cost', Field(
-                name='Cost',
+            ('Radius', Field(
+                name='Radius',
                 type='int',
             )),
             ('Unknown8', Field(
@@ -2817,8 +2819,8 @@ specification = Specification({
                 type='ulong',
                 key='MonsterVarieties.dat',
             )),
-            ('Unknown3', Field(
-                name='Unknown3',
+            ('Cost', Field(
+                name='Cost',
                 type='int',
             )),
             ('Unknown4', Field(
@@ -3303,6 +3305,14 @@ specification = Specification({
                 name='ExtraArt',
                 type='ref|string',
                 file_path=True,
+            )),
+            ('Unknown1', Field(
+                name='Unknown1',
+                type='int',
+            )),
+            ('Unknown2', Field(
+                name='Unknown2',
+                type='int',
             )),
         )),
     ),
@@ -5022,8 +5032,8 @@ specification = Specification({
                 type='ulong',
                 key='BaseItemTypes.dat',
             )),
-            ('AddedModKeys', Field(
-                name='AddedModKeys',
+            ('AddedModsKeys', Field(
+                name='AddedModsKeys',
                 type='ref|list|ulong',
                 key='Mods.dat',
             )),
@@ -5036,8 +5046,8 @@ specification = Specification({
                 name='NegativeWeight_Values',
                 type='ref|list|int',
             )),
-            ('ForcedAddModKeys', Field(
-                name='ForcedAddModKeys',
+            ('ForcedAddModsKeys', Field(
+                name='ForcedAddModsKeys',
                 type='ref|list|ulong',
                 key='Mods.dat',
             )),
@@ -6897,7 +6907,7 @@ specification = Specification({
                 key='HideoutDoodads.dat',
             )),
             ('BaseTypeHideoutDoodadsKey', Field(
-                name='HideoutDoodadsKey',
+                name='BaseTypeHideoutDoodadsKey',
                 type='ulong',
                 key='HideoutDoodads.dat',
             )),
@@ -7775,13 +7785,13 @@ specification = Specification({
                 type='int',
                 description='Time in milliseconds',
             )),
-            ('Key0', Field(
-                name='Key0',
+            ('BaseDuration', Field(
+                name='BaseDuration',
                 type='ulong',
             )),
             # 3.4
-            ('Unknown1', Field(
-                name='Unknown1',
+            ('Stat9Value', Field(
+                name='Stat9Value',
                 type='int',
             )),
             ('AttackSpeedMultiplier', Field(
@@ -7792,13 +7802,16 @@ specification = Specification({
         virtual_fields=OrderedDict((
             ('StatValues', VirtualField(
                 fields=(
-                    'Stat1Value', 'Stat2Value', 'Stat3Value', 'Stat4Value', 'Stat5Value', 'Stat6Value', 'Stat7Value',
-                    'Stat8Value'),
+                    'Stat1Value', 'Stat2Value', 'Stat3Value', 'Stat4Value',
+                    'Stat5Value', 'Stat6Value', 'Stat7Value', 'Stat8Value',
+                    'Stat9Value',
+                ),
             )),
             ('StatFloats', VirtualField(
                 fields=(
-                    'Stat1Float', 'Stat2Float', 'Stat3Float', 'Stat4Float', 'Stat5Float', 'Stat6Float', 'Stat7Float',
-                    'Stat8Float'),
+                    'Stat1Float', 'Stat2Float', 'Stat3Float', 'Stat4Float',
+                    'Stat5Float', 'Stat6Float', 'Stat7Float', 'Stat8Float'
+                ),
             )),
             ('Stats', VirtualField(
                 fields=('StatsKeys', 'StatValues'),
@@ -10308,7 +10321,7 @@ specification = Specification({
                 unique=True,
             )),
             ('ModsKeys', Field(
-                name='ModsKey',
+                name='ModsKeys',
                 type='ref|list|ulong',
                 key='Mods.dat'
             )),
@@ -10986,12 +10999,12 @@ specification = Specification({
                 name='Id',
                 type='ref|string',
             )),
-            ('Unknown2', Field(
-                name='Unknown2',
+            ('MinimapIconRadius', Field(
+                name='MinimapIconRadius',
                 type='int',
             )),
-            ('Unknown3', Field(
-                name='Unknown3',
+            ('LargemapIconRadius', Field(
+                name='LargemapIconRadius',
                 type='int',
             )),
             ('Flag0', Field(
@@ -11006,8 +11019,8 @@ specification = Specification({
                 name='Flag2',
                 type='bool',
             )),
-            ('Unknown4', Field(
-                name='Unknown4',
+            ('MinimapIconPointerMaxDistance', Field(
+                name='MinimapIconPointerMaxDistance',
                 type='int',
             )),
             ('Unknown5', Field(
@@ -11666,7 +11679,7 @@ specification = Specification({
                 type='byte',
             )),
             ('Flag2', Field(
-                name='Flag1',
+                name='Flag2',
                 type='byte',
             )),
             ('Unknown8', Field(
@@ -11748,7 +11761,7 @@ specification = Specification({
                 type='int',
             )),
             ('Flag2', Field(
-                name='Flag1',
+                name='Flag2',
                 type='byte',
             )),
             ('Unknown6', Field(
@@ -13682,16 +13695,12 @@ specification = Specification({
     ),
     'PCBangRewardMicros.dat': File(
         fields=OrderedDict((
+            ('BaseItemTypesKey', Field(
+                name='BaseItemTypesKey',
+                type='ulong',
+            )),
             ('Unknown0', Field(
                 name='Unknown0',
-                type='ref|string',
-            )),
-            ('Unknown1', Field(
-                name='Unknown1',
-                type='int',
-            )),
-            ('Unknown2', Field(
-                name='Unknown2',
                 type='int',
             )),
         )),
@@ -13700,19 +13709,19 @@ specification = Specification({
         fields=OrderedDict((
         )),
     ),
-    # 3.0.0 TODO
     'PantheonPanelLayout.dat': File(
         fields=OrderedDict((
-            ('Name', Field(
-                name='Name',
+            ('Id', Field(
+                name='Id',
                 type='ref|string',
+                unique=True,
             )),
-            ('Unknown1', Field(
-                name='Unknown1',
+            ('X', Field(
+                name='X',
                 type='int',
             )),
-            ('Unknown2', Field(
-                name='Unknown2',
+            ('Y', Field(
+                name='Y',
                 type='int',
             )),
             ('IsMajorGod', Field(
@@ -13728,9 +13737,10 @@ specification = Specification({
                 name='GodName2',
                 type='ref|string',
             )),
-            ('Unknown5', Field(
-                name='Unknown5',
-                type='int',
+            ('SelectionImage', Field(
+                name='SelectionImage',
+                type='ref|string',
+                file_path=True,
             )),
             ('Effect1_StatsKeys', Field(
                 name='Effect1_StatsKeys',
@@ -13796,17 +13806,18 @@ specification = Specification({
                 name='QuestState4',
                 type='int',
             )),
-            ('IsEnabled', Field(
-                name='IsEnabled',
+            ('IsDisabled', Field(
+                name='IsDisabled',
                 type='bool',
             )),
         )),
     ),
     'PantheonSouls.dat': File(
         fields=OrderedDict((
-            ('Key0', Field(
-                name='Key0',
+            ('WorldAreasKey', Field(
+                name='WorldAreasKey',
                 type='ulong',
+                key='WorldAreas.dat',
             )),
             ('BaseItemTypesKey', Field(
                 name='BaseItemTypesKey',
@@ -13817,13 +13828,15 @@ specification = Specification({
                 name='Unknown0',
                 type='int',
             )),
-            ('Key1', Field(
-                name='Key1',
+            ('MonsterVarietiesKey', Field(
+                name='MonsterVarietiesKey',
                 type='ulong',
+                key='MonsterVarieties.dat',
             )),
-            ('Key2', Field(
-                name='Key2',
+            ('PantheonPanelLayoutKey', Field(
+                name='PantheonPanelLayoutKey',
                 type='ulong',
+                key='PantheonPanelLayout.dat',
             )),
         )),
     ),
@@ -14033,9 +14046,10 @@ specification = Specification({
                 type='ref|list|ulong',
                 key='PassiveSkillBuffs.dat',
             )),
-            ('Key0', Field(
-                name='Key0',
+            ('GrantedEffectsPerLevelKey', Field(
+                name='GrantedEffectsPerLevelKey',
                 type='ulong',
+                key='GrantedEffectsPerLevel.dat',
             )),
             ('Flag0', Field(
                 name='Flag0',
@@ -15560,8 +15574,8 @@ specification = Specification({
                 type='ref|string',
                 unique=True,
             )),
-            ('Unknown0', Field(
-                name='Unknown0',
+            ('TimeoutInSeconds', Field(
+                name='TimeoutInSeconds',
                 type='int',
             )),
             ('Name', Field(
