@@ -317,10 +317,10 @@ class PassiveSkillParser(parser.BaseParser):
                 stat_ids = [stat['Id'] for stat in
                             ps_buff['BuffDefinitionsKey']['StatsKeys']]
                 values = ps_buff['Buff_StatValues']
-                if passive['Id'] == 'AscendancyChampion7':
-                    index = stat_ids.index('damage_taken_+%_from_hits')
-                    del stat_ids[index]
-                    del values[index]
+                #if passive['Id'] == 'AscendancyChampion7':
+                #    index = stat_ids.index('damage_taken_+%_from_hits')
+                #    del stat_ids[index]
+                #    del values[index]
                 for i, (sid, val) in enumerate(zip(stat_ids, values)):
                     j += 1
                     data['stat%s_id' % j] = sid

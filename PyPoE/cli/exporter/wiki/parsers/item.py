@@ -36,7 +36,7 @@ Kishara's Star (item)
 import re
 import warnings
 import os
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from functools import partialmethod
 
 # Self
@@ -497,6 +497,7 @@ class ItemsParser(SkillParserShared):
         'Synthesis': '3.6.0',
         'Legion': '3.7.0',
         'Blight': '3.8.0',
+        'Metamorphosis': '3.9.0',
     }
 
     _IGNORE_DROP_LEVEL_CLASSES = (
@@ -2071,6 +2072,8 @@ class ItemsParser(SkillParserShared):
         'Map': (_type_map,),
         'MapFragment': (_type_map_fragment_mods,),
         'QuestItem': (),
+        'AtlasRegionUpgradeItem': (),
+        'MetamorphosisDNA': (),
     }
 
     _conflict_active_skill_gems_map = {
@@ -2216,6 +2219,10 @@ class ItemsParser(SkillParserShared):
             self, infobox, base_item_type, rr, language):
         return base_item_type['Name']
 
+    def _conflict_atlas_region_upgrade(
+            self, infobox, base_item_type, rr, language):
+        return base_item_type['Name']
+
     _conflict_resolver_map = {
         'Active Skill Gem': _conflict_active_skill_gems,
         'QuestItem': _conflict_quest_items,
@@ -2228,6 +2235,7 @@ class ItemsParser(SkillParserShared):
         'DelveSocketableCurrency': _conflict_delve_socketable_currency,
         'DelveStackableSocketableCurrency':
             _conflict_delve_stackable_socketable_currency,
+        'AtlasRegionUpgradeItem': _conflict_atlas_region_upgrade,
     }
 
     def _parse_class_filter(self, parsed_args):
@@ -2619,22 +2627,40 @@ class ItemsParser(SkillParserShared):
             if latest:
                 infobox['atlas_x'] = atlas_node['X']
                 infobox['atlas_y'] = atlas_node['Y']
-                connections = []
-                for atlas_node2 in atlas_node['AtlasNodeKeys']:
-                    ivi = atlas_node2['ItemVisualIdentityKey']
-                    if ivi['IsAtlasOfWorldsMapIcon']:
-                        connections.append('%s (%s)' % (
-                            atlas_node2['MapsKey']['BaseItemTypesKey']['Name'],
-                            map_series['Name']
-                        ))
-                    else:
-                        connections.append('%s (%s)' % (
-                            self.rr['UniqueMaps.dat'].index[
-                                'ItemVisualIdentityKey'][ivi]['WordsKey']['Text'],
-                            map_series['Name']
-                        ))
+                infobox['atlas_region_id'] = atlas_node['AtlasRegionsKey']['Id']
 
-                infobox['atlas_connections'] = ', '.join(connections)
+                minimum = 0
+                connections = defaultdict(
+                    lambda: ['False' for i in range(0, 5)])
+                for i in range(0, 5):
+                    tier = atlas_node['Tier%s' % i]
+                    infobox['atlas_map_tier%s' % i] = tier
+                    if tier:
+                        minimum = min(minimum, i)
+                    minimum += 1
+
+                    for atlas_node2 in atlas_node['AtlasNodeKeys%s' % i]:
+                        ivi = atlas_node2['ItemVisualIdentityKey']
+                        if ivi['IsAtlasOfWorldsMapIcon']:
+                            key = '%s (%s)' % (
+                                atlas_node2['MapsKey']['BaseItemTypesKey'][
+                                    'Name'],
+                                map_series['Name']
+                            )
+                        else:
+                            key = '%s (%s)' % (
+                                self.rr['UniqueMaps.dat'].index[
+                                    'ItemVisualIdentityKey'][ivi]['WordsKey'][
+                                    'Text'],
+                                map_series['Name']
+                            )
+                        connections[key][i] = 'True'
+
+                infobox['atlas_region_minimum'] = minimum
+                for i, (k, v) in enumerate(connections.items(), start=1):
+                    infobox['atlas_connection%s_target' % i] = k
+                    infobox['atlas_connection%s_tier' % i] = ', '.join(v)
+
             infobox['flavour_text'] = \
                 atlas_node['FlavourTextKey']['Text'].replace('\n', '<br>')\
                 .replace('\r', '')
@@ -2644,15 +2670,6 @@ class ItemsParser(SkillParserShared):
                     self.rr['MapPurchaseCosts.dat'].index['Tier'][maps['Tier']],
                     infobox
                 )
-
-            i = 1
-            for atlas_sector in atlas_node['AtlasSectorKeys']:
-                for j, tag in enumerate(atlas_sector['SpawnWeight_TagsKeys']):
-                    prefix = 'area_spawn_weight_override'
-                    infobox['%s%s_tag' % (prefix, i)] = tag['Id']
-                    infobox['%s%s_value' % (prefix, i)] = \
-                        atlas_sector['SpawnWeight_Values'][j]
-                    i += 1
 
             '''if maps['UpgradedFrom_MapsKey']:
                 infobox['upgeaded_from_set1_group1_page'] = '%s (%s)' % (

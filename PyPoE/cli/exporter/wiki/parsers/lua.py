@@ -147,6 +147,16 @@ class LuaHandler(ExporterHandler):
         )
 
         parser = lua_sub.add_parser(
+            'atlas',
+            help='Extract atlas information not covered by maps',
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=AtlasParser,
+            func=AtlasParser.main,
+        )
+
+        parser = lua_sub.add_parser(
             'bestiary',
             help='Extract bestiary information',
         )
@@ -157,26 +167,6 @@ class LuaHandler(ExporterHandler):
         )
 
         parser = lua_sub.add_parser(
-            'delve',
-            help='Extract delve information',
-        )
-        self.add_default_parsers(
-            parser=parser,
-            cls=DelveParser,
-            func=DelveParser.main,
-        )
-
-        parser = lua_sub.add_parser(
-            'synthesis',
-            help='Extract synthesis information',
-        )
-        self.add_default_parsers(
-            parser=parser,
-            cls=SynthesisParser,
-            func=SynthesisParser.main,
-        )
-
-        parser = lua_sub.add_parser(
             'blight',
             help='Extract blight information',
         )
@@ -184,6 +174,26 @@ class LuaHandler(ExporterHandler):
             parser=parser,
             cls=BlightParser,
             func=BlightParser.main,
+        )
+
+        parser = lua_sub.add_parser(
+            'crafting_bench',
+            help='Extract crafting bench information',
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=CraftingBenchParser,
+            func=CraftingBenchParser.main,
+        )
+
+        parser = lua_sub.add_parser(
+            'delve',
+            help='Extract delve information',
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=DelveParser,
+            func=DelveParser.main,
         )
 
         parser = lua_sub.add_parser(
@@ -207,14 +217,72 @@ class LuaHandler(ExporterHandler):
         )
 
         parser = lua_sub.add_parser(
-            'crafting_bench',
-            help='Extract crafting bench information',
+            'synthesis',
+            help='Extract synthesis information',
         )
         self.add_default_parsers(
             parser=parser,
-            cls=CraftingBenchParser,
-            func=CraftingBenchParser.main,
+            cls=SynthesisParser,
+            func=SynthesisParser.main,
         )
+
+
+class AtlasParser(GenericLuaParser):
+    _files = [
+        'AtlasBaseTypeDrops.dat',
+        'AtlasRegions.dat',
+    ]
+
+    _COPY_KEYS_ATLAS_REGIONS = (
+        ('Id', {
+            'key': 'id',
+        }),
+        ('Name', {
+            'key': 'name',
+        }),
+    )
+
+    _COPY_KEYS_ATLAS_BASE_TYPE_DROPS = (
+        ('AtlasRegionsKey', {
+            'key': 'region_id',
+            'value': lambda v: v['Id'],
+        }),
+        ('MinTier', {
+            'key': 'tier_min',
+        }),
+        ('MaxTier', {
+            'key': 'tier_max',
+        }),
+    )
+
+    def main(self, parsed_args):
+        atlas_regions = []
+        atlas_base_item_types = []
+
+        for row in self.rr['AtlasRegions.dat']:
+            self._copy_from_keys(row, self._COPY_KEYS_ATLAS_REGIONS,
+                                 atlas_regions)
+
+        for row in self.rr['AtlasBaseTypeDrops.dat']:
+            for i, tag in enumerate(row['SpawnWeight_TagsKeys']):
+                self._copy_from_keys(row, self._COPY_KEYS_ATLAS_BASE_TYPE_DROPS,
+                                     atlas_base_item_types)
+                atlas_base_item_types[-1]['tag'] = tag['Id']
+                atlas_base_item_types[-1]['weight'] = \
+                    row['SpawnWeight_Values'][i]
+
+        r = ExporterResult()
+        for k in ('atlas_regions', 'atlas_base_item_types'):
+            r.add_result(
+                text=lua_formatter(locals()[k]),
+                out_file='%s.lua' % k,
+                wiki_page=[{
+                    'page': 'Module:Atlas/%s' % k,
+                    'condition': None,
+                }]
+            )
+
+        return r
 
 
 class BestiaryParser(GenericLuaParser):
@@ -1149,6 +1217,9 @@ class MonsterParser(GenericLuaParser):
                 }),
                 ('Evasion', {
                     'key': 'evasion',
+                }),
+                ('Armour', {
+                    'key': 'armour',
                 }),
                 ('Accuracy', {
                     'key': 'accuracy',

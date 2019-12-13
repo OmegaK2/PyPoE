@@ -351,7 +351,7 @@ class SkillParserShared(parser.BaseParser):
             qtr = tf.get_translation(
                 tags=[r['Id'] for r in row['Quality_StatsKeys']],
                 # Offset Q1000
-                values=[v/50 for v in row['Quality_Values']],
+                values=[v//50 for v in row['Quality_Values']],
                 full_result=True,
                 use_placeholder=lambda i: "{%s}" % i,
                 lang=config.get_option('language'),
@@ -518,7 +518,10 @@ class SkillParserShared(parser.BaseParser):
         lines = []
         for key in stat_key_order['stats']:
             if key in static['stats']:
-                sdict = level_data[0]['stats'][key]
+                try:
+                    sdict = level_data[0]['stats'][key]
+                except:
+                    sdict = level_data[-1]['stats'][key]
                 line = sdict['line']
                 stats.extend(sdict['stats'])
                 values.extend(sdict['values'])
