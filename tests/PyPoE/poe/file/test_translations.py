@@ -214,6 +214,22 @@ class TestTranslationResults:
             {},
         ),
         (
+            ['test_not_body', 'test_not'],
+            [50, 0],
+            ['Not value fails: 50'],
+            'Not test: Testing !0==0',
+            {},
+            {},
+        ),
+        (
+            ['test_not_body', 'test_not'],
+            [50, 1],
+            ['Not value succeeds: 50'],
+            'Not test: Testing !0==1',
+            {},
+            {},
+        ),
+        (
             ['test_plus', ],
             [20, ],
             ['Plus: +20'],

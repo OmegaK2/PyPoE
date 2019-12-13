@@ -144,7 +144,7 @@ CUSTOM_TRANSLATION_FILE = os.path.join(DATA_DIR, 'custom_descriptions.txt')
 regex_translation_string = re.compile(
     r'^'
     r'[\s]*'
-    r'(?P<minmax>(?:[0-9\-\|#]+[ \t]+)+)'
+    r'(?P<minmax>(?:[0-9\-\|#!]+[ \t]+)+)'
     r'"(?P<description>.*)"'
     r'(?P<quantifier>(?:[ \t]*[\w%]+)*)'
     r'[ \t]*[\r\n]*'
@@ -746,17 +746,29 @@ class TranslationString(TranslationReprMixin):
                 # The only definitive case
                 r = self.range[i]
                 warn = True
-                if r.min == r.max and r.max is not None:
-                    val = r.min
-                    warn = False
-                elif r.min is not None and r.max is not None:
-                    val = r.max
-                elif r.min is None and r.max is not None:
-                    val = r.max
-                elif r.min is not None and r.min is None:
-                    val = r.min
+                if r.negated:
+                    if r.min == r.max and r.max is not None:
+                        val = r.max + 1
+                    elif r.min is not None and r.max is not None:
+                        val = r.max + 1
+                    elif r.min is None and r.max is not None:
+                        val = r.max + 1
+                    elif r.min is not None and r.min is None:
+                        val = r.min - 1
+                    else:
+                        val = 1
                 else:
-                    val = 0
+                    if r.min == r.max and r.max is not None:
+                        val = r.min
+                        warn = False
+                    elif r.min is not None and r.max is not None:
+                        val = r.max
+                    elif r.min is None and r.max is not None:
+                        val = r.max
+                    elif r.min is not None and r.min is None:
+                        val = r.min
+                    else:
+                        val = 0
 
                 if warn:
                     warnings.warn(
@@ -787,15 +799,18 @@ class TranslationRange(TranslationReprMixin):
         minimum range
     max : int
         maximum range
+    negated : bool
+        Whether the value is negated
     """
 
-    __slots__ = ['parent', 'min', 'max']
+    __slots__ = ['parent', 'min', 'max', 'negated']
 
-    def __init__(self, min, max, parent):
+    def __init__(self, min, max, parent, negated=False):
         parent.range.append(self)
         self.parent = parent
         self.min = min
         self.max = max
+        self.negated = negated
 
     def __eq__(self, other):
         if not isinstance(other, TranslationRange):
@@ -805,6 +820,9 @@ class TranslationRange(TranslationReprMixin):
             return False
 
         if self.max != other.max:
+            return False
+
+        if self.negated != other.negated:
             return False
 
         return True
@@ -837,23 +855,28 @@ class TranslationRange(TranslationReprMixin):
         if self.min is None and self.max is None:
             return 1
 
+        if self.negated:
+            f_comp = int.__gt__
+            f_and = bool.__or__
+        else:
+            f_comp = int.__le__
+            f_and = bool.__and__
+
         if self.min is None:
-            if value <= self.max:
+            if f_comp(value, self.max):
                 return 2
             else:
                 return -10000
-
-        if self.max is None:
-            if value >= self.min:
+        elif self.max is None:
+            if f_comp(self.min, value):
                 return 2
             else:
                 return -10000
-
-        if self.min is not None and self.max is not None:
-            if self.min <= value <= self.max:
-                return 3
+        elif self.min is not None and self.max is not None:
+            if f_and(f_comp(self.min, value), f_comp(value, self.max)):
+                 return 3
             else:
-                return -10000
+                 return -10000
 
         return -100
 
@@ -1376,7 +1399,7 @@ class TranslationFile(AbstractFileReadOnly):
                             raise ParserError(
                                 'Malformed translation string near line %s @ ids %s: %s' % (
                                     data.count('\n', 0, offset),
-                                    ids,
+                                    translation.ids,
                                     data[offset:offset_next_lang+1],
                                 )
                             )
@@ -1389,18 +1412,28 @@ class TranslationFile(AbstractFileReadOnly):
                         limiter = ts_match.group('minmax').strip().split()
                         for j in range(0, id_count):
                             matchstr = limiter[j]
+                            if matchstr.startswith('!'):
+                                matchstr = matchstr[1:]
+                                negated = True
+                            else:
+                                negated = False
+
                             if matchstr == '#':
-                                TranslationRange(None, None, parent=ts)
+                                TranslationRange(None, None, parent=ts,
+                                                 negated=negated)
                             elif regex_isnumber.match(matchstr):
                                 value = int(matchstr)
-                                TranslationRange(value, value, parent=ts)
+                                TranslationRange(value, value, parent=ts,
+                                                 negated=negated)
                             elif '|' in matchstr:
                                 minmax = matchstr.split('|')
                                 min = int(minmax[0]) if minmax[0] != '#' else None
                                 max = int(minmax[1]) if minmax[1] != '#' else None
-                                TranslationRange(min, max, parent=ts)
+                                TranslationRange(min, max, parent=ts,
+                                                 negated=negated)
                             else:
-                                TranslationRange(None, None, parent=ts)
+                                TranslationRange(None, None, parent=ts,
+                                                 negated=negated)
                                 warnings.warn(
                                     'Malformed quantifier string "%s" near index %s (parent %s). Assuming # instead.' % (
                                         matchstr, ts_match.start('minmax'), translation.ids
