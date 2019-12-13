@@ -68,7 +68,7 @@ def spec_unknown(size, i=0):
         return ''
     spec = "('Unknown%s', Field("
     out = []
-    while size > 4:
+    while size >= 4:
         out.append(spec % i)
         out.append("    name='Unknown%s'," % i)
         out.append("    type='int',")
@@ -76,23 +76,13 @@ def spec_unknown(size, i=0):
         size -= 4
         i+=1
 
-    out.append(spec % i)
     mod = size % 4
-    out.append("    name='Unknown%s'," % i)
-    if mod == 0:
-        out.append("    type='int',")
-    elif mod == 1:
-        out.append("    type='byte',")
-    elif mod == 2:
-        out.append("    type='short',")
-    elif mod == 3:
-        out.append("    type='short',")
-        out.append(")),")
-        i+=1
+    for j in range(0, mod):
         out.append(spec % i)
         out.append("    name='Unknown%s'," % i)
         out.append("    type='byte',")
-    out.append(")),")
+        out.append(")),")
+        i+=1
 
     return ' '*12 + ('\n' + ' '*12).join(out)
 
