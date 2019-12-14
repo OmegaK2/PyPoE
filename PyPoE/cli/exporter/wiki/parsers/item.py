@@ -129,6 +129,8 @@ class WikiCondition(parser.WikiCondition):
         'drop_leagues',
         'drop_areas',
         'drop_text',
+        'drop_monsters',
+        'upgraded_from_disabled',
 
         # Item flags
         'is_corrupted',
