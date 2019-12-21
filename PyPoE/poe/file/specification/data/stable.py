@@ -1360,20 +1360,6 @@ specification = Specification({
             )),
         )),
     ),
-    'AtlasExileInfluencePacks.dat': File(
-        fields=OrderedDict((
-            ('AtlasExileInfluenceOutcomesKey', Field(
-                name='AtlasExileInfluenceOutcomesKey',
-                type='ulong',
-                key='AtlasExileInfluenceOutcomes.dat',
-            )),
-            ('MonsterPacks', Field(
-                name='MonsterPacksKey',
-                type='ref|list|ulong',
-                key='MonsterPacks.dat'
-            )),
-        )),
-    ),
     'AtlasExileInfluenceSets.dat': File(
         fields=OrderedDict((
             ('Id', Field(
@@ -1395,17 +1381,22 @@ specification = Specification({
                 type='ulong',
                 key='AtlasExiles.dat',
             )),
-            ('Key0', Field(
-                name='Key0',
+            ('AtlasRegionsKey', Field(
+                name='AtlasRegionsKey',
                 type='ulong',
+                key='AtlasRegions.dat',
             )),
-            ('Unknown2', Field(
-                name='Unknown2',
+            ('Unknown1', Field(
+                name='Unknown1',
                 type='int',
             )),
             ('Key1', Field(
                 name='Key1',
                 type='ulong',
+            )),
+            ('QuestState', Field(
+                name='QuestState',
+                type='int',
             )),
         )),
     ),
@@ -2031,8 +2022,8 @@ specification = Specification({
                 key='AchievementItems.dat',
                 description='Achievement check when equipping this item',
             )),
-            ('IsPickedUpByMonsters', Field(
-                name='IsPickedUpByMonsters',
+            ('IsCorrupted', Field(
+                name='IsCorrupted',
                 type='bool',
             )),
             ('Identify_AchievementItemsKeys', Field(
@@ -15666,7 +15657,7 @@ specification = Specification({
             )),
             ('Key1', Field(
                 name='Key1',
-                type='ulong',
+                type='ref|list|ulong',
             )),
             ('Unknown3', Field(
                 name='Unknown3',
