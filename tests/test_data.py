@@ -63,10 +63,14 @@ def files(poe_version):
 
 # Kind of testing the reading of the files twice, but whatever.
 # dat_file_name is parametrized in conftest.py
-def test_definitions(dat_file_name, ggpkfile):
+@pytest.mark.parametrize('x64', (True, False))
+def test_definitions(dat_file_name, ggpkfile, x64):
     opt = {
         'use_dat_value': False,
+        'x64': x64
     }
+    if x64:
+        dat_file_name += '64'
     # Will raise errors accordingly if it fails
     df = dat.DatFile(dat_file_name)
     try:
@@ -75,7 +79,6 @@ def test_definitions(dat_file_name, ggpkfile):
     # If a file is in the spec, but not in the dat file this is allright
     except FileNotFoundError:
         return
-
 
 def test_missing(files, ggpkfile):
     file_set = set()

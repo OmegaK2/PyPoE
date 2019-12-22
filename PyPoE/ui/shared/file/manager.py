@@ -55,6 +55,7 @@ class FileDataManager(object):
     FILE_ANY = 1
     # Some default instances
     DAT_DATA_HANDLER = DatDataHandler()
+    DAT_DATA_HANDLER_64 = DatDataHandler(x64=True)
     DDS_DATA_HANDLER = DDSDataHandler()
     IMAGE_DATA_HANDLER = ImageDataHandler()
     TEXT_DATA_HANDLER_UTF8 = TextDataHandler('utf-8')
@@ -91,6 +92,7 @@ class FileDataManager(object):
         ('.cht', TEXT_DATA_HANDLER_UTF16_LE),  # GGG Format? Terrain.
         ('.clt', TEXT_DATA_HANDLER_UTF16_LE),  # GGG Format? Terrain.
         ('.dat', DAT_DATA_HANDLER),  # TODO
+        ('.dat64', DAT_DATA_HANDLER_64),
         ('.dct', TEXT_DATA_HANDLER_UTF16_LE),  # GGG Format? Terrain.
         # DirectDraw Surface format
         # Only images are supported atm (TODO?)

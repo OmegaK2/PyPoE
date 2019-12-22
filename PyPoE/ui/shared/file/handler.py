@@ -318,10 +318,13 @@ class DatFrame(QFrame):
 
 
 class DatDataHandler(FileDataHandler):
+    def __init__(self, x64=False):
+        self.x64 = x64
+
     def get_widget(self, file_data, file_name='', parent=None, *args, **kwargs):
         dat_file = DatFile(file_name)
         # We want dat values here
-        dat_file.read(file_data, use_dat_value=True)
+        dat_file.read(file_data, use_dat_value=True, x64=self.x64)
 
         frame = DatFrame(dat_file=dat_file, parent=parent)
 

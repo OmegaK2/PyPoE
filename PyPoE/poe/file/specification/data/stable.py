@@ -1570,27 +1570,27 @@ specification = Specification({
             )),
             ('AtlasNodeKeys0', Field(
                 name='AtlasNodeKeys0',
-                type='ref|list|int',
+                type='ref|list|ref|generic',
                 key='AtlasNode.dat',
             )),
             ('AtlasNodeKeys1', Field(
                 name='AtlasNodeKeys1',
-                type='ref|list|int',
+                type='ref|list|ref|generic',
                 key='AtlasNode.dat',
             )),
             ('AtlasNodeKeys2', Field(
                 name='AtlasNodeKeys2',
-                type='ref|list|int',
+                type='ref|list|ref|generic',
                 key='AtlasNode.dat',
             )),
             ('AtlasNodeKeys3', Field(
                 name='AtlasNodeKeys3',
-                type='ref|list|int',
+                type='ref|list|ref|generic',
                 key='AtlasNode.dat',
             )),
             ('AtlasNodeKeys4', Field(
                 name='AtlasNodeKeys4',
-                type='ref|list|int',
+                type='ref|list|ref|generic',
                 key='AtlasNode.dat',
             )),
             ('Tier0', Field(
@@ -1943,7 +1943,7 @@ specification = Specification({
             )),
             ('NormalPurchase_BaseItemTypesKeys', Field(
                 name='NormalPurchase_BaseItemTypesKeys',
-                type='ref|list|uint',
+                type='ref|list|ref|generic',
                 key='BaseItemTypes.dat',
             )),
             ('NormalPurchase_Costs', Field(
@@ -1952,7 +1952,7 @@ specification = Specification({
             )),
             ('MagicPurchase_BaseItemTypesKeys', Field(
                 name='MagicPurchase_BaseItemTypesKeys',
-                type='ref|list|uint',
+                type='ref|list|ref|generic',
                 key='BaseItemTypes.dat',
             )),
             ('MagicPurchase_Costs', Field(
@@ -1994,7 +1994,7 @@ specification = Specification({
             )),
             ('RarePurchase_BaseItemTypesKeys', Field(
                 name='RarePurchase_BaseItemTypesKeys',
-                type='ref|list|uint',
+                type='ref|list|ref|generic',
                 key='BaseItemTypes.dat',
             )),
             ('RarePurchase_Costs', Field(
@@ -2003,7 +2003,7 @@ specification = Specification({
             )),
             ('UniquePurchase_BaseItemTypesKeys', Field(
                 name='UniquePurchase_BaseItemTypesKeys',
-                type='ref|list|uint',
+                type='ref|list|ref|generic',
                 key='BaseItemTypes.dat',
             )),
             ('UniquePurchase_Costs', Field(
@@ -2046,7 +2046,7 @@ specification = Specification({
             # can only hold currencies it seems
             ('FragmentBaseItemTypesKey', Field(
                 name='FragmentBaseItemTypesKey',
-                type='uint',
+                type='ref|generic',
                 key='BaseItemTypes.dat',
             )),
             ('IsBlessing', Field(
@@ -2135,7 +2135,7 @@ specification = Specification({
             )),
             ('BestiaryCapturableMonstersKey', Field(
                 name='BestiaryCapturableMonstersKey',
-                type='int',
+                type='ref|generic',
                 key='BestiaryCapturableMonsters.dat',
             )),
             ('Flag2', Field(
@@ -8123,7 +8123,7 @@ specification = Specification({
             )),
             ('GrantedEffectsKey', Field(
                 name='GrantedEffectsKey',
-                type='int',
+                type='ref|generic',
                 key='GrantedEffects.dat',
             )),
         )),
@@ -8868,7 +8868,7 @@ specification = Specification({
             )),
             ('RoomUpgrade_IncursionRoomsKey', Field(
                 name='RoomUpgrade_IncursionRoomsKey',
-                type='uint',
+                type='ref|generic',
                 key='IncursionRooms.dat',
             )),
             ('ModsKey', Field(
@@ -8932,7 +8932,7 @@ specification = Specification({
             )),
             ('RoomUpgradeFrom_IncursionRoomsKey', Field(
                 name='RoomUpgradeFrom_IncursionRoomsKey',
-                type='uint',
+                type='ref|generic',
                 key='IncursionRooms.dat',
             )),
         )),
@@ -10058,7 +10058,7 @@ specification = Specification({
             )),
             ('LabyrinthSectionLayoutKeys', Field(
                 name='LabyrinthSectionLayoutKeys',
-                type='ref|list|int',
+                type='ref|list|ref|generic',
                 key='LabyrinthSectionLayout.dat',
             )),
             ('LabyrinthSecretsKey0', Field(
@@ -11273,7 +11273,7 @@ specification = Specification({
             )),
             ('Shaped_Base_MapsKey', Field(
                 name='Shaped_Base_MapsKey',
-                type='int',
+                type='ref|generic',
                 key='Maps.dat',
             )),
             ('Shaped_AreaLevel', Field(
@@ -11282,19 +11282,19 @@ specification = Specification({
             )),
             ('UpgradedFrom_MapsKey', Field(
                 name='UpgradedFrom_MapsKey',
-                type='int',
+                type='ref|generic',
                 key='Maps.dat',
             )),
             # TODO upgrades into?
             ('MapsKey2', Field(
                 name='MapsKey2',
-                type='int',
+                type='ref|generic',
                 key='Maps.dat',
             )),
             # TODO upgrades into for unique maps?
             ('MapsKey3', Field(
                 name='MapsKey3',
-                type='int',
+                type='ref|generic',
                 key='Maps.dat',
             )),
             ('MapSeriesKey', Field(
@@ -16386,7 +16386,7 @@ specification = Specification({
             )),
             ('Upgrade_ShopPaymentPackageKey', Field(
                 name='Upgrade_ShopPaymentPackageKey',
-                type='int',
+                type='ref|generic',
                 key='ShopPaymentPackage.dat',
             )),
             ('PhysicalItemPoints', Field(
@@ -17128,13 +17128,13 @@ specification = Specification({
             # value of the stat is added to MainHandAlias_StatsKey if weapon is in main-hand
             ('MainHandAlias_StatsKey', Field(
                 name='MainHandAlias_StatsKey',
-                type='int',
+                type='ref|generic',
                 key='Stats.dat',
             )),
             # value of the stat is added to OffHandAlias_StatsKey if weapon is in off-hand
             ('OffHandAlias_StatsKey', Field(
                 name='OffHandAlias_StatsKey',
-                type='int',
+                type='ref|generic',
                 key='Stats.dat',
             )),
             ('Flag7', Field(
@@ -18546,12 +18546,12 @@ specification = Specification({
             )),
             ('UniqueStashLayoutKey', Field(
                 name='UniqueStashLayoutKey',
-                type='int',
+                type='ref|generic',
                 key='UniqueStashLayout.dat',
             )),
             ('UniqueStashLayoutKey2', Field(
                 name='UniqueStashLayoutKey2',
-                type='int',
+                type='ref|generic',
                 key='UniqueStashLayout.dat',
             )),
             ('Flag2', Field(
@@ -18942,7 +18942,7 @@ specification = Specification({
             )),
             ('Connections_WorldAreasKeys', Field(
                 name='Connections_WorldAreasKeys',
-                type='ref|list|uint',
+                type='ref|list|ref|generic',
                 key='WorldAreas.dat',
             )),
             ('AreaLevel', Field(
@@ -18986,7 +18986,7 @@ specification = Specification({
             )),
             ('ParentTown_WorldAreasKey', Field(
                 name='ParentTown_WorldAreasKey',
-                type='uint',
+                type='ref|generic',
                 key='WorldAreas.dat',
             )),
             ('Unknown17', Field(
@@ -19059,7 +19059,7 @@ specification = Specification({
             )),
             ('VaalArea_WorldAreasKeys', Field(
                 name='VaalArea_WorldAreasKeys',
-                type='ref|list|int',
+                type='ref|list|ref|generic',
                 key='WorldAreas.dat',
             )),
             ('VaalArea_SpawnChance', Field(
