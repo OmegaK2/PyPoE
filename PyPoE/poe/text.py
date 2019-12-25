@@ -147,7 +147,12 @@ class Tag(ReprMixin):
         if self.id is None:
             return out_str
         else:
-            return handlers[self.id](hstr=out_str, parameter=self.parameter)
+            idHandler = handlers.get(self.id)
+            if idHandler:
+                return handlers[self.id](hstr=out_str, parameter=self.parameter)
+            else:
+                print(f'The handler "{self.id}" was not found. This should probably be fixed.')
+                return out_str
 
 # =============================================================================
 # Functions
