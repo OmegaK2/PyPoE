@@ -193,7 +193,7 @@ class UniqueCopy(BaseParser):
             try:
                 correct = results[int(input('Enter index of correct translation:\n'))]
             except Exception as e:
-                traceback.console_exc()
+                traceback.print_exc()
 
             return self.rr[file_name][correct['id']][key]
         else:
