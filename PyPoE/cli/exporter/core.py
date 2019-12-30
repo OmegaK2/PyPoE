@@ -85,7 +85,8 @@ def setup_config():
     )
     config.add_option('language',
                       'option("English", "French", "German", "Portuguese",'
-                      '"Russian", "Spanish", "Thai", default="English")')
+                      '"Russian", "Spanish", "Thai", "Simplified Chinese",'
+                      '"Traditional Chinese", "Korean", default="English")')
 
 
 def main():
