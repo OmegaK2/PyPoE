@@ -113,7 +113,7 @@ class SpecificationError(ValueError):
         RUNTIME_ROWSIZE_MISMATCH = 3002
 
     def __init__(self, code, msg):
-        super(SpecificationError, self).__init__()
+        super().__init__()
         self.code = self.ERRORS(code)
         self.msg = msg
 

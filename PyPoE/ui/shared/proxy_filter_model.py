@@ -64,7 +64,7 @@ __all__ = []
 # Filters
 #
 
-class AbstractFilter(object):
+class AbstractFilter:
 
     NAME = ''
 

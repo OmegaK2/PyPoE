@@ -91,7 +91,7 @@ class Msg(Enum):
     warning = Style.BRIGHT + Fore.YELLOW
 
 
-class OutputHook(object):
+class OutputHook:
     """
     Warning hook to reformat / restyle warning messages properly.
     """

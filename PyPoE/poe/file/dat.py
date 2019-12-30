@@ -107,7 +107,7 @@ DAT_FILE_MAGIC_NUMBER = b'\xBB\xbb\xBB\xbb\xBB\xbb\xBB\xbb'
 # =============================================================================
 
 
-class DatValue(object):
+class DatValue:
     """
     Representation of a value found in a dat file.
 
@@ -988,7 +988,7 @@ class RelationalReader(AbstractFileCache):
             self._language = ''
         else:
             self._language = language + '/'
-        super(RelationalReader, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def __getitem__(self, item):
         """
@@ -1055,7 +1055,7 @@ class RelationalReader(AbstractFileCache):
             return self._set_value(value, other, key, offset)
 
     def _get_file_instance_args(self, file_name, *args, **kwargs):
-        opts = super(RelationalReader, self)._get_file_instance_args(file_name)
+        opts = super()._get_file_instance_args(file_name)
         opts['file_name'] = file_name.replace('Data/' + self._language, '')
         return opts
 

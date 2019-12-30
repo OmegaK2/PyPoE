@@ -56,7 +56,7 @@ class GGPKViewerMainWindow(SharedMainWindow):
     NAME = 'GGPK Viewer'
 
     def __init__(self, *args, **kwargs):
-        super(GGPKViewerMainWindow, self).__init__(
+        super().__init__(
             *args, app_name=self.NAME, **kwargs
         )
 
@@ -242,7 +242,7 @@ class GeneralSettingsFrame(SettingFrame):
     KEY = 'general'
 
     def __init__(self, *args, **kwargs):
-        super(GeneralSettingsFrame, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.parent().settings_window.add_config_section(
             tr=self.tr('General'),
@@ -271,7 +271,7 @@ class SettingDDS(BoolSetting):
     DEFAULT = False
 
     def __init__(self, parent, settings, row, *args, **kwargs):
-        super(SettingDDS, self).__init__(parent, settings, *args, **kwargs)
+        super().__init__(parent, settings, *args, **kwargs)
 
         self.value = self.get()
 
@@ -286,7 +286,7 @@ class SettingVersion(ComboBoxSetting):
     DEFAULT = VERSION.DEFAULT
 
     def __init__(self, parent, settings, row, *args, **kwargs):
-        super(SettingVersion, self).__init__(parent, settings, *args, **kwargs)
+        super().__init__(parent, settings, *args, **kwargs)
         self._set_data(OrderedDict((
             ('Stable', VERSION.STABLE),
             ('Beta', VERSION.BETA),

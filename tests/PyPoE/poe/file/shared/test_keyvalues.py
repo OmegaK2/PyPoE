@@ -115,7 +115,7 @@ _write_file_name = 'keyvalues_write.kv'
 # Tests
 # =============================================================================
 
-class TestKeyValuesFile(object):
+class TestKeyValuesFile:
 
     data = [(section, key, value) for section, keyvalues in data.items() for key, value in keyvalues.items()]
 
@@ -163,7 +163,7 @@ class TestKeyValuesFile(object):
             assert kf_target == kf_should
 
 
-class TestKeyValuesFileCache(object):
+class TestKeyValuesFileCache:
     @pytest.fixture
     def kf_cache(self):
         kfc = KeyValuesFileCache(path_or_ggpk=data_dir)

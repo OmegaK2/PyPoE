@@ -61,7 +61,7 @@ __all__ = [
 # =============================================================================
 
 
-class BaseHandler(object):
+class BaseHandler:
     """
     Other handlers should inherit this one.
     """

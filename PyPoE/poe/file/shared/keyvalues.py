@@ -129,7 +129,7 @@ class AbstractKeyValueSection(dict):
     NAME = ''
 
     def __init__(self, parent, name=None, *args, **kwargs):
-        super(AbstractKeyValueSection, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.parent = parent
         if name:
             self.name = name
@@ -154,7 +154,7 @@ class AbstractKeyValueSection(dict):
                     return
                 else:
                     value = [value, ]
-        super(AbstractKeyValueSection, self).__setitem__(key, value)
+        super().__setitem__(key, value)
 
     def merge(self, other):
         if not isinstance(other, AbstractKeyValueSection):
@@ -405,7 +405,7 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
             The current values held by the file instance will be written. This
             means values inherited from parent files will also be written.
         """
-        return super(AbstractKeyValueFile, self).write(*args, **kwargs)
+        return super().write(*args, **kwargs)
 
     def _get_write_line(self, key, value):
         return '\t%s = "%s"' % (key, value)
@@ -443,8 +443,7 @@ class AbstractKeyValueFileCache(AbstractFileCache):
 
     @doc(doc=AbstractFileCache._get_file_instance_args)
     def _get_file_instance_args(self, file_name):
-        options = super(AbstractKeyValueFileCache, self
-                        )._get_file_instance_args(file_name)
+        options = super()._get_file_instance_args(file_name)
         options['parent_or_base_dir_or_ggpk'] = self._ggpk or self._path
 
         return options

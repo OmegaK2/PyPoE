@@ -49,7 +49,7 @@ __all__ = ['FileDataManager']
 # =============================================================================
 
 
-class FileDataManager(object):
+class FileDataManager:
     # Settings
     EXTENSION_ANY = 1
     FILE_ANY = 1

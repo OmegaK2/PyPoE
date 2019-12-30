@@ -59,7 +59,7 @@ __all__ = ['SettingsWindow', 'SettingFrame', 'Setting', 'BoolSetting']
 
 class SettingsWindow(QDialog):
     def __init__(self, *args, **kwargs):
-        super(SettingsWindow, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.action_open = QAction(self, text=self.tr('Settings'))
         self.action_open.setStatusTip(self.tr(
@@ -128,7 +128,7 @@ class SettingFrame(QFrame):
     KEY = NotImplemented
 
     def __init__(self, *args, **kwargs):
-        super(SettingFrame, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.settings = {}
 
     def _add_setting(self, setting):
@@ -141,7 +141,7 @@ class SettingFrame(QFrame):
             raise AttributeError
 
 
-class BaseSetting(object):
+class BaseSetting:
     KEY = NotImplemented
     DEFAULT = NotImplemented
 
@@ -181,7 +181,7 @@ class BaseSetting(object):
 
 class BoolSetting(BaseSetting):
     def __init__(self, *args, **kwargs):
-        super(BoolSetting, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.checkbox = QCheckBox()
         self.checkbox.setChecked(self.value)
@@ -206,7 +206,7 @@ class BoolSetting(BaseSetting):
 
 class ComboBoxSetting(BaseSetting):
     def __init__(self, *args, **kwargs):
-        super(ComboBoxSetting, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.combobox = QComboBox()
         self.combobox.setEditable(False)

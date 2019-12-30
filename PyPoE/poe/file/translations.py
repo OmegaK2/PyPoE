@@ -1132,7 +1132,7 @@ class TranslationQuantifier(TranslationReprMixin):
 class TQReminderString(TranslationQuantifier):
     def __init__(self, relational_reader, *args, **kwargs):
         self.relational_reader = relational_reader
-        super(TQReminderString, self).__init__(
+        super().__init__(
             id='reminderstring',
             type=self.QuantifierTypes.STRING,
             handler=self.handle,
@@ -1767,7 +1767,7 @@ class TranslationFileCache(AbstractFileCache):
             )
 
         # Call order matters here
-        super(TranslationFileCache, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def __getitem__(self, item):
         """

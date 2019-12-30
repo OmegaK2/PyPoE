@@ -93,7 +93,7 @@ class ITEM_TYPES(Enum):
     CURRENCY = 2
 
 
-class ItemSocket(object):
+class ItemSocket:
     """
 
     Attributes
@@ -120,7 +120,7 @@ class ItemSocket(object):
         return self.index == other.index and self.colour == other.colour
 
 
-class ItemParser(object):
+class ItemParser:
     """
     Class to parse/handle the string provided by items when using CTRL-C on
     items in game.

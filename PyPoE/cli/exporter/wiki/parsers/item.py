@@ -176,7 +176,7 @@ class ProphecyWikiCondition(WikiCondition):
 
 class ItemsHandler(ExporterHandler):
     def __init__(self, sub_parser, *args, **kwargs):
-        super(ItemsHandler, self).__init__(self, sub_parser, *args, **kwargs)
+        super().__init__(self, sub_parser, *args, **kwargs)
         self.parser = sub_parser.add_parser('items', help='Items Exporter')
         self.parser.set_defaults(func=lambda args: self.parser.print_help())
         core_sub = self.parser.add_subparsers()
@@ -384,7 +384,7 @@ class ProphecyParser(parser.BaseParser):
     )
 
     def __init__(self, *args, **kwargs):
-        parser.BaseParser.__init__(self, *args, **kwargs)
+        super().__init__(self, *args, **kwargs)
         self.lang = config.get_option('language')
 
     def by_rowid(self, parsed_args):

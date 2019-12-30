@@ -53,7 +53,7 @@ __all__ = ['FileMenu', 'MiscMenu', 'ViewMenu']
 
 class CustomOpenAction(GGPKOpenAction):
     def __init__(self, *args, **kwargs):
-        super(CustomOpenAction, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self._thread = None
 
@@ -64,7 +64,7 @@ class CustomOpenAction(GGPKOpenAction):
         return self.parent().parent()
 
     def _open_ggpk(self):
-        self._thread = super(CustomOpenAction, self)._open_ggpk()
+        self._thread = super()._open_ggpk()
 
         # User cancelled
         if self._thread is None:

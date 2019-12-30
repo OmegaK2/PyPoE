@@ -124,7 +124,7 @@ class OTFile(AbstractKeyValueFile):
     EXTENSION = '.ot'
 
     def __init__(self, *args, **kwargs):
-        super(OTFile, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 @doc(append=AbstractKeyValueFileCache)
