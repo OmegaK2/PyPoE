@@ -194,7 +194,7 @@ This item can be obtained by using a {{il|Divine Vessel}} with a {{il|Beach Map}
 # =============================================================================
 
 
-class TestBaseParser():
+class TestBaseParser:
     data = (
         # Mod ID, expected results
         (

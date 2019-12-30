@@ -97,7 +97,7 @@ class JSONExportHandler(DatExportHandler):
         self.add_default_arguments(self.json)
 
     def handle(self, args):
-        super(JSONExportHandler, self).handle(args)
+        super().handle(args)
 
         dict_spec = args.spec.as_dict()
 

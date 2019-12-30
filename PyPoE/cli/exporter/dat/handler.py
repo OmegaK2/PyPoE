@@ -52,7 +52,7 @@ __all__ = []
 # =============================================================================
 
 
-class DatExportHandler(object):
+class DatExportHandler:
     def add_default_arguments(self, parser):
         """
 

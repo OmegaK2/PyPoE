@@ -118,7 +118,7 @@ class UniqueCommandHandler(ExporterHandler):
 
 class UniqueCopy(BaseParser):
     def __init__(self, *args, **kwargs):
-        super(UniqueCopy, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # Set this up at the earlist so no processing time is wasted
         if not self.parsed_args.user or not self.parsed_args.password:
@@ -193,7 +193,7 @@ class UniqueCopy(BaseParser):
             try:
                 correct = results[int(input('Enter index of correct translation:\n'))]
             except Exception as e:
-                traceback.console_exc()
+                traceback.print_exc()
 
             return self.rr[file_name][correct['id']][key]
         else:

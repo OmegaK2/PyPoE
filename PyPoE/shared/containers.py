@@ -42,7 +42,7 @@ __all__ = ['Record', 'TypedContainerMeta', 'TypedContainerMixin', 'TypedList']
 # Classes
 # =============================================================================
 
-class Record(object):
+class Record:
     def __str__(self):
         return repr(self)
 
@@ -94,7 +94,7 @@ class TypedContainerMeta(type):
         return type.__new__(cls, name, bases, attrs)
 
 
-class TypedContainerMixin(object):
+class TypedContainerMixin:
 
     ACCEPTED_TYPES = None
 

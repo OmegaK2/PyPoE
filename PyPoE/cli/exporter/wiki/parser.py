@@ -697,7 +697,7 @@ _inter_wiki_re = _make_inter_wiki_re()
 # =============================================================================
 
 
-class BaseParser(object):
+class BaseParser:
     """
     :ivar str base_path:
 
@@ -966,7 +966,7 @@ class BaseParser(object):
         return finalout
 
 
-class TagHandler(object):
+class TagHandler:
     """
     Provides tag handlers for use with :func:`parse_description_tags`
 
@@ -1061,7 +1061,7 @@ class TagHandler(object):
     }
 
 
-class WikiCondition(object):
+class WikiCondition:
     COPY_KEYS = (
     )
     COPY_MATCH = None

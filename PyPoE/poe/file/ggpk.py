@@ -216,9 +216,9 @@ class BaseRecord(ReprMixin):
         ggpkfile.write(self.tag)
 
 
-class MixinRecord(object):
+class MixinRecord:
     def __init__(self, *args, **kwargs):
-        super(MixinRecord, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._name = ''
         self._name_length = 0
 
@@ -270,7 +270,7 @@ class GGPKRecord(BaseRecord):
     @doc(doc=BaseRecord.write)
     def write(self, ggpkfile):
         # Write length & tag
-        super(GGPKRecord, self).write(ggpkfile)
+        super().write(ggpkfile)
         # Should always be 2
         ggpkfile.write(struct.pack('<i', 2))
         for i in range(0, len(offsets)):
@@ -321,7 +321,7 @@ class DirectoryRecord(MixinRecord, BaseRecord):
     __slots__ = BaseRecord.__slots__.copy() + ['_name', '_name_length', 'entries_length', 'hash', 'entries']
 
     def __init__(self, *args, **kwargs):
-        super(DirectoryRecord, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @doc(doc=BaseRecord.read)
     def read(self, ggpkfile):
@@ -348,7 +348,7 @@ class DirectoryRecord(MixinRecord, BaseRecord):
             raise ValueError('Numbers of entries must match with length')
         name_str = self._name.encode('UTF-16')
         # Write length & tag
-        super(DirectoryRecord, self).write(ggpkfile)
+        super().write(ggpkfile)
         ggpkfile.write(struct.pack('<i', self._name_length))
         ggpkfile.write(struct.pack('<i', self.entries_length))
         # Fixed 32-bytes
@@ -385,7 +385,7 @@ class FileRecord(MixinRecord, BaseRecord):
     __slots__ = BaseRecord.__slots__.copy() + ['_name', '_name_length', 'hash', 'data_start', 'data_length']
 
     def __init__(self, *args, **kwargs):
-        super(FileRecord, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         
     def extract(self, buffer=None):
         """
@@ -456,7 +456,7 @@ class FileRecord(MixinRecord, BaseRecord):
         
         name_str = self._name.encode('UTF-16')
         # Write length & tag
-        super(FileRecord, self).write(ggpkfile)
+        super().write(ggpkfile)
         ggpkfile.write(struct.pack('<i', self._name_length))
         # Fixed 32-bytes
         ggpkfile.write(self.hash)
@@ -486,11 +486,11 @@ class FreeRecord(BaseRecord):
     @doc(doc=BaseRecord.write)
     def write(self, ggpkfile):
         # Write length & tag
-        super(FreeRecord, self).write(ggpkfile)
+        super().write(ggpkfile)
         ggpkfile.write(struct.pack('<q', self.next_free))
 
 
-class DirectoryNode(object):
+class DirectoryNode:
     """
     Attributes
     ----------
@@ -1021,7 +1021,7 @@ class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
 
     @doc(prepend=AbstractFileReadOnly.read)
     def read(self, file_path_or_raw, *args, **kwargs):
-        super(GGPKFile, self).read(file_path_or_raw, *args, **kwargs)
+        super().read(file_path_or_raw, *args, **kwargs)
         self._file_path_or_raw = file_path_or_raw
 
     @doc(doc=extract_dds)

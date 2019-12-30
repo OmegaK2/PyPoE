@@ -57,7 +57,7 @@ __all__ = ['ReprMixin']
 # =============================================================================
 
 
-class ReprMixin(object):
+class ReprMixin:
     """
     Add to a class to get semi-universal repr of the form:
 

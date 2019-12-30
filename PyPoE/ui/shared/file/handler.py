@@ -71,7 +71,7 @@ __all__ = [
 # =============================================================================
 
 
-class FileDataHandler(object):
+class FileDataHandler:
     def _verify_data(self, file_data):
         if isinstance(file_data, bytes):
             d = io.BytesIO()

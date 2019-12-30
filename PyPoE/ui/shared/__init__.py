@@ -61,7 +61,7 @@ class SharedMainWindow(QMainWindow):
     sig_log_message = Signal(str)
 
     def __init__(self, *args, app_name=NotImplemented, **kwargs):
-        super(SharedMainWindow, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.NAME = app_name
 

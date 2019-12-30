@@ -47,7 +47,7 @@ __all__ = ['DatHandler']
 # =============================================================================
 
 
-class DatHandler(object):
+class DatHandler:
     """
 
     :type sql: argparse.ArgumentParser

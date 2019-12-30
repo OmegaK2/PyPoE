@@ -234,7 +234,7 @@ class PSGFile(AbstractFileReadOnly):
     EXTENSION = '.psg'
 
     def __init__(self, passive_skills_dat_file=None, *args, **kwargs):
-        super(PSGFile, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.root_passives = []
         self.groups = []

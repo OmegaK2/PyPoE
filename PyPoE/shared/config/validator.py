@@ -62,7 +62,7 @@ __all__ = ['IntEnumValidator', 'is_directory', 'is_file', 'functions']
 # =============================================================================
 
 
-class IntEnumValidator(object):
+class IntEnumValidator:
     """
     Class to create a dynamic validator for IntEnum classes
     """

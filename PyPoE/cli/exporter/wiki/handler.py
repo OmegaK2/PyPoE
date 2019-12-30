@@ -65,7 +65,7 @@ WIKIS = {
 # =============================================================================
 
 
-class WikiHandler(object):
+class WikiHandler:
     def add_arguments(self, parser):
         add_parser_arguments(parser)
         parser.add_argument(
@@ -235,7 +235,7 @@ class WikiHandler(object):
 
 class ExporterHandler(BaseHandler):
     def __init__(self, *args, **kwargs):
-        super(ExporterHandler, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def get_wrap(self, cls, func, handler, wiki_handler):
         def wrapper(pargs, *args, **kwargs):

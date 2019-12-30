@@ -91,7 +91,7 @@ class TestGetModFromId:
         assert None == mods.get_mod_from_id('does_not_exist', self.mod_list)
 
 
-class TestGetSpawnChanceCalculator(object):
+class TestGetSpawnChanceCalculator:
     mod_list = [
         DatRecordOverride(
             Id='0',
@@ -159,7 +159,7 @@ class TestGetSpawnChanceCalculator(object):
         assert 0 == scc['default'].spawn_chance('0', remove=False)
 
 
-class TestGetSpawnWeight(object):
+class TestGetSpawnWeight:
     data = DatRecordOverride(
         SpawnWeight_TagsKeys=[
             {'Id': 'a'},
@@ -185,7 +185,7 @@ class TestGetSpawnWeight(object):
         assert 2 == mods.get_spawn_weight(self.data, ['b', 'c', 'default'])
 
 
-class TestGenerateSpawnableModList(object):
+class TestGenerateSpawnableModList:
     mod_list = [
         DatRecordOverride(
             Id='0',

@@ -56,7 +56,7 @@ DDS_COMPRESSED = 'Art/2DArt/BuffIcons/AssassinsMark.dds'
 # =============================================================================
 
 
-class TestGGPKFile():
+class TestGGPKFile:
     # This kinda tests it already by reading the global fixture
     def test_init(self, ggpkfile):
         assert ggpkfile.is_parsed == True
@@ -64,7 +64,7 @@ class TestGGPKFile():
 
 # These tests will raise errors if something is wrong, like decompression
 # errors
-class TestDDSExtract():
+class TestDDSExtract:
     def test_uncompressed(self, ggpkfile):
         data = ggpkfile[DDS_UNCOMPRESSED].record.extract().read()
         ggpk.extract_dds(data=data)

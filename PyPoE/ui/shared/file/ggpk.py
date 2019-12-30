@@ -64,7 +64,7 @@ __all__ = []
 
 class GGPKOpenAction(QAction):
     def __init__(self, *args, **kwargs):
-        super(GGPKOpenAction, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.setText(self.tr('Open GGPK'))
         self.setStatusTip(self.tr('Open a content.ggpk file'))

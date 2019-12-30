@@ -518,7 +518,7 @@ def node_update_files(patch_file_list, directory_node_path,
 # =============================================================================
 
 
-class Patch(object):
+class Patch:
     """
     Class that handles connecting to the patching server and downloading files
     from the patching server.
@@ -704,7 +704,7 @@ class Patch(object):
         """
         return self.patch_url.strip('/').rsplit('/', maxsplit=1)[-1]
 
-class PatchFileList(object):
+class PatchFileList:
     """
     Class that retrieves file details from the patch server.
 
@@ -1083,15 +1083,13 @@ class BaseRecordData(ReprMixin):
 class VirtualDirectoryRecord(BaseRecordData,
                              DirectoryRecord):
     def __init__(self, *args, **kwargs):
-        super(VirtualDirectoryRecord,
-              self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 class VirtualFileRecord(BaseRecordData,
                         FileRecord):
     def __init__(self, name, hash, size):
         self.data_length = size
-        super(VirtualFileRecord,
-              self).__init__(name, hash)
+        super().__init__(name, hash)
 
 class DirectoryNodeExtended(DirectoryNode):
     """
@@ -1103,8 +1101,7 @@ class DirectoryNodeExtended(DirectoryNode):
         :meth:`.gen_walk`
     """
     def __init__(self, *args, **kwargs):
-        super(DirectoryNodeExtended,
-              self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def get_dict(self, recurse=True):
         """

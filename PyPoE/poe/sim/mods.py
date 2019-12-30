@@ -86,7 +86,7 @@ _translation_map = {
 # =============================================================================
 
 
-class SpawnChanceCalculator(object):
+class SpawnChanceCalculator:
     """
     Class to calculate spawn chances.
     """

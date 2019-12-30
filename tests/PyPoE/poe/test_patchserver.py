@@ -102,7 +102,7 @@ def test_socket_fd_open_close(patch_temp):
     sock_fd = test_sock_from_fd.detach()
     patchserver.socket_fd_close(sock_fd)
 
-class TestPatch(object):
+class TestPatch:
     def test_dst_file(self, patch, tmpdir):
         patch.download(
             file_path=_TEST_FILE,
@@ -133,7 +133,7 @@ class TestPatch(object):
             'result is expected to match the x.x.x.x format'
 
 @pytest.mark.dependency(depends=["test_socket"])
-class TestPatchFileList(object):
+class TestPatchFileList:
     @pytest.mark.dependency()
     def test_init(self, patch_file_list):
         assert isinstance(patch_file_list.directory,

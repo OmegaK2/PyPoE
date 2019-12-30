@@ -59,7 +59,7 @@ __all__ = []
 # =============================================================================
 
 
-class Monster():
+class Monster:
     def __init__(self, parent, mv):
         self.parent = parent
         self._mv = mv
@@ -89,7 +89,7 @@ class Monster():
         base = self.parent.rr['DefaultMonsterStats.dat'][self.level]
 
 
-class MonsterFactory():
+class MonsterFactory:
     """
     Handler for monsters.
     """

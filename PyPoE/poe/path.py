@@ -99,7 +99,7 @@ class PoEPathValue(str):
         return str.__new__(self, path)
 
 
-class PoEPath(object):
+class PoEPath:
     """
     Class for retrieving default paths related to path of exile.
 

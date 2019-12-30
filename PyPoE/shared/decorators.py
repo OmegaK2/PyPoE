@@ -49,7 +49,7 @@ __all__ = ['deprecated', 'doc']
 # =============================================================================
 
 
-class DeprecationDecorator(object):
+class DeprecationDecorator:
     """
     Decorator for setting functions as deprecated.
 
@@ -112,7 +112,7 @@ class DeprecationDecorator(object):
         return deprecated_function
 
 
-class DocStringDecorator(object):
+class DocStringDecorator:
     """
     Decorator for docstring modifications.
 

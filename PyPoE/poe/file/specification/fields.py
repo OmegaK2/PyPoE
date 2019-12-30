@@ -211,7 +211,7 @@ __all__ = ['Specification', 'File', 'Field', 'VirtualField']
 # =============================================================================
 
 
-class _Common(object):
+class _Common:
     def as_dict(self):
         """
         Returns
@@ -227,7 +227,7 @@ class Specification(dict):
     Specification file
     """
     def __init__(self, *args, **kwargs):
-        super(Specification, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def validate(self):
         """
@@ -354,7 +354,7 @@ class Specification(dict):
         }
 
 
-class File(object):
+class File:
     """
     Represents a single file in the specification.
 

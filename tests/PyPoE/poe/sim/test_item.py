@@ -62,7 +62,7 @@ from PyPoE.poe.sim import item
 # Tests
 # =============================================================================
 
-class TestItemParser(object):
+class TestItemParser:
     data = (
         #
         # Regular items
