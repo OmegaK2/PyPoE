@@ -119,6 +119,13 @@ class DatExportHandler:
         if lang != 'English':
             ggpk_data = ggpk_data[lang]
         remove = []
+
+        files = config.get_option('ignore_files')
+        for f in files:
+            if not f.endswith('.dat'):
+                f += '.dat'
+            args.files.remove(f)
+            console('ignore file: %s' % f)
         for name in tqdm(args.files):
             try:
                 node = ggpk_data[name]
@@ -127,6 +134,7 @@ class DatExportHandler:
                 remove.append(name)
                 continue
 
+            # console('Read dat file: %s' % name, msg=Msg.warning)
             df = dat.DatFile(name)
             df.read(file_path_or_raw=node.record.extract(), use_dat_value=False)
 
@@ -135,6 +143,7 @@ class DatExportHandler:
         for file_name in remove:
             args.files.remove(file_name)
 
+        # print('files: %s' % (' '.join(dat_files),))
         return dat_files
 
 

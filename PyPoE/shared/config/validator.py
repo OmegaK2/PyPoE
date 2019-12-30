@@ -54,7 +54,7 @@ from validate import ValidateError, is_boolean
 # Globals
 # =============================================================================
 
-__all__ = ['IntEnumValidator', 'is_directory', 'is_file', 'functions']
+__all__ = ['IntEnumValidator', 'is_directory', 'is_file', 'is_list', 'functions']
 
 
 # =============================================================================
@@ -246,6 +246,15 @@ def is_directory(value, *args, exists=True, allow_empty=False, **kwargs):
             raise ValidateError('"%s" is not a directory.' % value)
         return value
 
+
+def is_list(value, *args, allow_empty=False, **kwargs):
+    if allow_empty and value == '':
+        return []
+    elif isinstance(value, list):
+        return value
+    else:
+        return value.split(',')
+
 # =============================================================================
 # Globals
 # =============================================================================
@@ -253,4 +262,6 @@ def is_directory(value, *args, exists=True, allow_empty=False, **kwargs):
 functions = {
     'is_file': is_file,
     'is_directory': is_directory,
+    'is_list': is_list,
 }
+
