@@ -90,6 +90,7 @@ class SpawnChanceCalculator:
     """
     Class to calculate spawn chances.
     """
+
     def __init__(self, mod_list, tags):
         """
         Parameters
@@ -207,7 +208,7 @@ class SpawnChanceCalculator:
             )
 
         weight = self.get_spawn_weight(mod)
-        chance = weight/self.total_spawn_weight
+        chance = weight / self.total_spawn_weight
 
         if remove:
             mods = []
@@ -230,6 +231,7 @@ class SpawnChanceCalculator:
 # =============================================================================
 # Functions
 # =============================================================================
+
 
 def get_translation_file_from_domain(domain):
     """
@@ -347,12 +349,8 @@ def get_spawn_weight(mod, tags):
 
 
 def generate_spawnable_mod_list(
-        mod_dat_file,
-        domain,
-        generation_type,
-        level=1,
-        tags=['default', ]
-        ):
+    mod_dat_file, domain, generation_type, level=1, tags=['default',]
+):
     """
     Generates a list of modifiers that can be spawned for the specified
     parameters, i.e. mods that can not spawn will be removed.
@@ -412,6 +410,3 @@ def generate_spawnable_mod_list(
         mods.append(mod)
 
     return mods
-
-
-

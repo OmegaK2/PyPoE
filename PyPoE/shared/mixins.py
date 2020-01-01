@@ -106,7 +106,9 @@ class ReprMixin:
 
     def __repr__(self):
         args = []
-        for name, parameter in inspect.signature(self.__init__).parameters.items():
+        for name, parameter in inspect.signature(
+            self.__init__
+        ).parameters.items():
             if parameter.kind != inspect.Parameter.POSITIONAL_OR_KEYWORD:
                 continue
 
@@ -135,6 +137,7 @@ class ReprMixin:
             hex(id(self)),
             ', '.join(args),
         )
+
 
 # =============================================================================
 # Functions

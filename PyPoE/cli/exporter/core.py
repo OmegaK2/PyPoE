@@ -67,26 +67,28 @@ from PyPoE.cli.exporter.wiki.core import WikiHandler
 
 
 def setup_config():
-    config.validator.functions.update({
-        'is_version': IntEnumValidator(
-            enum=VERSION,
-        ),
-        'is_distributor': IntEnumValidator(
-            enum=DISTRIBUTOR,
-        )
-    })
+    config.validator.functions.update(
+        {
+            'is_version': IntEnumValidator(enum=VERSION,),
+            'is_distributor': IntEnumValidator(enum=DISTRIBUTOR,),
+        }
+    )
 
-    config.add_option('version', 'is_version(default=%s)' %
-                      VERSION.DEFAULT.value)
-    config.add_option('distributor', 'is_distributor(default=%s)' %
-                      DISTRIBUTOR.DEFAULT.value)
+    config.add_option(
+        'version', 'is_version(default=%s)' % VERSION.DEFAULT.value
+    )
+    config.add_option(
+        'distributor', 'is_distributor(default=%s)' % DISTRIBUTOR.DEFAULT.value
+    )
     config.add_option(
         'ggpk_path', 'is_file(default="", exists=True, allow_empty=True)'
     )
-    config.add_option('language',
-                      'option("English", "French", "German", "Portuguese",'
-                      '"Russian", "Spanish", "Thai", "Simplified Chinese",'
-                      '"Traditional Chinese", "Korean", default="English")')
+    config.add_option(
+        'language',
+        'option("English", "French", "German", "Portuguese",'
+        '"Russian", "Spanish", "Thai", "Simplified Chinese",'
+        '"Traditional Chinese", "Korean", default="English")',
+    )
 
 
 def main():
@@ -107,6 +109,7 @@ def main():
 
     # Execute
     run(main_parser, config)
+
 
 if __name__ == '__main__':
     main()

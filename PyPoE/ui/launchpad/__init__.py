@@ -49,6 +49,7 @@ __all__ = ['LaunchpadMainWindow', 'launchpad_main']
 # Classes
 # =============================================================================
 
+
 class LaunchpadMainWindow(QMainWindow):
 
     child_closed = Signal(QWidget)
@@ -81,6 +82,7 @@ class LaunchpadMainWindow(QMainWindow):
     def _wrap_clicked(self, i):
         def wrapped():
             return self.run_application(i)
+
         return wrapped
 
     def _handle_closed_child(self, qwidget):
@@ -99,6 +101,7 @@ class LaunchpadMainWindow(QMainWindow):
         qmainwindow.activateWindow()
 
         self.instances[i] = qmainwindow
+
 
 # =============================================================================
 # Functions

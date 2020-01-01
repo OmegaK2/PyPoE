@@ -88,7 +88,7 @@ def get_content_ggpk_hash():
     """
     ggpk = get_content_ggpk_path()
     with open(ggpk, 'rb') as f:
-        data = f.read(2**16)
+        data = f.read(2 ** 16)
 
     return hashlib.md5(data).hexdigest()
 

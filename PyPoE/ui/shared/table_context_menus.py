@@ -66,7 +66,7 @@ class TableContextReadOnlyMenu(QMenu):
     def copy(self, *args, **kwargs):
         qmodelindexlist = self.parent().selectionModel().selectedIndexes()
 
-        rmin, rmax, cmin, cmax = 2**32, 0, 2**32, 0
+        rmin, rmax, cmin, cmax = 2 ** 32, 0, 2 ** 32, 0
 
         for qmodelindex in qmodelindexlist:
             rid = qmodelindex.row()
@@ -78,15 +78,22 @@ class TableContextReadOnlyMenu(QMenu):
             cmax = max(cmax, cid)
 
         # +1 to offset for the minimum size
-        matrix = [[None for j in range(0, cmax-cmin+1)] for i in range(0, rmax-rmin+1)]
+        matrix = [
+            [None for j in range(0, cmax - cmin + 1)]
+            for i in range(0, rmax - rmin + 1)
+        ]
 
         for qmodelindex in qmodelindexlist:
-            matrix[qmodelindex.row()-rmin][qmodelindex.column()-cmin] = self._handle_data(qmodelindex.data())
+            matrix[qmodelindex.row() - rmin][
+                qmodelindex.column() - cmin
+            ] = self._handle_data(qmodelindex.data())
 
         # Transform the matrix into a string
         out = []
         for row in matrix:
-            out.append('\t'.join(['' if cell is None else cell for cell in row]))
+            out.append(
+                '\t'.join(['' if cell is None else cell for cell in row])
+            )
 
         QApplication.clipboard().setText('\n'.join(out))
 

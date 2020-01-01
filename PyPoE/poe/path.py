@@ -63,6 +63,7 @@ class PoEPathList(list):
     used just like a regular list.
     It addition it performs existence checks on the items added by default.
     """
+
     def __init__(self, only_existing=True):
         self._only_existing = True
 
@@ -108,7 +109,9 @@ class PoEPath:
         official Path of Exile client on Linux.
     """
 
-    def __init__(self, version=VERSION.DEFAULT, distributor=DISTRIBUTOR.DEFAULT):
+    def __init__(
+        self, version=VERSION.DEFAULT, distributor=DISTRIBUTOR.DEFAULT
+    ):
         """
         Change the version or distributor if you only watch to search for
         specific installations.
@@ -163,17 +166,23 @@ class PoEPath:
         if self.distributor & DISTRIBUTOR.GGG:
             for item in (
                 (r'Software\GrindingGearGames\Path of Exile', VERSION.STABLE),
-                (r'Software\GrindingGearGames\Path of Exile - beta', VERSION.BETA),
-                (r'Software\GrindingGearGames\Path of Exile - Alpha',
-                 VERSION.ALPHA)
+                (
+                    r'Software\GrindingGearGames\Path of Exile - beta',
+                    VERSION.BETA,
+                ),
+                (
+                    r'Software\GrindingGearGames\Path of Exile - Alpha',
+                    VERSION.ALPHA,
+                ),
             ):
                 if self.version & item[1]:
-                    basepath =  self._get_winreg_path(item[0], 'InstallLocation')
+                    basepath = self._get_winreg_path(item[0], 'InstallLocation')
                     paths.append(basepath, item[1], DISTRIBUTOR.GGG)
 
         if self.distributor & DISTRIBUTOR.STEAM:
-            basepath = self._get_winreg_path(r'Software\Valve\Steam',
-                                             'SteamPath')
+            basepath = self._get_winreg_path(
+                r'Software\Valve\Steam', 'SteamPath'
+            )
             # Steam does have a beta, but it is installed into the same directory
             # AFAIK, there is no safe way to determine which is installed
             # unless we hook into steam
@@ -187,11 +196,8 @@ class PoEPath:
         if self.distributor & DISTRIBUTOR.GARENA:
             if self.version & VERSION.STABLE:
                 basepath = self._get_winreg_path(
-                    r'SOFTWARE\Wow6432Node\Garena\PoE',
-                    'Path',
-                    user=False
+                    r'SOFTWARE\Wow6432Node\Garena\PoE', 'Path', user=False
                 )
                 paths.append(basepath, VERSION.STABLE, DISTRIBUTOR.GARENA)
-
 
         return paths

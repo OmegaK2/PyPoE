@@ -49,7 +49,11 @@ from PyPoE.poe.constants import WORDLISTS
 from PyPoE.poe.file.dat import RelationalReader
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter.wiki.parser import BaseParser
-from PyPoE.cli.exporter.wiki.handler import ExporterHandler, add_parser_arguments, WIKIS
+from PyPoE.cli.exporter.wiki.handler import (
+    ExporterHandler,
+    add_parser_arguments,
+    WIKIS,
+)
 
 # =============================================================================
 # Globals
@@ -65,20 +69,20 @@ __all__ = []
 class UniqueCommandHandler(ExporterHandler):
     def __init__(self, sub_parser):
         self.parser = sub_parser.add_parser(
-            'unique',
-            help='Unique item administrative utility functions',
+            'unique', help='Unique item administrative utility functions',
         )
         self.parser.set_defaults(func=lambda args: self.parser.print_help())
         sub = self.parser.add_subparsers()
 
         copy = sub.add_parser(
             'copy',
-            help='Copy unique item data from English wiki and translate various strings'
+            help='Copy unique item data from English wiki and translate various strings',
         )
 
         add_parser_arguments(copy)
         copy.add_argument(
-            '-en-w-u', '--english-wiki-user',
+            '-en-w-u',
+            '--english-wiki-user',
             dest='en_user',
             help='Gamepedia user name to use to login into the English wiki (source). Bot access speeds things up.',
             action='store',
@@ -87,7 +91,9 @@ class UniqueCommandHandler(ExporterHandler):
         )
 
         copy.add_argument(
-            '-en-w-p', '-en-w-pw', '--english-wiki-password',
+            '-en-w-p',
+            '-en-w-pw',
+            '--english-wiki-password',
             dest='en_password',
             help='Gamepedia password to use to login into the English wiki (source). Bot access speeds things up.',
             action='store',
@@ -96,7 +102,10 @@ class UniqueCommandHandler(ExporterHandler):
         )
 
         copy.add_argument(
-            '-uf', '-cuf', '-c-uf', '--copy-upgraded-from',
+            '-uf',
+            '-cuf',
+            '-c-uf',
+            '--copy-upgraded-from',
             dest='copy_upgraded_from',
             help='Copy upgraded from',
             action='store_true',
@@ -104,16 +113,16 @@ class UniqueCommandHandler(ExporterHandler):
         )
 
         copy.add_argument(
-            'page',
-            help='page of the unique item to process',
-            nargs='+',
+            'page', help='page of the unique item to process', nargs='+',
         )
-        copy.set_defaults(func=self.get_wrap(
-            cls=UniqueCopy,
-            func=None,
-            handler=UniqueCopy.run,
-            wiki_handler=None,
-        ))
+        copy.set_defaults(
+            func=self.get_wrap(
+                cls=UniqueCopy,
+                func=None,
+                handler=UniqueCopy.run,
+                wiki_handler=None,
+            )
+        )
 
 
 class UniqueCopy(BaseParser):
@@ -122,11 +131,19 @@ class UniqueCopy(BaseParser):
 
         # Set this up at the earlist so no processing time is wasted
         if not self.parsed_args.user or not self.parsed_args.password:
-            raise ValueError('User login to target wiki is required for this operation.')
+            raise ValueError(
+                'User login to target wiki is required for this operation.'
+            )
 
-        self.site_english = mwclient.Site(WIKIS['English'], path='/', scheme='https')
-        self.site_english.login(self.parsed_args.en_user, self.parsed_args.en_password)
-        self.site_other = mwclient.Site(WIKIS[self.lang], path='/', scheme='https')
+        self.site_english = mwclient.Site(
+            WIKIS['English'], path='/', scheme='https'
+        )
+        self.site_english.login(
+            self.parsed_args.en_user, self.parsed_args.en_password
+        )
+        self.site_other = mwclient.Site(
+            WIKIS[self.lang], path='/', scheme='https'
+        )
         self.site_other.login(self.parsed_args.user, self.parsed_args.password)
 
         if self.lang == 'English':
@@ -135,11 +152,8 @@ class UniqueCopy(BaseParser):
         self.rr_english = RelationalReader(
             path_or_ggpk=self.base_path,
             raise_error_on_missing_relation=False,
-            read_options={
-                'use_dat_value': False,
-                'auto_build_index': True,
-            },
-            language='English'
+            read_options={'use_dat_value': False, 'auto_build_index': True,},
+            language='English',
         )
 
         console('Creating lookup cache...')
@@ -151,9 +165,18 @@ class UniqueCopy(BaseParser):
         self.cache = defaultdict(BaseItemCacheInstance)
         for row in self.rr_english['BaseItemTypes.dat']:
             self.cache[row['ItemClassesKey']['Id']].append(row)
-            self.cache[row['ItemClassesKey']['Id']].index['Name'][row['Name']].append(row)
+            self.cache[row['ItemClassesKey']['Id']].index['Name'][
+                row['Name']
+            ].append(row)
 
-    def fuzzy_find_text(self, text, file_name, key, source_list=None, fuzzy_func=fuzz.partial_ratio):
+    def fuzzy_find_text(
+        self,
+        text,
+        file_name,
+        key,
+        source_list=None,
+        fuzzy_func=fuzz.partial_ratio,
+    ):
         text = text.strip()
 
         if source_list is None:
@@ -171,11 +194,9 @@ class UniqueCopy(BaseParser):
         for row in source_list:
             ratio = fuzzy_func(row[key], text)
             if ratio > 90:
-                results.append({
-                    'id': row.rowid,
-                    'text': row[key],
-                    'ratio': ratio,
-                })
+                results.append(
+                    {'id': row.rowid, 'text': row[key], 'ratio': ratio,}
+                )
 
         if len(results) == 0:
             console('No matching text found.')
@@ -191,7 +212,9 @@ class UniqueCopy(BaseParser):
                 console('%(i)s: %(ratio)s\n%(text)s\n----------------' % row)
 
             try:
-                correct = results[int(input('Enter index of correct translation:\n'))]
+                correct = results[
+                    int(input('Enter index of correct translation:\n'))
+                ]
             except Exception as e:
                 traceback.print_exc()
 
@@ -213,29 +236,33 @@ class UniqueCopy(BaseParser):
             raise Exception('Item template not found')
 
         console('Finding flavour text...')
-        if not mwtemplate.has('flavour_text_id') and mwtemplate.has('flavour_text'):
-            console('Missing flavour_text_id. Trying to find flavour text in FlavourText.dat')
+        if not mwtemplate.has('flavour_text_id') and mwtemplate.has(
+            'flavour_text'
+        ):
+            console(
+                'Missing flavour_text_id. Trying to find flavour text in FlavourText.dat'
+            )
 
             ftext = self.fuzzy_find_text(
                 mwtemplate.get('flavour_text'),
                 'FlavourText.dat',
                 'Text',
-                fuzzy_func=fuzz.partial_token_set_ratio
+                fuzzy_func=fuzz.partial_token_set_ratio,
             )
 
             results = []
             for row in self.rr_english['FlavourText.dat']:
                 ratio = fuzz.partial_token_set_ratio(row['Text'], ftext)
                 if ratio > 90:
-                    results.append({
-                        'id': row['Id'],
-                        'text': row['Text'],
-                        'ratio': ratio,
-                    })
+                    results.append(
+                        {'id': row['Id'], 'text': row['Text'], 'ratio': ratio,}
+                    )
 
             if len(results) == 0:
                 console('No matching flavour text found.')
-                text = input('Enter translated flavour text. Type None to skip item entirely.\n')
+                text = input(
+                    'Enter translated flavour text. Type None to skip item entirely.\n'
+                )
                 if text == 'None':
                     console('Skipping item %s.' % pn)
                     return
@@ -244,10 +271,15 @@ class UniqueCopy(BaseParser):
                 console('Multiple matching flavour text entries found.\n')
                 for i, row in enumerate(results):
                     row['i'] = i
-                    console('%(i)s %(id)s: %(ratio)s\n%(text)s\n----------------' % row)
+                    console(
+                        '%(i)s %(id)s: %(ratio)s\n%(text)s\n----------------'
+                        % row
+                    )
 
                 try:
-                    correct = results[int(input('Enter index of correct translation.'))]
+                    correct = results[
+                        int(input('Enter index of correct translation.'))
+                    ]
                 except Exception as e:
                     traceback.print_exc()
 
@@ -257,8 +289,15 @@ class UniqueCopy(BaseParser):
 
         # Grab flavour text from other language
         if mwtemplate.has('flavour_text_id'):
-            mwtemplate.get('flavour_text').value = ' %s\n' % self.rr['FlavourText.dat'].index['Id'][
-                mwtemplate.get('flavour_text_id').value.strip()]['Text'].replace('\r', '').replace('\n', '<br>')
+            mwtemplate.get('flavour_text').value = ' %s\n' % self.rr[
+                'FlavourText.dat'
+            ].index['Id'][mwtemplate.get('flavour_text_id').value.strip()][
+                'Text'
+            ].replace(
+                '\r', ''
+            ).replace(
+                '\n', '<br>'
+            )
 
         # Need this for multiple things
         name = mwtemplate.get('name').value.strip()
@@ -269,7 +308,9 @@ class UniqueCopy(BaseParser):
 
         # Find translated item name
         console('Finding item name...')
-        new = self.fuzzy_find_text(name, 'Words.dat', 'Text2', source_list=self.words)
+        new = self.fuzzy_find_text(
+            name, 'Words.dat', 'Text2', source_list=self.words
+        )
         if new is None:
             console('Didn\'t get an english name for this item, skipping.')
             return
@@ -289,7 +330,9 @@ class UniqueCopy(BaseParser):
                 mwtemplate.get('base_item'),
                 'BaseItemTypes.dat',
                 'Name',
-                source_list=self.cache[mwtemplate.get('class_id').value.strip()]
+                source_list=self.cache[
+                    mwtemplate.get('class_id').value.strip()
+                ],
             )
             if base is None:
                 console('Base item is required for unique items. Skipping.')
@@ -310,7 +353,10 @@ class UniqueCopy(BaseParser):
                     mwtemplate.remove(mwparam.name)
 
         if mwtemplate.has('drop_text'):
-            console('Drop text might need a translation. Current text:\n\n%s' % mwtemplate.get('drop_text').value.strip())
+            console(
+                'Drop text might need a translation. Current text:\n\n%s'
+                % mwtemplate.get('drop_text').value.strip()
+            )
             text = input('\nNew text (leave empty to copy old):\n')
             if text:
                 mwtemplate.get('drop_text').value = ' %s\n' % text
@@ -319,7 +365,10 @@ class UniqueCopy(BaseParser):
         if pn == name:
             page = self.site_other.pages[new]
         else:
-            console('Name of page doesn\'t equal item name. \nOld: %s\nItem:%s' % (pn, new))
+            console(
+                'Name of page doesn\'t equal item name. \nOld: %s\nItem:%s'
+                % (pn, new)
+            )
             cont = True
             while cont:
                 t = '%s (%s)' % (new, input('Enter phrase for parenthesis:\n'))
@@ -339,16 +388,19 @@ class UniqueCopy(BaseParser):
 class BaseItemCacheInstance(list):
     index = {'Name': defaultdict(list)}
 
+
 # =============================================================================
 # Functions
 # =============================================================================
+
 
 def run():
     cache = defaultdict(BaseItemCacheInstance)
     for row in self.rr_english['BaseItemTypes.dat']:
         cache[row['ItemClassesKey']['Id']].append(row)
-        cache[row['ItemClassesKey']['Id']].index['Name'][row['Name']].append(row)
-
+        cache[row['ItemClassesKey']['Id']].index['Name'][row['Name']].append(
+            row
+        )
 
     for pn in ['Bubonic Trail (1 Abyssal Socket)']:
         copy(pn, cache)
@@ -361,4 +413,5 @@ def run():
     profiler.runcall(copy, "Brightbeak", cache)
     profiler.print_stats()'''
 
-#run()
+
+# run()

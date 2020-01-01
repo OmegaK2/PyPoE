@@ -84,7 +84,6 @@ __all__ = [
     'BaseParser',
     'WikiCondition',
     'TagHandler',
-
     'find_template',
     'format_result_rows',
     'make_inter_wiki_links',
@@ -112,7 +111,7 @@ _inter_wiki_map = {
         ('Critical Strike Multiplier', {'link': 'Critical Strike Multiplier'}),
         ('Critical Strike', {'link': 'Critical Strike'}),
         ('Movement Speed', {'link': 'Movement Speed'}),
-        ('Leech', {'link': 'Leech'}), # Life Leech, Mana Leech
+        ('Leech', {'link': 'Leech'}),  # Life Leech, Mana Leech
         ('Low Life', {'link': 'Low Life'}),
         ('Full Life', {'link': 'Full Life'}),
         ('Life', {'link': 'Life'}),
@@ -121,7 +120,7 @@ _inter_wiki_map = {
         ('Full Mana', {'link': 'Full Mana'}),
         ('Mana', {'link': 'Mana'}),
         # Just damage
-        #('Damage', {'link': 'Damage'}),
+        # ('Damage', {'link': 'Damage'}),
         #
         # Defenses
         #
@@ -143,24 +142,18 @@ _inter_wiki_map = {
         #
         # Buffs
         #
-
         # Charges
         ('Endurance Charge(?:|s)', {'link': 'Endurance Charge'}),
         ('Frenzy Charge(?:|s)', {'link': 'Frenzy Charge'}),
         ('Power Charge(?:|s)', {'link': 'Power Charge'}),
-
         # Friendly
         ('Rampage', {'link': 'Rampage'}),
-
         # Hostile
         ('Corrupted Blood', {'link': 'Corrupted Blood'}),
-
         #
         # Misc stats
         #
-
         ('Character Size', {'link': 'Character Size'}),
-
         #
         # Skills
         #
@@ -315,9 +308,10 @@ _inter_wiki_map = {
         ('(?:Summon |)Chaos Golem(?:|s)', {'link': 'Summon Chaos Golem'}),
         ('(?:Summon |)Flame Golem(?:|s)', {'link': 'Summon Flame Golem'}),
         ('(?:Summon |)Ice Golem(?:|s)', {'link': 'Summon Ice Golem'}),
-        ('(?:Summon |)Lightning Golem(?:|s)', {
-            'link': 'Summon Lightning Golem'
-        }),
+        (
+            '(?:Summon |)Lightning Golem(?:|s)',
+            {'link': 'Summon Lightning Golem'},
+        ),
         ('Summon Raging Spirit', {'link': 'Summon Raging Spirit'}),
         ('Summon Skeleton', {'link': 'Summon Skeleton'}),
         ('(?:Summon |)Stone Golem(?:|s)', {'link': 'Summon Stone Golem'}),
@@ -434,93 +428,149 @@ _inter_wiki_map = {
         #
         # Support gems
         #
-        ('(?:level [0-9]+) Added Chaos Damage', {
-            'link': 'Added Chaos Damage Support'}),
-        ('(?:level [0-9]+) Added Cold Damage', {
-            'link': 'Added Cold Damage Support'}),
-        ('(?:level [0-9]+) Added Fire Damage', {
-            'link': 'Added Fire Damage Support'}),
-        ('(?:level [0-9]+) Added Lightning Damage', {
-            'link': 'Added Lightning Damage Support'}),
-        ('(?:level [0-9]+) Additional Accuracy', {
-            'link': 'Additional Accuracy Support'}),
+        (
+            '(?:level [0-9]+) Added Chaos Damage',
+            {'link': 'Added Chaos Damage Support'},
+        ),
+        (
+            '(?:level [0-9]+) Added Cold Damage',
+            {'link': 'Added Cold Damage Support'},
+        ),
+        (
+            '(?:level [0-9]+) Added Fire Damage',
+            {'link': 'Added Fire Damage Support'},
+        ),
+        (
+            '(?:level [0-9]+) Added Lightning Damage',
+            {'link': 'Added Lightning Damage Support'},
+        ),
+        (
+            '(?:level [0-9]+) Additional Accuracy',
+            {'link': 'Additional Accuracy Support'},
+        ),
         ('(?:level [0-9]+) Arcane Surge', {'link': 'Arcane Surge Support'}),
         ('(?:level [0-9]+) Blasphemy', {'link': 'Blasphemy Support'}),
         ('(?:level [0-9]+) Blind', {'link': 'Blind Support'}),
-        ('(?:level [0-9]+) Block Chance Reduction', {
-            'link': 'Block Chance Reduction Support'}),
+        (
+            '(?:level [0-9]+) Block Chance Reduction',
+            {'link': 'Block Chance Reduction Support'},
+        ),
         ('(?:level [0-9]+) Blood Magic', {'link': 'Blood Magic Support'}),
         ('(?:level [0-9]+) Bloodlust', {'link': 'Bloodlust Support'}),
         ('(?:level [0-9]+) Brutality', {'link': 'Brutality Support'}),
         ('(?:level [0-9]+) Burning Damage', {'link': 'Burning Damage Support'}),
-        ('(?:level [0-9]+) Cast On Critical Strike', {
-            'link': 'Cast On Critical Strike Support'}),
+        (
+            '(?:level [0-9]+) Cast On Critical Strike',
+            {'link': 'Cast On Critical Strike Support'},
+        ),
         ('(?:level [0-9]+) Cast on Death', {'link': 'Cast on Death Support'}),
-        ('(?:level [0-9]+) Cast on Melee Kill', {
-            'link': 'Cast on Melee Kill Support'}),
-        ('(?:level [0-9]+) Cast when Damage Taken', {
-            'link': 'Cast when Damage Taken Support'}),
-        ('(?:level [0-9]+) Cast when Stunned', {
-            'link': 'Cast when Stunned Support'}),
+        (
+            '(?:level [0-9]+) Cast on Melee Kill',
+            {'link': 'Cast on Melee Kill Support'},
+        ),
+        (
+            '(?:level [0-9]+) Cast when Damage Taken',
+            {'link': 'Cast when Damage Taken Support'},
+        ),
+        (
+            '(?:level [0-9]+) Cast when Stunned',
+            {'link': 'Cast when Stunned Support'},
+        ),
         ('(?:level [0-9]+) Chain', {'link': 'Chain Support'}),
-        ('(?:level [0-9]+) Chance to Bleed', {
-            'link': 'Chance to Bleed Support'}),
+        (
+            '(?:level [0-9]+) Chance to Bleed',
+            {'link': 'Chance to Bleed Support'},
+        ),
         ('(?:level [0-9]+) Chance to Flee', {'link': 'Chance to Flee Support'}),
-        ('(?:level [0-9]+) Chance to Ignite', {
-            'link': 'Chance to Ignite Support'}),
+        (
+            '(?:level [0-9]+) Chance to Ignite',
+            {'link': 'Chance to Ignite Support'},
+        ),
         ('(?:level [0-9]+) Cluster Traps', {'link': 'Cluster Traps Support'}),
-        ('(?:level [0-9]+) Cold Penetration', {
-            'link': 'Cold Penetration Support'}),
+        (
+            '(?:level [0-9]+) Cold Penetration',
+            {'link': 'Cold Penetration Support'},
+        ),
         ('(?:level [0-9]+) Cold to Fire', {'link': 'Cold to Fire Support'}),
-        ('(?:level [0-9]+) Concentrated Effect', {
-            'link': 'Concentrated Effect Support'}),
-        ('(?:level [0-9]+) Controlled Destruction', {
-            'link': 'Controlled Destruction Support'}),
+        (
+            '(?:level [0-9]+) Concentrated Effect',
+            {'link': 'Concentrated Effect Support'},
+        ),
+        (
+            '(?:level [0-9]+) Controlled Destruction',
+            {'link': 'Controlled Destruction Support'},
+        ),
         ('(?:level [0-9]+) Culling Strike', {'link': 'Culling Strike Support'}),
         ('(?:level [0-9]+) Curse On Hit', {'link': 'Curse On Hit Support'}),
-        ('(?:level [0-9]+) Damage on Full Life', {
-            'link': 'Damage on Full Life Support'}),
-        ('(?:level [0-9]+) Deadly Ailments', {
-            'link': 'Deadly Ailments Support'}),
+        (
+            '(?:level [0-9]+) Damage on Full Life',
+            {'link': 'Damage on Full Life Support'},
+        ),
+        (
+            '(?:level [0-9]+) Deadly Ailments',
+            {'link': 'Deadly Ailments Support'},
+        ),
         ('(?:level [0-9]+) Decay', {'link': 'Decay Support'}),
         ('(?:level [0-9]+) Efficacy', {'link': 'Efficacy Support'}),
-        ('(?:level [0-9]+) Elemental Focus', {
-            'link': 'Elemental Focus Support'}),
-        ('(?:level [0-9]+) Elemental Proliferation', {
-            'link': 'Elemental Proliferation Support'}),
+        (
+            '(?:level [0-9]+) Elemental Focus',
+            {'link': 'Elemental Focus Support'},
+        ),
+        (
+            '(?:level [0-9]+) Elemental Proliferation',
+            {'link': 'Elemental Proliferation Support'},
+        ),
         ('(?:level [0-9]+) Empower', {'link': 'Empower Support'}),
-        ('(?:level [0-9]+) Endurance Charge on Melee Stun', {
-            'link': 'Endurance Charge on Melee Stun Support'}),
+        (
+            '(?:level [0-9]+) Endurance Charge on Melee Stun',
+            {'link': 'Endurance Charge on Melee Stun Support'},
+        ),
         ('(?:level [0-9]+) Enhance', {'link': 'Enhance Support'}),
         ('(?:level [0-9]+) Enlighten', {'link': 'Enlighten Support'}),
-        ('(?:level [0-9]+) Elemental Damage with Attacks', {
-            'link': 'Elemental Damage with Attacks Support'}),
-        ('(?:level [0-9]+) Faster Attacks', {
-            'link': 'Faster Attacks Support'}),
-        ('(?:level [0-9]+) Faster Casting', {
-            'link': 'Faster Casting Support'}),
-        ('(?:level [0-9]+) Faster Projectiles', {
-            'link': 'Faster Projectiles Support'}),
-        ('(?:level [0-9]+) Fire Penetration', {
-            'link': 'Fire Penetration Support'}),
+        (
+            '(?:level [0-9]+) Elemental Damage with Attacks',
+            {'link': 'Elemental Damage with Attacks Support'},
+        ),
+        ('(?:level [0-9]+) Faster Attacks', {'link': 'Faster Attacks Support'}),
+        ('(?:level [0-9]+) Faster Casting', {'link': 'Faster Casting Support'}),
+        (
+            '(?:level [0-9]+) Faster Projectiles',
+            {'link': 'Faster Projectiles Support'},
+        ),
+        (
+            '(?:level [0-9]+) Fire Penetration',
+            {'link': 'Fire Penetration Support'},
+        ),
         ('(?:level [0-9]+) Fork', {'link': 'Fork Support'}),
         ('(?:level [0-9]+) Fortify', {'link': 'Fortify Support'}),
         ('(?:level [0-9]+) Generosity', {'link': 'Generosity Support'}),
-        ('(?:level [0-9]+) Greater Multiple Projectiles', {
-            'link': 'Greater Multiple Projectiles Support'}),
+        (
+            '(?:level [0-9]+) Greater Multiple Projectiles',
+            {'link': 'Greater Multiple Projectiles Support'},
+        ),
         ('(?:level [0-9]+) Hypothermia', {'link': 'Hypothermia Support'}),
         ('(?:level [0-9]+) Ice Bite', {'link': 'Ice Bite Support'}),
-        ('(?:level [0-9]+) Increased Area of Effect', {
-            'link': 'Increased Area of Effect Support'}),
-        ('(?:level [0-9]+) Increased Critical Damage', {
-            'link': 'Increased Critical Damage Support'}),
-        ('(?:level [0-9]+) Increased Critical Strikes', {
-            'link': 'Increased Critical Strikes Support'}),
-        ('(?:level [0-9]+) Increased Duration', {
-            'link': 'Increased Duration Support'}),
+        (
+            '(?:level [0-9]+) Increased Area of Effect',
+            {'link': 'Increased Area of Effect Support'},
+        ),
+        (
+            '(?:level [0-9]+) Increased Critical Damage',
+            {'link': 'Increased Critical Damage Support'},
+        ),
+        (
+            '(?:level [0-9]+) Increased Critical Strikes',
+            {'link': 'Increased Critical Strikes Support'},
+        ),
+        (
+            '(?:level [0-9]+) Increased Duration',
+            {'link': 'Increased Duration Support'},
+        ),
         ('(?:level [0-9]+) Innervate', {'link': 'Innervate Support'}),
-        ('(?:level [0-9]+) Ignite Proliferation', {
-            'link': 'Ignite Proliferation Support'}),
+        (
+            '(?:level [0-9]+) Ignite Proliferation',
+            {'link': 'Ignite Proliferation Support'},
+        ),
         ('(?:level [0-9]+) Iron Grip', {'link': 'Iron Grip Support'}),
         ('(?:level [0-9]+) Iron Will', {'link': 'Iron Will Support'}),
         ('(?:level [0-9]+) Item Quantity', {'link': 'Item Quantity Support'}),
@@ -528,62 +578,94 @@ _inter_wiki_map = {
         ('(?:level [0-9]+) Immolate', {'link': 'Immolate Support'}),
         ('(?:level [0-9]+) Knockback', {'link': 'Knockback Support'}),
         ('(?:level [0-9]+) Less Duration', {'link': 'Less Duration Support'}),
-        ('(?:level [0-9]+) Lesser Multiple Projectiles', {
-            'link': 'Lesser Multiple Projectiles Support'}),
+        (
+            '(?:level [0-9]+) Lesser Multiple Projectiles',
+            {'link': 'Lesser Multiple Projectiles Support'},
+        ),
         ('(?:level [0-9]+) Lesser Poison', {'link': 'Lesser Poison Support'}),
-        ('(?:level [0-9]+) Life Gain on Hit', {
-            'link': 'Life Gain on Hit Support'}),
+        (
+            '(?:level [0-9]+) Life Gain on Hit',
+            {'link': 'Life Gain on Hit Support'},
+        ),
         ('(?:level [0-9]+) Life Leech', {'link': 'Life Leech Support'}),
-        ('(?:level [0-9]+) Lightning Penetration', {
-            'link': 'Lightning Penetration Support'}),
+        (
+            '(?:level [0-9]+) Lightning Penetration',
+            {'link': 'Lightning Penetration Support'},
+        ),
         ('(?:level [0-9]+) Maim', {'link': 'Maim Support'}),
         ('(?:level [0-9]+) Mana Leech', {'link': 'Mana Leech Support'}),
-        ('(?:level [0-9]+) Melee Physical Damage', {
-            'link': 'Melee Physical Damage Support'}),
+        (
+            '(?:level [0-9]+) Melee Physical Damage',
+            {'link': 'Melee Physical Damage Support'},
+        ),
         ('(?:level [0-9]+) Melee Splash', {'link': 'Melee Splash Support'}),
         ('(?:level [0-9]+) Minefield', {'link': 'Minefield Support'}),
         ('(?:level [0-9]+) Minion Damage', {'link': 'Minion Damage Support'}),
         ('(?:level [0-9]+) Minion Life', {'link': 'Minion Life Support'}),
         ('(?:level [0-9]+) Minion Speed', {'link': 'Minion Speed Support'}),
-        ('(?:level [0-9]+) Minion and Totem Elemental Resistance', {
-            'link': 'Minion and Totem Elemental Resistance Support'}),
+        (
+            '(?:level [0-9]+) Minion and Totem Elemental Resistance',
+            {'link': 'Minion and Totem Elemental Resistance Support'},
+        ),
         ('(?:level [0-9]+) Multiple Traps', {'link': 'Multiple Traps Support'}),
         ('(?:level [0-9]+) Multistrike', {'link': 'Multistrike Support'}),
         ('(?:level [0-9]+) Onslaught', {'link': 'Onslaught Support'}),
-        ('(?:level [0-9]+) Physical Projectile Attack Damage', {
-            'link': 'Physical Projectile Attack Damage Support'}),
-        ('(?:level [0-9]+) Physical to Lightning', {
-            'link': 'Physical to Lightning Support'}),
+        (
+            '(?:level [0-9]+) Physical Projectile Attack Damage',
+            {'link': 'Physical Projectile Attack Damage Support'},
+        ),
+        (
+            '(?:level [0-9]+) Physical to Lightning',
+            {'link': 'Physical to Lightning Support'},
+        ),
         ('(?:level [0-9]+) Pierce', {'link': 'Pierce Support'}),
         ('(?:level [0-9]+) Point Blank', {'link': 'Point Blank Support'}),
         ('(?:level [0-9]+) Poison', {'link': 'Poison Support'}),
-        ('(?:level [0-9]+) Power Charge On Critical', {
-            'link': 'Power Charge On Critical Support'}),
-        ('(?:level [0-9]+) Ranged Attack Totem', {
-            'link': 'Ranged Attack Totem Support'}),
+        (
+            '(?:level [0-9]+) Power Charge On Critical',
+            {'link': 'Power Charge On Critical Support'},
+        ),
+        (
+            '(?:level [0-9]+) Ranged Attack Totem',
+            {'link': 'Ranged Attack Totem Support'},
+        ),
         ('(?:level [0-9]+) Reduced Mana', {'link': 'Reduced Mana Support'}),
         ('(?:level [0-9]+) Remote Mine', {'link': 'Remote Mine Support'}),
-        ('(?:level [0-9]+) Return Projectiles', {
-            'link': 'Return Projectiles Support'}),
+        (
+            '(?:level [0-9]+) Return Projectiles',
+            {'link': 'Return Projectiles Support'},
+        ),
         ('(?:level [0-9]+) Ruthless', {'link': 'Ruthless Support'}),
-        ('(?:level [0-9]+) Slower Projectiles', {
-            'link': 'Slower Projectiles Support'}),
+        (
+            '(?:level [0-9]+) Slower Projectiles',
+            {'link': 'Slower Projectiles Support'},
+        ),
         ('(?:level [0-9]+) Spell Echo', {'link': 'Spell Echo Support'}),
         ('(?:level [0-9]+) Spell Totem', {'link': 'Spell Totem Support'}),
-        ('(?:level [0-9]+) Split Projectiles', {
-            'link': 'Split Projectiles Support'}),
+        (
+            '(?:level [0-9]+) Split Projectiles',
+            {'link': 'Split Projectiles Support'},
+        ),
         ('(?:level [0-9]+) Stun', {'link': 'Stun Support'}),
-        ('(?:level [0-9]+) Swift Affliction', {
-            'link': 'Swift Affliction Support'}),
+        (
+            '(?:level [0-9]+) Swift Affliction',
+            {'link': 'Swift Affliction Support'},
+        ),
         ('(?:level [0-9]+) Trap', {'link': 'Trap Support'}),
         ('(?:level [0-9]+) Trap Cooldown', {'link': 'Trap Cooldown Support'}),
-        ('(?:level [0-9]+) Trap and Mine Damage', {
-            'link': 'Trap and Mine Damage Support'}),
-        ('(?:level [0-9]+) Unbound Ailments', {
-            'link': 'Unbound Ailments Support'}),
+        (
+            '(?:level [0-9]+) Trap and Mine Damage',
+            {'link': 'Trap and Mine Damage Support'},
+        ),
+        (
+            '(?:level [0-9]+) Unbound Ailments',
+            {'link': 'Unbound Ailments Support'},
+        ),
         ('(?:level [0-9]+) Vile Toxins', {'link': 'Vile Toxins Support'}),
-        ('(?:level [0-9]+) Void Manipulation', {
-            'link': 'Void Manipulation Support'}),
+        (
+            '(?:level [0-9]+) Void Manipulation',
+            {'link': 'Void Manipulation Support'},
+        ),
         #
         # Groups
         #
@@ -596,7 +678,6 @@ _inter_wiki_map = {
         ('Melee (?:Skill|Gem)', {'link': 'Melee Skills'}),
         ('Bow (?:Skill|Gem)', {'link': 'Bow Skills'}),
         ('Minion (?:Skill|Gem)', {'link': 'Minion Skills'}),
-
         #
         # Damage
         #
@@ -611,17 +692,13 @@ _inter_wiki_map = {
         ('Spell Damage', {'link': 'Spell Damage'}),
         ('Elemental Damage', {'link': 'Elemental Damage'}),
         ('Minion Damage', {'link': 'Minion Damage'}),
-
         #
         # Armour & weapon types
         #
-
         # Generic
         ('Two Handed Melee Weapon(?:|s)', {'link': 'Two Handed Melee Weapons'}),
-
         # Armour
         ('Shield(?:|s)', {'link': 'Shield'}),
-
         # Melee
         ('Axe(?:|s)', {'link': 'Axe'}),
         ('Claw(?:|s)', {'link': 'Claw'}),
@@ -629,19 +706,16 @@ _inter_wiki_map = {
         ('Mace(?:|s)', {'link': 'Mace'}),
         ('Staff|Staves', {'link': 'Staff'}),
         ('Sword(?:|s)', {'link': 'Sword'}),
-
         # Range
         ('Bow(?:|s)', {'link': 'Bow'}),
         ('Wand(?:|s)', {'link': 'Axe'}),
         #
         # Status
         #
-
         ('Shock(?:|s|ed)', {'link': 'Shock'}),
         ('Ignite(?:|s|ed)', {'link': 'Ignite'}),
         ('Frozen|Freeze(?:|s)', {'link': 'Freeze'}),
         ('Poison(?:|s|ed)', {'link': 'Poison'}),
-
         #
         # Misc
         #
@@ -678,17 +752,25 @@ def _make_inter_wiki_re():
     out = {}
     for language, _inter_wiki_mapping in _inter_wiki_map.items():
         out[language] = []
-        for i in range(0, (len(_inter_wiki_mapping)//_MAX_RE)+1):
-            id = i*_MAX_RE
-            out[language].append(re.compile(
-                r'(?![^\[]*\]\])'
-                r'(?: |^)'
-                r'(?P<text>%s)'
-                r'(?= |$)' %
-                '|'.join(['(%s)' % item[0] for item in _inter_wiki_mapping[id:id+_MAX_RE]]),
-                re.UNICODE | re.IGNORECASE,
-            ))
+        for i in range(0, (len(_inter_wiki_mapping) // _MAX_RE) + 1):
+            id = i * _MAX_RE
+            out[language].append(
+                re.compile(
+                    r'(?![^\[]*\]\])'
+                    r'(?: |^)'
+                    r'(?P<text>%s)'
+                    r'(?= |$)'
+                    % '|'.join(
+                        [
+                            '(%s)' % item[0]
+                            for item in _inter_wiki_mapping[id : id + _MAX_RE]
+                        ]
+                    ),
+                    re.UNICODE | re.IGNORECASE,
+                )
+            )
     return out
+
 
 _inter_wiki_re = _make_inter_wiki_re()
 
@@ -757,8 +839,9 @@ class BaseParser:
         self._img_path = None
         self.lang = config.get_option('language')
 
-    def _column_index_filter(self, dat_file_name, column_id, arg_list,
-                             error_msg=_MISSING_MSG):
+    def _column_index_filter(
+        self, dat_file_name, column_id, arg_list, error_msg=_MISSING_MSG
+    ):
         self.rr[dat_file_name].build_index(column_id)
 
         rows = []
@@ -771,16 +854,12 @@ class BaseParser:
 
         for argument in arg_list:
             if argument in self.rr[dat_file_name].index[column_id]:
-                func(
-                    self.rr[dat_file_name].index[column_id][argument]
-                )
+                func(self.rr[dat_file_name].index[column_id][argument])
             else:
                 missing.append(argument)
 
         if missing:
-            console(
-                self._MISSING_MSG % '\n'.join(missing), msg=Msg.warning
-            )
+            console(self._MISSING_MSG % '\n'.join(missing), msg=Msg.warning)
 
         return rows
 
@@ -794,26 +873,21 @@ class BaseParser:
         return self._HIDDEN_FORMAT[self.lang] % make_inter_wiki_links(custom)
 
     def _format_detailed(self, custom, ingame):
-        return self._DETAILED_FORMAT % (
-            ingame,
-            make_inter_wiki_links(custom)
-        )
+        return self._DETAILED_FORMAT % (ingame, make_inter_wiki_links(custom))
 
     def _write_dds(self, data, out_path, parsed_args):
         with open(out_path, 'wb') as f:
-            f.write(extract_dds(
-                data,
-                path_or_ggpk=self.ggpk,
-            ))
+            f.write(extract_dds(data, path_or_ggpk=self.ggpk,))
 
             console('Wrote "%s"' % out_path)
 
         if not parsed_args.convert_images:
             return
 
-        os.system('magick convert "%s" "%s"' % (
-            out_path, out_path.replace('.dds', '.png'),
-        ))
+        os.system(
+            'magick convert "%s" "%s"'
+            % (out_path, out_path.replace('.dds', '.png'),)
+        )
         os.remove(out_path)
 
         console('Converted "%s" to png' % out_path)
@@ -828,8 +902,7 @@ class BaseParser:
     def _image_init(self, parsed_args):
         if parsed_args.store_images:
             console(
-                'Images are flagged for extraction. Loading content.ggpk '
-                '...'
+                'Images are flagged for extraction. Loading content.ggpk ' '...'
             )
             self._load_ggpk()
 
@@ -837,8 +910,9 @@ class BaseParser:
             if not os.path.exists(self._img_path):
                 os.makedirs(self._img_path)
 
-    def _get_stats(self, stats=None, values=None, mod=None,
-                   translation_file=None):
+    def _get_stats(
+        self, stats=None, values=None, mod=None, translation_file=None
+    ):
         if translation_file is None:
             if mod is None:
                 raise ValueError(
@@ -847,7 +921,8 @@ class BaseParser:
                 )
             else:
                 translation_file = get_translation_file_from_domain(
-                    mod['Domain'])
+                    mod['Domain']
+                )
         if stats is None or values is None:
             if mod is None:
                 raise ValueError(
@@ -876,8 +951,10 @@ class BaseParser:
 
         if mod and mod['Domain'] == MOD_DOMAIN.MONSTER:
             default = self.tc['stat_descriptions.txt'].get_translation(
-                result.source_ids, result.source_values, full_result=True,
-                lang=self.lang
+                result.source_ids,
+                result.source_values,
+                full_result=True,
+                lang=self.lang,
             )
             temp_ids = []
             temp_trans = []
@@ -887,8 +964,12 @@ class BaseParser:
                     if tr.ids != tr2.ids:
                         continue
 
-                    r1 = tr.get_language(self.lang).get_string(default.values[i])
-                    r2 = tr2.get_language(self.lang).get_string(result.values[j])
+                    r1 = tr.get_language(self.lang).get_string(
+                        default.values[i]
+                    )
+                    r2 = tr2.get_language(self.lang).get_string(
+                        result.values[j]
+                    )
                     if r1 and r2 and r1[0] != r2[0]:
                         temp_trans.append(self._format_detailed(r1[0], r2[0]))
                     elif r2 and r2[0]:
@@ -904,8 +985,7 @@ class BaseParser:
                 if not is_missing:
                     continue
 
-                r1 = tr.get_language(self.lang).\
-                    get_string(default.values[i])
+                r1 = tr.get_language(self.lang).get_string(default.values[i])
                 if r1 and r1[0]:
                     temp_trans.append(self._format_hidden(r1[0]))
                     temp_ids.append(tr.ids)
@@ -924,10 +1004,14 @@ class BaseParser:
                     index = temp_ids.index(tr.ids)
                 except ValueError:
                     temp_ids.insert(index, tr.ids)
-                    temp_trans.insert(index, make_inter_wiki_links(
-                        tr.get_language(self.lang).\
-                            get_string(result.values[i])[0]
-                    ))
+                    temp_trans.insert(
+                        index,
+                        make_inter_wiki_links(
+                            tr.get_language(self.lang).get_string(
+                                result.values[i]
+                            )[0]
+                        ),
+                    )
                 else:
                     pass
 
@@ -945,8 +1029,8 @@ class BaseParser:
 
             if custom_result.missing_ids:
                 warnings.warn(
-                    'Missing translation for ids %s and values %s' % (
-                        custom_result.missing_ids, custom_result.missing_values),
+                    'Missing translation for ids %s and values %s'
+                    % (custom_result.missing_ids, custom_result.missing_values),
                     MissingIdentifierWarning,
                 )
 
@@ -1030,7 +1114,8 @@ class TagHandler:
         if 'x ' in hstr:
             s = hstr.split('x ', maxsplit=1)
             return self._C_FORMAT % (
-                'currency', '%sx %s' % (s[0], self._check_link(s[1]))
+                'currency',
+                '%sx %s' % (s[0], self._check_link(s[1])),
             )
         else:
             return self._default_handler(hstr, parameter, 'currency')
@@ -1042,28 +1127,22 @@ class TagHandler:
         'normal': partial(_default_handler, tid='normal'),
         'default': partial(_default_handler, tid='default'),
         'augmented': partial(_default_handler, tid='augmented'),
-
         'size': _pass_through_handler,
         'smaller': _pass_through_handler,
-
         'gemitem': partial(_default_handler, tid='gem'),
         'currencyitem': _currency_handler,
-
         'whiteitem': partial(_default_handler, tid='white'),
         'magicitem': partial(_default_handler, tid='magic'),
         'rareitem': partial(_default_handler, tid='rare'),
         'uniqueitem': _unique_handler,
-
         'divination': partial(_default_handler, tid='divination'),
         'prophecy': partial(_default_handler, tid='prophecy'),
-
         'corrupted': partial(_link_handler, tid='corrupted'),
     }
 
 
 class WikiCondition:
-    COPY_KEYS = (
-    )
+    COPY_KEYS = ()
     COPY_MATCH = None
 
     NAME = NotImplemented
@@ -1085,7 +1164,8 @@ class WikiCondition:
             # Abuse this so it can be called as "text" and "condition"
             if self.template_arguments is None:
                 self.template_arguments = find_template(
-                    page.text(), self.MATCH or self.NAME)
+                    page.text(), self.MATCH or self.NAME
+                )
                 if len(self.template_arguments['texts']) == 1:
                     self.template_arguments = None
                     return False
@@ -1104,13 +1184,18 @@ class WikiCondition:
                         self.data[k] = v
 
             prefix = ''
-            if self.ADD_INCLUDE and '<onlyinclude></onlyinclude>' not in \
-                    page.text():
+            if (
+                self.ADD_INCLUDE
+                and '<onlyinclude></onlyinclude>' not in page.text()
+            ):
                 prefix = '<onlyinclude></onlyinclude>'
 
-            return self.handler(prefix + self.template_arguments['texts'][0] + \
-                   self._get_text() + \
-                   ''.join(self.template_arguments['texts'][1:]))
+            return self.handler(
+                prefix
+                + self.template_arguments['texts'][0]
+                + self._get_text()
+                + ''.join(self.template_arguments['texts'][1:])
+            )
         else:
             return self.handler(self._get_text())
 
@@ -1125,13 +1210,15 @@ class WikiCondition:
             ordered_dict=self.data,
         )
 
+
 # =============================================================================
 # Functions
 # =============================================================================
 
 
-def format_result_rows(parsed_args, ordered_dict, template_name,
-                       indent=DEFAULT_INDENT):
+def format_result_rows(
+    parsed_args, ordered_dict, template_name, indent=DEFAULT_INDENT
+):
     """
     Formats the given result rows as mediawiki template or module.
 
@@ -1197,10 +1284,10 @@ def make_inter_wiki_links(string):
         for match in regex.finditer(string):
             text = match.group('text')
             # Offset by 1 to account for text group
-            index = match.groups().index(text, 1)-1
-            data = mapping[i*_MAX_RE+index][1]
+            index = match.groups().index(text, 1) - 1
+            data = mapping[i * _MAX_RE + index][1]
 
-            out.append(string[last_index:match.start('text')])
+            out.append(string[last_index : match.start('text')])
             if text == data['link']:
                 out.append('[[%s]]' % data['link'])
             else:
@@ -1240,27 +1327,35 @@ def find_template(wikitext, template_name):
             appeared in the wikitext
 
     """
+
     def f(scanner, result, tid):
         return tid, scanner.match, result
 
-    scanner = re.Scanner([
-        # Need to have this look ahead to avoid matching templates that start
-        # with the same name.
-        (r'{{%s(?=[^\w}\|]*\||}})' % template_name,
-            partial(f, tid='template')),
-        (r'{{', partial(f, tid='l_brace')),
-        (r'}}', partial(f, tid='r_brace')),
-        (r'\[\[', partial(f, tid='l_brackets')),
-        (r'\]\]', partial(f, tid='r_brackets')),
-        (r'\|', partial(f, tid='pipe')),
-        (r'=', partial(f, tid='equals')),
-        (r'[{}]{1}', partial(f, tid='single_brace')),
-        (r'[\[\]]{1}', partial(f, tid='single_bracket')),
-        (r'[^{}\|=\[\]]+', partial(f, tid='text')),
-    ], re.UNICODE | re.MULTILINE)
+    scanner = re.Scanner(
+        [
+            # Need to have this look ahead to avoid matching templates that start
+            # with the same name.
+            (
+                r'{{%s(?=[^\w}\|]*\||}})' % template_name,
+                partial(f, tid='template'),
+            ),
+            (r'{{', partial(f, tid='l_brace')),
+            (r'}}', partial(f, tid='r_brace')),
+            (r'\[\[', partial(f, tid='l_brackets')),
+            (r'\]\]', partial(f, tid='r_brackets')),
+            (r'\|', partial(f, tid='pipe')),
+            (r'=', partial(f, tid='equals')),
+            (r'[{}]{1}', partial(f, tid='single_brace')),
+            (r'[\[\]]{1}', partial(f, tid='single_bracket')),
+            (r'[^{}\|=\[\]]+', partial(f, tid='text')),
+        ],
+        re.UNICODE | re.MULTILINE,
+    )
 
     # Returns
-    texts = [[], ]
+    texts = [
+        [],
+    ]
     kw_arguments = OrderedDict()
     arguments = []
 
@@ -1278,21 +1373,30 @@ def find_template(wikitext, template_name):
             # r_brace is needed to capture the last argument, as it's not
             # delimited by a pipe
             # It also prevents reaching the second condition in that case
-            if tid in ('pipe', 'r_brace') and brace_count == 0 and \
-                            bracket_count == 0:
+            if (
+                tid in ('pipe', 'r_brace')
+                and brace_count == 0
+                and bracket_count == 0
+            ):
                 pre_equal = True
                 for i in range(0, 2):
                     template_argument[i] = template_argument[i].strip(' \n')
 
                 if template_argument[1]:
-                    kw_arguments[template_argument[0]] = \
-                        template_argument[1]
+                    kw_arguments[template_argument[0]] = template_argument[1]
                 elif template_argument[0]:
                     arguments.append([template_argument[0]])
                 template_argument = ['', '']
-            elif tid in ('text', 'l_brace', 'r_brace', 'single_brace', 'pipe',
-                         'l_brackets', 'r_brackets', 'single_bracket') or (
-                    tid == 'equals' and brace_count >= 1):
+            elif tid in (
+                'text',
+                'l_brace',
+                'r_brace',
+                'single_brace',
+                'pipe',
+                'l_brackets',
+                'r_brackets',
+                'single_bracket',
+            ) or (tid == 'equals' and brace_count >= 1):
                 index = 0 if pre_equal else 1
                 template_argument[index] += text
             elif tid == 'equals' and brace_count == 0:
@@ -1337,5 +1441,9 @@ def parse_and_handle_description_tags(rr, text):
     str
         Parsed texts with wiki templates/links
     """
-    return parse_description_tags(text).handle_tags(
-        TagHandler(rr).tag_handlers).replace('\n', '<br>').replace('\r', '')
+    return (
+        parse_description_tags(text)
+        .handle_tags(TagHandler(rr).tag_handlers)
+        .replace('\n', '<br>')
+        .replace('\r', '')
+    )

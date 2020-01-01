@@ -42,8 +42,12 @@ from functools import partialmethod
 
 # Self
 from PyPoE.poe import text
-from PyPoE.poe.constants import \
-    MOD_DOMAIN, MOD_GENERATION_TYPE, MOD_STATS_RANGE, MOD_SELL_PRICES
+from PyPoE.poe.constants import (
+    MOD_DOMAIN,
+    MOD_GENERATION_TYPE,
+    MOD_STATS_RANGE,
+    MOD_SELL_PRICES,
+)
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter import config
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult
@@ -66,9 +70,7 @@ class OutOfBoundsWarning(UserWarning):
 
 
 class ModWikiCondition(WikiCondition):
-    COPY_KEYS = (
-        'tier_text',
-    )
+    COPY_KEYS = ('tier_text',)
 
     NAME = 'Mod'
 
@@ -80,10 +82,7 @@ class ModsHandler(ExporterHandler):
         lua_sub = self.parser.add_subparsers()
 
         # Mods
-        mparser = lua_sub.add_parser(
-            'mods',
-            help='Extract all mods.'
-        )
+        mparser = lua_sub.add_parser('mods', help='Extract all mods.')
         mparser.set_defaults(func=lambda args: mparser.print_help())
 
         sub = mparser.add_subparsers(help='Method of extracting mods')
@@ -100,28 +99,23 @@ class ModsHandler(ExporterHandler):
         )
 
         parser.add_argument(
-            '--generation-type', '--type',
+            '--generation-type',
+            '--type',
             dest='generation_type',
             help='Mod domain',
             choices=[k.name for k in MOD_GENERATION_TYPE],
         )
 
         self.add_default_parsers(
-            parser=parser,
-            cls=ModParser,
-            func=ModParser.filter,
+            parser=parser, cls=ModParser, func=ModParser.filter,
         )
 
         # Tempest
         parser = lua_sub.add_parser(
-            'tempest',
-            help='Extract tempest stuff (DEPRECATED).',
+            'tempest', help='Extract tempest stuff (DEPRECATED).',
         )
         self.add_default_parsers(
-            parser=parser,
-            cls=ModParser,
-            func=ModParser.tempest,
-            wiki=False,
+            parser=parser, cls=ModParser, func=ModParser.tempest, wiki=False,
         )
 
     def add_default_parsers(self, *args, **kwargs):
@@ -136,7 +130,7 @@ class ModParser(BaseParser):
         'Mods.dat',
         'Stats.dat',
     ]
-    
+
     # Load translations in advance
     _translations = [
         'map_stat_descriptions.txt',
@@ -162,34 +156,41 @@ class ModParser(BaseParser):
     def by_rowid(self, parsed_args):
         return self._export(
             parsed_args,
-            self.rr['Mods.dat'][parsed_args.start:parsed_args.end],
+            self.rr['Mods.dat'][parsed_args.start : parsed_args.end],
         )
 
     def by_id(self, parsed_args):
-        return self._export(parsed_args, self._mod_column_index_filter(
-            column_id='Id', arg_list=parsed_args.id
-        ))
+        return self._export(
+            parsed_args,
+            self._mod_column_index_filter(
+                column_id='Id', arg_list=parsed_args.id
+            ),
+        )
 
     def by_name(self, parsed_args):
-        return self._export(parsed_args, self._mod_column_index_filter(
-            column_id='Name', arg_list=parsed_args.name
-        ))
+        return self._export(
+            parsed_args,
+            self._mod_column_index_filter(
+                column_id='Name', arg_list=parsed_args.name
+            ),
+        )
 
     def filter(self, args):
         mods = []
 
         filters = []
         if args.domain:
-            filters.append({
-                'column': 'Domain',
-                'comp': getattr(MOD_DOMAIN, args.domain),
-            })
+            filters.append(
+                {'column': 'Domain', 'comp': getattr(MOD_DOMAIN, args.domain),}
+            )
 
         if args.generation_type:
-            filters.append({
-                'column': 'GenerationType',
-                'comp': getattr(MOD_GENERATION_TYPE, args.generation_type),
-            })
+            filters.append(
+                {
+                    'column': 'GenerationType',
+                    'comp': getattr(MOD_GENERATION_TYPE, args.generation_type),
+                }
+            )
 
         for mod in self.rr['Mods.dat']:
             for filter in filters:
@@ -208,7 +209,7 @@ class ModParser(BaseParser):
         else:
             console(
                 'No mods found for the specified parameters. Quitting.',
-                msg=Msg.warning
+                msg=Msg.warning,
             )
             return r
 
@@ -235,7 +236,9 @@ class ModParser(BaseParser):
                 def handler(hstr, parameter):
                     return hstr if parameter == 'MS' else ''
 
-                data['name'] = root.handle_tags({'if': handler, 'elif': handler})
+                data['name'] = root.handle_tags(
+                    {'if': handler, 'elif': handler}
+                )
 
             if mod['BuffDefinitionsKey']:
                 data['granted_buff_id'] = mod['BuffDefinitionsKey']['Id']
@@ -243,8 +246,11 @@ class ModParser(BaseParser):
             # todo ID for GEPL
             if mod['GrantedEffectsPerLevelKeys']:
                 data['granted_skill'] = ', '.join(
-                    [k['GrantedEffectsKey']['Id'] for k in
-                     mod['GrantedEffectsPerLevelKeys']])
+                    [
+                        k['GrantedEffectsKey']['Id']
+                        for k in mod['GrantedEffectsPerLevelKeys']
+                    ]
+                )
             data['mod_type'] = mod['ModTypeKey']['Name']
 
             stats = []
@@ -265,7 +271,9 @@ class ModParser(BaseParser):
 
             data['stat_text'] = '<br>'.join(self._get_stats(stats, values, mod))
 
-            for i, (sid, (vmin, vmax)) in enumerate(zip(stats, values), start=1):
+            for i, (sid, (vmin, vmax)) in enumerate(
+                zip(stats, values), start=1
+            ):
                 data['stat%s_id' % i] = sid
                 data['stat%s_min' % i] = vmin
                 data['stat%s_max' % i] = vmax
@@ -278,12 +286,13 @@ class ModParser(BaseParser):
             for i, tag in enumerate(mod['GenerationWeight_TagsKeys']):
                 j = i + 1
                 data['generation_weight%s_tag' % j] = tag['Id']
-                data['generation_weight%s_value' % j] = \
-                    mod['GenerationWeight_Values'][i]
+                data['generation_weight%s_value' % j] = mod[
+                    'GenerationWeight_Values'
+                ][i]
 
             tags = ', '.join(
-                [t['Id'] for t in mod['ModTypeKey']['TagsKeys']] +
-                [t['Id'] for t in mod['TagsKeys']]
+                [t['Id'] for t in mod['ModTypeKey']['TagsKeys']]
+                + [t['Id'] for t in mod['TagsKeys']]
             )
             if tags:
                 data['tags'] = tags
@@ -292,13 +301,15 @@ class ModParser(BaseParser):
                 sell_price = defaultdict(int)
                 for msp in mod['ModTypeKey']['ModSellPriceTypesKeys']:
                     for i, (item_id, amount) in enumerate(
-                            MOD_SELL_PRICES[msp['Id']].items(), start=1):
+                        MOD_SELL_PRICES[msp['Id']].items(), start=1
+                    ):
                         data['sell_price%s_name' % i] = self.rr[
-                            'BaseItemTypes.dat'].index['Id'][item_id]['Name']
+                            'BaseItemTypes.dat'
+                        ].index['Id'][item_id]['Name']
                         data['sell_price%s_amount' % i] = amount
 
                 # Make sure this is always the same order
-                sell_price = sorted(sell_price.items(), key=lambda x:x[0])
+                sell_price = sorted(sell_price.items(), key=lambda x: x[0])
 
                 for i, (item_name, amount) in enumerate(sell_price, start=1):
                     data['sell_price%s_name' % i] = item_name
@@ -311,9 +322,7 @@ class ModParser(BaseParser):
             r.add_result(
                 text=cond,
                 out_file='mod_%s.txt' % data['id'],
-                wiki_page=[
-                    {'page': page_name, 'condition': cond},
-                ],
+                wiki_page=[{'page': page_name, 'condition': cond},],
                 wiki_message='Mod updater',
             )
 
@@ -358,7 +367,9 @@ class ModParser(BaseParser):
                 pass
             else:
                 # Value is incremented by 1 for some reason
-                tempest = self.rr['ExplodingStormBuffs.dat'][stat_values[index]-1]
+                tempest = self.rr['ExplodingStormBuffs.dat'][
+                    stat_values[index] - 1
+                ]
 
                 stat_ids.pop(index)
                 stat_values.pop(index)
@@ -368,19 +379,29 @@ class ModParser(BaseParser):
                     tempest_values = tempest['StatValues']
                     tempest_stat_ids = [st['Id'] for st in tempest_stats]
                     t = tf.get_translation(
-                        tempest_stat_ids, tempest_values, full_result=True,
-                        lang=config.get_option('language')
+                        tempest_stat_ids,
+                        tempest_values,
+                        full_result=True,
+                        lang=config.get_option('language'),
                     )
-                    self._append_effect(t, effects, 'The tempest buff provides the following effects:')
-                #if tempest['MonsterVarietiesKey']:
+                    self._append_effect(
+                        t,
+                        effects,
+                        'The tempest buff provides the following effects:',
+                    )
+                # if tempest['MonsterVarietiesKey']:
                 #    print(tempest['MonsterVarietiesKey'])
                 #    break
 
             t = tf.get_translation(
-                stat_ids, stat_values, full_result=True,
-                lang=config.get_option('language')
+                stat_ids,
+                stat_values,
+                full_result=True,
+                lang=config.get_option('language'),
             )
-            self._append_effect(t, effects, 'The area gets the following modifiers:')
+            self._append_effect(
+                t, effects, 'The area gets the following modifiers:'
+            )
 
             info['effect'] = '\n'.join(effects)
             data.append(info)

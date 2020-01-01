@@ -76,8 +76,14 @@ class AbstractFileCache(ReprMixin):
 
     FILE_TYPE = None
 
-    def __init__(self, path_or_ggpk=None, files=None, files_shortcut=True,
-                 instance_options=None, read_options=None):
+    def __init__(
+        self,
+        path_or_ggpk=None,
+        files=None,
+        files_shortcut=True,
+        instance_options=None,
+        read_options=None,
+    ):
         """
         Parameters
         ----------
@@ -115,8 +121,9 @@ class AbstractFileCache(ReprMixin):
                 'path_or_ggpk must be a valid directory or GGPKFile'
             )
 
-        self.instance_options = {} if instance_options is None else \
-            instance_options
+        self.instance_options = (
+            {} if instance_options is None else instance_options
+        )
         self.read_options = {} if read_options is None else read_options
 
         self.files = {}

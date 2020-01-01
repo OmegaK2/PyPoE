@@ -66,8 +66,9 @@ def _apply_column_map(infobox, column_map, list_object):
         infobox[data['template']] = value
 
 
-def _type_factory(data_file, data_mapping, row_index=True, function=None,
-                  fail_condition=False):
+def _type_factory(
+    data_file, data_mapping, row_index=True, function=None, fail_condition=False
+):
     def func(self, infobox, base_item_type):
         try:
             data = self.rr[data_file].index['BaseItemTypesKey'][
@@ -85,6 +86,7 @@ def _type_factory(data_file, data_mapping, row_index=True, function=None,
             function(self, infobox, base_item_type, data)
 
         return True
+
     return func
 
 
@@ -97,6 +99,7 @@ def _simple_conflict_factory(data):
             return base_item_type['Name'] + appendix
 
     return _conflict_handler
+
 
 # =============================================================================
 # Classes
@@ -119,11 +122,9 @@ class WikiCondition(parser.WikiCondition):
         #
         'name_list',
         'quality',
-
         # Icons
         'inventory_icon',
         'alternate_art_inventory_icons',
-
         # Drop restrictions
         'drop_enabled',
         'drop_leagues',
@@ -131,24 +132,22 @@ class WikiCondition(parser.WikiCondition):
         'drop_text',
         'drop_monsters',
         'upgraded_from_disabled',
-
         # Item flags
         'is_corrupted',
         'is_relic',
         'can_not_be_traded_or_modified',
         'suppress_improper_modifiers_category',
-
         # Version information
         'release_version',
         'removal_version',
-
         # prophecies
         'prophecy_objective',
         'prophecy_reward',
     )
     COPY_MATCH = re.compile(
-        r'^(upgraded_from_set|implicit[0-9]+_(?:text|random_list)).*'
-        , re.UNICODE)
+        r'^(upgraded_from_set|implicit[0-9]+_(?:text|random_list)).*',
+        re.UNICODE,
+    )
 
     NAME = 'Base item'
     INDENT = 40
@@ -166,8 +165,9 @@ class MapItemWikiCondition(WikiCondition):
 class UniqueMapItemWikiCondition(MapItemWikiCondition):
     NAME = 'Item'
     COPY_MATCH = re.compile(
-        r'^(upgraded_from_set|(ex|im)plicit[0-9]+_(?:text|random_list)).*'
-        , re.UNICODE)
+        r'^(upgraded_from_set|(ex|im)plicit[0-9]+_(?:text|random_list)).*',
+        re.UNICODE,
+    )
 
 
 class ProphecyWikiCondition(WikiCondition):
@@ -191,8 +191,7 @@ class ItemsHandler(ExporterHandler):
         self.add_default_subparser_filters(sub, cls=ItemsParser, type='item')
 
         item_filter_parser = sub.add_parser(
-            'by_filter',
-            help='Extracts all items matching various filters',
+            'by_filter', help='Extracts all items matching various filters',
         )
 
         self.add_default_parsers(
@@ -202,13 +201,16 @@ class ItemsHandler(ExporterHandler):
             type='item',
         )
         item_filter_parser.add_argument(
-            '-ft-n', '--filter-name',
+            '-ft-n',
+            '--filter-name',
             help='Filter by item name using regular expression.',
             dest='re_name',
         )
 
         item_filter_parser.add_argument(
-            '-ft-id', '--filter-id', '--filter-metadata-id',
+            '-ft-id',
+            '--filter-id',
+            '--filter-metadata-id',
             help='Filter by item metadata id using regular expression',
             dest='re_id',
         )
@@ -219,32 +221,36 @@ class ItemsHandler(ExporterHandler):
         parser = core_sub.add_parser('prophecy', help='Prophecy export')
         parser.set_defaults(func=lambda args: parser.print_help())
         sub = parser.add_subparsers()
-        self.add_default_subparser_filters(sub, cls=ProphecyParser,
-                                           type='prophecy')
+        self.add_default_subparser_filters(
+            sub, cls=ProphecyParser, type='prophecy'
+        )
 
         #
         # Betrayal and later map series
         #
         parser = core_sub.add_parser(
-            'maps', help='Map export (Betrayal and later)')
+            'maps', help='Map export (Betrayal and later)'
+        )
         parser.set_defaults(func=lambda args: parser.print_help())
 
         self.add_default_parsers(
-            parser=parser,
-            cls=ItemsParser,
-            func=ItemsParser.export_map,
+            parser=parser, cls=ItemsParser, func=ItemsParser.export_map,
         )
         self.add_image_arguments(parser)
 
         group = parser.add_mutually_exclusive_group(required=False)
         group.add_argument(
-            '-ms', '--map-series', '--filter-map-series',
+            '-ms',
+            '--map-series',
+            '--filter-map-series',
             help='Filter by map series name (localized)',
             dest='map_series',
         )
 
         group.add_argument(
-            '-msid', '--map-series-id', '--filter-map-series-id',
+            '-msid',
+            '--map-series-id',
+            '--filter-map-series-id',
             help='Filter by internal map series id',
             dest='map_series_id',
         )
@@ -252,7 +258,7 @@ class ItemsHandler(ExporterHandler):
         parser.add_argument(
             'name',
             help='Visible name (i.e. the name you see in game). Can be '
-                 'specified multiple times.',
+            'specified multiple times.',
             nargs='*',
         )
 
@@ -263,7 +269,7 @@ class ItemsHandler(ExporterHandler):
         parser.add_argument(
             '--disable-english-file-links',
             help='Disables putting english file links in inventory icon for non'
-                 ' English languages',
+            ' English languages',
             action='store_false',
             dest='english_file_link',
             default=True,
@@ -271,7 +277,8 @@ class ItemsHandler(ExporterHandler):
 
         if type == 'item':
             parser.add_argument(
-                '-ft-c', '--filter-class',
+                '-ft-c',
+                '--filter-class',
                 help='Filter by item class(es). Case sensitive.',
                 nargs='*',
                 dest='item_class',
@@ -294,15 +301,9 @@ class ProphecyParser(parser.BaseParser):
     ]
 
     _LANG = {
-        'English': {
-            'prophecy': ' (prophecy)',
-        },
-        'Russian': {
-            'prophecy': ' (пророчество)',
-        },
-        'German': {
-            'prophecy': ' (Prophezeiung)',
-        },
+        'English': {'prophecy': ' (prophecy)',},
+        'Russian': {'prophecy': ' (пророчество)',},
+        'German': {'prophecy': ' (Prophezeiung)',},
     }
 
     _conflict_resolver_prophecy_map = {
@@ -325,7 +326,6 @@ class ProphecyParser(parser.BaseParser):
             'MysteriousInvadersLightning': ' (Lightning)',
             'MysteriousInvadersPhysical': ' (Physical)',
             'MysteriousInvadersChaos': ' (Chaos)',
-
             'AreaAllRaresAreCloned': ' (prophecy)',
             'HillockDropsTheAnvil': ' (prophecy)',
         },
@@ -348,7 +348,6 @@ class ProphecyParser(parser.BaseParser):
             'MysteriousInvadersLightning': ' (молния)',
             'MysteriousInvadersPhysical': ' (физический)',
             'MysteriousInvadersChaos': ' (хаос)',
-
             'AreaAllRaresAreCloned': ' (пророчество)',
             'HillockDropsTheAnvil': ' (пророчество)',
         },
@@ -371,7 +370,6 @@ class ProphecyParser(parser.BaseParser):
             'MysteriousInvadersLightning': ' (Blitz)',
             'MysteriousInvadersPhysical': ' (Physisch)',
             'MysteriousInvadersChaos': ' (Chaos)',
-
             'AreaAllRaresAreCloned': ' (Prophezeiung)',
             'HillockDropsTheAnvil': ' (Prophezeiung)',
         },
@@ -390,18 +388,24 @@ class ProphecyParser(parser.BaseParser):
     def by_rowid(self, parsed_args):
         return self.export(
             parsed_args,
-            self.rr['Prophecies.dat'][parsed_args.start:parsed_args.end],
+            self.rr['Prophecies.dat'][parsed_args.start : parsed_args.end],
         )
 
     def by_id(self, parsed_args):
-        return self.export(parsed_args, self._prophecy_column_index_filter(
-            column_id='Id', arg_list=parsed_args.id
-        ))
+        return self.export(
+            parsed_args,
+            self._prophecy_column_index_filter(
+                column_id='Id', arg_list=parsed_args.id
+            ),
+        )
 
     def by_name(self, parsed_args):
-        return self.export(parsed_args, self._prophecy_column_index_filter(
-            column_id='Name', arg_list=parsed_args.name
-        ))
+        return self.export(
+            parsed_args,
+            self._prophecy_column_index_filter(
+                column_id='Name', arg_list=parsed_args.name
+            ),
+        )
 
     def export(self, parsed_args, prophecies):
         final = []
@@ -409,7 +413,7 @@ class ProphecyParser(parser.BaseParser):
             if not prophecy['IsEnabled'] and not parsed_args.allow_disabled:
                 console(
                     'Prophecy "%s" is disabled - skipping.' % prophecy['Name'],
-                    msg=Msg.error
+                    msg=Msg.error,
                 )
                 continue
 
@@ -426,8 +430,9 @@ class ProphecyParser(parser.BaseParser):
             infobox['rarity_id'] = 'normal'
             infobox['name'] = name
             infobox['class_id'] = 'StackableCurrency'
-            infobox['base_item_id'] = \
-                'Metadata/Items/Currency/CurrencyItemisedProphecy'
+            infobox[
+                'base_item_id'
+            ] = 'Metadata/Items/Currency/CurrencyItemisedProphecy'
             infobox['flavour_text'] = prophecy['FlavourText']
             infobox['prophecy_id'] = prophecy['Id']
             infobox['prediction_text'] = prophecy['PredictionText']
@@ -439,17 +444,17 @@ class ProphecyParser(parser.BaseParser):
             # handle items with duplicate name entries
             if len(self.rr['Prophecies.dat'].index['Name'][name]) > 1:
                 extra = self._conflict_resolver_prophecy_map[self.lang].get(
-                    prophecy['Id'])
+                    prophecy['Id']
+                )
                 if extra is None:
-                    console('Unresolved ambiguous item name "%s" / id "%s". '
-                            'Skipping' % (prophecy['Name'], prophecy['Id']),
-                            msg=Msg.error)
+                    console(
+                        'Unresolved ambiguous item name "%s" / id "%s". '
+                        'Skipping' % (prophecy['Name'], prophecy['Id']),
+                        msg=Msg.error,
+                    )
                     continue
                 name += extra
-            cond = ProphecyWikiCondition(
-                data=infobox,
-                cmdargs=parsed_args,
-            )
+            cond = ProphecyWikiCondition(data=infobox, cmdargs=parsed_args,)
 
             r.add_result(
                 text=cond,
@@ -458,7 +463,7 @@ class ProphecyParser(parser.BaseParser):
                     {'page': name, 'condition': cond},
                     {
                         'page': name + self._LANG[self.lang]['prophecy'],
-                        'condition': cond
+                        'condition': cond,
                     },
                 ],
                 wiki_message='Prophecy exporter',
@@ -469,10 +474,7 @@ class ProphecyParser(parser.BaseParser):
 
 class ItemsParser(SkillParserShared):
     _regex_format = re.compile(
-        r'(?P<index>x|y|z)'
-        r'(?:[\W]*)'
-        r'(?P<tag>%|second)',
-        re.IGNORECASE
+        r'(?P<index>x|y|z)' r'(?:[\W]*)' r'(?P<tag>%|second)', re.IGNORECASE
     )
 
     # Core files we need to load
@@ -519,7 +521,7 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/Currency/CurrencyImprint',
         # Transmute Shard
         'Metadata/Items/Currency/CurrencyUpgradeToMagicShard',
-        'Metadata/Items/Currency/CurrencyIdentificationShard'
+        'Metadata/Items/Currency/CurrencyIdentificationShard',
     }
 
     _DROP_DISABLED_ITEMS_BY_ID = {
@@ -542,129 +544,81 @@ class ItemsParser(SkillParserShared):
             # =================================================================
             # One Hand Axes
             # =================================================================
-
-            'Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/OneHandAxe22':
-                '',
+            'Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/OneHandAxe22': '',
             # =================================================================
             # Boots
             # =================================================================
-
             'Metadata/Items/Armours/Boots/BootsInt4': '',
             # Legion Boots
             'Metadata/Items/Armours/Boots/BootsStrInt7': '',
-            'Metadata/Items/Armours/Boots/BootsAtlas1':
-                ' (Cold and Lightning Resistance)',
-            'Metadata/Items/Armours/Boots/BootsAtlas2':
-                ' (Fire and Cold Resistance)',
-            'Metadata/Items/Armours/Boots/BootsAtlas3':
-                ' (Fire and Lightning Resistance)',
+            'Metadata/Items/Armours/Boots/BootsAtlas1': ' (Cold and Lightning Resistance)',
+            'Metadata/Items/Armours/Boots/BootsAtlas2': ' (Fire and Cold Resistance)',
+            'Metadata/Items/Armours/Boots/BootsAtlas3': ' (Fire and Lightning Resistance)',
             # =================================================================
             # Gloves
             # =================================================================
-
             # Legion Gloves
             'Metadata/Items/Armours/Gloves/GlovesStrInt7': '',
             # =================================================================
             # Quivers
             # =================================================================
-
             'Metadata/Items/Quivers/QuiverDescent': ' (Descent)',
             # =================================================================
             # Rings
             # =================================================================
-
             'Metadata/Items/Rings/Ring12': " (ruby and topaz)",
             'Metadata/Items/Rings/Ring13': " (sapphire and topaz)",
             'Metadata/Items/Rings/Ring14': " (ruby and sapphire)",
             # =================================================================
             # Amulets
             # =================================================================
-            'Metadata/Items/Amulets/Talismans/Talisman2_6_1':
-                ' (Fire Damage taken as Cold Damage)',
-            'Metadata/Items/Amulets/Talismans/Talisman2_6_2':
-                ' (Fire Damage taken as Lightning Damage)',
-            'Metadata/Items/Amulets/Talismans/Talisman2_6_3':
-                ' (Cold Damage taken as Fire Damage)',
-            'Metadata/Items/Amulets/Talismans/Talisman2_6_4':
-                ' (Cold Damage taken as Lightning Damage)',
-            'Metadata/Items/Amulets/Talismans/Talisman2_6_5':
-                ' (Lightning Damage taken as Cold Damage)',
-            'Metadata/Items/Amulets/Talismans/Talisman2_6_6':
-                ' (Lightning Damage taken as Fire Damage)',
-            'Metadata/Items/Amulets/Talismans/Talisman3_6_1':
-                '  (Power Charge on Kill)',
-            'Metadata/Items/Amulets/Talismans/Talisman3_6_2':
-                '  (Frenzy Charge on Kill)',
-            'Metadata/Items/Amulets/Talismans/Talisman3_6_3':
-                '  (Endurance Charge on Kill)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_1': ' (Fire Damage taken as Cold Damage)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_2': ' (Fire Damage taken as Lightning Damage)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_3': ' (Cold Damage taken as Fire Damage)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_4': ' (Cold Damage taken as Lightning Damage)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_5': ' (Lightning Damage taken as Cold Damage)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_6': ' (Lightning Damage taken as Fire Damage)',
+            'Metadata/Items/Amulets/Talismans/Talisman3_6_1': '  (Power Charge on Kill)',
+            'Metadata/Items/Amulets/Talismans/Talisman3_6_2': '  (Frenzy Charge on Kill)',
+            'Metadata/Items/Amulets/Talismans/Talisman3_6_3': '  (Endurance Charge on Kill)',
             # =================================================================
             # Hideout Doodads
             # =================================================================
-
             'Metadata/Items/Hideout/HideoutLightningCoil': " (hideout doodad)",
             # =================================================================
             # Piece
             # =================================================================
-
-            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_1':
-                ' (1 of 4)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_2':
-                ' (2 of 4)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_3':
-                ' (3 of 4)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_4':
-                ' (4 of 4)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_1':
-                ' (1 of 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_2':
-                ' (2 of 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_3':
-                ' (3 of 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_1':
-                ' (1 of 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_2':
-                ' (2 of 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_3':
-                ' (3 of 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_1':
-                ' (1 of 2)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_2':
-                ' (2 of 2)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_1':
-                ' (1 of 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_2':
-                ' (2 of 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_3':
-                ' (3 of 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_1':
-                ' (1 of 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_2':
-                ' (2 of 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_3':
-                ' (3 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_1': ' (1 of 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_2': ' (2 of 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_3': ' (3 of 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_4': ' (4 of 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_1': ' (1 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_2': ' (2 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_3': ' (3 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_1': ' (1 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_2': ' (2 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_3': ' (3 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_1': ' (1 of 2)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_2': ' (2 of 2)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_1': ' (1 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_2': ' (2 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_3': ' (3 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_1': ' (1 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_2': ' (2 of 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_3': ' (3 of 3)',
             # =================================================================
             # MTX
             # =================================================================
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x1':
-                ' (1x1)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x2':
-                ' (1x2)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x3':
-                ' (1x3)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x4':
-                ' (1x4)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x1':
-                ' (2x1)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x2':
-                ' (2x2)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x3':
-                ' (2x3)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x4':
-                ' (2x4)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox3x2':
-                ' (3x2)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox3x3':
-                ' (3x3)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x1': ' (1x1)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x2': ' (1x2)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x3': ' (1x3)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x4': ' (1x4)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x1': ' (2x1)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x2': ' (2x2)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x3': ' (2x3)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x4': ' (2x4)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox3x2': ' (3x2)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox3x3': ' (3x3)',
             'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
             'IronMaiden': '',
             'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
@@ -681,183 +635,110 @@ class ItemsParser(SkillParserShared):
             # =================================================================
             # Quest items
             # =================================================================
-            'Metadata/Items/QuestItems/GoldenPages/Page1':
-                ' (1 of 4)',
-            'Metadata/Items/QuestItems/GoldenPages/Page2':
-                ' (2 of 4)',
-            'Metadata/Items/QuestItems/GoldenPages/Page3':
-                ' (3 of 4)',
-            'Metadata/Items/QuestItems/GoldenPages/Page4':
-                ' (4 of 4)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_1':
-                ' (1 of 2)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_2':
-                ' (2 of 2)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_1':
-                ' (1 of 3)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_2':
-                ' (2 of 3)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_3':
-                ' (3 of 3)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_1':
-                ' (1 of 3)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_2':
-                ' (2 of 3)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_3':
-                ' (3 of 3)',
+            'Metadata/Items/QuestItems/GoldenPages/Page1': ' (1 of 4)',
+            'Metadata/Items/QuestItems/GoldenPages/Page2': ' (2 of 4)',
+            'Metadata/Items/QuestItems/GoldenPages/Page3': ' (3 of 4)',
+            'Metadata/Items/QuestItems/GoldenPages/Page4': ' (4 of 4)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_1': ' (1 of 2)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_2': ' (2 of 2)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_1': ' (1 of 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_2': ' (2 of 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_3': ' (3 of 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_1': ' (1 of 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_2': ' (2 of 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_3': ' (3 of 3)',
         },
         'Russian': {
             # =================================================================
             # Active Skill Gems
             # =================================================================
-
-            'Metadata/Items/Gems/SkillGemPortal':
-                ' (камень умения)',
+            'Metadata/Items/Gems/SkillGemPortal': ' (камень умения)',
             # =================================================================
             # One Hand Axes
             # =================================================================
-
-            'Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/OneHandAxe22':
-                '',
+            'Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/OneHandAxe22': '',
             # =================================================================
             # Boots
             # =================================================================
-
             'Metadata/Items/Armours/Boots/BootsInt4': '',
             # Legion Boots
             'Metadata/Items/Armours/Boots/BootsStrInt7': '',
-            'Metadata/Items/Armours/Boots/BootsAtlas1':
-                ' (сопротивление холоду и молнии)',
-            'Metadata/Items/Armours/Boots/BootsAtlas2':
-                ' (сопротивление огню и холоду)',
-            'Metadata/Items/Armours/Boots/BootsAtlas3':
-                ' (сопротивление огню и молнии)',
+            'Metadata/Items/Armours/Boots/BootsAtlas1': ' (сопротивление холоду и молнии)',
+            'Metadata/Items/Armours/Boots/BootsAtlas2': ' (сопротивление огню и холоду)',
+            'Metadata/Items/Armours/Boots/BootsAtlas3': ' (сопротивление огню и молнии)',
             # =================================================================
             # Gloves
             # =================================================================
-
             # Legion Gloves
             'Metadata/Items/Armours/Gloves/GlovesStrInt7': '',
             # =================================================================
             # Quivers
             # =================================================================
-
             'Metadata/Items/Quivers/QuiverDescent': ' (Спуск)',
             # =================================================================
             # Rings
             # =================================================================
-            'Metadata/Items/Rings/Ring12':
-                " (рубин и топаз)",
-            'Metadata/Items/Rings/Ring13':
-                " (сапфир и топаз)",
-            'Metadata/Items/Rings/Ring14':
-                " (рубин и сапфир)",
+            'Metadata/Items/Rings/Ring12': " (рубин и топаз)",
+            'Metadata/Items/Rings/Ring13': " (сапфир и топаз)",
+            'Metadata/Items/Rings/Ring14': " (рубин и сапфир)",
             # =================================================================
             # Amulets
             # =================================================================
-            'Metadata/Items/Amulets/Talismans/Talisman2_6_1':
-                ' (получаемый урон от огня становится уроном от холода)',
-            'Metadata/Items/Amulets/Talismans/Talisman2_6_2':
-                ' (получаемый урон от огня становится уроном от молнии)',
-            'Metadata/Items/Amulets/Talismans/Talisman2_6_3':
-                ' (получаемый урон от холода становится уроном от огня)',
-            'Metadata/Items/Amulets/Talismans/Talisman2_6_4':
-                ' (получаемый урон от холода становится уроном от молнии)',
-            'Metadata/Items/Amulets/Talismans/Talisman2_6_5':
-                ' (получаемый урон от молнии становится уроном от холода)',
-            'Metadata/Items/Amulets/Talismans/Talisman2_6_6':
-                ' (получаемый урон от молнии становится уроном от огня)',
-            'Metadata/Items/Amulets/Talismans/Talisman3_6_1':
-                ' (заряд энергии при убийстве)',
-            'Metadata/Items/Amulets/Talismans/Talisman3_6_2':
-                ' (заряд ярости при убийстве)',
-            'Metadata/Items/Amulets/Talismans/Talisman3_6_3':
-                ' (заряд выносливости при убийстве)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_1': ' (получаемый урон от огня становится уроном от холода)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_2': ' (получаемый урон от огня становится уроном от молнии)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_3': ' (получаемый урон от холода становится уроном от огня)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_4': ' (получаемый урон от холода становится уроном от молнии)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_5': ' (получаемый урон от молнии становится уроном от холода)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_6': ' (получаемый урон от молнии становится уроном от огня)',
+            'Metadata/Items/Amulets/Talismans/Talisman3_6_1': ' (заряд энергии при убийстве)',
+            'Metadata/Items/Amulets/Talismans/Talisman3_6_2': ' (заряд ярости при убийстве)',
+            'Metadata/Items/Amulets/Talismans/Talisman3_6_3': ' (заряд выносливости при убийстве)',
             # =================================================================
             # Hideout Doodads
             # =================================================================
-
-            'Metadata/Items/Hideout/HideoutMalachaiHeart':
-                ' (предмет убежища)',
-            'Metadata/Items/Hideout/HideoutVaalWhispySmoke':
-                ' (предмет убежища)',
-            'Metadata/Items/Hideout/HideoutChestVaal':
-                ' (предмет убежища)',
-            'Metadata/Items/Hideout/HideoutEncampmentFireplace':
-                ' (предмет убежища)',
-            'Metadata/Items/Hideout/HideoutEncampmentLetters':
-                ' (предмет убежища)',
-            'Metadata/Items/Hideout/HideoutIncaPyramid':
-                ' (предмет убежища)',
-            'Metadata/Items/Hideout/HideoutDarkSoulercoaster':
-                ' (предмет убежища)',
-            'Metadata/Items/Hideout/HideoutVaalMechanism':
-                ' (предмет убежища)',
-            'Metadata/Items/Hideout/HideoutCharredSkeleton':
-                ' (предмет убежища)',
+            'Metadata/Items/Hideout/HideoutMalachaiHeart': ' (предмет убежища)',
+            'Metadata/Items/Hideout/HideoutVaalWhispySmoke': ' (предмет убежища)',
+            'Metadata/Items/Hideout/HideoutChestVaal': ' (предмет убежища)',
+            'Metadata/Items/Hideout/HideoutEncampmentFireplace': ' (предмет убежища)',
+            'Metadata/Items/Hideout/HideoutEncampmentLetters': ' (предмет убежища)',
+            'Metadata/Items/Hideout/HideoutIncaPyramid': ' (предмет убежища)',
+            'Metadata/Items/Hideout/HideoutDarkSoulercoaster': ' (предмет убежища)',
+            'Metadata/Items/Hideout/HideoutVaalMechanism': ' (предмет убежища)',
+            'Metadata/Items/Hideout/HideoutCharredSkeleton': ' (предмет убежища)',
             # =================================================================
             # Piece
             # =================================================================
-
-            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_1':
-                ' (1 из 4)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_2':
-                ' (2 из 4)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_3':
-                ' (3 из 4)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_4':
-                ' (4 из 4)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_1':
-                ' (1 из 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_2':
-                ' (2 из 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_3':
-                ' (3 из 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_1':
-                ' (1 из 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_2':
-                ' (2 из 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_3':
-                ' (3 из 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_1':
-                ' (1 из 2)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_2':
-                ' (2 из 2)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_1':
-                ' (1 из 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_2':
-                ' (2 из 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_3':
-                ' (3 из 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_1':
-                ' (1 из 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_2':
-                ' (2 из 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_3':
-                ' (3 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_1': ' (1 из 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_2': ' (2 из 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_3': ' (3 из 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_4': ' (4 из 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_1': ' (1 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_2': ' (2 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_3': ' (3 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_1': ' (1 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_2': ' (2 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_3': ' (3 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_1': ' (1 из 2)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_2': ' (2 из 2)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_1': ' (1 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_2': ' (2 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_3': ' (3 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_1': ' (1 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_2': ' (2 из 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_3': ' (3 из 3)',
             # =================================================================
             # MTX
             # =================================================================
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x1':
-                ' (1x1)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x2':
-                ' (1x2)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x3':
-                ' (1x3)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x4':
-                ' (1x4)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x1':
-                ' (2x1)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x2':
-                ' (2x2)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x3':
-                ' (2x3)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x4':
-                ' (2x4)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox3x2':
-                ' (3x2)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox3x3':
-                ' (3x3)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x1': ' (1x1)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x2': ' (1x2)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x3': ' (1x3)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x4': ' (1x4)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x1': ' (2x1)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x2': ' (2x2)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x3': ' (2x3)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x4': ' (2x4)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox3x2': ' (3x2)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox3x3': ' (3x3)',
             'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
             'IronMaiden': '',
             'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
@@ -868,8 +749,7 @@ class ItemsParser(SkillParserShared):
             'LegionBoots': ' (микротранзакция)',
             'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
             'LegionGloves': ' (микротранзакция)',
-            'Metadata/Items/MicrotransactionItemEffects/MasterArmour1Boots':
-                ' (микротранзакция)',
+            'Metadata/Items/MicrotransactionItemEffects/MasterArmour1Boots': ' (микротранзакция)',
             'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
             'SinFootprintsEffect': ' (микротранзакция)',
             'Metadata/Items/Pets/DemonLion': ' (питомец)',
@@ -878,169 +758,103 @@ class ItemsParser(SkillParserShared):
             # =================================================================
             # Quest items
             # =================================================================
-            'Metadata/Items/QuestItems/GoldenPages/Page1':
-                ' (1 из 4)',
-            'Metadata/Items/QuestItems/GoldenPages/Page2':
-                ' (2 из 4)',
-            'Metadata/Items/QuestItems/GoldenPages/Page3':
-                ' (3 из 4)',
-            'Metadata/Items/QuestItems/GoldenPages/Page4':
-                ' (4 из 4)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_1':
-                ' (1 из 2)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_2':
-                ' (2 из 2)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_1':
-                ' (1 из 3)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_2':
-                ' (2 из 3)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_3':
-                ' (3 из 3)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_1':
-                ' (1 из 3)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_2':
-                ' (2 из 3)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_3':
-                ' (3 из 3)',
-            'Metadata/Items/QuestItems/RibbonSpool':
-                ' (предмет)',
-            'Metadata/Items/QuestItems/Act7/SilverLocket':
-                ' (предмет)',
-            'Metadata/Items/QuestItems/Act7/KisharaStar':
-                ' (предмет)',
-            'Metadata/Items/QuestItems/Act8/WingsOfVastiri':
-                ' (предмет)',
-            'Metadata/Items/QuestItems/Act9/StormSword':
-                ' (предмет)',
+            'Metadata/Items/QuestItems/GoldenPages/Page1': ' (1 из 4)',
+            'Metadata/Items/QuestItems/GoldenPages/Page2': ' (2 из 4)',
+            'Metadata/Items/QuestItems/GoldenPages/Page3': ' (3 из 4)',
+            'Metadata/Items/QuestItems/GoldenPages/Page4': ' (4 из 4)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_1': ' (1 из 2)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_2': ' (2 из 2)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_1': ' (1 из 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_2': ' (2 из 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_3': ' (3 из 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_1': ' (1 из 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_2': ' (2 из 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_3': ' (3 из 3)',
+            'Metadata/Items/QuestItems/RibbonSpool': ' (предмет)',
+            'Metadata/Items/QuestItems/Act7/SilverLocket': ' (предмет)',
+            'Metadata/Items/QuestItems/Act7/KisharaStar': ' (предмет)',
+            'Metadata/Items/QuestItems/Act8/WingsOfVastiri': ' (предмет)',
+            'Metadata/Items/QuestItems/Act9/StormSword': ' (предмет)',
         },
         'German': {
             # =================================================================
             # One Hand Axes
             # =================================================================
-
-            'Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/OneHandAxe22':
-                '',
+            'Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/OneHandAxe22': '',
             # =================================================================
             # Boots
             # =================================================================
-
             'Metadata/Items/Armours/Boots/BootsInt4': '',
             # Legion Boots
             'Metadata/Items/Armours/Boots/BootsStrInt7': '',
-            'Metadata/Items/Armours/Boots/BootsAtlas1':
-                ' (Kälte und Blitz Resistenzen)',
-            'Metadata/Items/Armours/Boots/BootsAtlas2':
-                ' (Feuer und Kälte Resistenzen)',
-            'Metadata/Items/Armours/Boots/BootsAtlas3':
-                ' (Feuer und Blitz Resistenzen)',
+            'Metadata/Items/Armours/Boots/BootsAtlas1': ' (Kälte und Blitz Resistenzen)',
+            'Metadata/Items/Armours/Boots/BootsAtlas2': ' (Feuer und Kälte Resistenzen)',
+            'Metadata/Items/Armours/Boots/BootsAtlas3': ' (Feuer und Blitz Resistenzen)',
             # =================================================================
             # Gloves
             # =================================================================
-
             # Legion Gloves
             'Metadata/Items/Armours/Gloves/GlovesStrInt7': '',
             # =================================================================
             # Quivers
             # =================================================================
-
             'Metadata/Items/Quivers/QuiverDescent': ' (Descent)',
             # =================================================================
             # Rings
             # =================================================================
-
             'Metadata/Items/Rings/Ring12': " (Rubin und Topas)",
             'Metadata/Items/Rings/Ring13': " (Saphir und Topas)",
             'Metadata/Items/Rings/Ring14': " (Rubin und Saphir)",
             # =================================================================
             # Amulets
             # =================================================================
-            'Metadata/Items/Amulets/Talismans/Talisman2_6_1':
-                ' (Feuerschaden erlitten als Kälteschaden)',
-            'Metadata/Items/Amulets/Talismans/Talisman2_6_2':
-                ' (Feuerschaden erlitten als Blitzschaden)',
-            'Metadata/Items/Amulets/Talismans/Talisman2_6_3':
-                ' (Kälteschaden erlitten als Feuerschaden)',
-            'Metadata/Items/Amulets/Talismans/Talisman2_6_4':
-                ' (Kälteschaden erlitten als Blitzschaden)',
-            'Metadata/Items/Amulets/Talismans/Talisman2_6_5':
-                ' (Blitzschaden erlitten als Kälteschaden)',
-            'Metadata/Items/Amulets/Talismans/Talisman2_6_6':
-                ' (Blitzschaden erlitten als Feuerschaden)',
-            'Metadata/Items/Amulets/Talismans/Talisman3_6_1':
-                ' (Energie-Ladung bei Tötung)',
-            'Metadata/Items/Amulets/Talismans/Talisman3_6_2':
-                ' (Raserei-Ladung bei Tötung)',
-            'Metadata/Items/Amulets/Talismans/Talisman3_6_3':
-                ' (Widerstands-Ladung bei Tötung)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_1': ' (Feuerschaden erlitten als Kälteschaden)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_2': ' (Feuerschaden erlitten als Blitzschaden)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_3': ' (Kälteschaden erlitten als Feuerschaden)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_4': ' (Kälteschaden erlitten als Blitzschaden)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_5': ' (Blitzschaden erlitten als Kälteschaden)',
+            'Metadata/Items/Amulets/Talismans/Talisman2_6_6': ' (Blitzschaden erlitten als Feuerschaden)',
+            'Metadata/Items/Amulets/Talismans/Talisman3_6_1': ' (Energie-Ladung bei Tötung)',
+            'Metadata/Items/Amulets/Talismans/Talisman3_6_2': ' (Raserei-Ladung bei Tötung)',
+            'Metadata/Items/Amulets/Talismans/Talisman3_6_3': ' (Widerstands-Ladung bei Tötung)',
             # =================================================================
             # Hideout Doodads
             # =================================================================
-
-            'Metadata/Items/Hideout/HideoutLightningCoil':
-                " (Dinge fürs Versteck)",
+            'Metadata/Items/Hideout/HideoutLightningCoil': " (Dinge fürs Versteck)",
             # =================================================================
             # Piece
             # =================================================================
-
-            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_1':
-                ' (1 von 4)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_2':
-                ' (2 von 4)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_3':
-                ' (3 von 4)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_4':
-                ' (4 von 4)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_1':
-                ' (1 von 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_2':
-                ' (2 von 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_3':
-                ' (3 von 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_1':
-                ' (1 von 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_2':
-                ' (2 von 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_3':
-                ' (3 von 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_1':
-                ' (1 von 2)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_2':
-                ' (2 von 2)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_1':
-                ' (1 von 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_2':
-                ' (2 von 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_3':
-                ' (3 von 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_1':
-                ' (1 von 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_2':
-                ' (2 von 3)',
-            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_3':
-                ' (3 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_1': ' (1 von 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_2': ' (2 von 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_3': ' (3 von 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueShield1_4': ' (4 von 4)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_1': ' (1 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_2': ' (2 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueSword1_3': ' (3 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_1': ' (1 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_2': ' (2 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueStaff1_3': ' (3 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_1': ' (1 von 2)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueBelt1_2': ' (2 von 2)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_1': ' (1 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_2': ' (2 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueQuiver1_3': ' (3 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_1': ' (1 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_2': ' (2 von 3)',
+            'Metadata/Items/UniqueFragments/FragmentUniqueHelmet1_3': ' (3 von 3)',
             # =================================================================
             # MTX
             # =================================================================
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x1':
-                ' (1x1)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x2':
-                ' (1x2)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x3':
-                ' (1x3)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x4':
-                ' (1x4)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x1':
-                ' (2x1)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x2':
-                ' (2x2)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x3':
-                ' (2x3)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x4':
-                ' (2x4)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox3x2':
-                ' (3x2)',
-            'Metadata/Items/MicrotransactionCurrency/MysteryBox3x3':
-                ' (3x3)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x1': ' (1x1)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x2': ' (1x2)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x3': ' (1x3)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox1x4': ' (1x4)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x1': ' (2x1)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x2': ' (2x2)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x3': ' (2x3)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox2x4': ' (2x4)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox3x2': ' (3x2)',
+            'Metadata/Items/MicrotransactionCurrency/MysteryBox3x3': ' (3x3)',
             'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
             'IronMaiden': '',
             'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
@@ -1057,31 +871,18 @@ class ItemsParser(SkillParserShared):
             # =================================================================
             # Quest items
             # =================================================================
-            'Metadata/Items/QuestItems/GoldenPages/Page1':
-                ' (1 von 4)',
-            'Metadata/Items/QuestItems/GoldenPages/Page2':
-                ' (2 von 4)',
-            'Metadata/Items/QuestItems/GoldenPages/Page3':
-                ' (3 von 4)',
-            'Metadata/Items/QuestItems/GoldenPages/Page4':
-                ' (4 von 4)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_1':
-                ' (1 von 2)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_2':
-                ' (2 von 2)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_1':
-                ' (1 von 3)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_2':
-                ' (2 von 3)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_3':
-                ' (3 von 3)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_1':
-                ' (1 von 3)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_2':
-                ' (2 von 3)',
-            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_3':
-                ' (3 von 3)',
-
+            'Metadata/Items/QuestItems/GoldenPages/Page1': ' (1 von 4)',
+            'Metadata/Items/QuestItems/GoldenPages/Page2': ' (2 von 4)',
+            'Metadata/Items/QuestItems/GoldenPages/Page3': ' (3 von 4)',
+            'Metadata/Items/QuestItems/GoldenPages/Page4': ' (4 von 4)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_1': ' (1 von 2)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier8_2': ' (2 von 2)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_1': ' (1 von 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_2': ' (2 von 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier9_3': ' (3 von 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_1': ' (1 von 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_2': ' (2 von 3)',
+            'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_3': ' (3 von 3)',
             # =================================================================
             # =================================================================
             # ==================== Germany only conflicts =====================
@@ -1089,8 +890,7 @@ class ItemsParser(SkillParserShared):
             # =================================================================
             # Schleifstein
             'Metadata/Items/Currency/CurrencyWeaponQuality': '',
-            'Metadata/Items/HideoutInteractables/StrDexCraftingBench':
-                ' (Dinge fürs Versteck)',
+            'Metadata/Items/HideoutInteractables/StrDexCraftingBench': ' (Dinge fürs Versteck)',
         },
     }
 
@@ -1174,7 +974,6 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/Gems/SkillGemWandTeleport',
         'Metadata/Items/Gems/SkillGemNewPhaseRun',
         'Metadata/Items/Gems/SkillGemNewArcticArmour',
-
         #
         # Support Skill Gems
         #
@@ -1184,7 +983,6 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/Gems/SupportGemReturn',
         'Metadata/Items/Gems/SupportGemTemporaryForTutorial',
         'Metadata/Items/Gems/SupportGemVaalSoulHarvesting',
-
         #
         # MTX
         #
@@ -1218,7 +1016,6 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/MicrotransactionItemEffects/MicrotransactionDemonhandClaw',
         'Metadata/Items/MicrotransactionItemEffects/MicrotransactionDivineShield',
         'Metadata/Items/MicrotransactionItemEffects/MicrotransactionEldritchWings',
-
         'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencent1Frame',
         'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencent2Frame',
         'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencent3Frame',
@@ -1296,7 +1093,6 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge10_5',
         'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge10_6',
         'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentBadge10_7',
-
         'Metadata/Items/MicrotransactionItemEffects/MicrotransactionTencentInfernalWeapon',
         'Metadata/Items/MicrotransactionCurrency/MicrotransactionTencentExpandInventory0to1',
         'Metadata/Items/MicrotransactionCurrency/MicrotransactionTencentExpandInventory1to2',
@@ -1304,7 +1100,6 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/MicrotransactionCurrency/MicrotransactionTencentExpandInventory3to4',
         'Metadata/Items/MicrotransactionCurrency/MicrotransactionTencentExpandInventory4to5',
         'Metadata/Items/MicrotransactionCurrency/MicrotransactionTencentExpandInventory5to6',
-
         'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame1_1',
         'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame1_2',
         'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame1_3',
@@ -1375,19 +1170,15 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame10_5',
         'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame10_6',
         'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentGradingFrame10_7',
-
         'Metadata/Items/MicrotrransactionCharacterEffects/MicrotransactionTencentTopPlayerFrame',
         'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentS3HideOutFrame',
         'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentS3FashionFrame',
         'Metadata/Items/MicrotransactionCharacterEffects/MicrotransactionTencentS3BDMasterFrame',
-
         'Metadata/Items/MicrotransactionCurrency/TradeMarketTab',
         'Metadata/Items/MicrotransactionCurrency/TradeMarketBuyoutTab',
-
         #
         # Hideout Doodads
         #
-
         # Hideout totem test variants, not needed
         'Metadata/Items/Hideout/HideoutTotemPoleTest',
         'Metadata/Items/Hideout/HideoutTotemPole2Test',
@@ -1404,11 +1195,9 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/Hideout/HideoutTotemPole13Test',
         'Metadata/Items/Hideout/HideoutTotemPole14Test',
         'Metadata/Items/Hideout/HideoutTotemPole15Test',
-
         #
         # Stackable currency
         #
-
         # Legacy variants of items before item stash tabs
         'Metadata/Items/Delve/DelveSocketableCurrencyUpgrade1',
         'Metadata/Items/Delve/DelveSocketableCurrencyUpgrade2',
@@ -1443,11 +1232,9 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/Labyrinth/OfferingToTheGoddess',
     }
 
-    _attribute_map = OrderedDict((
-        ('Str', 'strength'),
-        ('Dex', 'dexterity'),
-        ('Int', 'intelligence'),
-    ))
+    _attribute_map = OrderedDict(
+        (('Str', 'strength'), ('Dex', 'dexterity'), ('Int', 'intelligence'),)
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1470,7 +1257,8 @@ class ItemsParser(SkillParserShared):
     def _skill_gem(self, infobox, base_item_type):
         try:
             skill_gem = self.rr['SkillGems.dat'].index['BaseItemTypesKey'][
-                base_item_type.rowid]
+                base_item_type.rowid
+            ]
         except KeyError:
             return False
 
@@ -1499,16 +1287,23 @@ class ItemsParser(SkillParserShared):
                 exp = exp_new
 
         if not exp_level:
-            console('No experience progression found for "%s" - assuming max '
-                    'level 1' %
-                    base_item_type['Name'], msg=Msg.error)
+            console(
+                'No experience progression found for "%s" - assuming max '
+                'level 1' % base_item_type['Name'],
+                msg=Msg.error,
+            )
             exp_total = [0]
 
-        max_level = len(exp_total)-1
+        max_level = len(exp_total) - 1
         ge = skill_gem['GrantedEffectsKey']
 
-        self._skill(ge=ge, infobox=infobox, parsed_args=self._parsed_args,
-                    msg_name=base_item_type['Name'], max_level=max_level)
+        self._skill(
+            ge=ge,
+            infobox=infobox,
+            parsed_args=self._parsed_args,
+            msg_name=base_item_type['Name'],
+            max_level=max_level,
+        )
 
         # some descriptions come from active skills which are parsed in above
         # function
@@ -1534,7 +1329,7 @@ class ItemsParser(SkillParserShared):
         # +1 for gem levels starting at 1
         # +1 for being able to corrupt gems to +1 level
         # +1 for python counting only up to, but not including the number
-        for i in range(1, max_level+3):
+        for i in range(1, max_level + 3):
             prefix = 'level%s_' % i
             for attr in ('Str', 'Dex', 'Int'):
                 if skill_gem[attr]:
@@ -1551,7 +1346,7 @@ class ItemsParser(SkillParserShared):
                         raise
             try:
                 # Index starts at 0 while levels start at 1
-                infobox[prefix + 'experience'] = exp_total[i-1]
+                infobox[prefix + 'experience'] = exp_total[i - 1]
             except IndexError:
                 pass
 
@@ -1565,18 +1360,27 @@ class ItemsParser(SkillParserShared):
     _type_attribute = _type_factory(
         data_file='ComponentAttributeRequirements.dat',
         data_mapping=(
-            ('ReqStr', {
-                'template': 'required_strength',
-                'condition': lambda v: v > 0,
-            }),
-            ('ReqDex', {
-                'template': 'required_dexterity',
-                'condition': lambda v: v > 0,
-            }),
-            ('ReqInt', {
-                'template': 'required_intelligence',
-                'condition': lambda v: v > 0,
-            }),
+            (
+                'ReqStr',
+                {
+                    'template': 'required_strength',
+                    'condition': lambda v: v > 0,
+                },
+            ),
+            (
+                'ReqDex',
+                {
+                    'template': 'required_dexterity',
+                    'condition': lambda v: v > 0,
+                },
+            ),
+            (
+                'ReqInt',
+                {
+                    'template': 'required_intelligence',
+                    'condition': lambda v: v > 0,
+                },
+            ),
         ),
         row_index=False,
     )
@@ -1592,33 +1396,23 @@ class ItemsParser(SkillParserShared):
     _type_armour = _type_factory(
         data_file='ComponentArmour.dat',
         data_mapping=(
-            ('Armour', {
-                'template': 'armour',
-                'condition': lambda v: v > 0,
-            }),
-            ('Evasion', {
-                'template': 'evasion',
-                'condition': lambda v: v > 0,
-            }),
-            ('EnergyShield', {
-                'template': 'energy_shield',
-                'condition': lambda v: v > 0,
-            }),
-            ('IncreasedMovementSpeed', {
-                'template': 'movement_speed',
-                'condition': lambda v: v != 0,
-            }),
+            ('Armour', {'template': 'armour', 'condition': lambda v: v > 0,}),
+            ('Evasion', {'template': 'evasion', 'condition': lambda v: v > 0,}),
+            (
+                'EnergyShield',
+                {'template': 'energy_shield', 'condition': lambda v: v > 0,},
+            ),
+            (
+                'IncreasedMovementSpeed',
+                {'template': 'movement_speed', 'condition': lambda v: v != 0,},
+            ),
         ),
         row_index=False,
     )
 
     _type_shield = _type_factory(
         data_file='ShieldTypes.dat',
-        data_mapping=(
-            ('Block', {
-                'template': 'block',
-            }),
-        ),
+        data_mapping=(('Block', {'template': 'block',}),),
         row_index=True,
     )
 
@@ -1629,36 +1423,43 @@ class ItemsParser(SkillParserShared):
         if flasks['BuffDefinitionsKey']:
             stats = [s['Id'] for s in flasks['BuffDefinitionsKey']['StatsKeys']]
             tr = self.tc['stat_descriptions.txt'].get_translation(
-                stats, flasks['BuffStatValues'], full_result=True,
+                stats,
+                flasks['BuffStatValues'],
+                full_result=True,
                 lang=self._language,
             )
-            infobox['buff_stat_text'] = '<br>'.join([
-                parser.make_inter_wiki_links(line) for line in tr.lines
-            ])
+            infobox['buff_stat_text'] = '<br>'.join(
+                [parser.make_inter_wiki_links(line) for line in tr.lines]
+            )
 
-
-    #TODO: BuffDefinitionsKey, BuffStatValues
+    # TODO: BuffDefinitionsKey, BuffStatValues
     _type_flask = _type_factory(
         data_file='Flasks.dat',
         data_mapping=(
-            ('LifePerUse', {
-                'template': 'flask_life',
-                'condition': lambda v: v > 0,
-            }),
-            ('ManaPerUse', {
-                'template': 'flask_mana',
-                'condition': lambda v: v > 0,
-            }),
-            ('RecoveryTime', {
-                'template': 'flask_duration',
-                'condition': lambda v: v > 0,
-                'format': lambda v: '{0:n}'.format(v / 10),
-            }),
-            ('BuffDefinitionsKey', {
-                'template': 'buff_id',
-                'condition': lambda v: v is not None,
-                'format': lambda v: v['Id'],
-            }),
+            (
+                'LifePerUse',
+                {'template': 'flask_life', 'condition': lambda v: v > 0,},
+            ),
+            (
+                'ManaPerUse',
+                {'template': 'flask_mana', 'condition': lambda v: v > 0,},
+            ),
+            (
+                'RecoveryTime',
+                {
+                    'template': 'flask_duration',
+                    'condition': lambda v: v > 0,
+                    'format': lambda v: '{0:n}'.format(v / 10),
+                },
+            ),
+            (
+                'BuffDefinitionsKey',
+                {
+                    'template': 'buff_id',
+                    'condition': lambda v: v is not None,
+                    'format': lambda v: v['Id'],
+                },
+            ),
         ),
         row_index=True,
         function=_apply_flask_buffs,
@@ -1667,12 +1468,8 @@ class ItemsParser(SkillParserShared):
     _type_flask_charges = _type_factory(
         data_file='ComponentCharges.dat',
         data_mapping=(
-            ('MaxCharges', {
-                'template': 'charges_max',
-            }),
-            ('PerCharge', {
-                'template': 'charges_per_use',
-            }),
+            ('MaxCharges', {'template': 'charges_max',}),
+            ('PerCharge', {'template': 'charges_per_use',}),
         ),
         row_index=False,
     )
@@ -1680,43 +1477,44 @@ class ItemsParser(SkillParserShared):
     _type_weapon = _type_factory(
         data_file='WeaponTypes.dat',
         data_mapping=(
-            ('Critical', {
-                'template': 'critical_strike_chance',
-                'format': lambda v: '{0:n}'.format(v / 100),
-            }),
-            ('Speed', {
-                'template': 'attack_speed',
-                'format': lambda v: '{0:n}'.format(round(1000 / v, 2)),
-            }),
-            ('DamageMin', {
-                'template': 'physical_damage_min',
-            }),
-            ('DamageMax', {
-                'template': 'physical_damage_max',
-            }),
-            ('RangeMax', {
-                'template': 'weapon_range',
-            }),
+            (
+                'Critical',
+                {
+                    'template': 'critical_strike_chance',
+                    'format': lambda v: '{0:n}'.format(v / 100),
+                },
+            ),
+            (
+                'Speed',
+                {
+                    'template': 'attack_speed',
+                    'format': lambda v: '{0:n}'.format(round(1000 / v, 2)),
+                },
+            ),
+            ('DamageMin', {'template': 'physical_damage_min',}),
+            ('DamageMax', {'template': 'physical_damage_max',}),
+            ('RangeMax', {'template': 'weapon_range',}),
         ),
         row_index=True,
     )
 
     def _currency_extra(self, infobox, base_item_type, currency):
         # Add the "shift click to unstack" stuff to currency-ish items
-        if currency['Stacks'] > 1 and infobox['class_id'] not in \
-                ('Microtransaction', ):
+        if currency['Stacks'] > 1 and infobox['class_id'] not in (
+            'Microtransaction',
+        ):
             if 'help_text' in infobox:
                 infobox['help_text'] += '<br>'
             else:
                 infobox['help_text'] = ''
 
-            infobox['help_text'] += self.rr['ClientStrings.dat'].index[
-                'Id']['ItemDisplayStackDescription']['Text']
+            infobox['help_text'] += self.rr['ClientStrings.dat'].index['Id'][
+                'ItemDisplayStackDescription'
+            ]['Text']
 
         if infobox.get('description'):
             infobox['description'] = parser.parse_and_handle_description_tags(
-                rr=self.rr,
-                text=infobox['description'],
+                rr=self.rr, text=infobox['description'],
             )
 
         return True
@@ -1724,74 +1522,81 @@ class ItemsParser(SkillParserShared):
     _type_currency = _type_factory(
         data_file='CurrencyItems.dat',
         data_mapping=(
-            ('Stacks', {
-                'template': 'stack_size',
-                'condition': None,
-            }),
-            ('Description', {
-                'template': 'description',
-                'condition': lambda v: v,
-            }),
-            ('Directions', {
-                'template': 'help_text',
-                'condition': lambda v: v,
-            }),
-            ('CurrencyTab_StackSize', {
-                'template': 'stack_size_currency_tab',
-                'condition': lambda v: v > 0,
-            }),
-            ('CosmeticTypeName', {
-                'template': 'cosmetic_type',
-                'condition': lambda v: v,
-            }),
+            ('Stacks', {'template': 'stack_size', 'condition': None,}),
+            (
+                'Description',
+                {'template': 'description', 'condition': lambda v: v,},
+            ),
+            (
+                'Directions',
+                {'template': 'help_text', 'condition': lambda v: v,},
+            ),
+            (
+                'CurrencyTab_StackSize',
+                {
+                    'template': 'stack_size_currency_tab',
+                    'condition': lambda v: v > 0,
+                },
+            ),
+            (
+                'CosmeticTypeName',
+                {'template': 'cosmetic_type', 'condition': lambda v: v,},
+            ),
         ),
         row_index=True,
         function=_currency_extra,
     )
 
     _master_hideout_doodad_map = (
-        ('HideoutNPCsKey', {
-            'template': 'master',
-            'format': lambda v: v['Hideout_NPCsKey']['Name'],
-            'condition': lambda v: v is not None,
-        }),
-        ('MasterLevel', {
-            'template': 'master_level_requirement',
-        }),
-        ('FavourCost', {
-            'template': 'master_favour_cost',
-        }),
+        (
+            'HideoutNPCsKey',
+            {
+                'template': 'master',
+                'format': lambda v: v['Hideout_NPCsKey']['Name'],
+                'condition': lambda v: v is not None,
+            },
+        ),
+        ('MasterLevel', {'template': 'master_level_requirement',}),
+        ('FavourCost', {'template': 'master_favour_cost',}),
     )
 
     def _apply_master_map(self, infobox, base_item_type, hideout):
         if not hideout['IsNonMasterDoodad']:
-            _apply_column_map(infobox, self._master_hideout_doodad_map,
-                                   hideout)
+            _apply_column_map(infobox, self._master_hideout_doodad_map, hideout)
 
     _type_hideout_doodad = _type_factory(
         data_file='HideoutDoodads.dat',
         data_mapping=(
-            ('IsNonMasterDoodad', {
-                'template': 'is_master_doodad',
-                'format': lambda v: not v,
-            }),
-            ('HideoutNPCsKey', {
-                'template': 'master',
-                'format': lambda v: v['Hideout_NPCsKey']['Name'],
-                'condition': lambda v: v,
-            }),
-            ('FavourCost', {
-                'template': 'master_favour_cost',
-                #'condition': lambda v: v,
-            }),
-            ('MasterLevel', {
-                'template': 'master_level_requirement',
-                #'condition': lambda v: v,
-            }),
-            ('Variation_AOFiles', {
-                'template': 'variation_count',
-                'format': lambda v: len(v),
-            }),
+            (
+                'IsNonMasterDoodad',
+                {'template': 'is_master_doodad', 'format': lambda v: not v,},
+            ),
+            (
+                'HideoutNPCsKey',
+                {
+                    'template': 'master',
+                    'format': lambda v: v['Hideout_NPCsKey']['Name'],
+                    'condition': lambda v: v,
+                },
+            ),
+            (
+                'FavourCost',
+                {
+                    'template': 'master_favour_cost',
+                    #'condition': lambda v: v,
+                },
+            ),
+            (
+                'MasterLevel',
+                {
+                    'template': 'master_level_requirement',
+                    #'condition': lambda v: v,
+                },
+            ),
+            (
+                'Variation_AOFiles',
+                {'template': 'variation_count', 'format': lambda v: len(v),},
+            ),
         ),
         row_index=True,
         function=_apply_master_map,
@@ -1802,7 +1607,8 @@ class ItemsParser(SkillParserShared):
             infobox['map_area_level'] = maps['Shaped_AreaLevel']
         else:
             infobox['map_area_level'] = maps['Regular_WorldAreasKey'][
-                'AreaLevel']
+                'AreaLevel'
+            ]
 
         '''# Regular items are handled in the main function
         if maps['Tier'] < 17:
@@ -1814,35 +1620,42 @@ class ItemsParser(SkillParserShared):
     _type_map = _type_factory(
         data_file='Maps.dat',
         data_mapping=(
-            ('Tier', {
-                'template': 'map_tier',
-            }),
-            ('Regular_GuildCharacter', {
-                'template': 'map_guild_character',
-                'condition': lambda v: v,
-            }),
-            ('Regular_WorldAreasKey', {
-                'template': 'map_area_id',
-                'format': lambda v: v['Id'],
-            }),
-            ('Unique_GuildCharacter', {
-                'template': 'unique_map_guild_character',
-                'condition': lambda v: v != '',
-            }),
-            ('Unique_WorldAreasKey', {
-                'template': 'unique_map_area_id',
-                'format': lambda v: v['Id'],
-                'condition': lambda v: v is not None,
-            }),
-            ('Unique_WorldAreasKey', {
-                'template': 'unique_map_area_level',
-                'format': lambda v: v['AreaLevel'],
-                'condition': lambda v: v is not None,
-            }),
-            ('MapSeriesKey', {
-                'template': 'map_series',
-                'format': lambda v: v['Name'],
-            })
+            ('Tier', {'template': 'map_tier',}),
+            (
+                'Regular_GuildCharacter',
+                {'template': 'map_guild_character', 'condition': lambda v: v,},
+            ),
+            (
+                'Regular_WorldAreasKey',
+                {'template': 'map_area_id', 'format': lambda v: v['Id'],},
+            ),
+            (
+                'Unique_GuildCharacter',
+                {
+                    'template': 'unique_map_guild_character',
+                    'condition': lambda v: v != '',
+                },
+            ),
+            (
+                'Unique_WorldAreasKey',
+                {
+                    'template': 'unique_map_area_id',
+                    'format': lambda v: v['Id'],
+                    'condition': lambda v: v is not None,
+                },
+            ),
+            (
+                'Unique_WorldAreasKey',
+                {
+                    'template': 'unique_map_area_level',
+                    'format': lambda v: v['AreaLevel'],
+                    'condition': lambda v: v is not None,
+                },
+            ),
+            (
+                'MapSeriesKey',
+                {'template': 'map_series', 'format': lambda v: v['Name'],},
+            ),
         ),
         row_index=True,
         function=_maps_extra,
@@ -1872,47 +1685,37 @@ class ItemsParser(SkillParserShared):
         # Essence description
         #
         get_str = lambda k: self.rr['ClientStrings.dat'].index['Id'][
-            'EssenceCategory%s' % k]['Text']
+            'EssenceCategory%s' % k
+        ]['Text']
 
-        essence_categories = OrderedDict((
-            (None,
-                ('OneHandWeapon', 'TwoHandWeapon'),
-            ),
-            ('MeleeWeapon',
-                (),
-            ),
-            ('RangedWeapon',
-                ('Wand', 'Bow'),
-            ),
-            ('Weapon',
-                ('TwoHandMeleeWeapon', ),
-            ),
-            ('Armour',
-                ('Gloves', 'Boots', 'BodyArmour', 'Helmet', 'Shield')
-            ),
-            ('Quiver',
-                ()
-            ),
-            ('Jewellery',
-                ('Amulet', 'Ring', 'Belt')
-            ),
-        ))
+        essence_categories = OrderedDict(
+            (
+                (None, ('OneHandWeapon', 'TwoHandWeapon'),),
+                ('MeleeWeapon', (),),
+                ('RangedWeapon', ('Wand', 'Bow'),),
+                ('Weapon', ('TwoHandMeleeWeapon',),),
+                (
+                    'Armour',
+                    ('Gloves', 'Boots', 'BodyArmour', 'Helmet', 'Shield'),
+                ),
+                ('Quiver', ()),
+                ('Jewellery', ('Amulet', 'Ring', 'Belt')),
+            )
+        )
 
         out = []
 
         if essence['ItemLevelRestriction'] != 0:
             out.append(
-                self.rr['ClientStrings.dat'].index['Id'][
-                    'EssenceModLevelRestriction']['Text'].replace(
-                    '%1%', str(essence['ItemLevelRestriction']))
+                self.rr['ClientStrings.dat']
+                .index['Id']['EssenceModLevelRestriction']['Text']
+                .replace('%1%', str(essence['ItemLevelRestriction']))
             )
             out[-1] += '<br />'
 
         def add_line(text, mod):
             nonlocal out
-            out.append('%s: %s' % (
-                text, ''.join(self._get_stats(mod=mod))
-            ))
+            out.append('%s: %s' % (text, ''.join(self._get_stats(mod=mod))))
 
         item_mod = essence['Display_Items_ModsKey']
 
@@ -1944,41 +1747,54 @@ class ItemsParser(SkillParserShared):
             # TODO: Can't find items in clientstrings
             add_line(get_str('Other').replace('%1%', 'Items'), item_mod)
 
-        infobox['description'] +='<br />' +  '<br />'.join(out)
+        infobox['description'] += '<br />' + '<br />'.join(out)
 
         return True
 
     _type_essence = _type_factory(
         data_file='Essences.dat',
         data_mapping=(
-            ('DropLevelMinimum', {
-                'template': 'drop_level',
-            }),
-            ('DropLevelMaximum', {
-                'template': 'drop_level_maximum',
-                'condition': lambda v: v > 0,
-            }),
-            ('ItemLevelRestriction', {
-                'template': 'essence_level_restriction',
-                'condition': lambda v: v > 0,
-            }),
-            ('Level', {
-                'template': 'essence_level',
-                'condition': lambda v: v > 0,
-            }),
-            ('EssenceTypeKey', {
-                'template': 'essence_type',
-                'format': lambda v: v['EssenceType'],
-            }),
-            ('EssenceTypeKey', {
-                'template': 'essence_category',
-                'format': lambda v: v['WordsKey']['Text'],
-            }),
-            ('Monster_ModsKeys', {
-                'template': 'essence_monster_modifier_ids',
-                'format': lambda v: ', '.join([m['Id'] for m in v]),
-                'condition': lambda v: v,
-            }),
+            ('DropLevelMinimum', {'template': 'drop_level',}),
+            (
+                'DropLevelMaximum',
+                {
+                    'template': 'drop_level_maximum',
+                    'condition': lambda v: v > 0,
+                },
+            ),
+            (
+                'ItemLevelRestriction',
+                {
+                    'template': 'essence_level_restriction',
+                    'condition': lambda v: v > 0,
+                },
+            ),
+            (
+                'Level',
+                {'template': 'essence_level', 'condition': lambda v: v > 0,},
+            ),
+            (
+                'EssenceTypeKey',
+                {
+                    'template': 'essence_type',
+                    'format': lambda v: v['EssenceType'],
+                },
+            ),
+            (
+                'EssenceTypeKey',
+                {
+                    'template': 'essence_category',
+                    'format': lambda v: v['WordsKey']['Text'],
+                },
+            ),
+            (
+                'Monster_ModsKeys',
+                {
+                    'template': 'essence_monster_modifier_ids',
+                    'format': lambda v: ', '.join([m['Id'] for m in v]),
+                    'condition': lambda v: v,
+                },
+            ),
         ),
         row_index=True,
         function=_essence_extra,
@@ -1987,11 +1803,7 @@ class ItemsParser(SkillParserShared):
 
     _type_blight_item = _type_factory(
         data_file='BlightCraftingItems.dat',
-        data_mapping=(
-            ('Tier', {
-                'template': 'blight_item_tier',
-            }),
-        ),
+        data_mapping=(('Tier', {'template': 'blight_item_tier',}),),
         row_index=True,
         fail_condition=True,
     )
@@ -1999,76 +1811,79 @@ class ItemsParser(SkillParserShared):
     _type_labyrinth_trinket = _type_factory(
         data_file='LabyrinthTrinkets.dat',
         data_mapping=(
-            ('Buff_BuffDefinitionsKey', {
-                'template': 'description',
-                'format': lambda v: v['Description'],
-            }),
+            (
+                'Buff_BuffDefinitionsKey',
+                {
+                    'template': 'description',
+                    'format': lambda v: v['Description'],
+                },
+            ),
         ),
-        row_index=True
+        row_index=True,
     )
 
     _type_incubator = _type_factory(
         data_file='Incubators.dat',
         data_mapping=(
-            ('Description', {
-                'template': 'incubator_effect',
-                'format': lambda v: v,
-            }),
+            (
+                'Description',
+                {'template': 'incubator_effect', 'format': lambda v: v,},
+            ),
         ),
-        row_index=True
+        row_index=True,
     )
 
     _cls_map = {
         # Jewellery
-        'Amulet': (_type_amulet, ),
+        'Amulet': (_type_amulet,),
         # Armour types
-        'Gloves': (_type_level, _type_attribute, _type_armour, ),
-        'Boots': (_type_level, _type_attribute, _type_armour, ),
-        'Body Armour': (_type_level, _type_attribute, _type_armour, ),
-        'Helmet': (_type_level, _type_attribute, _type_armour, ),
+        'Gloves': (_type_level, _type_attribute, _type_armour,),
+        'Boots': (_type_level, _type_attribute, _type_armour,),
+        'Body Armour': (_type_level, _type_attribute, _type_armour,),
+        'Helmet': (_type_level, _type_attribute, _type_armour,),
         'Shield': (_type_level, _type_attribute, _type_armour, _type_shield),
         # Weapons
-        'Claw': (_type_level, _type_attribute, _type_weapon, ),
-        'Dagger': (_type_level, _type_attribute, _type_weapon, ),
+        'Claw': (_type_level, _type_attribute, _type_weapon,),
+        'Dagger': (_type_level, _type_attribute, _type_weapon,),
         'Rune Dagger': (_type_level, _type_attribute, _type_weapon,),
-        'Wand': (_type_level, _type_attribute, _type_weapon, ),
-        'One Hand Sword': (_type_level, _type_attribute, _type_weapon, ),
+        'Wand': (_type_level, _type_attribute, _type_weapon,),
+        'One Hand Sword': (_type_level, _type_attribute, _type_weapon,),
         'Thrusting One Hand Sword': (
-            _type_level, _type_attribute, _type_weapon,
+            _type_level,
+            _type_attribute,
+            _type_weapon,
         ),
-        'One Hand Axe': (_type_level, _type_attribute, _type_weapon, ),
-        'One Hand Mace': (_type_level, _type_attribute, _type_weapon, ),
+        'One Hand Axe': (_type_level, _type_attribute, _type_weapon,),
+        'One Hand Mace': (_type_level, _type_attribute, _type_weapon,),
         'Sceptre': (_type_level, _type_attribute, _type_weapon,),
-
-        'Bow': (_type_level, _type_attribute, _type_weapon, ),
-        'Staff': (_type_level, _type_attribute, _type_weapon, ),
-        'Two Hand Sword': (_type_level, _type_attribute, _type_weapon, ),
-        'Two Hand Axe': (_type_level, _type_attribute, _type_weapon, ),
-        'Two Hand Mace': (_type_level, _type_attribute, _type_weapon, ),
+        'Bow': (_type_level, _type_attribute, _type_weapon,),
+        'Staff': (_type_level, _type_attribute, _type_weapon,),
+        'Two Hand Sword': (_type_level, _type_attribute, _type_weapon,),
+        'Two Hand Axe': (_type_level, _type_attribute, _type_weapon,),
+        'Two Hand Mace': (_type_level, _type_attribute, _type_weapon,),
         'Warstaff': (_type_level, _type_attribute, _type_weapon,),
-        'FishingRod': (_type_level, _type_attribute, _type_weapon, ),
+        'FishingRod': (_type_level, _type_attribute, _type_weapon,),
         # Flasks
         'LifeFlask': (_type_level, _type_flask, _type_flask_charges),
         'ManaFlask': (_type_level, _type_flask, _type_flask_charges),
         'HybridFlask': (_type_level, _type_flask, _type_flask_charges),
         'UtilityFlask': (_type_level, _type_flask, _type_flask_charges),
-        'UtilityFlaskCritical': (_type_level, _type_flask,
-                                    _type_flask_charges),
+        'UtilityFlaskCritical': (_type_level, _type_flask, _type_flask_charges),
         # Gems
-        'Active Skill Gem': (_skill_gem, ),
-        'Support Skill Gem': (_skill_gem, ),
+        'Active Skill Gem': (_skill_gem,),
+        'Support Skill Gem': (_skill_gem,),
         # Currency-like items
-        'Currency': (_type_currency, ),
+        'Currency': (_type_currency,),
         'StackableCurrency': (_type_currency, _type_essence, _type_blight_item),
-        'DelveSocketableCurrency': (_type_currency, ),
+        'DelveSocketableCurrency': (_type_currency,),
         'DelveStackableSocketableCurrency': (_type_currency,),
         'HideoutDoodad': (_type_currency, _type_hideout_doodad),
-        'Microtransaction': (_type_currency, ),
-        'DivinationCard': (_type_currency, ),
+        'Microtransaction': (_type_currency,),
+        'DivinationCard': (_type_currency,),
         'Incubator': (_type_currency, _type_incubator),
         # Labyrinth stuff
         #'LabyrinthItem': (),
-        'LabyrinthTrinket': (_type_labyrinth_trinket, ),
+        'LabyrinthTrinket': (_type_labyrinth_trinket,),
         #'LabyrinthMapItem': (),
         # Misc
         'Map': (_type_map,),
@@ -2084,10 +1899,12 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/Gems/SkillGemLightningTendrils': True,
     }
 
-    def _conflict_active_skill_gems(self, infobox, base_item_type, rr,
-                                    language):
+    def _conflict_active_skill_gems(
+        self, infobox, base_item_type, rr, language
+    ):
         appendix = self._conflict_active_skill_gems_map.get(
-            base_item_type['Id'])
+            base_item_type['Id']
+        )
         if appendix is None:
             return
         else:
@@ -2106,8 +1923,10 @@ class ItemsParser(SkillParserShared):
                 qid = qid.replace(ver[0], '')
 
             try:
-                return base_item_type['Name'] + ' (%s)' % \
-                       rr['Quest.dat'].index['Id'][qid]['Name']
+                return (
+                    base_item_type['Name']
+                    + ' (%s)' % rr['Quest.dat'].index['Id'][qid]['Name']
+                )
             except KeyError:
                 console('Quest %s not found' % qid, msg=Msg.error)
         else:
@@ -2115,7 +1934,8 @@ class ItemsParser(SkillParserShared):
             match = re.match(r'SkillBooks/Descent2_(?P<id>[0-9]+)', qid)
             if match:
                 return base_item_type['Name'] + ' (%s %s)' % (
-                    self._LANG[language]['descent'], match.group('id')
+                    self._LANG[language]['descent'],
+                    match.group('id'),
                 )
             else:
                 # Bandit respec
@@ -2125,14 +1945,12 @@ class ItemsParser(SkillParserShared):
                 else:
                     match = re.match(
                         r'Metadata/Items/QuestItems/Act7/Firefly(?P<id>[0-9]+)$',
-                        base_item_type['Id']
+                        base_item_type['Id'],
                     )
                     if match:
                         pageid = '%s (%s)' % (
                             base_item_type['Name'],
-                             self._LANG[language]['of'] % (
-                                 match.group('id'), 7
-                             ),
+                            self._LANG[language]['of'] % (match.group('id'), 7),
                         )
                         infobox['inventory_icon'] = pageid
                         return pageid
@@ -2141,27 +1959,30 @@ class ItemsParser(SkillParserShared):
 
     def _conflict_hideout_doodad(self, infobox, base_item_type, rr, language):
         try:
-            ho = rr['HideoutDoodads.dat'].index[
-                'BaseItemTypesKey'][base_item_type.rowid]
+            ho = rr['HideoutDoodads.dat'].index['BaseItemTypesKey'][
+                base_item_type.rowid
+            ]
         except KeyError:
             return
 
         # This is not perfect, but works currently.
         if ho['HideoutNPCsKey']:
-            if base_item_type['Id'].startswith('Metadata/Items/Hideout/Hideout'
-                                               'Wounded'):
+            if base_item_type['Id'].startswith(
+                'Metadata/Items/Hideout/Hideout' 'Wounded'
+            ):
                 name_fmt = self._LANG[self._language]['decoration_wounded']
             else:
                 name_fmt = self._LANG[self._language]['decoration']
             name = name_fmt % (
                 base_item_type['Name'],
                 ho['HideoutNPCsKey']['Hideout_NPCsKey']['ShortName'],
-                ho['MasterLevel']
+                ho['MasterLevel'],
             )
             infobox['inventory_icon'] = name
             return name
         elif base_item_type['Id'].startswith(
-                'Metadata/Items/Hideout/HideoutTotemPole'):
+            'Metadata/Items/Hideout/HideoutTotemPole'
+        ):
             # Ingore the test doodads on purpose
             if base_item_type['Id'].endswith('Test'):
                 return
@@ -2184,10 +2005,7 @@ class ItemsParser(SkillParserShared):
                 map_version,
             )
         else:
-            name = '%s (%s)' % (
-                base_item_type['Name'],
-                map_version
-            )
+            name = '%s (%s)' % (base_item_type['Name'], map_version)
 
         # Each iteration of maps has it's own art
         infobox['inventory_icon'] = name
@@ -2203,26 +2021,30 @@ class ItemsParser(SkillParserShared):
     def _conflict_divination_card(self, infobox, base_item_type, rr, language):
         return '%s (%s)' % (
             base_item_type['Name'],
-            base_item_type['ItemClassesKey']['Name'].lower()
+            base_item_type['ItemClassesKey']['Name'].lower(),
         )
 
-    def _conflict_labyrinth_map_item(self, infobox, base_item_type, rr,
-                                     language):
+    def _conflict_labyrinth_map_item(
+        self, infobox, base_item_type, rr, language
+    ):
         return base_item_type['Name']
 
     def _conflict_misc_map_item(self, infobox, base_item_type, rr, language):
         return base_item_type['Name']
 
     def _conflict_delve_socketable_currency(
-            self, infobox, base_item_type, rr, language):
+        self, infobox, base_item_type, rr, language
+    ):
         return
 
     def _conflict_delve_stackable_socketable_currency(
-            self, infobox, base_item_type, rr, language):
+        self, infobox, base_item_type, rr, language
+    ):
         return base_item_type['Name']
 
     def _conflict_atlas_region_upgrade(
-            self, infobox, base_item_type, rr, language):
+        self, infobox, base_item_type, rr, language
+    ):
         return base_item_type['Name']
 
     _conflict_resolver_map = {
@@ -2235,16 +2057,17 @@ class ItemsParser(SkillParserShared):
         'LabyrinthMapItem': _conflict_labyrinth_map_item,
         'MiscMapItem': _conflict_misc_map_item,
         'DelveSocketableCurrency': _conflict_delve_socketable_currency,
-        'DelveStackableSocketableCurrency':
-            _conflict_delve_stackable_socketable_currency,
+        'DelveStackableSocketableCurrency': _conflict_delve_stackable_socketable_currency,
         'AtlasRegionUpgradeItem': _conflict_atlas_region_upgrade,
     }
 
     def _parse_class_filter(self, parsed_args):
         self.rr['ItemClasses.dat'].build_index('Name')
         if parsed_args.item_class:
-            return [self.rr['ItemClasses.dat'].index['Name'][cls][0]['Name']
-                   for cls in parsed_args.item_class]
+            return [
+                self.rr['ItemClasses.dat'].index['Name'][cls][0]['Name']
+                for cls in parsed_args.item_class
+            ]
         else:
             return []
 
@@ -2253,8 +2076,8 @@ class ItemsParser(SkillParserShared):
             if rarity.id >= 5:
                 break
             for i, (item, cost) in enumerate(
-                    source[rarity.name_upper + 'Purchase'],
-                    start=1):
+                source[rarity.name_upper + 'Purchase'], start=1
+            ):
                 prefix = 'purchase_cost_%s%s' % (rarity.name_lower, i)
                 infobox[prefix + '_name'] = item['Name']
                 infobox[prefix + '_amount'] = cost
@@ -2262,23 +2085,30 @@ class ItemsParser(SkillParserShared):
     def by_rowid(self, parsed_args):
         return self._export(
             parsed_args,
-            self.rr['BaseItemTypes.dat'][parsed_args.start:parsed_args.end],
+            self.rr['BaseItemTypes.dat'][parsed_args.start : parsed_args.end],
         )
 
     def by_id(self, parsed_args):
-        return self._export(parsed_args, self._item_column_index_filter(
-            column_id='Id', arg_list=parsed_args.id
-        ))
+        return self._export(
+            parsed_args,
+            self._item_column_index_filter(
+                column_id='Id', arg_list=parsed_args.id
+            ),
+        )
 
     def by_name(self, parsed_args):
-        return self._export(parsed_args, self._item_column_index_filter(
-            column_id='Name', arg_list=parsed_args.name
-        ))
+        return self._export(
+            parsed_args,
+            self._item_column_index_filter(
+                column_id='Name', arg_list=parsed_args.name
+            ),
+        )
 
     def by_filter(self, parsed_args):
         if parsed_args.re_name:
-            parsed_args.re_name = re.compile(parsed_args.re_name,
-                                             flags=re.UNICODE)
+            parsed_args.re_name = re.compile(
+                parsed_args.re_name, flags=re.UNICODE
+            )
         if parsed_args.re_id:
             parsed_args.re_id = re.compile(parsed_args.re_id, flags=re.UNICODE)
 
@@ -2286,74 +2116,80 @@ class ItemsParser(SkillParserShared):
 
         for item in self.rr['BaseItemTypes.dat']:
 
-            if parsed_args.re_name and not \
-                    parsed_args.re_name.match(item['Name']):
+            if parsed_args.re_name and not parsed_args.re_name.match(
+                item['Name']
+            ):
                 continue
 
-            if parsed_args.re_id and not \
-                    parsed_args.re_id.match(item['Id']):
+            if parsed_args.re_id and not parsed_args.re_id.match(item['Id']):
                 continue
 
             items.append(item)
 
         return self._export(parsed_args, items)
 
-    def _process_base_item_type(self, base_item_type, infobox,
-                                not_new_map=True):
-            m_id = base_item_type['Id']
+    def _process_base_item_type(
+        self, base_item_type, infobox, not_new_map=True
+    ):
+        m_id = base_item_type['Id']
 
-            infobox['rarity_id'] = 'normal'
+        infobox['rarity_id'] = 'normal'
 
-            # BaseItemTypes.dat
-            infobox['name'] = base_item_type['Name']
-            infobox['class_id'] = base_item_type['ItemClassesKey']['Id']
-            infobox['size_x'] = base_item_type['Width']
-            infobox['size_y'] = base_item_type['Height']
-            if base_item_type['FlavourTextKey']:
-                infobox['flavour_text'] = \
-                    parser.parse_and_handle_description_tags(
-                        rr=self.rr,
-                        text=base_item_type['FlavourTextKey']['Text'],
-                    )
+        # BaseItemTypes.dat
+        infobox['name'] = base_item_type['Name']
+        infobox['class_id'] = base_item_type['ItemClassesKey']['Id']
+        infobox['size_x'] = base_item_type['Width']
+        infobox['size_y'] = base_item_type['Height']
+        if base_item_type['FlavourTextKey']:
+            infobox['flavour_text'] = parser.parse_and_handle_description_tags(
+                rr=self.rr, text=base_item_type['FlavourTextKey']['Text'],
+            )
 
-            if base_item_type['ItemClassesKey']['Id'] not in \
-                    self._IGNORE_DROP_LEVEL_CLASSES and \
-                    m_id not in self._IGNORE_DROP_LEVEL_ITEMS_BY_ID:
-                infobox['drop_level'] = base_item_type['DropLevel']
+        if (
+            base_item_type['ItemClassesKey']['Id']
+            not in self._IGNORE_DROP_LEVEL_CLASSES
+            and m_id not in self._IGNORE_DROP_LEVEL_ITEMS_BY_ID
+        ):
+            infobox['drop_level'] = base_item_type['DropLevel']
 
-            base_ot = OTFile(parent_or_base_dir_or_ggpk=self.base_path)
-            base_ot.read(
-                self.base_path + '/' + base_item_type['InheritsFrom'] + '.ot')
-            try:
-                ot = self.ot[m_id + '.ot']
-            except FileNotFoundError:
-                pass
-            else:
-                base_ot.merge(ot)
-            finally:
-                ot = base_ot
+        base_ot = OTFile(parent_or_base_dir_or_ggpk=self.base_path)
+        base_ot.read(
+            self.base_path + '/' + base_item_type['InheritsFrom'] + '.ot'
+        )
+        try:
+            ot = self.ot[m_id + '.ot']
+        except FileNotFoundError:
+            pass
+        else:
+            base_ot.merge(ot)
+        finally:
+            ot = base_ot
 
-            if 'enable_rarity' in ot['Mods']:
-                infobox['drop_rarities_ids'] = ', '.join(ot['Mods']['enable_rarity'])
+        if 'enable_rarity' in ot['Mods']:
+            infobox['drop_rarities_ids'] = ', '.join(
+                ot['Mods']['enable_rarity']
+            )
 
-            tags = [t['Id'] for t in base_item_type['TagsKeys']]
-            infobox['tags'] = ', '.join(tags + list(ot['Base']['tag']))
+        tags = [t['Id'] for t in base_item_type['TagsKeys']]
+        infobox['tags'] = ', '.join(tags + list(ot['Base']['tag']))
 
-            if not_new_map:
-                infobox['metadata_id'] = m_id
+        if not_new_map:
+            infobox['metadata_id'] = m_id
 
-            description = ot['Stack'].get('function_text')
-            if description:
-                infobox['description'] = self.rr['ClientStrings.dat'].index[
-                    'Id'][description]['Text']
+        description = ot['Stack'].get('function_text')
+        if description:
+            infobox['description'] = self.rr['ClientStrings.dat'].index['Id'][
+                description
+            ]['Text']
 
-            help_text = ot['Base'].get('description_text')
-            if help_text:
-                infobox['help_text'] = self.rr['ClientStrings.dat'].index['Id'][
-                    help_text]['Text']
+        help_text = ot['Base'].get('description_text')
+        if help_text:
+            infobox['help_text'] = self.rr['ClientStrings.dat'].index['Id'][
+                help_text
+            ]['Text']
 
-            for i, mod in enumerate(base_item_type['Implicit_ModsKeys']):
-                infobox['implicit%s' % (i+1)] = mod['Id']
+        for i, mod in enumerate(base_item_type['Implicit_ModsKeys']):
+            infobox['implicit%s' % (i + 1)] = mod['Id']
 
     def _process_name_conflicts(self, infobox, base_item_type, language):
         rr = self.rr2 if language != self._language else self.rr
@@ -2365,13 +2201,17 @@ class ItemsParser(SkillParserShared):
         m_id = base_item_type['Id']
         appendix = self._NAME_OVERRIDE_BY_ID[language].get(m_id)
 
-
         if appendix is not None:
             name += appendix
             infobox['inventory_icon'] = name
-        elif cls_id == 'Map' or \
-                len(rr['BaseItemTypes.dat'].index['Name'][name] +
-                    rr['Prophecies.dat'].index['Name'][name]) > 1:
+        elif (
+            cls_id == 'Map'
+            or len(
+                rr['BaseItemTypes.dat'].index['Name'][name]
+                + rr['Prophecies.dat'].index['Name'][name]
+            )
+            > 1
+        ):
             resolver = self._conflict_resolver_map.get(cls_id)
 
             if resolver:
@@ -2379,20 +2219,21 @@ class ItemsParser(SkillParserShared):
                 if name is None:
                     console(
                         'Unresolved ambiguous item "%s" with name "%s". '
-                        'Skipping' %
-                        (m_id, infobox['name']),
-                        msg=Msg.error
+                        'Skipping' % (m_id, infobox['name']),
+                        msg=Msg.error,
                     )
                     return
             else:
                 console(
-                        'Unresolved ambiguous item "%s" with name "%s". '
-                        'Skipping' %
-                        (m_id, infobox['name']),
-                        msg=Msg.error
-                    )
-                console('No name conflict handler defined for item class id'
-                        ' "%s"' % cls_id, msg=Msg.error)
+                    'Unresolved ambiguous item "%s" with name "%s". '
+                    'Skipping' % (m_id, infobox['name']),
+                    msg=Msg.error,
+                )
+                console(
+                    'No name conflict handler defined for item class id'
+                    ' "%s"' % cls_id,
+                    msg=Msg.error,
+                )
                 return
 
         return name
@@ -2400,13 +2241,17 @@ class ItemsParser(SkillParserShared):
     def _export(self, parsed_args, items):
         classes = self._parse_class_filter(parsed_args)
         if classes:
-            items = [item for item in items if item['ItemClassesKey']['Name']
-                     in classes]
+            items = [
+                item
+                for item in items
+                if item['ItemClassesKey']['Name'] in classes
+            ]
 
         self._parsed_args = parsed_args
         console('Found %s items. Removing disabled items...' % len(items))
         items = [
-            base_item_type for base_item_type in items
+            base_item_type
+            for base_item_type in items
             if base_item_type['Id'] not in self._SKIP_ITEMS_BY_ID
         ]
         console('%s items left for processing.' % len(items))
@@ -2443,7 +2288,8 @@ class ItemsParser(SkillParserShared):
                         console(
                             'Required extra info for item "%s" with class id '
                             '"%s" not found. Skipping.' % (name, cls_id),
-                            msg=Msg.error)
+                            msg=Msg.error,
+                        )
                         break
                 if fail:
                     continue
@@ -2468,45 +2314,41 @@ class ItemsParser(SkillParserShared):
                 if icon:
                     infobox[key] = icon
                 else:
-                    infobox[key] = \
-                        self.rr2['BaseItemTypes.dat'][base_item_type.rowid][
-                            'Name']
+                    infobox[key] = self.rr2['BaseItemTypes.dat'][
+                        base_item_type.rowid
+                    ]['Name']
 
             # putting this last since it's usually manually added
             if m_id in self._DROP_DISABLED_ITEMS_BY_ID:
                 infobox['drop_enabled'] = False
 
-            cond = ItemWikiCondition(
-                data=infobox,
-                cmdargs=parsed_args,
-            )
+            cond = ItemWikiCondition(data=infobox, cmdargs=parsed_args,)
 
             r.add_result(
                 text=cond,
                 out_file='item_%s.txt' % page,
-                wiki_page=[
-                    {
-                        'page': page,
-                        'condition': cond,
-                    }
-                ],
+                wiki_page=[{'page': page, 'condition': cond,}],
                 wiki_message='Item exporter',
             )
 
             if parsed_args.store_images and self.ggpk:
                 if not base_item_type['ItemVisualIdentityKey']['DDSFile']:
                     warnings.warn(
-                        'Missing 2d art inventory icon for item "%s"' %
-                        base_item_type['Name']
+                        'Missing 2d art inventory icon for item "%s"'
+                        % base_item_type['Name']
                     )
                     continue
 
                 self._write_dds(
-                    data=self.ggpk[base_item_type['ItemVisualIdentityKey'][
-                        'DDSFile']].record.extract().read(),
-                    out_path=os.path.join(self._img_path, (
-                        infobox.get('inventory_icon') or page) +
-                        ' inventory icon.dds',
+                    data=self.ggpk[
+                        base_item_type['ItemVisualIdentityKey']['DDSFile']
+                    ]
+                    .record.extract()
+                    .read(),
+                    out_path=os.path.join(
+                        self._img_path,
+                        (infobox.get('inventory_icon') or page)
+                        + ' inventory icon.dds',
                     ),
                     parsed_args=parsed_args,
                 )
@@ -2521,34 +2363,33 @@ class ItemsParser(SkillParserShared):
         if parsed_args.map_series_id is not None:
             try:
                 map_series = self.rr['MapSeries.dat'].index['Id'][
-                    parsed_args.map_series_id]
+                    parsed_args.map_series_id
+                ]
             except IndexError:
-                console(
-                    'Invalid map series id',
-                        msg=Msg.error)
+                console('Invalid map series id', msg=Msg.error)
                 return r
         elif parsed_args.map_series is not None:
             try:
                 map_series = self.rr['MapSeries.dat'].index['Name'][
-                    parsed_args.map_series][0]
+                    parsed_args.map_series
+                ][0]
             except IndexError:
-                console(
-                    'Invalid map series name',
-                        msg=Msg.error)
+                console('Invalid map series name', msg=Msg.error)
                 return r
         else:
             map_series = self.rr['MapSeries.dat'][-1]
             console(
-                'No map series specified. Using latest series "%s".' % (
-                    map_series['Name'],
-                ), msg=Msg.warning
+                'No map series specified. Using latest series "%s".'
+                % (map_series['Name'],),
+                msg=Msg.warning,
             )
 
         if map_series.rowid <= 3:
             console(
                 'Only Betrayal and newer map series are supported by this '
                 'function',
-                    msg=Msg.error)
+                msg=Msg.error,
+            )
             return r
 
         # Store whether this is the latest map series to determine later whether
@@ -2563,13 +2404,13 @@ class ItemsParser(SkillParserShared):
             for atlas_node in self.rr['AtlasNode.dat'].index['MapsKey'][maps]:
                 # This excludes the unique maps
                 if atlas_node['ItemVisualIdentityKey'][
-                        'IsAtlasOfWorldsMapIcon']:
+                    'IsAtlasOfWorldsMapIcon'
+                ]:
                     break
             else:
                 # Safeguard in case all entries are unique for some reason (???)
                 continue
-            if names and maps['BaseItemTypesKey']['Name'] in names or \
-                    not names:
+            if names and maps['BaseItemTypesKey']['Name'] in names or not names:
                 map_series_tiers[row] = atlas_node
 
         if parsed_args.store_images:
@@ -2577,14 +2418,17 @@ class ItemsParser(SkillParserShared):
                 console(
                     'Map images need to be processed and require conversion '
                     'option to be enabled.',
-                        msg=Msg.error)
+                    msg=Msg.error,
+                )
                 return r
 
             self._image_init(parsed_args)
             base_ico = os.path.join(self._img_path, 'Base.dds')
 
             self._write_dds(
-                data=self.ggpk[map_series['BaseIcon_DDSFile']].record.extract().read(),
+                data=self.ggpk[map_series['BaseIcon_DDSFile']]
+                .record.extract()
+                .read(),
                 out_path=base_ico,
                 parsed_args=parsed_args,
             )
@@ -2604,8 +2448,9 @@ class ItemsParser(SkillParserShared):
 
             # Base info
             infobox = OrderedDict()
-            self._process_base_item_type(base_item_type, infobox,
-                                         not_new_map=False)
+            self._process_base_item_type(
+                base_item_type, infobox, not_new_map=False
+            )
             self._type_map(infobox, base_item_type)
 
             # Overrides
@@ -2621,7 +2466,7 @@ class ItemsParser(SkillParserShared):
             if self._language != 'English' and parsed_args.english_file_link:
                 infobox['inventory_icon'] = '%s (%s)' % (
                     self.rr2['BaseItemTypes.dat'][base_item_type.rowid]['Name'],
-                    self.rr2['MapSeries.dat'][map_series.rowid]['Name']
+                    self.rr2['MapSeries.dat'][map_series.rowid]['Name'],
                 )
             else:
                 infobox['inventory_icon'] = name
@@ -2633,7 +2478,8 @@ class ItemsParser(SkillParserShared):
 
                 minimum = 0
                 connections = defaultdict(
-                    lambda: ['False' for i in range(0, 5)])
+                    lambda: ['False' for i in range(0, 5)]
+                )
                 for i in range(0, 5):
                     tier = atlas_node['Tier%s' % i]
                     infobox['atlas_map_tier%s' % i] = tier
@@ -2646,15 +2492,16 @@ class ItemsParser(SkillParserShared):
                         if ivi['IsAtlasOfWorldsMapIcon']:
                             key = '%s (%s)' % (
                                 atlas_node2['MapsKey']['BaseItemTypesKey'][
-                                    'Name'],
-                                map_series['Name']
+                                    'Name'
+                                ],
+                                map_series['Name'],
                             )
                         else:
                             key = '%s (%s)' % (
                                 self.rr['UniqueMaps.dat'].index[
-                                    'ItemVisualIdentityKey'][ivi]['WordsKey'][
-                                    'Text'],
-                                map_series['Name']
+                                    'ItemVisualIdentityKey'
+                                ][ivi]['WordsKey']['Text'],
+                                map_series['Name'],
                             )
                         connections[key][i] = 'True'
 
@@ -2663,14 +2510,16 @@ class ItemsParser(SkillParserShared):
                     infobox['atlas_connection%s_target' % i] = k
                     infobox['atlas_connection%s_tier' % i] = ', '.join(v)
 
-            infobox['flavour_text'] = \
-                atlas_node['FlavourTextKey']['Text'].replace('\n', '<br>')\
+            infobox['flavour_text'] = (
+                atlas_node['FlavourTextKey']['Text']
+                .replace('\n', '<br>')
                 .replace('\r', '')
+            )
 
             if tier < 17:
                 self._process_purchase_costs(
                     self.rr['MapPurchaseCosts.dat'].index['Tier'][maps['Tier']],
-                    infobox
+                    infobox,
                 )
 
             '''if maps['UpgradedFrom_MapsKey']:
@@ -2681,41 +2530,37 @@ class ItemsParser(SkillParserShared):
                 infobox['upgraded_from_set1_group1_amount'] = 3'''
 
             infobox['release_version'] = self._MAP_RELEASE_VERSION[
-                map_series['Id']]
+                map_series['Id']
+            ]
 
             if not latest:
                 infobox['drop_enabled'] = 'False'
 
-            cond = MapItemWikiCondition(
-                data=infobox,
-                cmdargs=parsed_args,
-            )
+            cond = MapItemWikiCondition(data=infobox, cmdargs=parsed_args,)
 
             r.add_result(
                 text=cond,
                 out_file='map_%s.txt' % name,
-                wiki_page=[
-                    {
-                        'page': name,
-                        'condition': cond,
-                    }
-                ],
+                wiki_page=[{'page': name, 'condition': cond,}],
                 wiki_message='Map exporter',
             )
 
             if parsed_args.store_images and self.ggpk:
                 if not atlas_node['ItemVisualIdentityKey']['DDSFile']:
                     warnings.warn(
-                        'Missing 2d art inventory icon for item "%s"' %
-                        base_item_type['Name']
+                        'Missing 2d art inventory icon for item "%s"'
+                        % base_item_type['Name']
                     )
                     continue
 
                 ico = os.path.join(self._img_path, name + ' inventory icon.dds')
 
                 self._write_dds(
-                    data=self.ggpk[atlas_node['ItemVisualIdentityKey'][
-                        'DDSFile']].record.extract().read(),
+                    data=self.ggpk[
+                        atlas_node['ItemVisualIdentityKey']['DDSFile']
+                    ]
+                    .record.extract()
+                    .read(),
                     out_path=ico,
                     parsed_args=parsed_args,
                 )
@@ -2729,14 +2574,14 @@ class ItemsParser(SkillParserShared):
                     color = "240,30,10"
                 if color:
                     os.system(
-                        '''magick convert "%s" -fill rgb(%s) -colorize 100 "%s"''' % (
-                        ico, color, ico
-                    ))
+                        '''magick convert "%s" -fill rgb(%s) -colorize 100 "%s"'''
+                        % (ico, color, ico)
+                    )
 
                 os.system(
-                    'magick composite -gravity center "%s" "%s" "%s"' % (
-                    ico, base_ico, ico
-                ))
+                    'magick composite -gravity center "%s" "%s" "%s"'
+                    % (ico, base_ico, ico)
+                )
 
         return r
 

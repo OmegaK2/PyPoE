@@ -63,13 +63,12 @@ class DatExportHandler:
         """
         parser.set_defaults(func=self.handle)
         parser.add_argument(
-            '--files', '--file',
-            help='.dat files to export',
-            nargs='*',
+            '--files', '--file', help='.dat files to export', nargs='*',
         )
 
         parser.add_argument(
-            '-lang', '--language',
+            '-lang',
+            '--language',
             help='Language subdirectory to use',
             dest='language',
             default=None,
@@ -94,7 +93,11 @@ class DatExportHandler:
                 elif not file_name.endswith('.dat'):
                     file_name += '.dat'
                     if file_name not in spec:
-                        console('.dat file "%s" is not in specification. Removing.' % file_name, msg=Msg.error)
+                        console(
+                            '.dat file "%s" is not in specification. Removing.'
+                            % file_name,
+                            msg=Msg.error,
+                        )
                     else:
                         files.add(file_name)
 

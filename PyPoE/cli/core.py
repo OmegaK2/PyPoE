@@ -86,6 +86,7 @@ class Msg(Enum):
     error
         red error message
     """
+
     default = Style.RESET_ALL
     error = Style.BRIGHT + Fore.RED
     warning = Style.BRIGHT + Fore.YELLOW
@@ -95,6 +96,7 @@ class OutputHook:
     """
     Warning hook to reformat / restyle warning messages properly.
     """
+
     def __init__(self, show_warning):
         self._orig_show_warning = show_warning
         self._orig_format_warning = warnings.formatwarning
@@ -111,9 +113,11 @@ class OutputHook:
         }
         f = "%(filename)s:%(lineno)s:\n%(category)s: %(message)s\n" % kwargs
         return console(f, msg=Msg.warning, rtr=True)
+
     #
     def show_warning(self, *args, **kwargs):
         self._orig_show_warning(*args, **kwargs)
+
 
 # =============================================================================
 # Functions
@@ -183,4 +187,3 @@ def console(message, msg=Msg.default, rtr=False, raw=False):
         return f
     else:
         print(f)
-

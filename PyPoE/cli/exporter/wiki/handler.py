@@ -69,7 +69,8 @@ class WikiHandler:
     def add_arguments(self, parser):
         add_parser_arguments(parser)
         parser.add_argument(
-            '-w-mt', '--wiki-max-threads',
+            '-w-mt',
+            '--wiki-max-threads',
             dest='wiki_threads',
             help='Maximum number of threads to spawn when editing wiki',
             action='store',
@@ -78,7 +79,8 @@ class WikiHandler:
         )
 
         parser.add_argument(
-            '-w-oe', '--wiki-only-existing',
+            '-w-oe',
+            '--wiki-only-existing',
             dest='only_existing',
             help='Only write to existing pages and do not create new ones',
             action='store_true',
@@ -93,7 +95,7 @@ class WikiHandler:
             except mwclient.APIError as e:
                 console(
                     'APIError occurred. Retrying - total attempts: %s' % fail,
-                    msg=Msg.error
+                    msg=Msg.error,
                 )
                 fail += 1
 
@@ -104,8 +106,10 @@ class WikiHandler:
             ]
         else:
             pages = row['wiki_page']
-        console('Scanning for wiki page candidates "%s"' %
-                ', '.join([p['page'] for p in pages]))
+        console(
+            'Scanning for wiki page candidates "%s"'
+            % ', '.join([p['page'] for p in pages])
+        )
         page_found = False
         new = False
         for pdata in pages:
@@ -128,28 +132,34 @@ class WikiHandler:
                         if not success:
                             break
                 else:
-                    raise ValueError('Invalid condition type "%s"' %
-                                     type(condition))
+                    raise ValueError(
+                        'Invalid condition type "%s"' % type(condition)
+                    )
                 if success:
-                    console('All conditions met on page "%s". Editing.' %
-                            pdata['page'])
+                    console(
+                        'All conditions met on page "%s". Editing.'
+                        % pdata['page']
+                    )
                     page_found = True
                     break
                 else:
                     console(
                         'One or more conditions failed on page "%s". Skipping.'
-                        % pdata['page'], msg=Msg.warning
+                        % pdata['page'],
+                        msg=Msg.warning,
                     )
             elif self.cmdargs.only_existing:
                 console(
                     'Page "%s" does not exist. Bot is set to only write to '
                     'existing pages, skipping.' % pdata['page'],
-                    msg=Msg.warning
+                    msg=Msg.warning,
                 )
                 return
             else:
-                console('Page "%s" does not exist. It will be created.' %
-                        pdata['page'])
+                console(
+                    'Page "%s" does not exist. It will be created.'
+                    % pdata['page']
+                )
                 page_found = True
                 new = True
                 break
@@ -171,16 +181,19 @@ class WikiHandler:
             else:
                 response = page.save(
                     text=text,
-                    summary='PyPoE/ExporterBot/%s: %s' % (
+                    summary='PyPoE/ExporterBot/%s: %s'
+                    % (
                         __version__,
-                        self.cmdargs.wiki_message or row['wiki_message']
-                     )
+                        self.cmdargs.wiki_message or row['wiki_message'],
+                    ),
                 )
                 if response['result'] == 'Success':
-                    console('Page was edited successfully (time: %s)' %
-                            response.get('newtimestamp'))
+                    console(
+                        'Page was edited successfully (time: %s)'
+                        % response.get('newtimestamp')
+                    )
                 else:
-                    #TODO: what happens if it fails?
+                    # TODO: what happens if it fails?
                     console('Something went wrong, status code:', msg=Msg.error)
                     console(response, msg=Msg.error)
         else:
@@ -195,18 +208,15 @@ class WikiHandler:
         if url is None:
             console(
                 'There is no wiki defined for language "%s"' % cmdargs.language,
-                msg=Msg.error
+                msg=Msg.error,
             )
             return
-        self.site = mwclient.Site(
-            url,
-            path='/',
-            scheme='https'
-        )
+        self.site = mwclient.Site(url, path='/', scheme='https')
 
         self.site.login(
             username=cmdargs.user or input('Enter your gamepedia user name:\n'),
-            password=cmdargs.password or input(
+            password=cmdargs.password
+            or input(
                 'Please enter your password for the specified user\n'
                 'WARNING: Password will be visible in console\n'
             ),
@@ -215,15 +225,13 @@ class WikiHandler:
         self.cmdargs = cmdargs
         self.parser = parser
 
-
         if cmdargs.wiki_threads > 1:
             console('Starting thread pool...')
             tp = ThreadPoolExecutor(max_workers=cmdargs.wiki_threads)
 
             for row in result:
                 tp.submit(
-                    self._error_catcher,
-                    row=row,
+                    self._error_catcher, row=row,
                 )
 
             tp.shutdown(wait=True)
@@ -241,7 +249,10 @@ class ExporterHandler(BaseHandler):
         def wrapper(pargs, *args, **kwargs):
             # Check Hash
             if not check_hash():
-                console('Game file hash mismatch. Please rerun setup.', msg=Msg.error)
+                console(
+                    'Game file hash mismatch. Please rerun setup.',
+                    msg=Msg.error,
+                )
                 return -1
             # Check outdir, if specified:
             if hasattr(pargs, 'outdir') and pargs.outdir:
@@ -289,20 +300,27 @@ class ExporterHandler(BaseHandler):
                             raise
 
                     if wiki_handler is None:
-                        console('No wiki-handler defined for this function',
-                                msg=Msg.error)
+                        console(
+                            'No wiki-handler defined for this function',
+                            msg=Msg.error,
+                        )
                         return 0
 
                     console('Running wikibot...')
-                    console('-'*80)
-                    wiki_handler.handle(mwclient=mwclient, result=result, cmdargs=pargs,
-                                        parser=parser)
-                    console('-'*80)
+                    console('-' * 80)
+                    wiki_handler.handle(
+                        mwclient=mwclient,
+                        result=result,
+                        cmdargs=pargs,
+                        parser=parser,
+                    )
+                    console('-' * 80)
                     console('Completed wikibot execution.')
 
                 console('Done.')
 
                 return 0
+
         return wrapper
 
     def add_default_subparser_filters(self, sub_parser, cls, *args, **kwargs):
@@ -324,15 +342,10 @@ class ExporterHandler(BaseHandler):
         """
         # By id
         a_id = sub_parser.add_parser(
-            'id',
-            help='Extract via a list of internal ids.'
+            'id', help='Extract via a list of internal ids.'
         )
         self.add_default_parsers(
-            parser=a_id,
-            cls=cls,
-            func=cls.by_id,
-            *args,
-            **kwargs
+            parser=a_id, cls=cls, func=cls.by_id, *args, **kwargs
         )
         a_id.add_argument(
             'id',
@@ -342,51 +355,35 @@ class ExporterHandler(BaseHandler):
 
         # by name
         a_name = sub_parser.add_parser(
-            'name',
-            help='Extract via a list of names.'
+            'name', help='Extract via a list of names.'
         )
         self.add_default_parsers(
-            parser=a_name,
-            cls=cls,
-            func=cls.by_name,
-            *args,
-            **kwargs
+            parser=a_name, cls=cls, func=cls.by_name, *args, **kwargs
         )
         a_name.add_argument(
             'name',
             help='Visible name (i.e. the name you see in game). Can be '
-                 'specified multiple times.',
+            'specified multiple times.',
             nargs='+',
         )
 
         # by row ID
         a_rid = sub_parser.add_parser(
-            'rowid',
-            help='Extract via rowid in the primary dat file.'
+            'rowid', help='Extract via rowid in the primary dat file.'
         )
         self.add_default_parsers(
-            parser=a_rid,
-            cls=cls,
-            func=cls.by_rowid,
-            *args,
-            **kwargs
+            parser=a_rid, cls=cls, func=cls.by_rowid, *args, **kwargs
         )
         a_rid.add_argument(
-            'start',
-            help='Starting index',
-            nargs='?',
-            type=int,
-            default=0,
+            'start', help='Starting index', nargs='?', type=int, default=0,
         )
         a_rid.add_argument(
-            'end',
-            nargs='?',
-            help='Ending index',
-            type=int,
+            'end', nargs='?', help='Ending index', type=int,
         )
 
-    def add_default_parsers(self, parser, cls, func=None, handler=None,
-                            wiki=True, wiki_handler=None):
+    def add_default_parsers(
+        self, parser, cls, func=None, handler=None, wiki=True, wiki_handler=None
+    ):
         if handler is None:
             for item in (func,):
                 if item is None:
@@ -395,41 +392,46 @@ class ExporterHandler(BaseHandler):
         if wiki:
             if wiki_handler is not None:
                 if not isinstance(wiki_handler, WikiHandler):
-                    raise TypeError('wiki_handler must be a WikiHandler '
-                                    'instance.')
+                    raise TypeError(
+                        'wiki_handler must be a WikiHandler ' 'instance.'
+                    )
             else:
                 wiki_handler = WikiHandler()
             wiki_handler.add_arguments(parser)
 
-        parser.set_defaults(func=self.get_wrap(cls, func, handler, wiki_handler))
-        parser.add_argument(
-            '-d', '--outdir',
-            help='Destination directory. If empty, uses current directory.'
+        parser.set_defaults(
+            func=self.get_wrap(cls, func, handler, wiki_handler)
         )
         parser.add_argument(
-            '-p', '--print',
+            '-d',
+            '--outdir',
+            help='Destination directory. If empty, uses current directory.',
+        )
+        parser.add_argument(
+            '-p',
+            '--print',
             help='Print the contents of the file',
             action='store_true',
         )
         parser.add_argument(
-            '-wr', '--write',
-            help='Write to file',
-            action='store_true',
+            '-wr', '--write', help='Write to file', action='store_true',
         )
 
     def add_image_arguments(self, parser):
         parser.add_argument(
-            '-im', '--store-images',
+            '-im',
+            '--store-images',
             help='If specified item 2d art images will be extracted. '
-                 'Requires brotli to be installed.',
+            'Requires brotli to be installed.',
             action='store_true',
             dest='store_images',
         )
 
         parser.add_argument(
-            '-im-c', '--convert-images',
+            '-im-c',
+            '--convert-images',
             help='Convert extracted images to png using ImageMagick '
-                 '(requires "magick" command to be executeable)',
+            '(requires "magick" command to be executeable)',
             action='store_true',
             dest='convert_images',
         )
@@ -444,8 +446,9 @@ class ExporterHandler(BaseHandler):
 
 
 class ExporterResult(list):
-    def add_result(self, text=None, out_file=None, wiki_page=None,
-                   wiki_message='', **extra):
+    def add_result(
+        self, text=None, out_file=None, wiki_page=None, wiki_message='', **extra
+    ):
         data = {
             'text': text,
             'out_file': out_file,
@@ -461,15 +464,18 @@ class ExporterResult(list):
 # Functions
 # =============================================================================
 
+
 def add_parser_arguments(parser):
     parser.add_argument(
-        '-w', '--wiki',
+        '-w',
+        '--wiki',
         help='Write to the gamepedia page (requires pywikibot)',
         action='store_true',
     )
 
     parser.add_argument(
-        '-w-u', '--wiki-user',
+        '-w-u',
+        '--wiki-user',
         dest='user',
         help='Gamepedia user name to use to login into the wiki',
         action='store',
@@ -478,7 +484,9 @@ def add_parser_arguments(parser):
     )
 
     parser.add_argument(
-        '-w-p', '-w-pw', '--wiki-password',
+        '-w-p',
+        '-w-pw',
+        '--wiki-password',
         dest='password',
         help='Gamepedia password to use to login into the wiki',
         action='store',
@@ -487,14 +495,17 @@ def add_parser_arguments(parser):
     )
 
     parser.add_argument(
-        '-w-dr', '--wiki-dry-run',
+        '-w-dr',
+        '--wiki-dry-run',
         dest='dry_run',
         help='Don\'t actually save the wiki page and print it instead',
         action='store_true',
     )
 
     parser.add_argument(
-        '-w-msg', '--wiki-message', '--wiki-edit-message',
+        '-w-msg',
+        '--wiki-message',
+        '--wiki-edit-message',
         dest='wiki_message',
         help='Override the default edit message',
         action='store',

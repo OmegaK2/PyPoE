@@ -102,6 +102,7 @@ class FileMenu(QMenu):
     """
     Create file menu and handle related actions
     """
+
     def __init__(self, *args, **kwargs):
         QMenu.__init__(self, *args, **kwargs)
 
@@ -116,11 +117,16 @@ class ViewMenu(QMenu):
     """
     Create view menu and handle related actions
     """
+
     def __init__(self, *args, **kwargs):
         QMenu.__init__(self, *args, **kwargs)
 
-        self.action_toggle_toolbar = QAction(self, text=self.tr('File Viewer Toolbar'), checkable=True)
-        self.action_toggle_toolbar.setStatusTip(self.tr('Toggle file viewer toolbar'))
+        self.action_toggle_toolbar = QAction(
+            self, text=self.tr('File Viewer Toolbar'), checkable=True
+        )
+        self.action_toggle_toolbar.setStatusTip(
+            self.tr('Toggle file viewer toolbar')
+        )
         self.action_toggle_toolbar.triggered.connect(self._toggle_view_toolbar)
         self.action_toggle_toolbar.setChecked(True)
         self.addAction(self.action_toggle_toolbar)
@@ -137,12 +143,19 @@ class MiscMenu(QMenu):
     """
     Create misc menu and handle related actions
     """
+
     def __init__(self, *args, **kwargs):
         QMenu.__init__(self, *args, **kwargs)
 
-        self.action_reload_specifications = QAction(self, text=self.tr('Reload .dat specifications'))
-        self.action_reload_specifications.setStatusTip(self.tr('Reloads the default .dat specifications.'))
-        self.action_reload_specifications.triggered.connect(self._reload_specifications)
+        self.action_reload_specifications = QAction(
+            self, text=self.tr('Reload .dat specifications')
+        )
+        self.action_reload_specifications.setStatusTip(
+            self.tr('Reloads the default .dat specifications.')
+        )
+        self.action_reload_specifications.triggered.connect(
+            self._reload_specifications
+        )
         self.addAction(self.action_reload_specifications)
 
         self.setTitle(self.tr('Misc'))

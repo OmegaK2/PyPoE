@@ -100,8 +100,9 @@ from PyPoE.poe.file.ggpk import GGPKFile
 # =============================================================================
 
 __all__ = [
-    'AbstractKeyValueFile', 'AbstractKeyValueFileCache',
-    'AbstractKeyValueSection'
+    'AbstractKeyValueFile',
+    'AbstractKeyValueFileCache',
+    'AbstractKeyValueSection',
 ]
 
 # =============================================================================
@@ -113,6 +114,7 @@ class DuplicateKeyWarning(ParserWarning):
     """
     Warning for keys that are not explicitly specified to be overridden.
     """
+
     pass
 
 
@@ -120,6 +122,7 @@ class OverriddenKeyWarning(ParserWarning):
     """
     Warning for keys that are overridden during a merge.
     """
+
     pass
 
 
@@ -146,14 +149,16 @@ class AbstractKeyValueSection(dict):
                     self[key][value] = True
                     return
                 else:
-                    value = OrderedDict(((value, True), ))
+                    value = OrderedDict(((value, True),))
         elif key in self.APPEND_KEYS:
             if not isinstance(value, list):
                 if key in self:
                     self[key].append(value)
                     return
                 else:
-                    value = [value, ]
+                    value = [
+                        value,
+                    ]
         super().__setitem__(key, value)
 
     def merge(self, other):
@@ -175,7 +180,7 @@ class AbstractKeyValueSection(dict):
                         self[k][v] = True
                         continue
                     else:
-                        v = OrderedDict(((v, True), ))
+                        v = OrderedDict(((v, True),))
             elif k in self.APPEND_KEYS:
                 if isinstance(v, list):
                     if k in self:
@@ -187,7 +192,9 @@ class AbstractKeyValueSection(dict):
                         self[k].append(v)
                         continue
                     else:
-                        v = [v, ]
+                        v = [
+                            v,
+                        ]
             elif k in self:
                 continue
 
@@ -213,6 +220,7 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
     extends : None or str
         Whether the file extends another file
     """
+
     version = None
     extends = None
 
@@ -224,16 +232,13 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
         r'^'
         r'version (?P<version>[0-9]+)[\r\n]*'
         r'extends "(?P<extends>[\w\./_]+)"[\r\n]*'
-        r'(?P<remainder>.*)' # Match the rest
+        r'(?P<remainder>.*)'  # Match the rest
         r'$',
-        re.UNICODE | re.MULTILINE | re.DOTALL
+        re.UNICODE | re.MULTILINE | re.DOTALL,
     )
 
     _re_find_kv_sections = re.compile(
-        r'^(?P<key>[\w]+)[\r\n]+'
-        r'^{'
-        r'(?P<contents>[^}]*)'
-        r'^}',
+        r'^(?P<key>[\w]+)[\r\n]+' r'^{' r'(?P<contents>[^}]*)' r'^}',
         re.UNICODE | re.MULTILINE,
     )
 
@@ -246,14 +251,19 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
         re.UNICODE | re.MULTILINE,
     )
 
-    def __init__(self, parent_or_base_dir_or_ggpk=None, version=None,
-                 extends=None, keys=None):
+    def __init__(
+        self,
+        parent_or_base_dir_or_ggpk=None,
+        version=None,
+        extends=None,
+        keys=None,
+    ):
         AbstractFile.__init__(self)
         defaultdict.__init__(self, keys)
 
         self.version = version
         self.extends = extends
-        #self._keys = keys if keys else {}
+        # self._keys = keys if keys else {}
 
         self._parent_dir = None
         self._parent_file = None
@@ -290,13 +300,16 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
         raise NotImplementedError()
 
     def __repr__(self):
-        return '%(name)s(extends="%(extends)s", version="%(version)s", ' \
-               'keys=%(keys)s' % {
-                    'name': self.__class__.__name__,
-                    'extends': self.extends,
-                    'version': self.version,
-                    'keys': defaultdict.__repr__(self),
-               }
+        return (
+            '%(name)s(extends="%(extends)s", version="%(version)s", '
+            'keys=%(keys)s'
+            % {
+                'name': self.__class__.__name__,
+                'extends': self.extends,
+                'version': self.version,
+                'keys': defaultdict.__repr__(self),
+            }
+        )
 
     @doc(doc=AbstractFile._read)
     def _read(self, buffer, *args, **kwargs):
@@ -311,18 +324,20 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
         self.version = int(match.group('version'))
 
         for section_match in self._re_find_kv_sections.finditer(
-                match.group('remainder')):
+            match.group('remainder')
+        ):
             key = section_match.group('key')
 
             try:
                 section = self[key]
             except KeyError:
-                #print('Extra section:', key)
+                # print('Extra section:', key)
                 section = AbstractKeyValueSection(parent=self, name=key)
                 self[key] = section
 
             for kv_match in self._re_find_kv_pairs.finditer(
-                    section_match.group('contents')):
+                section_match.group('contents')
+            ):
                 value = kv_match.group('value').strip('"')
                 if value == 'true':
                     value = True
@@ -356,17 +371,20 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
                 obj = self.__class__(
                     parent_or_base_dir_or_ggpk=self._parent_dir
                 )
-                obj.read(file_path_or_raw=os.path.join(
-                    self._parent_dir, extend + self.EXTENSION
-                ))
+                obj.read(
+                    file_path_or_raw=os.path.join(
+                        self._parent_dir, extend + self.EXTENSION
+                    )
+                )
                 self.merge(obj)
             elif self._parent_ggpk:
                 obj = self.__class__(
                     parent_or_base_dir_or_ggpk=self._parent_ggpk
                 )
-                obj.read(file_path_or_raw=
-                    self._parent_ggpk.directory[
-                        extend + self.EXTENSION].record.extract()
+                obj.read(
+                    file_path_or_raw=self._parent_ggpk.directory[
+                        extend + self.EXTENSION
+                    ].record.extract()
                 )
                 self.merge(obj)
             else:
@@ -447,6 +465,8 @@ class AbstractKeyValueFileCache(AbstractFileCache):
         options['parent_or_base_dir_or_ggpk'] = self._ggpk or self._path
 
         return options
+
+
 # =============================================================================
 # Functions
 # =============================================================================

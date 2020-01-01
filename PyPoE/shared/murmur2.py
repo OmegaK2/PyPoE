@@ -39,7 +39,7 @@ import struct
 DEFAULT_SEED = 0
 # 'm' and 'r' are mixing constants generated offline.
 # They're not really 'magic', they just happen to work well.
-M = 0x5bd1e995
+M = 0x5BD1E995
 R = 24
 
 int32 = 0xFFFFFFFF
@@ -66,7 +66,7 @@ def murmur2_32(byte_data, seed=DEFAULT_SEED):
     index = 0
 
     while length >= 4:
-        k = struct.unpack('<i', byte_data[index:index+4])[0]
+        k = struct.unpack('<i', byte_data[index : index + 4])[0]
 
         k = k * M & int32
         k = k ^ (k >> R & int32)
@@ -80,9 +80,9 @@ def murmur2_32(byte_data, seed=DEFAULT_SEED):
 
     # Handle the last few bytes of the input array
     if length >= 3:
-        h = (h ^ byte_data[index+2] << 16) & int32
+        h = (h ^ byte_data[index + 2] << 16) & int32
     if length >= 2:
-        h = (h ^ byte_data[index+1] << 8) & int32
+        h = (h ^ byte_data[index + 1] << 8) & int32
     if length >= 1:
         h = (h ^ byte_data[index]) & int32
         h = h * M & int32

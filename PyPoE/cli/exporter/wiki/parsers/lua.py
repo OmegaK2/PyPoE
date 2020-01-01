@@ -46,7 +46,7 @@ from PyPoE.cli.exporter.wiki.parser import BaseParser
 # Globals
 # =============================================================================
 
-__all__= ['QuestRewardReader', 'LuaHandler']
+__all__ = ['QuestRewardReader', 'LuaHandler']
 
 # =============================================================================
 # Functions
@@ -88,6 +88,7 @@ def lua_formatter(outdata, key_order=None):
 
     return ''.join(out)
 
+
 # =============================================================================
 # Classes
 # =============================================================================
@@ -127,8 +128,7 @@ class LuaHandler(ExporterHandler):
         lua_sub = self.parser.add_subparsers()
 
         parser = lua_sub.add_parser(
-            'quest_rewards',
-            help='Extract quest rewards into lua.'
+            'quest_rewards', help='Extract quest rewards into lua.'
         )
         self.add_default_parsers(
             parser=parser,
@@ -137,8 +137,7 @@ class LuaHandler(ExporterHandler):
         )
 
         parser = lua_sub.add_parser(
-            'vendor_rewards',
-            help='Extract quest vendor rewards into lua.',
+            'vendor_rewards', help='Extract quest vendor rewards into lua.',
         )
         self.add_default_parsers(
             parser=parser,
@@ -147,38 +146,28 @@ class LuaHandler(ExporterHandler):
         )
 
         parser = lua_sub.add_parser(
-            'atlas',
-            help='Extract atlas information not covered by maps',
+            'atlas', help='Extract atlas information not covered by maps',
         )
         self.add_default_parsers(
-            parser=parser,
-            cls=AtlasParser,
-            func=AtlasParser.main,
+            parser=parser, cls=AtlasParser, func=AtlasParser.main,
         )
 
         parser = lua_sub.add_parser(
-            'bestiary',
-            help='Extract bestiary information',
+            'bestiary', help='Extract bestiary information',
         )
         self.add_default_parsers(
-            parser=parser,
-            cls=BestiaryParser,
-            func=BestiaryParser.main,
+            parser=parser, cls=BestiaryParser, func=BestiaryParser.main,
         )
 
         parser = lua_sub.add_parser(
-            'blight',
-            help='Extract blight information',
+            'blight', help='Extract blight information',
         )
         self.add_default_parsers(
-            parser=parser,
-            cls=BlightParser,
-            func=BlightParser.main,
+            parser=parser, cls=BlightParser, func=BlightParser.main,
         )
 
         parser = lua_sub.add_parser(
-            'crafting_bench',
-            help='Extract crafting bench information',
+            'crafting_bench', help='Extract crafting bench information',
         )
         self.add_default_parsers(
             parser=parser,
@@ -186,44 +175,30 @@ class LuaHandler(ExporterHandler):
             func=CraftingBenchParser.main,
         )
 
-        parser = lua_sub.add_parser(
-            'delve',
-            help='Extract delve information',
-        )
+        parser = lua_sub.add_parser('delve', help='Extract delve information',)
         self.add_default_parsers(
-            parser=parser,
-            cls=DelveParser,
-            func=DelveParser.main,
+            parser=parser, cls=DelveParser, func=DelveParser.main,
         )
 
         parser = lua_sub.add_parser(
-            'monster',
-            help='Extract monster information',
+            'monster', help='Extract monster information',
         )
         self.add_default_parsers(
-            parser=parser,
-            cls=MonsterParser,
-            func=MonsterParser.main,
+            parser=parser, cls=MonsterParser, func=MonsterParser.main,
         )
 
         parser = lua_sub.add_parser(
-            'pantheon',
-            help='Extract pantheon information',
+            'pantheon', help='Extract pantheon information',
         )
         self.add_default_parsers(
-            parser=parser,
-            cls=PantheonParser,
-            func=PantheonParser.main,
+            parser=parser, cls=PantheonParser, func=PantheonParser.main,
         )
 
         parser = lua_sub.add_parser(
-            'synthesis',
-            help='Extract synthesis information',
+            'synthesis', help='Extract synthesis information',
         )
         self.add_default_parsers(
-            parser=parser,
-            cls=SynthesisParser,
-            func=SynthesisParser.main,
+            parser=parser, cls=SynthesisParser, func=SynthesisParser.main,
         )
 
 
@@ -234,25 +209,14 @@ class AtlasParser(GenericLuaParser):
     ]
 
     _COPY_KEYS_ATLAS_REGIONS = (
-        ('Id', {
-            'key': 'id',
-        }),
-        ('Name', {
-            'key': 'name',
-        }),
+        ('Id', {'key': 'id',}),
+        ('Name', {'key': 'name',}),
     )
 
     _COPY_KEYS_ATLAS_BASE_TYPE_DROPS = (
-        ('AtlasRegionsKey', {
-            'key': 'region_id',
-            'value': lambda v: v['Id'],
-        }),
-        ('MinTier', {
-            'key': 'tier_min',
-        }),
-        ('MaxTier', {
-            'key': 'tier_max',
-        }),
+        ('AtlasRegionsKey', {'key': 'region_id', 'value': lambda v: v['Id'],}),
+        ('MinTier', {'key': 'tier_min',}),
+        ('MaxTier', {'key': 'tier_max',}),
     )
 
     def main(self, parsed_args):
@@ -260,26 +224,28 @@ class AtlasParser(GenericLuaParser):
         atlas_base_item_types = []
 
         for row in self.rr['AtlasRegions.dat']:
-            self._copy_from_keys(row, self._COPY_KEYS_ATLAS_REGIONS,
-                                 atlas_regions)
+            self._copy_from_keys(
+                row, self._COPY_KEYS_ATLAS_REGIONS, atlas_regions
+            )
 
         for row in self.rr['AtlasBaseTypeDrops.dat']:
             for i, tag in enumerate(row['SpawnWeight_TagsKeys']):
-                self._copy_from_keys(row, self._COPY_KEYS_ATLAS_BASE_TYPE_DROPS,
-                                     atlas_base_item_types)
+                self._copy_from_keys(
+                    row,
+                    self._COPY_KEYS_ATLAS_BASE_TYPE_DROPS,
+                    atlas_base_item_types,
+                )
                 atlas_base_item_types[-1]['tag'] = tag['Id']
-                atlas_base_item_types[-1]['weight'] = \
-                    row['SpawnWeight_Values'][i]
+                atlas_base_item_types[-1]['weight'] = row['SpawnWeight_Values'][
+                    i
+                ]
 
         r = ExporterResult()
         for k in ('atlas_regions', 'atlas_base_item_types'):
             r.add_result(
                 text=lua_formatter(locals()[k]),
                 out_file='%s.lua' % k,
-                wiki_page=[{
-                    'page': 'Module:Atlas/%s' % k,
-                    'condition': None,
-                }]
+                wiki_page=[{'page': 'Module:Atlas/%s' % k, 'condition': None,}],
             )
 
         return r
@@ -293,53 +259,35 @@ class BestiaryParser(GenericLuaParser):
     ]
 
     _COPY_KEYS_BESTIARY = (
-        ('Id', {
-            'key': 'id',
-        }),
-        ('HintText', {
-            'key': 'header',
-        }),
-        ('Description', {
-            'key': 'subheader',
-        }),
-        ('Notes', {
-            'key': 'notes',
-        }),
+        ('Id', {'key': 'id',}),
+        ('HintText', {'key': 'header',}),
+        ('Description', {'key': 'subheader',}),
+        ('Notes', {'key': 'notes',}),
     )
 
     _COPY_KEYS_BESTIARY_COMPONENTS = (
-        ('Id', {
-            'key': 'id',
-        }),
-        ('MinLevel', {
-            'key': 'min_level',
-        }),
-        ('BestiaryFamiliesKey', {
-            'key': 'family',
-            'value': lambda x: x['Name'],
-        }),
-        ('BestiaryGroupsKey', {
-            'key': 'beast_group',
-            'value': lambda x: x['Name'],
-        }),
-        ('BestiaryGenusKey', {
-            'key': 'genus',
-            'value': lambda x: x['Name'],
-        }),
-        ('ModsKey', {
-            'key': 'mod_id',
-            'value': lambda x: x['Id'],
-        }),
-        ('BestiaryCapturableMonstersKey', {
-            'key': 'monster',
-            'value': lambda x: x['Name'],
-        }),
+        ('Id', {'key': 'id',}),
+        ('MinLevel', {'key': 'min_level',}),
+        (
+            'BestiaryFamiliesKey',
+            {'key': 'family', 'value': lambda x: x['Name'],},
+        ),
+        (
+            'BestiaryGroupsKey',
+            {'key': 'beast_group', 'value': lambda x: x['Name'],},
+        ),
+        ('BestiaryGenusKey', {'key': 'genus', 'value': lambda x: x['Name'],}),
+        ('ModsKey', {'key': 'mod_id', 'value': lambda x: x['Id'],}),
+        (
+            'BestiaryCapturableMonstersKey',
+            {'key': 'monster', 'value': lambda x: x['Name'],},
+        ),
     )
 
     def main(self, parsed_args):
         recipes = []
         components = []
-        recipe_components_temp = defaultdict(lambda:defaultdict(int))
+        recipe_components_temp = defaultdict(lambda: defaultdict(int))
 
         for row in self.rr['BestiaryRecipes.dat']:
             self._copy_from_keys(row, self._COPY_KEYS_BESTIARY, recipes)
@@ -352,27 +300,30 @@ class BestiaryParser(GenericLuaParser):
             )
             if row['RarityKey'] != RARITY.ANY:
                 components[-1]['rarity'] = self.rr['ClientStrings.dat'].index[
-                    'Id']['ItemDisplayString' + row['RarityKey'].name_upper][
-                    'Text']
+                    'Id'
+                ]['ItemDisplayString' + row['RarityKey'].name_upper]['Text']
 
         recipe_components = []
         for recipe_id, data in recipe_components_temp.items():
             for component_id, amount in data.items():
-                recipe_components.append(OrderedDict((
-                    ('recipe_id', recipe_id),
-                    ('component_id', component_id),
-                    ('amount', amount)
-                )))
+                recipe_components.append(
+                    OrderedDict(
+                        (
+                            ('recipe_id', recipe_id),
+                            ('component_id', component_id),
+                            ('amount', amount),
+                        )
+                    )
+                )
 
         r = ExporterResult()
         for k in ('recipes', 'components', 'recipe_components'):
             r.add_result(
                 text=lua_formatter(locals()[k]),
                 out_file='bestiary_%s.lua' % k,
-                wiki_page=[{
-                    'page': 'Module:Bestiary/%s' % k,
-                    'condition': None,
-                }]
+                wiki_page=[
+                    {'page': 'Module:Bestiary/%s' % k, 'condition': None,}
+                ],
             )
 
         return r
@@ -385,52 +336,57 @@ class BlightParser(GenericLuaParser):
     ]
 
     _COPY_KEYS_CRAFTING_RECIPES = (
-        ('Id', {
-            'key': 'id',
-        }),
-        ('BlightCraftingResultsKey', {
-            'key': 'modifier_id',
-            'value': lambda v: v['ModsKey']['Id'] if v['ModsKey'] else None,
-        }),
-        ('BlightCraftingResultsKey', {
-            'key': 'passive_id',
-            'value': lambda v: v['PassiveSkillsKey']['Id'] if
-                v['PassiveSkillsKey'] else None,
-        }),
-        ('BlightCraftingTypesKey', {
-            'key': 'type',
-            'value': lambda v: v['Id'],
-        }),
+        ('Id', {'key': 'id',}),
+        (
+            'BlightCraftingResultsKey',
+            {
+                'key': 'modifier_id',
+                'value': lambda v: v['ModsKey']['Id'] if v['ModsKey'] else None,
+            },
+        ),
+        (
+            'BlightCraftingResultsKey',
+            {
+                'key': 'passive_id',
+                'value': lambda v: v['PassiveSkillsKey']['Id']
+                if v['PassiveSkillsKey']
+                else None,
+            },
+        ),
+        (
+            'BlightCraftingTypesKey',
+            {'key': 'type', 'value': lambda v: v['Id'],},
+        ),
     )
 
     _COPY_KEYS_BLIGHT_TOWERS = (
-        ('Id', {
-            'key': 'id',
-        }),
-        ('Name', {
-            'key': 'name',
-        }),
-        ('Description', {
-            'key': 'description',
-            'value': lambda v: v.replace('\n', '<br>').replace('\r', ''),
-        }),
-        ('Tier', {
-            'key': 'tier',
-        }),
-        ('Radius', {
-            'key': 'radius',
-        }),
-        ('Icon', {
-            'key': 'icon',
-            'value': lambda v: (
-                'File:%s tower icon.png' % v.replace(
-                    'Art/2DArt/UIImages/InGame/Blight/Tower Icons/Icon',
-                    ''
-                ) if v.startswith(
-                    'Art/2DArt/UIImages/InGame/Blight/Tower Icons'
-                ) else None
-            ),
-        }),
+        ('Id', {'key': 'id',}),
+        ('Name', {'key': 'name',}),
+        (
+            'Description',
+            {
+                'key': 'description',
+                'value': lambda v: v.replace('\n', '<br>').replace('\r', ''),
+            },
+        ),
+        ('Tier', {'key': 'tier',}),
+        ('Radius', {'key': 'radius',}),
+        (
+            'Icon',
+            {
+                'key': 'icon',
+                'value': lambda v: (
+                    'File:%s tower icon.png'
+                    % v.replace(
+                        'Art/2DArt/UIImages/InGame/Blight/Tower Icons/Icon', ''
+                    )
+                    if v.startswith(
+                        'Art/2DArt/UIImages/InGame/Blight/Tower Icons'
+                    )
+                    else None
+                ),
+            },
+        ),
     )
 
     def main(self, parsed_args):
@@ -441,31 +397,42 @@ class BlightParser(GenericLuaParser):
         self.rr['BlightTowersPerLevel.dat'].build_index('BlightTowersKey')
 
         for row in self.rr['BlightCraftingRecipes.dat']:
-            self._copy_from_keys(row, self._COPY_KEYS_CRAFTING_RECIPES,
-                                 blight_crafting_recipes)
+            self._copy_from_keys(
+                row, self._COPY_KEYS_CRAFTING_RECIPES, blight_crafting_recipes
+            )
 
             for i, blight_crafting_item in enumerate(
-                    row['BlightCraftingItemsKeys'], start=1):
-                blight_crafting_recipes_items.append(OrderedDict((
-                    ('ordinal', i),
-                    ('recipe_id', row['Id']),
-                    ('item_id', blight_crafting_item['BaseItemTypesKey']['Id']),
-                )))
+                row['BlightCraftingItemsKeys'], start=1
+            ):
+                blight_crafting_recipes_items.append(
+                    OrderedDict(
+                        (
+                            ('ordinal', i),
+                            ('recipe_id', row['Id']),
+                            (
+                                'item_id',
+                                blight_crafting_item['BaseItemTypesKey']['Id'],
+                            ),
+                        )
+                    )
+                )
 
         for row in self.rr['BlightTowers.dat']:
-            self._copy_from_keys(row, self._COPY_KEYS_BLIGHT_TOWERS,
-                                 blight_towers)
-            blight_towers[-1]['cost'] = self.rr['BlightTowersPerLevel.dat'].index['BlightTowersKey'][row][0]['Cost']
+            self._copy_from_keys(
+                row, self._COPY_KEYS_BLIGHT_TOWERS, blight_towers
+            )
+            blight_towers[-1]['cost'] = self.rr[
+                'BlightTowersPerLevel.dat'
+            ].index['BlightTowersKey'][row][0]['Cost']
 
         r = ExporterResult()
         for k in ('crafting_recipes', 'crafting_recipes_items', 'towers'):
             r.add_result(
                 text=lua_formatter(locals()['blight_' + k]),
                 out_file='blight_%s.lua' % k,
-                wiki_page=[{
-                    'page': 'Module:Blight/blight_%s' % k,
-                    'condition': None,
-                }]
+                wiki_page=[
+                    {'page': 'Module:Blight/blight_%s' % k, 'condition': None,}
+                ],
             )
 
         return r
@@ -480,91 +447,74 @@ class DelveParser(GenericLuaParser):
     ]
 
     _COPY_KEYS_DELVE_LEVEL_SCALING = (
-        ('Depth', {
-            'key': 'depth',
-        }),
-        ('MonsterLevel', {
-            'key': 'monster_level',
-        }),
-        ('SulphiteCost', {
-            'key': 'sulphite_cost',
-        }),
-        ('DarknessResistance', {
-            'key': 'darkness_resistance',
-        }),
-        ('LightRadius', {
-            'key': 'light_radius',
-        }),
-        ('MoreMonsterLife', {
-            'key': 'monster_life',
-        }),
-        ('MoreMonsterDamage', {
-            'key': 'monster_damage',
-        }),
+        ('Depth', {'key': 'depth',}),
+        ('MonsterLevel', {'key': 'monster_level',}),
+        ('SulphiteCost', {'key': 'sulphite_cost',}),
+        ('DarknessResistance', {'key': 'darkness_resistance',}),
+        ('LightRadius', {'key': 'light_radius',}),
+        ('MoreMonsterLife', {'key': 'monster_life',}),
+        ('MoreMonsterDamage', {'key': 'monster_damage',}),
     )
 
     _COPY_KEYS_DELVE_RESOURCES_PER_LEVEL = (
-        ('AreaLevel', {
-            'key': 'area_level',
-        }),
-        ('Sulphite', {
-            'key': 'sulphite',
-        }),
+        ('AreaLevel', {'key': 'area_level',}),
+        ('Sulphite', {'key': 'sulphite',}),
     )
 
     _COPY_KEYS_DELVE_UPGRADES = (
-        ('DelveUpgradeTypeKey', {
-            'key': 'type',
-            'value': lambda x: x.name.lower(),
-        }),
-        ('UpgradeLevel', {
-            'key': 'level',
-        }),
+        (
+            'DelveUpgradeTypeKey',
+            {'key': 'type', 'value': lambda x: x.name.lower(),},
+        ),
+        ('UpgradeLevel', {'key': 'level',}),
     )
 
     _COPY_KEYS_DELVE_CRAFTING_MODIFIERS = (
-        ('BaseItemTypesKey', {
-            'key': 'base_item_id',
-            'value': lambda x: x['Id'],
-        }),
-        ('AddedModsKeys', {
-            'key': 'added_modifier_ids',
-            'value': lambda x: [v['Id'] for v in x],
-        }),
-        ('ForcedAddModsKeys', {
-            'key': 'forced_modifier_ids',
-            'value': lambda x: [v['Id'] for v in x],
-        }),
-        ('SellPrice_ModsKeys', {
-            'key': 'sell_price_modifier_ids',
-            'value': lambda x: [v['Id'] for v in x],
-        }),
-        ('ForbiddenDelveCraftingTagsKeys', {
-            'key': 'forbidden_tags',
-            'value': lambda x: [v['TagsKey']['Id'] for v in x],
-        }),
-        ('AllowedDelveCraftingTagsKeys', {
-            'key': 'allowed_tags',
-            'value': lambda x: [v['TagsKey']['Id'] for v in x],
-        }),
-        ('CorruptedEssenceChance', {
-            'key': 'corrupted_essence_chance',
-        }),
-        ('CanMirrorItem', {
-            'key': 'can_mirror',
-        }),
-        ('CanRollEnchant', {
-            'key': 'can_enchant',
-        }),
-        ('CanImproveQuality', {
-            'key': 'can_quality',
-        }),
-        ('CanRollWhiteSockets', {
-            'key': 'can_roll_white_sockets',
-        }),
-        ('HasLuckyRolls', {
-            'key': 'is_lucky',
-        }),
+        (
+            'BaseItemTypesKey',
+            {'key': 'base_item_id', 'value': lambda x: x['Id'],},
+        ),
+        (
+            'AddedModsKeys',
+            {
+                'key': 'added_modifier_ids',
+                'value': lambda x: [v['Id'] for v in x],
+            },
+        ),
+        (
+            'ForcedAddModsKeys',
+            {
+                'key': 'forced_modifier_ids',
+                'value': lambda x: [v['Id'] for v in x],
+            },
+        ),
+        (
+            'SellPrice_ModsKeys',
+            {
+                'key': 'sell_price_modifier_ids',
+                'value': lambda x: [v['Id'] for v in x],
+            },
+        ),
+        (
+            'ForbiddenDelveCraftingTagsKeys',
+            {
+                'key': 'forbidden_tags',
+                'value': lambda x: [v['TagsKey']['Id'] for v in x],
+            },
+        ),
+        (
+            'AllowedDelveCraftingTagsKeys',
+            {
+                'key': 'allowed_tags',
+                'value': lambda x: [v['TagsKey']['Id'] for v in x],
+            },
+        ),
+        ('CorruptedEssenceChance', {'key': 'corrupted_essence_chance',}),
+        ('CanMirrorItem', {'key': 'can_mirror',}),
+        ('CanRollEnchant', {'key': 'can_enchant',}),
+        ('CanImproveQuality', {'key': 'can_quality',}),
+        ('CanRollWhiteSockets', {'key': 'can_roll_white_sockets',}),
+        ('HasLuckyRolls', {'key': 'is_lucky',}),
     )
 
     def main(self, parsed_args):
@@ -576,32 +526,39 @@ class DelveParser(GenericLuaParser):
         fossil_weights = []
 
         for row in self.rr['DelveLevelScaling.dat']:
-            self._copy_from_keys(row, self._COPY_KEYS_DELVE_LEVEL_SCALING,
-                                 delve_level_scaling)
+            self._copy_from_keys(
+                row, self._COPY_KEYS_DELVE_LEVEL_SCALING, delve_level_scaling
+            )
 
         for row in self.rr['DelveResourcePerLevel.dat']:
-            self._copy_from_keys(row, self._COPY_KEYS_DELVE_RESOURCES_PER_LEVEL,
-                                 delve_resources_per_level)
+            self._copy_from_keys(
+                row,
+                self._COPY_KEYS_DELVE_RESOURCES_PER_LEVEL,
+                delve_resources_per_level,
+            )
 
         for row in self.rr['DelveUpgrades.dat']:
-            self._copy_from_keys(row, self._COPY_KEYS_DELVE_UPGRADES,
-                                 delve_upgrades)
+            self._copy_from_keys(
+                row, self._COPY_KEYS_DELVE_UPGRADES, delve_upgrades
+            )
             delve_upgrades[-1]['cost'] = row['Cost']
 
             for i, (stat, value) in enumerate(row['Stats']):
-                self._copy_from_keys(row, self._COPY_KEYS_DELVE_UPGRADES,
-                                     delve_upgrade_stats)
+                self._copy_from_keys(
+                    row, self._COPY_KEYS_DELVE_UPGRADES, delve_upgrade_stats
+                )
                 delve_upgrade_stats[-1]['id'] = stat['Id']
                 delve_upgrade_stats[-1]['value'] = value
 
         for row in self.rr['DelveCraftingModifiers.dat']:
-            self._copy_from_keys(row, self._COPY_KEYS_DELVE_CRAFTING_MODIFIERS,
-                                 fossils)
+            self._copy_from_keys(
+                row, self._COPY_KEYS_DELVE_CRAFTING_MODIFIERS, fossils
+            )
 
             for data_prefix, data_type in (
-                    ('NegativeWeight', 'override'),
-                    ('Weight', 'added'),
-                ):
+                ('NegativeWeight', 'override'),
+                ('Weight', 'added'),
+            ):
                 for i, tag in enumerate(row['%s_TagsKeys' % data_prefix]):
                     entry = OrderedDict()
                     entry['base_item_id'] = row['BaseItemTypesKey']['Id']
@@ -612,16 +569,18 @@ class DelveParser(GenericLuaParser):
                     fossil_weights.append(entry)
 
         r = ExporterResult()
-        for k in ('delve_level_scaling', 'delve_resources_per_level',
-                  'delve_upgrades', 'delve_upgrade_stats', 'fossils',
-                  'fossil_weights'):
+        for k in (
+            'delve_level_scaling',
+            'delve_resources_per_level',
+            'delve_upgrades',
+            'delve_upgrade_stats',
+            'fossils',
+            'fossil_weights',
+        ):
             r.add_result(
-                text=lua_formatter(locals()[ k]),
+                text=lua_formatter(locals()[k]),
                 out_file='%s.lua' % k,
-                wiki_page=[{
-                    'page': 'Module:Delve/%s' % k,
-                    'condition': None,
-                }]
+                wiki_page=[{'page': 'Module:Delve/%s' % k, 'condition': None,}],
             )
 
         return r
@@ -634,27 +593,20 @@ class PantheonParser(GenericLuaParser):
     ]
 
     _COPY_KEYS_PANTHEON = (
-        ('Id', {
-            'key': 'id',
-        }),
-        ('IsMajorGod', {
-            'key': 'is_major_god',
-        }),
+        ('Id', {'key': 'id',}),
+        ('IsMajorGod', {'key': 'is_major_god',}),
     )
 
     _COPY_KEYS_PANTHEON_SOULS = (
-        ('WorldAreasKey', {
-            'key': 'target_area_id',
-            'value': lambda v: v['Id'],
-        }),
-        ('MonsterVarietiesKey', {
-            'key': 'target_monster_id',
-            'value': lambda v: v['Id'],
-        }),
-        ('BaseItemTypesKey', {
-            'key': 'item_id',
-            'value': lambda v: v['Id'],
-        }),
+        (
+            'WorldAreasKey',
+            {'key': 'target_area_id', 'value': lambda v: v['Id'],},
+        ),
+        (
+            'MonsterVarietiesKey',
+            {'key': 'target_monster_id', 'value': lambda v: v['Id'],},
+        ),
+        ('BaseItemTypesKey', {'key': 'item_id', 'value': lambda v: v['Id'],}),
     )
 
     def main(self, parsed_args):
@@ -675,7 +627,8 @@ class PantheonParser(GenericLuaParser):
                     continue
                 stats = [s['Id'] for s in row['Effect%s_StatsKeys' % i]]
                 tr = self.tc['stat_descriptions.txt'].get_translation(
-                    tags=stats, values=values, full_result=True)
+                    tags=stats, values=values, full_result=True
+                )
 
                 od = OrderedDict()
                 od['id'] = row['Id']
@@ -686,31 +639,40 @@ class PantheonParser(GenericLuaParser):
                 # The first entry is the god itself
                 if i > 1:
                     souls = self.rr['PantheonSouls.dat'].index[
-                        'PantheonPanelLayoutKey'][row][i-2]
+                        'PantheonPanelLayoutKey'
+                    ][row][i - 2]
 
-                    od.update(self._copy_from_keys(
-                        souls, self._COPY_KEYS_PANTHEON_SOULS, rtr=True
-                    ))
+                    od.update(
+                        self._copy_from_keys(
+                            souls, self._COPY_KEYS_PANTHEON_SOULS, rtr=True
+                        )
+                    )
                 pantheon_souls.append(od)
 
                 for j, (stat, value) in enumerate(zip(stats, values), start=1):
-                    pantheon_stats.append(OrderedDict((
-                        ('pantheon_id', row['Id']),
-                        ('pantheon_ordinal', i,),
-                        ('ordinal', j),
-                        ('stat', stat),
-                        ('value', value),
-                    )))
+                    pantheon_stats.append(
+                        OrderedDict(
+                            (
+                                ('pantheon_id', row['Id']),
+                                ('pantheon_ordinal', i,),
+                                ('ordinal', j),
+                                ('stat', stat),
+                                ('value', value),
+                            )
+                        )
+                    )
 
         r = ExporterResult()
         for k in ('', '_souls', '_stats'):
             r.add_result(
                 text=lua_formatter(locals()['pantheon' + k]),
                 out_file='pantheon%s.lua' % k,
-                wiki_page=[{
-                    'page': 'Module:Pantheon/pantheon%s' % k,
-                    'condition': None,
-                }]
+                wiki_page=[
+                    {
+                        'page': 'Module:Pantheon/pantheon%s' % k,
+                        'condition': None,
+                    }
+                ],
             )
 
         return r
@@ -726,7 +688,7 @@ class QuestRewardReader(BaseParser):
         'QuestStates.dat',
         'QuestRewards.dat',
         'QuestVendorRewards.dat',
-        'MapSeries.dat'
+        'MapSeries.dat',
     ]
 
     # TODO find a better way
@@ -734,27 +696,25 @@ class QuestRewardReader(BaseParser):
     _ITEM_MAP = {
         'English': {
             # A2: Though Scared Ground
-            423: "Survival Instincts", # Veridian
-            424: "Survival Skills", # Crimson
-            425: "Survival Secrets", # Cobalt
+            423: "Survival Instincts",  # Veridian
+            424: "Survival Skills",  # Crimson
+            425: "Survival Secrets",  # Cobalt
             # A5: The King's Feast
-            454: "Poacher's Aim", # Verdian
-            455: "Warlord's Reach ", # Crimson
-            456: "Assassin's Haste", # Cobalt
+            454: "Poacher's Aim",  # Verdian
+            455: "Warlord's Reach ",  # Crimson
+            456: "Assassin's Haste",  # Cobalt
             #
-            457: "Conqueror's Efficiency", # crimson
-            458: "Conqueror's Potency", # cobalt
-            459: "Conqueror's Longevity", #viridian
+            457: "Conqueror's Efficiency",  # crimson
+            458: "Conqueror's Potency",  # cobalt
+            459: "Conqueror's Longevity",  # viridian
             # A5: Death to Puirty
             560: "Rapid Expansion",
             780: "Wildfire",
             777: "Overwhelming Odds",
-
             775: "Collateral Damage",
             779: "Omen on the Winds",
             781: "Fight for Survival",
             784: "Ring of Blades",
-
             778: "First Snow",
             783: "Frozen Trail",
             786: "Inevitability",
@@ -764,27 +724,25 @@ class QuestRewardReader(BaseParser):
         },
         'Russian': {
             # A2: По святой земле
-            423: "Инстинкты выживания", # Бирюзовый
-            424: "Навыки выживания", # Багровый
-            425: "Секреты выживания", # Кобальтовый
+            423: "Инстинкты выживания",  # Бирюзовый
+            424: "Навыки выживания",  # Багровый
+            425: "Секреты выживания",  # Кобальтовый
             # A5: Пир вождя
-            454: "Браконьерство", # Бирюзовый
-            455: "Длинные руки ", # Багровый
-            456: "Бойкий убийца", # Кобальтовый
+            454: "Браконьерство",  # Бирюзовый
+            455: "Длинные руки ",  # Багровый
+            456: "Бойкий убийца",  # Кобальтовый
             #
-            457: "Смекалка победителя", # Багровый
-            458: "Могущество победителя", # Кобальтовый
-            459: "Живучесть победителя", #Бирюзовый
+            457: "Смекалка победителя",  # Багровый
+            458: "Могущество победителя",  # Кобальтовый
+            459: "Живучесть победителя",  # Бирюзовый
             # A5: Смерть Чистоте
             560: "Быстрое расширение",
             780: "Степной пожар",
             777: "Подавляющее превосходство",
-
             775: "Сопутствующий риск",
             779: "Знамение ветров",
             781: "Борьба за жизнь",
             784: "Кольцо клинков",
-
             778: "Первый снег",
             783: "Мерзлый путь",
             786: "Неизбежность",
@@ -801,18 +759,15 @@ class QuestRewardReader(BaseParser):
             'Metadata/Items/Rings/Ring14': "Two-Stone Ring (ruby and sapphire)",
         },
         'Russian': {
-            'Metadata/Items/Rings/Ring12':
-                "Кольцо с двумя камнями (рубин и топаз)",
-            'Metadata/Items/Rings/Ring13':
-                "Кольцо с двумя камнями (сапфир и топаз)",
-            'Metadata/Items/Rings/Ring14':
-                "Кольцо с двумя камнями (рубин и сапфир)",
+            'Metadata/Items/Rings/Ring12': "Кольцо с двумя камнями (рубин и топаз)",
+            'Metadata/Items/Rings/Ring13': "Кольцо с двумя камнями (сапфир и топаз)",
+            'Metadata/Items/Rings/Ring14': "Кольцо с двумя камнями (рубин и сапфир)",
         },
         'German': {
             'Metadata/Items/Rings/Ring12': "Zweisteinring (Rubin und Topas)",
             'Metadata/Items/Rings/Ring13': "Zweisteinring (Saphir und Topas)",
             'Metadata/Items/Rings/Ring14': "Zweisteinring (Rubin und Saphir)",
-        }
+        },
     }
 
     _UNIT_SEP = '\u001F'
@@ -827,10 +782,12 @@ class QuestRewardReader(BaseParser):
         r.add_result(
             text=lua_formatter(outdata),
             out_file='%s_rewards.txt' % data_type,
-            wiki_page=[{
-                'page': 'Module:Quest reward/data/%s_rewards' % data_type,
-                'condition': None,
-            }]
+            wiki_page=[
+                {
+                    'page': 'Module:Quest reward/data/%s_rewards' % data_type,
+                    'condition': None,
+                }
+            ],
         )
 
         return r
@@ -846,7 +803,6 @@ class QuestRewardReader(BaseParser):
                 continue
             quest = row['QuestKey']
             character = row['CharactersKey']
-
 
             itemcls = item['ItemClassesKey']['Id']
 
@@ -865,7 +821,8 @@ class QuestRewardReader(BaseParser):
 
             if row['RarityKey'] != RARITY.ANY:
                 rarity = self.rr['ClientStrings.dat'].index['Id'][
-                    'ItemDisplayString' + row['RarityKey'].name_upper]['Text']
+                    'ItemDisplayString' + row['RarityKey'].name_upper
+                ]['Text']
 
             sockets = row['SocketGems']
             if sockets:
@@ -878,12 +835,16 @@ class QuestRewardReader(BaseParser):
                 name = '%s (%s)' % (name, data['quest'])
             elif itemcls == 'Map':
                 name = '%s (%s)' % (
-                    name, self.rr['MapSeries.dat'].index['Id']['MapWorlds'][
-                        'Name']
+                    name,
+                    self.rr['MapSeries.dat'].index['Id']['MapWorlds']['Name'],
                 )
             # Non non quest items or skill gems have their rarity added
-            if itemcls not in {'Active Skill Gem', 'Support Skill Gem',
-                               'QuestItem', 'StackableCurrency'}:
+            if itemcls not in {
+                'Active Skill Gem',
+                'Support Skill Gem',
+                'QuestItem',
+                'StackableCurrency',
+            }:
                 data['item_level'] = row['ItemLevel']
                 data['rarity'] = rarity
                 # Unique and not a quest item or gem
@@ -892,25 +853,28 @@ class QuestRewardReader(BaseParser):
                     item_map = self._ITEM_MAP.get(config.get_option('language'))
                     if item_map is None:
                         warnings.warn(
-                             'No unique item mapping defined for the current '
-                             'language'
+                            'No unique item mapping defined for the current '
+                            'language'
                         )
                     elif uid in item_map:
                         name = item_map[uid]
                         data['rarity'] = self.rr['ClientStrings.dat'].index[
-                            'Id']['ItemDisplayStringUnique']['Text']
+                            'Id'
+                        ]['ItemDisplayStringUnique']['Text']
                     else:
                         warnings.warn(
-                            'Uncaptured unique item. %s %s %s' % (
-                                uid, data['quest'], name)
+                            'Uncaptured unique item. %s %s %s'
+                            % (uid, data['quest'], name)
                         )
 
             # Two stone rings
             two_stone_map = self._TWO_STONE_MAP.get(
-                config.get_option('language'))
+                config.get_option('language')
+            )
             if two_stone_map is None:
                 warnings.warn(
-                    'No two stone ring mapping for the current language')
+                    'No two stone ring mapping for the current language'
+                )
             elif item['Id'] in two_stone_map:
                 name = two_stone_map[item['Id']]
             data['reward'] = name
@@ -948,7 +912,8 @@ class QuestRewardReader(BaseParser):
                     'Row %s: Quest vendor reward had no quest associated; \n'
                     'State: %s\n'
                     'NPC: %s\n'
-                    'Items: %s\n' % (
+                    'Items: %s\n'
+                    % (
                         row.rowid,
                         quest_state_key,
                         row['NPCKey']['Name'],
@@ -960,7 +925,10 @@ class QuestRewardReader(BaseParser):
             items = row['BaseItemTypesKeys']
 
             if not items:
-                warnings.warn('Row %s: No corresponding items found for given item ids' % row.rowid)
+                warnings.warn(
+                    'Row %s: No corresponding items found for given item ids'
+                    % row.rowid
+                )
                 continue
 
             classes = row['CharactersKeys']
@@ -986,8 +954,9 @@ class QuestRewardReader(BaseParser):
                     key = quest['Id'] + item['Id']
                     if key in compress:
                         if 'classes' in data:
-                            compress[key]['classes'] += self._UNIT_SEP + \
-                                                        data['classes']
+                            compress[key]['classes'] += (
+                                self._UNIT_SEP + data['classes']
+                            )
                     else:
                         compress[key] = data
 
@@ -1012,79 +981,64 @@ class SynthesisParser(GenericLuaParser):
             'file': 'ItemSynthesisCorruptedMods.dat',
             'key': 'synthesis_corrupted_mods',
             'data': (
-                ('ItemClassesKey', {
-                    'key': 'item_class_id',
-                    'value': lambda v: v['Id'],
-                }),
-                ('ModsKeys', {
-                    'key': 'mod_ids',
-                    'value': lambda v: [m['Id'] for m in v],
-                }),
+                (
+                    'ItemClassesKey',
+                    {'key': 'item_class_id', 'value': lambda v: v['Id'],},
+                ),
+                (
+                    'ModsKeys',
+                    {
+                        'key': 'mod_ids',
+                        'value': lambda v: [m['Id'] for m in v],
+                    },
+                ),
             ),
         },
         {
             'file': 'ItemSynthesisMods.dat',
             'key': 'synthesis_mods',
             'data': (
-                ('StatsKey', {
-                    'key': 'stat_id',
-                    'value': lambda v: v['Id'],
-                }),
-                ('StatValue', {
-                    'key': 'stat_value',
-                }),
-                ('ItemClassesKeys', {
-                    'key': 'item_class_ids',
-                    'value': lambda v: [ic['Id'] for ic in v],
-                }),
-                ('ModsKeys', {
-                    'key': 'mod_ids',
-                    'value': lambda v: [m['Id'] for m in v],
-                }),
+                ('StatsKey', {'key': 'stat_id', 'value': lambda v: v['Id'],}),
+                ('StatValue', {'key': 'stat_value',}),
+                (
+                    'ItemClassesKeys',
+                    {
+                        'key': 'item_class_ids',
+                        'value': lambda v: [ic['Id'] for ic in v],
+                    },
+                ),
+                (
+                    'ModsKeys',
+                    {
+                        'key': 'mod_ids',
+                        'value': lambda v: [m['Id'] for m in v],
+                    },
+                ),
             ),
         },
         {
             'file': 'SynthesisAreas.dat',
             'key': 'synthesis_areas',
             'data': (
-                ('Id', {
-                    'key': 'id',
-                }),
-                ('MinLevel', {
-                    'key': 'min_level',
-                }),
-                ('MaxLevel', {
-                    'key': 'max_level',
-                }),
-                ('Weight', {
-                    'key': 'weight',
-                }),
-                ('Name', {
-                    'key': 'name',
-                }),
-                ('SynthesisAreaSizeKey', {
-                    'key': 'size',
-                    'value': lambda v: v.rowid,
-                }),
+                ('Id', {'key': 'id',}),
+                ('MinLevel', {'key': 'min_level',}),
+                ('MaxLevel', {'key': 'max_level',}),
+                ('Weight', {'key': 'weight',}),
+                ('Name', {'key': 'name',}),
+                (
+                    'SynthesisAreaSizeKey',
+                    {'key': 'size', 'value': lambda v: v.rowid,},
+                ),
             ),
         },
         {
             'file': 'SynthesisGlobalMods.dat',
             'key': 'synthesis_global_mods',
             'data': (
-                ('ModsKey', {
-                    'key': 'mod_id',
-                    'value': lambda v: v['Id'],
-                }),
-                ('MinLevel', {
-                    'key': 'min_level',
-                }),
-                ('MaxLevel', {
-                    'key': 'max_level',
-                }),
-                ('Weight', {
-                    'key': 'weight',
-                }),
+                ('ModsKey', {'key': 'mod_id', 'value': lambda v: v['Id'],}),
+                ('MinLevel', {'key': 'min_level',}),
+                ('MaxLevel', {'key': 'max_level',}),
+                ('Weight', {'key': 'weight',}),
             ),
         },
     )
@@ -1101,13 +1055,13 @@ class SynthesisParser(GenericLuaParser):
                 )
 
         for row in data['synthesis_mods']:
-            row['stat_text'] = \
-                '<br>'.join(self.tc['stat_descriptions.txt'].get_translation(
-                    tags=(row['stat_id'], ),
-                    values=(row['stat_value'], ),
+            row['stat_text'] = '<br>'.join(
+                self.tc['stat_descriptions.txt'].get_translation(
+                    tags=(row['stat_id'],),
+                    values=(row['stat_value'],),
                     lang=self.lang,
-                )).replace('\n', '')
-
+                )
+            ).replace('\n', '')
 
         r = ExporterResult()
         for definition in self._DATA:
@@ -1115,10 +1069,9 @@ class SynthesisParser(GenericLuaParser):
             r.add_result(
                 text=lua_formatter(data[key]),
                 out_file='%s.lua' % key,
-                wiki_page=[{
-                    'page': 'Module:Synthesis/%s' % key,
-                    'condition': None,
-                }]
+                wiki_page=[
+                    {'page': 'Module:Synthesis/%s' % key, 'condition': None,}
+                ],
             )
 
         return r
@@ -1130,109 +1083,73 @@ class MonsterParser(GenericLuaParser):
             'key': 'monster_types',
             'file': 'MonsterTypes.dat',
             'data': (
-                ('Id', {
-                    'key': 'id',
-                }),
-                ('TagsKeys', {
-                    'key': 'tags',
-                    'value': lambda v: ', '.join([r['Id'] for r in v]),
-                }),
-                ('MonsterResistancesKey', {
-                    'key': 'monster_resistance_id',
-                    'value': lambda v: v['Id'],
-                }),
-                ('Armour', {
-                    'key': 'armour_multiplier',
-                    'value': lambda v: v/100,
-                }),
-                ('Evasion', {
-                    'key': 'evasion_multiplier',
-                    'value': lambda v: v/100,
-                }),
-                ('EnergyShieldFromLife', {
-                    'key': 'energy_shield_multiplier',
-                    'value': lambda v: v/100,
-                }),
-                ('DamageSpread', {
-                    'key': 'damage_spread',
-                    'value': lambda v: v/100,
-                }),
+                ('Id', {'key': 'id',}),
+                (
+                    'TagsKeys',
+                    {
+                        'key': 'tags',
+                        'value': lambda v: ', '.join([r['Id'] for r in v]),
+                    },
+                ),
+                (
+                    'MonsterResistancesKey',
+                    {
+                        'key': 'monster_resistance_id',
+                        'value': lambda v: v['Id'],
+                    },
+                ),
+                (
+                    'Armour',
+                    {'key': 'armour_multiplier', 'value': lambda v: v / 100,},
+                ),
+                (
+                    'Evasion',
+                    {'key': 'evasion_multiplier', 'value': lambda v: v / 100,},
+                ),
+                (
+                    'EnergyShieldFromLife',
+                    {
+                        'key': 'energy_shield_multiplier',
+                        'value': lambda v: v / 100,
+                    },
+                ),
+                (
+                    'DamageSpread',
+                    {'key': 'damage_spread', 'value': lambda v: v / 100,},
+                ),
             ),
         },
         {
             'key': 'monster_resistances',
             'file': 'MonsterResistances.dat',
             'data': (
-                ('Id', {
-                    'key': 'id',
-                }),
-                ('FireNormal', {
-                    'key': 'part1_fire',
-                }),
-                ('ColdNormal', {
-                    'key': 'part1_cold',
-                }),
-                ('LightningNormal', {
-                    'key': 'part1_lightning',
-                }),
-                ('ChaosNormal', {
-                    'key': 'part1_chaos',
-                }),
-                ('FireCruel', {
-                    'key': 'part2_fire',
-                }),
-                ('ColdCruel', {
-                    'key': 'part2_cold',
-                }),
-                ('LightningCruel', {
-                    'key': 'part2_lightning',
-                }),
-                ('ChaosCruel', {
-                    'key': 'part2_chaos',
-                }),
-                ('FireMerciless', {
-                    'key': 'maps_fire',
-                }),
-                ('ColdMerciless', {
-                    'key': 'maps_cold',
-                }),
-                ('LightningMerciless', {
-                    'key': 'maps_lightning',
-                }),
-                ('ChaosMerciless', {
-                    'key': 'maps_chaos',
-                }),
+                ('Id', {'key': 'id',}),
+                ('FireNormal', {'key': 'part1_fire',}),
+                ('ColdNormal', {'key': 'part1_cold',}),
+                ('LightningNormal', {'key': 'part1_lightning',}),
+                ('ChaosNormal', {'key': 'part1_chaos',}),
+                ('FireCruel', {'key': 'part2_fire',}),
+                ('ColdCruel', {'key': 'part2_cold',}),
+                ('LightningCruel', {'key': 'part2_lightning',}),
+                ('ChaosCruel', {'key': 'part2_chaos',}),
+                ('FireMerciless', {'key': 'maps_fire',}),
+                ('ColdMerciless', {'key': 'maps_cold',}),
+                ('LightningMerciless', {'key': 'maps_lightning',}),
+                ('ChaosMerciless', {'key': 'maps_chaos',}),
             ),
         },
         {
             'key': 'monster_base_stats',
             'file': 'DefaultMonsterStats.dat',
             'data': (
-                ('DisplayLevel', {
-                    'key': 'level',
-                    'value': lambda v: int(v),
-                }),
-                ('Damage', {
-                    'key': 'damage',
-                }),
-                ('Evasion', {
-                    'key': 'evasion',
-                }),
-                ('Armour', {
-                    'key': 'armour',
-                }),
-                ('Accuracy', {
-                    'key': 'accuracy',
-                }),
-                ('Life', {
-                    'key': 'life',
-                }),
-                ('Experience', {
-                    'key': 'experience',
-                }),
-                ('AllyLife', {
-                    'key': 'summon_life',
-                }),
+                ('DisplayLevel', {'key': 'level', 'value': lambda v: int(v),}),
+                ('Damage', {'key': 'damage',}),
+                ('Evasion', {'key': 'evasion',}),
+                ('Armour', {'key': 'armour',}),
+                ('Accuracy', {'key': 'accuracy',}),
+                ('Life', {'key': 'life',}),
+                ('Experience', {'key': 'experience',}),
+                ('AllyLife', {'key': 'summon_life',}),
             ),
         },
     )
@@ -1240,55 +1157,33 @@ class MonsterParser(GenericLuaParser):
     _ENUM_DATA = {
         'monster_map_multipliers': {
             'MonsterMapDifficulty.dat': (
-                ('MapLevel', {
-                    'key': 'level',
-                }),
+                ('MapLevel', {'key': 'level',}),
                 # stat1Key -> map_hidden_monster_life_+%_final
-                ('Stat1Value', {
-                    'key': 'life',
-                }),
+                ('Stat1Value', {'key': 'life',}),
                 # stat2key -> map_hidden_monster_damage_+%_final
-                ('Stat2Value', {
-                    'key': 'damage',
-                }),
+                ('Stat2Value', {'key': 'damage',}),
             ),
             'MonsterMapBossDifficulty.dat': (
                 # stat1Key -> map_hidden_monster_life_+%_final
-                ('Stat1Value', {
-                    'key': 'boss_life',
-                }),
+                ('Stat1Value', {'key': 'boss_life',}),
                 # stat2key -> map_hidden_monster_damage_+%_final
-                ('Stat2Value', {
-                    'key': 'boss_damage',
-                }),
+                ('Stat2Value', {'key': 'boss_damage',}),
                 # stat1Key -> monster_dropped_item_quantity_+%
-                ('Stat3Value', {
-                    'key': 'boss_item_quantity',
-                }),
+                ('Stat3Value', {'key': 'boss_item_quantity',}),
                 # stat2key -> monster_dropped_item_rarity_+%
-                ('Stat4Value', {
-                    'key': 'boss_item_rarity',
-                }),
+                ('Stat4Value', {'key': 'boss_item_rarity',}),
             ),
         },
         'monster_life_scaling': {
             'MagicMonsterLifeScalingPerLevel.dat': (
-                ('Level', {
-                    'key': 'level',
-                }),
-                ('Life', {
-                    'key': 'magic',
-                }),
+                ('Level', {'key': 'level',}),
+                ('Life', {'key': 'magic',}),
             ),
-            'RareMonsterLifeScalingPerLevel.dat': (
-                ('Life', {
-                    'key': 'rare',
-                }),
-            ),
+            'RareMonsterLifeScalingPerLevel.dat': (('Life', {'key': 'rare',}),),
         },
     }
 
-    #_files = [row['files'].keys() in _DATA]
+    # _files = [row['files'].keys() in _DATA]
 
     def main(self, parsed_args):
         data = {}
@@ -1303,9 +1198,7 @@ class MonsterParser(GenericLuaParser):
             map_multi = []
             for file_name, definition in data_map.items():
                 for i, row in enumerate(self.rr[file_name]):
-                    self._copy_from_keys(
-                        row, definition, map_multi, i
-                    )
+                    self._copy_from_keys(row, definition, map_multi, i)
 
             data[key] = map_multi
 
@@ -1314,10 +1207,9 @@ class MonsterParser(GenericLuaParser):
             r.add_result(
                 text=lua_formatter(v),
                 out_file='%s.lua' % key,
-                wiki_page=[{
-                    'page': 'Module:Monster/%s' % key,
-                    'condition': None,
-                }]
+                wiki_page=[
+                    {'page': 'Module:Monster/%s' % key, 'condition': None,}
+                ],
             )
 
         return r
@@ -1325,78 +1217,69 @@ class MonsterParser(GenericLuaParser):
 
 class CraftingBenchParser(GenericLuaParser):
     _DATA = (
-        ('HideoutNPCsKey', {
-            'key': 'npc',
-            'value': lambda v: v['NPCMasterKey']['Id'],
-        }),
-        ('Order', {
-            'key': 'ordinal',
-        }),
-        ('ModsKey', {
-            'key': 'mod_id',
-            'value': lambda v: v['Id'],
-        }),
-        ('RequiredLevel', {
-            'key': 'required_level',
-            'default': 0,
-        }),
-        ('Name', {
-            'key': 'name',
-        }),
-        ('ItemClassesKeys', {
-            'key': 'item_classes',
-            'value': lambda v: [k['Name'] for k in v],
-            'default': [],
-        }),
-        ('ItemClassesKeys', {
-            'key': 'item_classes_ids',
-            'value': lambda v: [k['Id'] for k in v],
-            'default': [],
-        }),
-        ('Links', {
-            'key': 'links',
-            'default': 0,
-        }),
-        ('SocketColours', {
-            'key': 'socket_colours',
-        }),
-        ('Sockets', {
-            'key': 'sockets',
-            'default': 0,
-        }),
-        ('Description', {
-            'key': 'description',
-        }),
-        ('RecipeIds', {
-            'key': 'recipe_unlock_location',
-            'value': lambda v: '<br>'.join([k['UnlockDescription'] for k in v]),
-            'default': '',
-        }),
-        ('Tier', {
-            'key': 'rank',
-        }),
-        ('ModFamily', {
-            'key': 'mod_group',
-        }),
-        ('CraftingItemClassCategoriesKeys', {
-            'key': 'crafting_item_class_categories',
-            'value': lambda v: [k['Text'] for k in v],
-        }),
-        ('CraftingBenchUnlockCategoriesKey', {
-            'key': 'crafting_bench_unlock_category',
-            'value': lambda v: v['UnlockType'],
-        }),
-        ('CraftingBenchUnlockCategoriesKey', {
-            'key': 'crafting_bench_unlock_category_description',
-            'value': lambda v: v['ObtainingDescription'],
-        }),
-        ('UnveilsRequired', {
-            'key': 'unveils_required',
-            'default': 0,
-        }),
-        ('AffixType', {
-            'key': 'affix_type',
-        }),
+        (
+            'HideoutNPCsKey',
+            {'key': 'npc', 'value': lambda v: v['NPCMasterKey']['Id'],},
+        ),
+        ('Order', {'key': 'ordinal',}),
+        ('ModsKey', {'key': 'mod_id', 'value': lambda v: v['Id'],}),
+        ('RequiredLevel', {'key': 'required_level', 'default': 0,}),
+        ('Name', {'key': 'name',}),
+        (
+            'ItemClassesKeys',
+            {
+                'key': 'item_classes',
+                'value': lambda v: [k['Name'] for k in v],
+                'default': [],
+            },
+        ),
+        (
+            'ItemClassesKeys',
+            {
+                'key': 'item_classes_ids',
+                'value': lambda v: [k['Id'] for k in v],
+                'default': [],
+            },
+        ),
+        ('Links', {'key': 'links', 'default': 0,}),
+        ('SocketColours', {'key': 'socket_colours',}),
+        ('Sockets', {'key': 'sockets', 'default': 0,}),
+        ('Description', {'key': 'description',}),
+        (
+            'RecipeIds',
+            {
+                'key': 'recipe_unlock_location',
+                'value': lambda v: '<br>'.join(
+                    [k['UnlockDescription'] for k in v]
+                ),
+                'default': '',
+            },
+        ),
+        ('Tier', {'key': 'rank',}),
+        ('ModFamily', {'key': 'mod_group',}),
+        (
+            'CraftingItemClassCategoriesKeys',
+            {
+                'key': 'crafting_item_class_categories',
+                'value': lambda v: [k['Text'] for k in v],
+            },
+        ),
+        (
+            'CraftingBenchUnlockCategoriesKey',
+            {
+                'key': 'crafting_bench_unlock_category',
+                'value': lambda v: v['UnlockType'],
+            },
+        ),
+        (
+            'CraftingBenchUnlockCategoriesKey',
+            {
+                'key': 'crafting_bench_unlock_category_description',
+                'value': lambda v: v['ObtainingDescription'],
+            },
+        ),
+        ('UnveilsRequired', {'key': 'unveils_required', 'default': 0,}),
+        ('AffixType', {'key': 'affix_type',}),
     )
 
     _files = ['CraftingBenchOptions.dat']
@@ -1408,26 +1291,32 @@ class CraftingBenchParser(GenericLuaParser):
         }
         for row in self.rr['CraftingBenchOptions.dat']:
             self._copy_from_keys(
-                row, self._DATA, data['crafting_bench_options'])
+                row, self._DATA, data['crafting_bench_options']
+            )
             data['crafting_bench_options'][-1]['id'] = row.rowid
 
             for i, base_item in enumerate(row['Cost_BaseItemTypesKeys']):
-                data['crafting_bench_options_costs'].append(OrderedDict((
-                    ('option_id', row.rowid),
-                    ('name', base_item['Name']),
-                    ('amount', row['Cost_Values'][i])
-                )))
-
+                data['crafting_bench_options_costs'].append(
+                    OrderedDict(
+                        (
+                            ('option_id', row.rowid),
+                            ('name', base_item['Name']),
+                            ('amount', row['Cost_Values'][i]),
+                        )
+                    )
+                )
 
         r = ExporterResult()
         for key, data in data.items():
             r.add_result(
                 text=lua_formatter(data),
                 out_file='%s.lua' % key,
-                wiki_page=[{
-                    'page': 'Module:Crafting bench/%s' % key,
-                    'condition': None,
-                }]
+                wiki_page=[
+                    {
+                        'page': 'Module:Crafting bench/%s' % key,
+                        'condition': None,
+                    }
+                ],
             )
 
         return r

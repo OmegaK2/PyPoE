@@ -53,7 +53,9 @@ from PyPoE.cli.core import console, Msg
 # =============================================================================
 
 __all__ = [
-    'BaseHandler', 'ConfigHandler', 'SetupHandler',
+    'BaseHandler',
+    'ConfigHandler',
+    'SetupHandler',
 ]
 
 # =============================================================================
@@ -65,6 +67,7 @@ class BaseHandler:
     """
     Other handlers should inherit this one.
     """
+
     def __init__(self, sub_parser, *args, **kwargs):
         pass
 
@@ -73,14 +76,13 @@ class BaseHandler:
         return 0
 
     def _show_error(self, e):
-        console("%s: %s" % (
-            e.__class__.__name__,
-            ''.join(e.args)
-        ), msg=Msg.error)
+        console(
+            "%s: %s" % (e.__class__.__name__, ''.join(e.args)), msg=Msg.error
+        )
         return -1
 
     def print_sep(self, char='-'):
-        console(char*70)
+        console(char * 70)
 
 
 class ConfigHandler(BaseHandler):
@@ -92,6 +94,7 @@ class ConfigHandler(BaseHandler):
     .. warning::
         Should be included in any application that uses the cli config
     """
+
     def __init__(self, sub_parser, config):
         """
         Parameters
@@ -112,19 +115,20 @@ class ConfigHandler(BaseHandler):
             raise ConfigError('Config validation failed.')
 
         # Parsing stuff
-        self.parser = sub_parser.add_parser('config', help='Edit config options')
+        self.parser = sub_parser.add_parser(
+            'config', help='Edit config options'
+        )
         self.parser.set_defaults(func=self._help)
         config_sub = self.parser.add_subparsers()
 
         print_debug_parser = config_sub.add_parser(
             'print_debug',
-            help='Prints out all registered and internal options for debugging.'
+            help='Prints out all registered and internal options for debugging.',
         )
         print_debug_parser.set_defaults(func=self.print_debug)
 
         print_all_parser = config_sub.add_parser(
-            'print_all',
-            help='Prints out all registered config options'
+            'print_all', help='Prints out all registered config options'
         )
         print_all_parser.set_defaults(func=self.print_all)
 
@@ -144,9 +148,7 @@ class ConfigHandler(BaseHandler):
             help='Variable to set',
         )
         set_parser.add_argument(
-            'value',
-            action='store',
-            help='Value to set',
+            'value', action='store', help='Value to set',
         )
 
     def print_debug(self, args):
@@ -183,11 +185,9 @@ class ConfigHandler(BaseHandler):
         spec = set(self.config.optionspec.keys())
         real = set(self.config.option.keys())
 
-
         missing = spec.difference(real)
         extra = real.difference(spec)
         configured = spec.difference(missing)
-
 
         console('Current stored config variables:')
         for key in sorted(list(configured)):
@@ -195,15 +195,19 @@ class ConfigHandler(BaseHandler):
 
         if missing:
             console('', raw=True)
-            console('Missing config variables (require config set):', msg=Msg.error)
+            console(
+                'Missing config variables (require config set):', msg=Msg.error
+            )
             for key in sorted(list(missing)):
-                console("%s" % (key, ), Msg.error)
+                console("%s" % (key,), Msg.error)
 
         if extra:
             console('', raw=True)
             console('Extra variables (unused):', msg=Msg.warning)
             for key in sorted(list(extra)):
-                console("%s: %s" % (key, self.config.option[key]), msg=Msg.warning)
+                console(
+                    "%s: %s" % (key, self.config.option[key]), msg=Msg.warning
+                )
 
         return 0
 
@@ -221,7 +225,10 @@ class ConfigHandler(BaseHandler):
         int
             success code
         """
-        console('Config setting "%s" is currently set to:\n%s' % (args.variable, self.config.option[args.variable]))
+        console(
+            'Config setting "%s" is currently set to:\n%s'
+            % (args.variable, self.config.option[args.variable])
+        )
         return 0
 
     def set(self, args):
@@ -244,9 +251,14 @@ class ConfigHandler(BaseHandler):
             return self._show_error(e)
         self.config.write()
 
-        console('Config setting "%s" has been set to:\n%s' % (args.variable, args.value))
+        console(
+            'Config setting "%s" has been set to:\n%s'
+            % (args.variable, args.value)
+        )
 
-        if self.config.needs_setup(args.variable) and not self.config.is_setup(args.variable):
+        if self.config.needs_setup(args.variable) and not self.config.is_setup(
+            args.variable
+        ):
             console('', raw=True)
             console('Variable needs setup. Please run:\nsetup perform')
 
@@ -262,6 +274,7 @@ class SetupHandler(BaseHandler):
     .. warning::
         Should be included in any application that uses the cli config
     """
+
     def __init__(self, sub_parser, config):
         """
         Parameters
@@ -277,10 +290,7 @@ class SetupHandler(BaseHandler):
 
         setup_sub = self.parser.add_subparsers()
 
-        setup_perform = setup_sub.add_parser(
-            'perform',
-            help='Perform setup'
-        )
+        setup_perform = setup_sub.add_parser('perform', help='Perform setup')
         setup_perform.set_defaults(func=self.setup)
 
     def setup(self, args):

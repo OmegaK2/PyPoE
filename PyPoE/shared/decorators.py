@@ -57,8 +57,10 @@ class DeprecationDecorator:
     function call and also adds the DEPRECATED
 
     """
-    _default_message = 'Use of {func} is deprecated and will be removed in' \
-                       ' PyPoE {version}'
+
+    _default_message = (
+        'Use of {func} is deprecated and will be removed in' ' PyPoE {version}'
+    )
     _default_doc_message = 'DEPRECATED. Will be removed in PyPoE {version}'
 
     def __init__(self, message=None, doc_message=None, version=None):
@@ -95,16 +97,18 @@ class DeprecationDecorator:
         if function.__doc__ is None:
             function.__doc__ = self.doc_message.format(**message_kwargs)
         else:
-            function.__doc__ = self.doc_message.format(**message_kwargs) + \
-                               '\n' + function.__doc__
+            function.__doc__ = (
+                self.doc_message.format(**message_kwargs)
+                + '\n'
+                + function.__doc__
+            )
 
         @functools.wraps(function)
         def deprecated_function(*args, **kwargs):
             warnings.warn(
-                self.message.format(
-                    func=function.__name__,
-                    **message_kwargs
-                ), DeprecationWarning, stacklevel=2,
+                self.message.format(func=function.__name__, **message_kwargs),
+                DeprecationWarning,
+                stacklevel=2,
             )
 
             return function(*args, **kwargs)

@@ -56,9 +56,7 @@ class GGPKViewerMainWindow(SharedMainWindow):
     NAME = 'GGPK Viewer'
 
     def __init__(self, *args, **kwargs):
-        super().__init__(
-            *args, app_name=self.NAME, **kwargs
-        )
+        super().__init__(*args, app_name=self.NAME, **kwargs)
 
         self.s_general = GeneralSettingsFrame(parent=self)
         dat.set_default_spec(version=self.s_general.version)
@@ -89,7 +87,7 @@ class GGPKViewerMainWindow(SharedMainWindow):
         self.ggpk_view.setColumnWidth(0, 200)
         self.ggpk_view.setColumnWidth(1, 75)
         self.ggpk_view.setColumnWidth(2, 80)
-        #self.ggpk_view.setColumnWidth(3, 80)
+        # self.ggpk_view.setColumnWidth(3, 80)
         self.ggpk_view.setMinimumSize(370, 370)
         self.ggpk_view.clicked.connect(self._view_record)
         self.ggpk_view.setContextMenuPolicy(Qt.ActionsContextMenu)
@@ -110,23 +108,21 @@ class GGPKViewerMainWindow(SharedMainWindow):
         self.file_infobar_layout.setAlignment(Qt.AlignLeft)
         self.file_infobar = QFrame()
         self.file_infobar.setSizePolicy(
-            QSizePolicy.Minimum,
-            QSizePolicy.Maximum
+            QSizePolicy.Minimum, QSizePolicy.Maximum
         )
         self.file_infobar.setFrameStyle(QFrame.StyledPanel | QFrame.Plain)
         self.file_infobar.setLayout(self.file_infobar_layout)
 
         self.file_infobar_layout.addWidget(QLabel(self.tr('Name Hash:')))
         self.file_infobar_name_hash = QLineEdit(readOnly=True)
-        #self.file_infobar_name_hash.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
+        # self.file_infobar_name_hash.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
         self.file_infobar_name_hash.setFixedWidth(70)
         self.file_infobar_layout.addWidget(self.file_infobar_name_hash)
 
         self.file_infobar_layout.addWidget(QLabel(self.tr('File Hash:')))
         self.file_infobar_file_hash = QLineEdit(readOnly=True)
         self.file_infobar_file_hash.setSizePolicy(
-            QSizePolicy.MinimumExpanding,
-            QSizePolicy.Maximum
+            QSizePolicy.MinimumExpanding, QSizePolicy.Maximum
         )
         self.file_infobar_file_hash.setMinimumWidth(405)
         self.file_infobar_layout.addWidget(self.file_infobar_file_hash)
@@ -135,15 +131,13 @@ class GGPKViewerMainWindow(SharedMainWindow):
         self.file_layout.addWidget(self.file_infobar)
 
         # Create Frame
-        #self.file_frame_scroll = QScrollArea()
-        #self.file_frame_scroll.setFrameStyle(QFrame.StyledPanel | QFrame.Plain)
-        #self.file_layout.addWidget(self.file_frame_scroll)
-
+        # self.file_frame_scroll = QScrollArea()
+        # self.file_frame_scroll.setFrameStyle(QFrame.StyledPanel | QFrame.Plain)
+        # self.file_layout.addWidget(self.file_frame_scroll)
 
         self.file_frame = QFrame()
         self.file_frame.setSizePolicy(
-            QSizePolicy.Expanding,
-            QSizePolicy.Expanding
+            QSizePolicy.Expanding, QSizePolicy.Expanding
         )
         self.file_frame.setFrameStyle(QFrame.StyledPanel | QFrame.Plain)
         self.file_layout.addWidget(self.file_frame)
@@ -152,16 +146,15 @@ class GGPKViewerMainWindow(SharedMainWindow):
         self.file_frame_layout.setAlignment(Qt.AlignTop)
         self.file_frame.setLayout(self.file_frame_layout)
 
-        #self.file_frame_scroll.setWidget(self.file_frame)
-        #self.file_frame_scroll.setLayout(self.file_frame_layout)
-        #self.file_frame_scroll.show()
+        # self.file_frame_scroll.setWidget(self.file_frame)
+        # self.file_frame_scroll.setLayout(self.file_frame_layout)
+        # self.file_frame_scroll.show()
 
         #
         self.file_textbox = QTextEdit(self)
         self.file_textbox.setText(self.tr("No file selected."))
         self.file_textbox.setSizePolicy(
-            QSizePolicy.MinimumExpanding,
-            QSizePolicy.MinimumExpanding
+            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding
         )
         self.file_frame_layout.addWidget(self.file_textbox)
 
@@ -203,24 +196,22 @@ class GGPKViewerMainWindow(SharedMainWindow):
         # Avoid extracting data until we actually need
         obj = self._file_data_manager.get_handler(node.record.name)
         if obj is None:
-            self.file_textbox.setText(self.tr(
-                "File view not supported for this file type."
-            ))
+            self.file_textbox.setText(
+                self.tr("File view not supported for this file type.")
+            )
             self.file_textbox.setVisible(True)
             self._reset_file_view(reset_hash=False)
             return
 
         try:
             qwidget = obj.get_widget(
-                node.record.extract(),
-                file_name=node.record.name,
-                parent=self
+                node.record.extract(), file_name=node.record.name, parent=self
             )
         except Exception as e:
-            msg = self.tr("%(error)s occurred when trying to open %(file)s" % {
-                'file': node.record.name,
-                'error': e.__class__.__name__,
-            })
+            msg = self.tr(
+                "%(error)s occurred when trying to open %(file)s"
+                % {'file': node.record.name, 'error': e.__class__.__name__,}
+            )
             fullmsg = msg + ': \n\n' + format_exc()
 
             self.file_textbox.setText(fullmsg)
@@ -245,25 +236,19 @@ class GeneralSettingsFrame(SettingFrame):
         super().__init__(*args, **kwargs)
 
         self.parent().settings_window.add_config_section(
-            tr=self.tr('General'),
-            qframe=self,
-            order=-100,
+            tr=self.tr('General'), qframe=self, order=-100,
         )
 
         self.layout = QGridLayout()
         self.setLayout(self.layout)
 
-        self._add_setting(SettingDDS(
-            parent=self,
-            settings=self.parent().settings,
-            row=1
-        ))
+        self._add_setting(
+            SettingDDS(parent=self, settings=self.parent().settings, row=1)
+        )
 
-        self._add_setting(SettingVersion(
-            parent=self,
-            settings=self.parent().settings,
-            row=2,
-        ))
+        self._add_setting(
+            SettingVersion(parent=self, settings=self.parent().settings, row=2,)
+        )
 
 
 class SettingDDS(BoolSetting):
@@ -275,9 +260,15 @@ class SettingDDS(BoolSetting):
 
         self.value = self.get()
 
-        parent.layout.addWidget(QLabel(parent.tr(
-            'Uncompress DDS files after exporting them from the GGPK'
-        )), row, 1)
+        parent.layout.addWidget(
+            QLabel(
+                parent.tr(
+                    'Uncompress DDS files after exporting them from the GGPK'
+                )
+            ),
+            row,
+            1,
+        )
         parent.layout.addWidget(self.checkbox, row, 2)
 
 
@@ -287,15 +278,19 @@ class SettingVersion(ComboBoxSetting):
 
     def __init__(self, parent, settings, row, *args, **kwargs):
         super().__init__(parent, settings, *args, **kwargs)
-        self._set_data(OrderedDict((
-            ('Stable', VERSION.STABLE),
-            ('Beta', VERSION.BETA),
-            ('Alpha', VERSION.ALPHA),
-        )))
+        self._set_data(
+            OrderedDict(
+                (
+                    ('Stable', VERSION.STABLE),
+                    ('Beta', VERSION.BETA),
+                    ('Alpha', VERSION.ALPHA),
+                )
+            )
+        )
 
-        parent.layout.addWidget(QLabel(parent.tr(
-            'Version of the game'
-        )), row, 1)
+        parent.layout.addWidget(
+            QLabel(parent.tr('Version of the game')), row, 1
+        )
         parent.layout.addWidget(self.combobox, row, 2)
 
     def _get_cast(self, value):
@@ -304,6 +299,7 @@ class SettingVersion(ComboBoxSetting):
     def _set_cast(self, value):
         # Change VERSION.STABLE into STABLE
         return str(value).split('.')[-1]
+
 
 # =============================================================================
 # Functions

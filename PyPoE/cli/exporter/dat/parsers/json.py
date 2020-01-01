@@ -60,14 +60,13 @@ class JSONExportHandler(DatExportHandler):
             formatter_class=argparse.RawTextHelpFormatter,
         )
         self.json.add_argument(
-            'target',
-            help='target to export to',
+            'target', help='target to export to',
         )
 
         self.json.add_argument(
             '--use-object-format',
             help='Export files as objects as row and header instead of lists. '
-                 'Will significantly increase the the size of the export',
+            'Will significantly increase the the size of the export',
             dest='use_object_format',
             action='store_true',
         )
@@ -82,7 +81,7 @@ class JSONExportHandler(DatExportHandler):
         self.json.add_argument(
             '--force-ascii-format',
             help='Will enforce the json file to be written as ascii, escaping '
-                 'unicode characters using python escapes accordingly',
+            'unicode characters using python escapes accordingly',
             dest='ascii',
             action='store_true',
         )
@@ -102,9 +101,7 @@ class JSONExportHandler(DatExportHandler):
         dict_spec = args.spec.as_dict()
 
         with open(
-                args.target,
-                mode='w',
-                encoding='ascii' if args.ascii else 'utf-8'
+            args.target, mode='w', encoding='ascii' if args.ascii else 'utf-8'
         ) as f:
             dat_files = self._read_dat_files(args)
 
@@ -113,34 +110,39 @@ class JSONExportHandler(DatExportHandler):
 
             for file_name in args.files:
                 dat_file = dat_files[file_name]
-                
+
                 header = [
-                    dict({ 'name': name, 'rowid': index }, **props)
-                    for index, (name, props) 
-                    in enumerate(dict_spec[file_name]['fields'].items())
+                    dict({'name': name, 'rowid': index}, **props)
+                    for index, (name, props) in enumerate(
+                        dict_spec[file_name]['fields'].items()
+                    )
                 ]
 
                 virtual_header = [
-                    dict({ 'name': name, 'rowid': index }, **props)
-                    for index, (name, props) 
-                    in enumerate(dict_spec[file_name]['virtual_fields'].items())
+                    dict({'name': name, 'rowid': index}, **props)
+                    for index, (name, props) in enumerate(
+                        dict_spec[file_name]['virtual_fields'].items()
+                    )
                 ]
 
                 if args.use_object_format:
                     out_obj = {
                         'filename': file_name,
                         'header': {row['name']: row for row in header},
-                        'data': [{
-                                cid: row[i] for i, cid in enumerate(
+                        'data': [
+                            {
+                                cid: row[i]
+                                for i, cid in enumerate(
                                     dat_file.reader.columns_data
                                 )
-                            } for row in dat_file.reader.table_data
+                            }
+                            for row in dat_file.reader.table_data
                         ],
                     }
 
-                    virtual_header = (
-                        {row['name']: row for row in virtual_header}
-                    )
+                    virtual_header = {
+                        row['name']: row for row in virtual_header
+                    }
                 else:
                     out_obj = {
                         'filename': file_name,
@@ -152,7 +154,9 @@ class JSONExportHandler(DatExportHandler):
                     out_obj['virtual_header'] = virtual_header
 
                 if args.include_record_length:
-                    out_obj['record_length'] = dat_files[file_name].reader.table_record_length
+                    out_obj['record_length'] = dat_files[
+                        file_name
+                    ].reader.table_record_length
 
                 out.append(out_obj)
 
@@ -161,6 +165,7 @@ class JSONExportHandler(DatExportHandler):
             dump(out, f, ensure_ascii=args.ascii, indent=4)
 
         console('Done.')
+
 
 # =============================================================================
 # Functions

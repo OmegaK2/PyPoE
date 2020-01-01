@@ -76,6 +76,7 @@ class IDLRecord(Record):
     y2 :  int
         Lower right y coordinate
     """
+
     __slots__ = ['destination', 'source', 'x1', 'y1', 'x2', 'y2']
 
     def __init__(self, destination, source, x1, y1, x2, y2):
@@ -160,7 +161,7 @@ class IDLFile(AbstractFile, TypedList, metaclass=TypedContainerMeta):
         r'(?P<x2>[0-9]+)[ ]+'
         r'(?P<y2>[0-9]+)[ \r\n]*'
         r'$',
-        re.UNICODE | re.MULTILINE
+        re.UNICODE | re.MULTILINE,
     )
 
     def __init__(self):

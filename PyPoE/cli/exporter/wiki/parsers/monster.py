@@ -66,8 +66,7 @@ class MonsterWikiCondition(parser.WikiCondition):
 class MonsterCommandHandler(ExporterHandler):
     def __init__(self, sub_parser):
         self.parser = sub_parser.add_parser(
-            'monster',
-            help='Monster exporter (non-lua)',
+            'monster', help='Monster exporter (non-lua)',
         )
         self.parser.set_defaults(func=lambda args: self.parser.print_help())
 
@@ -75,74 +74,51 @@ class MonsterCommandHandler(ExporterHandler):
 
         # By id
         a_id = sub.add_parser(
-            'id',
-            help='Extract monsters by their metadata id.'
+            'id', help='Extract monsters by their metadata id.'
         )
         self.add_default_parsers(
-            parser=a_id,
-            cls=MonsterParser,
-            func=MonsterParser.by_id,
+            parser=a_id, cls=MonsterParser, func=MonsterParser.by_id,
         )
         a_id.add_argument(
-            'monster_id',
-            help='Monster id',
-            nargs='+',
+            'monster_id', help='Monster id', nargs='+',
         )
 
         # by name
-        a_name = sub.add_parser(
-            'name',
-            help='Extract areas by their name.'
-        )
+        a_name = sub.add_parser('name', help='Extract areas by their name.')
         self.add_default_parsers(
-            parser=a_name,
-            cls=MonsterParser,
-            func=MonsterParser.by_name,
+            parser=a_name, cls=MonsterParser, func=MonsterParser.by_name,
         )
         a_name.add_argument(
             'monster_name',
             help='Visible name of the area (localized), can be specified '
-                 'multiple times.',
+            'multiple times.',
             nargs='+',
         )
 
         # by row ID
-        a_rid = sub.add_parser(
-            'rowid',
-            help='Extract monsters by rowid.'
-        )
+        a_rid = sub.add_parser('rowid', help='Extract monsters by rowid.')
         self.add_default_parsers(
-            parser=a_rid,
-            cls=MonsterParser,
-            func=MonsterParser.by_rowid,
+            parser=a_rid, cls=MonsterParser, func=MonsterParser.by_rowid,
         )
         a_rid.add_argument(
-            'start',
-            help='Starting index',
-            nargs='?',
-            type=int,
-            default=0,
+            'start', help='Starting index', nargs='?', type=int, default=0,
         )
         a_rid.add_argument(
-            'end',
-            nargs='?',
-            help='Ending index',
-            type=int,
+            'end', nargs='?', help='Ending index', type=int,
         )
 
         # filtering
         a_filter = sub.add_parser(
-            'filter',
-            help='Extract monsters using filters.'
+            'filter', help='Extract monsters using filters.'
         )
         self.add_default_parsers(
-            parser=a_filter,
-            cls=MonsterParser,
-            func=MonsterParser.by_filter,
+            parser=a_filter, cls=MonsterParser, func=MonsterParser.by_filter,
         )
 
         a_filter.add_argument(
-            '-ft-id', '--filter-id', '--filter-metadata-id',
+            '-ft-id',
+            '--filter-id',
+            '--filter-metadata-id',
             help='Regular expression on the id',
             type=str,
             dest='re_id',
@@ -165,91 +141,118 @@ class MonsterParser(parser.BaseParser):
         error_msg='Several monsters have not been found:\n%s',
     )
 
-    _COPY_KEYS = OrderedDict((
-        ('Id', {
-            'template': 'metadata_id',
-        }),
-        ('MonsterTypesKey', {
-            'template': 'monster_type_id',
-            'format': lambda v: v['Id'],
-        }),
-        ('ModsKeys', {
-            'template': 'mod_ids',
-            'format': lambda v: ', '.join([r['Id'] for r in v]),
-        }),
-        ('Part1_ModsKeys', {
-            'template': 'part1_mod_ids',
-            'format': lambda v: ', '.join([r['Id'] for r in v]),
-        }),
-        ('Part2_ModsKeys', {
-            'template': 'part2_mod_ids',
-            'format': lambda v: ', '.join([r['Id'] for r in v]),
-        }),
-        ('Endgame_ModsKeys', {
-            'template': 'endgame_mod_ids',
-            'format': lambda v: ', '.join([r['Id'] for r in v]),
-        }),
-        ('TagsKeys', {
-            'template': 'tags',
-            'format': lambda v: ', '.join([r['Id'] for r in v]),
-        }),
-        ('GrantedEffectsKeys', {
-            'template': 'skill_ids',
-            'format': lambda v: ', '.join([r['Id'] for r in v]),
-        }),
-        ('Name', {
-            'template': 'name',
-        }),
-        ('ObjectSize', {
-            'template': 'size',
-        }),
-        ('MinimumAttackDistance', {
-            'template': 'minimum_attack_distance',
-        }),
-        ('MaximumAttackDistance', {
-            'template': 'maximum_attack_distance',
-        }),
-        ('ModelSizeMultiplier', {
-            'template': 'model_size_multiplier',
-            'format': lambda v: v/100,
-        }),
-        ('ExperienceMultiplier', {
-            'template': 'experience_multiplier',
-            'format': lambda v: v/100,
-        }),
-        ('DamageMultiplier', {
-            'template': 'damage_multiplier',
-            'format': lambda v: v/100,
-        }),
-        ('LifeMultiplier', {
-            'template': 'health_multiplier',
-            'format': lambda v: v/100,
-        }),
-        ('CriticalStrikeChance', {
-            'template': 'critical_strike_chance',
-            'format': lambda v: v/100,
-        }),
-        ('AttackSpeed', {
-            'template': 'attack_speed',
-            'format': lambda v: v/1000,
-        }),
-    ))
+    _COPY_KEYS = OrderedDict(
+        (
+            ('Id', {'template': 'metadata_id',}),
+            (
+                'MonsterTypesKey',
+                {'template': 'monster_type_id', 'format': lambda v: v['Id'],},
+            ),
+            (
+                'ModsKeys',
+                {
+                    'template': 'mod_ids',
+                    'format': lambda v: ', '.join([r['Id'] for r in v]),
+                },
+            ),
+            (
+                'Part1_ModsKeys',
+                {
+                    'template': 'part1_mod_ids',
+                    'format': lambda v: ', '.join([r['Id'] for r in v]),
+                },
+            ),
+            (
+                'Part2_ModsKeys',
+                {
+                    'template': 'part2_mod_ids',
+                    'format': lambda v: ', '.join([r['Id'] for r in v]),
+                },
+            ),
+            (
+                'Endgame_ModsKeys',
+                {
+                    'template': 'endgame_mod_ids',
+                    'format': lambda v: ', '.join([r['Id'] for r in v]),
+                },
+            ),
+            (
+                'TagsKeys',
+                {
+                    'template': 'tags',
+                    'format': lambda v: ', '.join([r['Id'] for r in v]),
+                },
+            ),
+            (
+                'GrantedEffectsKeys',
+                {
+                    'template': 'skill_ids',
+                    'format': lambda v: ', '.join([r['Id'] for r in v]),
+                },
+            ),
+            ('Name', {'template': 'name',}),
+            ('ObjectSize', {'template': 'size',}),
+            ('MinimumAttackDistance', {'template': 'minimum_attack_distance',}),
+            ('MaximumAttackDistance', {'template': 'maximum_attack_distance',}),
+            (
+                'ModelSizeMultiplier',
+                {
+                    'template': 'model_size_multiplier',
+                    'format': lambda v: v / 100,
+                },
+            ),
+            (
+                'ExperienceMultiplier',
+                {
+                    'template': 'experience_multiplier',
+                    'format': lambda v: v / 100,
+                },
+            ),
+            (
+                'DamageMultiplier',
+                {'template': 'damage_multiplier', 'format': lambda v: v / 100,},
+            ),
+            (
+                'LifeMultiplier',
+                {'template': 'health_multiplier', 'format': lambda v: v / 100,},
+            ),
+            (
+                'CriticalStrikeChance',
+                {
+                    'template': 'critical_strike_chance',
+                    'format': lambda v: v / 100,
+                },
+            ),
+            (
+                'AttackSpeed',
+                {'template': 'attack_speed', 'format': lambda v: v / 1000,},
+            ),
+        )
+    )
 
     def by_rowid(self, parsed_args):
         return self.export(
             parsed_args,
-            self.rr['MonsterVarieties.dat'][parsed_args.start:parsed_args.end],
+            self.rr['MonsterVarieties.dat'][
+                parsed_args.start : parsed_args.end
+            ],
         )
 
     def by_id(self, parsed_args):
-        return self.export(parsed_args, self._area_column_index_filter(
-            column_id='Id', arg_list=parsed_args.monster_id
-        ))
+        return self.export(
+            parsed_args,
+            self._area_column_index_filter(
+                column_id='Id', arg_list=parsed_args.monster_id
+            ),
+        )
 
     def by_name(self, parsed_args):
-        return self.export(parsed_args, self._area_column_index_filter(
-            column_id='Name', arg_list=parsed_args.monster_name
-        ))
+        return self.export(
+            parsed_args,
+            self._area_column_index_filter(
+                column_id='Name', arg_list=parsed_args.monster_name
+            ),
+        )
 
     def by_filter(self, parsed_args):
         re_id = re.compile(parsed_args.re_id) if parsed_args.re_id else None
@@ -294,19 +297,16 @@ class MonsterParser(parser.BaseParser):
                 if value:
                     data[copy_data['template']] = value
 
-            cond = MonsterWikiCondition(
-                data=data,
-                cmdargs=parsed_args,
-            )
+            cond = MonsterWikiCondition(data=data, cmdargs=parsed_args,)
 
             r.add_result(
                 text=cond,
-                out_file='monster_%s.txt' % data['metadata_id'].replace(
-                    '/', '_'),
+                out_file='monster_%s.txt'
+                % data['metadata_id'].replace('/', '_'),
                 wiki_page=[
                     {
-                        'page': 'Monster:' +
-                                self._format_wiki_title(data['metadata_id']),
+                        'page': 'Monster:'
+                        + self._format_wiki_title(data['metadata_id']),
                         'condition': cond,
                     },
                 ],
@@ -314,6 +314,7 @@ class MonsterParser(parser.BaseParser):
             )
 
         return r
+
 
 # =============================================================================
 # Functions

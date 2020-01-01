@@ -94,23 +94,19 @@ class StatFilterFile(AbstractFileReadOnly):
         Dictionary mapping the active skill id (as key) to a the respective
         :class:`SkillEntry` instance as value.
     """
+
     _re_find_sections = re.compile(
         # header
         r'^(?:'
-            r'group (?P<group>[\w]+)|'
-            r'(?P<skill_id>[\w]+) "(?P<file>[\w/\.]+)"'
+        r'group (?P<group>[\w]+)|'
+        r'(?P<skill_id>[\w]+) "(?P<file>[\w/\.]+)"'
         r')[\r\n]+'
         # contents
-        r'^{'
-        r'(?P<contents>[^}]*)'
-        r'^}',
+        r'^{' r'(?P<contents>[^}]*)' r'^}',
         re.UNICODE | re.MULTILINE,
     )
 
-    _re_find_contents = re.compile(
-        r'[\w$]+',
-        re.UNICODE | re.MULTILINE,
-    )
+    _re_find_contents = re.compile(r'[\w$]+', re.UNICODE | re.MULTILINE,)
 
     groups = None
     skills = None

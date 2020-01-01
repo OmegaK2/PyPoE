@@ -42,6 +42,7 @@ __all__ = ['Record', 'TypedContainerMeta', 'TypedContainerMixin', 'TypedList']
 # Classes
 # =============================================================================
 
+
 class Record:
     def __str__(self):
         return repr(self)
@@ -83,13 +84,17 @@ class TypedContainerMeta(type):
             raise ValueError('ACCEPTED_TYPES must not be None.')
 
         if isinstance(attrs['ACCEPTED_TYPES'], type):
-            attrs['ACCEPTED_TYPES'] = (attrs['ACCEPTED_TYPES'], )
+            attrs['ACCEPTED_TYPES'] = (attrs['ACCEPTED_TYPES'],)
         elif isinstance(attrs['ACCEPTED_TYPES'], Iterable):
             for t in attrs['ACCEPTED_TYPES']:
                 if not isinstance(t, type):
-                    raise ValueError('Every type in ACCEPTED_TYPES Iterable must be a type')
+                    raise ValueError(
+                        'Every type in ACCEPTED_TYPES Iterable must be a type'
+                    )
         else:
-            raise ValueError('ACCEPTED_TYPES must be a type or Iterable of types')
+            raise ValueError(
+                'ACCEPTED_TYPES must be a type or Iterable of types'
+            )
 
         return type.__new__(cls, name, bases, attrs)
 
@@ -101,18 +106,19 @@ class TypedContainerMixin:
     def _is_cls(self, obj):
         if not isinstance(obj, self.__class__):
             raise TypeError(
-                '"%s" instance can only be added to another "%s" instance.' % (
-                    self.__class__.__name__,
-                    self.__class__.__name__,
-                )
+                '"%s" instance can only be added to another "%s" instance.'
+                % (self.__class__.__name__, self.__class__.__name__,)
             )
 
     def _is_acceptable(self, obj):
         if not isinstance(obj, self.ACCEPTED_TYPES):
-            raise TypeError('"%s" instance only accepts "%s" instances.' % (
-                self.__class__.__name__,
-                ', '.join([t.__name__ for t in self.ACCEPTED_TYPES]),
-            ))
+            raise TypeError(
+                '"%s" instance only accepts "%s" instances.'
+                % (
+                    self.__class__.__name__,
+                    ', '.join([t.__name__ for t in self.ACCEPTED_TYPES]),
+                )
+            )
 
 
 class TypedList(list, TypedContainerMixin):

@@ -66,6 +66,7 @@ class IntEnumValidator:
     """
     Class to create a dynamic validator for IntEnum classes
     """
+
     def __init__(self, enum, default=None):
         """
 
@@ -118,8 +119,8 @@ class IntEnumValidator:
             return self._enum(value)
         except ValueError:
             raise ValidateError(
-                '%s The value is not accepted by the enum.' %
-                self._enum.__name__
+                '%s The value is not accepted by the enum.'
+                % self._enum.__name__
             )
 
     def __call__(self, value):
@@ -148,12 +149,12 @@ class IntEnumValidator:
                 #
                 # This will get rid of the class portion for casting if present
                 if value.startswith(self._enum.__name__ + '.'):
-                    value = value[len(self._enum.__name__) + 1:]
+                    value = value[len(self._enum.__name__) + 1 :]
                 try:
                     value = getattr(self._enum, value)
                 except AttributeError:
                     raise ValidateError(
-                        'The value is neither an integer or a valid %s ' \
+                        'The value is neither an integer or a valid %s '
                         'attribute' % self._enum.__name__
                     )
             else:
@@ -245,6 +246,7 @@ def is_directory(value, *args, exists=True, allow_empty=False, **kwargs):
         if not os.path.isdir(value):
             raise ValidateError('"%s" is not a directory.' % value)
         return value
+
 
 # =============================================================================
 # Globals

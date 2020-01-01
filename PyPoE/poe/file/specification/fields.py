@@ -226,6 +226,7 @@ class Specification(dict):
     """
     Specification file
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -250,11 +251,12 @@ class Specification(dict):
                         raise SpecificationError(
                             SpecificationError.ERRORS.INVALID_FOREIGN_KEY_FILE,
                             '%(dat_file)s->%(field)s->key: %(other)s is not in '
-                            'specification' % {
+                            'specification'
+                            % {
                                 'dat_file': file_name,
                                 'field': field_name,
                                 'other': field.key,
-                            }
+                            },
                         )
 
                     other_key = field['key_id']
@@ -262,12 +264,13 @@ class Specification(dict):
                         raise SpecificationError(
                             SpecificationError.ERRORS.INVALID_FOREIGN_KEY_ID,
                             '%(dat_file)s->%(field)s->key_id: %(other)s->'
-                            '%(other_key)s not in specification' % {
+                            '%(other_key)s not in specification'
+                            % {
                                 'dat_file': file_name,
                                 'field': field_name,
                                 'other': field.key,
                                 'other_key': other_key,
-                            }
+                            },
                         )
 
                 if field.enum:
@@ -275,10 +278,8 @@ class Specification(dict):
                         raise SpecificationError(
                             SpecificationError.ERRORS.INVALID_ARGUMENT_COMBINATION,
                             '%(dat_file)s->%(field)s->enum: Either key or enum can '
-                            'be specified but never both.' % {
-                                'dat_file': file_name,
-                                'field': field_name,
-                            }
+                            'be specified but never both.'
+                            % {'dat_file': file_name, 'field': field_name,},
                         )
                     if not hasattr(constants, field.enum):
                         raise SpecificationError(
@@ -289,7 +290,7 @@ class Specification(dict):
                                 'dat_file': file_name,
                                 'field': field_name,
                                 'enum': field.enum,
-                            }
+                            },
                         )
 
             for field_name, virtual_field in file.virtual_fields.items():
@@ -298,48 +299,48 @@ class Specification(dict):
                     raise SpecificationError(
                         SpecificationError.ERRORS.VIRTUAL_KEY_DUPLICATE,
                         '%(dat_file)s->virtual_fields->%(field)s use the same name '
-                        'as a key specified in %(dat_file)s->fields' %
-                        {
-                            'dat_file': file_name,
-                            'field': field_name,
-                        }
+                        'as a key specified in %(dat_file)s->fields'
+                        % {'dat_file': file_name, 'field': field_name,},
                     )
 
                 if not virtual_field.fields:
                     raise SpecificationError(
                         SpecificationError.ERRORS.VIRTUAL_KEY_EMPTY,
-                        '%(dat_file)s->virtual_fields->%(field)s->fields is empty' %
-                        {
-                            'dat_file': file_name,
-                            'field': field_name,
-                        }
+                        '%(dat_file)s->virtual_fields->%(field)s->fields is empty'
+                        % {'dat_file': file_name, 'field': field_name,},
                     )
 
                 for other_field in virtual_field.fields:
-                    if other_field not in file.fields and \
-                                    other_field not in file.virtual_fields:
+                    if (
+                        other_field not in file.fields
+                        and other_field not in file.virtual_fields
+                    ):
                         raise SpecificationError(
                             SpecificationError.ERRORS.VIRTUAL_KEY_INVALID_KEY,
                             '%(dat_file)s->virtual_fields->%(field)s->fields: '
-                            'Field "%(other_field)s" does not exist' %
-                            {
+                            'Field "%(other_field)s" does not exist'
+                            % {
                                 'dat_file': file_name,
                                 'field': field_name,
                                 'other_field': other_field,
-                            }
+                            },
                         )
-                    if virtual_field.zip and other_field in file.fields and \
-                            not file.fields[other_field].type.startswith(
-                                'ref|list'):
+                    if (
+                        virtual_field.zip
+                        and other_field in file.fields
+                        and not file.fields[other_field].type.startswith(
+                            'ref|list'
+                        )
+                    ):
                         raise SpecificationError(
                             SpecificationError.ERRORS.VIRTUAL_KEY_INVALID_DATA_TYPE,
                             '%(dat_file)s->virtual_fields->%(field)s->zip: The zip '
-                            'option requires "%(other_field)s" to be a list' %
-                            {
+                            'option requires "%(other_field)s" to be a list'
+                            % {
                                 'dat_file': file_name,
                                 'field': field_name,
                                 'other_field': other_field,
-                            }
+                            },
                         )
 
     def as_dict(self):
@@ -349,9 +350,7 @@ class Specification(dict):
         dict
             Returns itself as dictionary without any class references
         """
-        return {
-            k: v.as_dict() for k, v in self.items()
-        }
+        return {k: v.as_dict() for k, v in self.items()}
 
 
 class File:
@@ -456,7 +455,9 @@ class File:
         for k in self.__slots__:
             v = getattr(self, k)
             if k in ('fields', 'virtual_fields'):
-                out[k] = OrderedDict([(ok, ov.as_dict()) for ok, ov in v.items()])
+                out[k] = OrderedDict(
+                    [(ok, ov.as_dict()) for ok, ov in v.items()]
+                )
             else:
                 out[k] = v
         return out
@@ -513,14 +514,36 @@ class Field(_Common, ReprMixin):
             utf16_le encoded string
 
     """
+
     __slots__ = [
-        'type', 'key', 'key_id', 'key_offset', 'enum', 'unique', 'file_path',
-        'file_ext', 'display', 'display_type', 'description'
+        'type',
+        'key',
+        'key_id',
+        'key_offset',
+        'enum',
+        'unique',
+        'file_path',
+        'file_ext',
+        'display',
+        'display_type',
+        'description',
     ]
 
-    def __init__(self, type, key=None, key_id=None, key_offset=0, enum=None,
-                 unique=False, file_path=False, file_ext=None, display=None,
-                 display_type=None, description=None, name=None):
+    def __init__(
+        self,
+        type,
+        key=None,
+        key_id=None,
+        key_offset=0,
+        enum=None,
+        unique=False,
+        file_path=False,
+        file_ext=None,
+        display=None,
+        display_type=None,
+        description=None,
+        name=None,
+    ):
         """
         All parameters except type are optional.
 
@@ -594,6 +617,7 @@ class VirtualField(_Common):
     Virtual fields are based off other Field instances and provide additional
     convenience options such as grouping certain fields together.
     """
+
     __slots__ = ['fields', 'zip']
 
     def __init__(self, fields, zip=False):

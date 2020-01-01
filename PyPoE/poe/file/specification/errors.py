@@ -100,6 +100,7 @@ class SpecificationError(ValueError):
             The row size in the specification doesn't match the real data row
             size
         """
+
         INVALID_FOREIGN_KEY_FILE = 1000
         INVALID_FOREIGN_KEY_ID = 1001
         INVALID_ARGUMENT_COMBINATION = 1002

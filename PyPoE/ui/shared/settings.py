@@ -62,9 +62,7 @@ class SettingsWindow(QDialog):
         super().__init__(*args, **kwargs)
 
         self.action_open = QAction(self, text=self.tr('Settings'))
-        self.action_open.setStatusTip(self.tr(
-            'Opens the settings window'
-        ))
+        self.action_open.setStatusTip(self.tr('Opens the settings window'))
         self.action_open.triggered.connect(self._action_open)
 
         self.setWindowTitle(self.tr('Settings'))
@@ -103,11 +101,9 @@ class SettingsWindow(QDialog):
         self.current_frame = self.sections[index.row()]['frame']
 
     def add_config_section(self, tr, qframe, order=0):
-        self.sections.append({
-            'text': tr,
-            'frame': qframe,
-            'order': order,
-        })
+        self.sections.append(
+            {'text': tr, 'frame': qframe, 'order': order,}
+        )
         self.changed = True
 
     def _action_open(self):
@@ -151,9 +147,7 @@ class BaseSetting:
         self.value = self.get()
 
     def setting_path(self):
-        return '/'.join(
-            (self.parent.KEY, self.KEY)
-        )
+        return '/'.join((self.parent.KEY, self.KEY))
 
     def _get_cast(self, value):
         raise NotImplementedError
@@ -174,8 +168,7 @@ class BaseSetting:
             value = self.value
 
         self.settings.setValue(
-            self.setting_path(),
-            self._set_cast(value),
+            self.setting_path(), self._set_cast(value),
         )
 
 
@@ -224,6 +217,8 @@ class ComboBoxSetting(BaseSetting):
     def _update(self, value):
         self.value = self.data[self.combobox.itemText(value)]
         self.set(self.value)
+
+
 # =============================================================================
 # Functions
 # =============================================================================

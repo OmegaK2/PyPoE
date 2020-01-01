@@ -64,7 +64,7 @@ class FileDataManager:
     # List of file-types as actually found in the ggpk
     DEFAULT_HANDLERS = [
         ('.act', TEXT_DATA_HANDLER_UTF16_LE),  # GGG Format? Animation Mapping
-        ('.ais', TEXT_DATA_HANDLER_UTF16_LE),   # GGG Format? Monster/NPC AI
+        ('.ais', TEXT_DATA_HANDLER_UTF16_LE),  # GGG Format? Monster/NPC AI
         # GGG Format? Maybe something like animation data?
         # Those files are named rig.amd and accompanied by a rig.ast
         # Format is something like:
@@ -80,13 +80,22 @@ class FileDataManager:
         #       <int> <int> <int>          # pitch/yaw/roll?
         #
         ('.amd', TEXT_DATA_HANDLER_UTF16_LE),
-        ('.ao', TEXT_DATA_HANDLER_UTF16_LE),  # GGG Format? Animation Controller?
-        ('.aoc', TEXT_DATA_HANDLER_UTF16_LE),  # GGG Format? Animation Controller for client?
+        (
+            '.ao',
+            TEXT_DATA_HANDLER_UTF16_LE,
+        ),  # GGG Format? Animation Controller?
+        (
+            '.aoc',
+            TEXT_DATA_HANDLER_UTF16_LE,
+        ),  # GGG Format? Animation Controller for client?
         ('.arm', TEXT_DATA_HANDLER_UTF16_LE),  # GGG Format? Terrain.
         # GGG Format? Guessing the actual animation in some kind of format
         # Usually rig.ast and accompanied by rig.amd files
         ('.ast', None),
-        ('.atlas', TEXT_DATA_HANDLER_UTF16_LE),  # GGG Format? Decals on materials
+        (
+            '.atlas',
+            TEXT_DATA_HANDLER_UTF16_LE,
+        ),  # GGG Format? Decals on materials
         ('.bat', TEXT_DATA_HANDLER_UTF8),  # Windows Batch File/Script
         ('.cfg', TEXT_DATA_HANDLER_UTF8),  # Config File
         ('.cht', TEXT_DATA_HANDLER_UTF16_LE),  # GGG Format? Terrain.
@@ -102,11 +111,17 @@ class FileDataManager:
         # GGG Format? Texture reference map?
         # Starts with 3 or 4 entries, following by a list of .fmt + float/int
         ('.dlp', TEXT_DATA_HANDLER_UTF16_LE),
-        ('.ecf', TEXT_DATA_HANDLER_UTF16_LE),   # GGG Format? Terrain
-        ('.env', TEXT_DATA_HANDLER_UTF16_LE),  # GGG Format? KV-like environment thing
+        ('.ecf', TEXT_DATA_HANDLER_UTF16_LE),  # GGG Format? Terrain
+        (
+            '.env',
+            TEXT_DATA_HANDLER_UTF16_LE,
+        ),  # GGG Format? KV-like environment thing
         ('.epk', TEXT_DATA_HANDLER_UTF16_LE),  # GGG Format? Animation something
         ('.et', TEXT_DATA_HANDLER_UTF16_LE),  # GGG Format? Terrain.
-        ('.ffx', TEXT_DATA_HANDLER_UTF16_LE),  # Some kind of shader not compiled
+        (
+            '.ffx',
+            TEXT_DATA_HANDLER_UTF16_LE,
+        ),  # Some kind of shader not compiled
         ('.fmt', None),  # GGG Format? Model-related. Data/No-text.
         ('.fx', None),  # Direct3D File
         ('.gft', TEXT_DATA_HANDLER_UTF16_LE),  # GGG Format? Terrain.
@@ -123,7 +138,10 @@ class FileDataManager:
         ('.mb', None),
         ('.mel', TEXT_DATA_HANDLER_UTF8),  # Maya Embeeded Language
         ('.mtd', TEXT_DATA_HANDLER_UTF16_LE),  # GGG Format? Terrain.
-        ('.mtp', TEXT_DATA_HANDLER_UTF16_LE),  # GGG Format? MiniMap stuff TODO: semi-broken display
+        (
+            '.mtp',
+            TEXT_DATA_HANDLER_UTF16_LE,
+        ),  # GGG Format? MiniMap stuff TODO: semi-broken display
         ('.ogg', None),  # TODO: OGG Music Format
         ('.ot', TEXT_DATA_HANDLER_UTF16_LE),  # GGG Format? Metadata
         ('.otc', TEXT_DATA_HANDLER_UTF16_LE),  # GGG Format? Metadata Client
@@ -175,13 +193,19 @@ class FileDataManager:
         # GGG Format? Some kind of effect
         # First entry is number of {}-scoped entries
         ('.trl', TEXT_DATA_HANDLER_UTF16_LE),
-        ('.tsi', TEXT_DATA_HANDLER_UTF16_LE),  # GGG Format? Terrain. Some kind of tileset restriction/controller
+        (
+            '.tsi',
+            TEXT_DATA_HANDLER_UTF16_LE,
+        ),  # GGG Format? Terrain. Some kind of tileset restriction/controller
         # GGG Format? Usually/always tiles.tst
         # Possibly some kind of tileset pieces list
         ('.tst', TEXT_DATA_HANDLER_UTF16_LE),
         ('.ttf', TEXT_DATA_HANDLER_UTF16_LE),  # True Type Font # TODO?
         ('.txt', TEXT_DATA_HANDLER_UTF16_LE),  # Text File
-        ('.ui', TEXT_DATA_HANDLER_UTF16_LE),  # GGG Format? UI definitions like colours
+        (
+            '.ui',
+            TEXT_DATA_HANDLER_UTF16_LE,
+        ),  # GGG Format? UI definitions like colours
         ('.xls', None),  # Microsoft Excel
         ('.xml', None),  # XML Files
     ]
@@ -189,9 +213,7 @@ class FileDataManager:
     def __init__(self, parent, load_default=True):
         self._parent = parent
         self.handlers = {
-            FileDataManager.EXTENSION_ANY: {
-                FileDataManager.FILE_ANY: None,
-            }
+            FileDataManager.EXTENSION_ANY: {FileDataManager.FILE_ANY: None,}
         }
 
         if load_default:
@@ -241,18 +263,25 @@ class FileDataManager:
 
     def register(self, obj, extension=EXTENSION_ANY, filenames=FILE_ANY):
         if not isinstance(obj, FileDataHandler):
-            raise TypeError('obj must be a instance of FileDataHandler, got %s' % type(obj))
+            raise TypeError(
+                'obj must be a instance of FileDataHandler, got %s' % type(obj)
+            )
 
         # TODO convert into negative and remove the empty pass
-        if (isinstance(extension, str) or isinstance(extension, int) and
-                extension == FileDataManager.EXTENSION_ANY):
+        if (
+            isinstance(extension, str)
+            or isinstance(extension, int)
+            and extension == FileDataManager.EXTENSION_ANY
+        ):
             pass
         else:
             raise TypeError('extension must be a string or EXTENSION_ANY')
 
-        if (isinstance(filenames, collections.abc.Iterable) or
-                isinstance(filenames, int) and
-                filenames == FileDataManager.FILE_ANY):
+        if (
+            isinstance(filenames, collections.abc.Iterable)
+            or isinstance(filenames, int)
+            and filenames == FileDataManager.FILE_ANY
+        ):
             pass
         else:
             raise TypeError('filenames must be a iterable or FILE_ANY')

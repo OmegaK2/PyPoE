@@ -72,8 +72,7 @@ from PyPoE.shared.mixins import ReprMixin
 
 __all__ = [
     'ParserError',
-    'ParserWarning'
-    'AbstractFileReadOnly',
+    'ParserWarning' 'AbstractFileReadOnly',
     'AbstractFile',
 ]
 
@@ -87,6 +86,7 @@ class ParserError(Exception):
     This exception or subclasses of this exception are raised when general
     errors related to the parsing of files occur, such as malformed files.
     """
+
     pass
 
 
@@ -96,6 +96,7 @@ class ParserWarning(UserWarning):
     parsing process there are cases where issues are not severe enough to
     entirely fail the passing, but could pose serious problems.
     """
+
     pass
 
 
@@ -111,6 +112,7 @@ class AbstractFileReadOnly(ReprMixin):
     It provides common methods as well as methods that implementing classes
     should override.
     """
+
     def _read(self, buffer, *args, **kwargs):
         """
         Parameters
@@ -155,7 +157,9 @@ class AbstractFileReadOnly(ReprMixin):
             with open(file_path_or_raw, 'rb') as f:
                 return function(*args, buffer=f, **kwargs)
         else:
-            raise TypeError('file_path_or_raw must be a file path or bytes object')
+            raise TypeError(
+                'file_path_or_raw must be a file path or bytes object'
+            )
 
     def read(self, file_path_or_raw, *args, **kwargs):
         """
@@ -189,7 +193,9 @@ class AbstractFileReadOnly(ReprMixin):
         TypeError
             if file_path_or_raw has an invalid type
         """
-        return self.get_read_buffer(file_path_or_raw, self._read, *args, **kwargs)
+        return self.get_read_buffer(
+            file_path_or_raw, self._read, *args, **kwargs
+        )
 
 
 class AbstractFile(AbstractFileReadOnly):
@@ -244,7 +250,9 @@ class AbstractFile(AbstractFileReadOnly):
             with open(file_path_or_raw, 'wb') as f:
                 return function(*args, buffer=f, **kwargs)
         else:
-            raise TypeError('file_path_or_raw must be a file path or bytes object')
+            raise TypeError(
+                'file_path_or_raw must be a file path or bytes object'
+            )
 
     def write(self, file_path_or_raw, *args, **kwargs):
         """
@@ -277,4 +285,6 @@ class AbstractFile(AbstractFileReadOnly):
         TypeError
             if file_path_or_raw has an invalid type
         """
-        return self.get_write_buffer(file_path_or_raw, self._write, *args, **kwargs)
+        return self.get_write_buffer(
+            file_path_or_raw, self._write, *args, **kwargs
+        )

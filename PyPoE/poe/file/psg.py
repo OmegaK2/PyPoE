@@ -95,9 +95,7 @@ class GraphGroup(ReprMixin):
 
     __slots__ = ['x', 'y', 'id', 'nodes']
 
-    _REPR_EXTRA_ATTRIBUTES = OrderedDict((
-        ('nodes', None),
-    ))
+    _REPR_EXTRA_ATTRIBUTES = OrderedDict((('nodes', None),))
 
     def __init__(self, x, y, id):
         """
@@ -208,13 +206,9 @@ class GraphGroupNode(ReprMixin):
         dat_reader:  DatReader
             :class:`PyPoE.poe.file.dat.DatReader` instance
         """
-        self.passive_skill = dat_reader.index[PSG_COL][
-            self.passive_skill
-        ]
+        self.passive_skill = dat_reader.index[PSG_COL][self.passive_skill]
         for i, connection in enumerate(self.connections):
-            self.connections[i] = dat_reader.index[PSG_COL][
-                connection
-            ]
+            self.connections[i] = dat_reader.index[PSG_COL][connection]
 
 
 class PSGFile(AbstractFileReadOnly):
@@ -240,7 +234,7 @@ class PSGFile(AbstractFileReadOnly):
         self.groups = []
 
         if isinstance(passive_skills_dat_file, DatFile):
-            #TODO check whether is read and raise exception
+            # TODO check whether is read and raise exception
             self._passive_skills = passive_skills_dat_file.reader
         elif isinstance(passive_skills_dat_file, RelationalReader):
             self._passive_skills = passive_skills_dat_file.get_file(
@@ -269,17 +263,17 @@ class PSGFile(AbstractFileReadOnly):
         offset += 1
 
         unknown = struct.unpack_from(
-            '<' + 'B'*unknown_length, data, offset=offset
+            '<' + 'B' * unknown_length, data, offset=offset
         )
-        offset += 1*unknown_length
+        offset += 1 * unknown_length
 
         root_length = struct.unpack_from('<I', data, offset=offset)[0]
         offset += 4
 
-        self.root_passives = list(struct.unpack_from(
-            '<' + 'I'*root_length, data, offset=offset
-        ))
-        offset += 4*root_length
+        self.root_passives = list(
+            struct.unpack_from('<' + 'I' * root_length, data, offset=offset)
+        )
+        offset += 4 * root_length
 
         group_length = struct.unpack_from('<I', data, offset=offset)[0]
         offset += 4
@@ -289,20 +283,23 @@ class PSGFile(AbstractFileReadOnly):
             x, y, passive_length = struct.unpack_from(
                 '<ffI', data, offset=offset
             )
-            offset += 4*2+4
+            offset += 4 * 2 + 4
 
             group = GraphGroup(x=x, y=y, id=len(self.groups))
 
             for j in range(0, passive_length):
-                rowid, radius, position, connections_length = struct.unpack_from(
-                    '<IIII', data, offset=offset
-                )
-                offset += 4*4
+                (
+                    rowid,
+                    radius,
+                    position,
+                    connections_length,
+                ) = struct.unpack_from('<IIII', data, offset=offset)
+                offset += 4 * 4
 
                 connections = struct.unpack_from(
-                    '<' + 'I'*connections_length, data, offset=offset
+                    '<' + 'I' * connections_length, data, offset=offset
                 )
-                offset += 4*connections_length
+                offset += 4 * connections_length
 
                 group.nodes.append(
                     GraphGroupNode(
@@ -319,7 +316,9 @@ class PSGFile(AbstractFileReadOnly):
         # Done parsing, finalize the connections if the dat file is specified
         if self._passive_skills is not None:
             for i, psg_id in enumerate(self.root_passives):
-                self.root_passives[i] = self._passive_skills.index[PSG_COL][psg_id]
+                self.root_passives[i] = self._passive_skills.index[PSG_COL][
+                    psg_id
+                ]
 
             for group in self.groups:
                 group._update_connections(self._passive_skills)

@@ -82,8 +82,9 @@ class GGPKOpenAction(QAction):
             Returns GGPKThread if successful, none otherwise
         """
         # TODO replace with config / last path
-        paths = PoEPath(version=self._get_version(),
-                        distributor=DISTRIBUTOR.GGG).get_installation_paths()
+        paths = PoEPath(
+            version=self._get_version(), distributor=DISTRIBUTOR.GGG
+        ).get_installation_paths()
 
         # Use the first found path
         if paths:
@@ -94,10 +95,7 @@ class GGPKOpenAction(QAction):
         p = self.parent()
 
         file = QFileDialog.getOpenFileName(
-            p,
-            self.tr("Open GGPK"),
-            dir,
-            self.tr("GGPK Files (*.ggpk)")
+            p, self.tr("Open GGPK"), dir, self.tr("GGPK Files (*.ggpk)")
         )
         # User Aborted
         if not file[0]:
@@ -133,7 +131,7 @@ class GGPKThread(QThread):
                 self._size = kwargs['ggpkfile'].seek(0, os.SEEK_END)
                 kwargs['ggpkfile'].seek(0, os.SEEK_SET)
             else:
-                #kwargs['offset'])
+                # kwargs['offset'])
 
                 self.progress_bar.sig_progress.emit(
                     int(kwargs['offset'] / self._size * 100)
@@ -147,7 +145,7 @@ class GGPKThread(QThread):
         p = self.parent().parent()
 
         p._write_log(title)
-        #self.progress_bar = GGPKProgressDialog(title, max, *args, **kwargs)
+        # self.progress_bar = GGPKProgressDialog(title, max, *args, **kwargs)
         self.progress_bar.setLabelText(title)
         self.progress_bar.setWindowTitle(title)
         self.progress_bar.setMaximum(max)
@@ -157,7 +155,9 @@ class GGPKThread(QThread):
         fm = self.parent()
         p = fm.parent()
 
-        p.sig_log_message.emit(self.tr('Open GGPK file "%(file)s".') % {'file': self._file_path})
+        p.sig_log_message.emit(
+            self.tr('Open GGPK file "%(file)s".') % {'file': self._file_path}
+        )
 
         self.sig_update_progress.emit(self.tr('Reading GGPK records...'), 100)
         ggpk_file = GGPKFile()
@@ -185,10 +185,11 @@ class GGPKProgressDialog(QProgressDialog):
         self.setMaximum(maximum)
         self.setCancelButton(None)
         self.setMinimumWidth(250)
-        #self.setMinimumSize(300, 50)
+        # self.setMinimumSize(300, 50)
         self.show()
 
         self.sig_progress.connect(self.setValue)
+
 
 # =============================================================================
 # Functions

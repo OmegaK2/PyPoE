@@ -81,64 +81,38 @@ __all__ = [
     'STAT_INTERPOLATION_TYPES',
     'VERSION',
     'WORDLISTS',
-
     'MOD_MAX_STATS',
     'MOD_STATS_RANGE',
     'MOD_SELL_PRICES',
-
     'PASSIVE_TYPES',
 ]
 
 MOD_MAX_STATS = 6
-MOD_STATS_RANGE = range(1, MOD_MAX_STATS+1)
+MOD_STATS_RANGE = range(1, MOD_MAX_STATS + 1)
 
 # Apparently GGG doesnt want us to know this, so they removed it in 3.5.0
 MOD_SELL_PRICES = {
-    'Low': {
-        'Metadata/Items/Currency/CurrencyRerollMagicShard': 1,
-    },
-    'Medium': {
-        'Metadata/Items/Currency/CurrencyRerollMagicShard': 3,
-    },
-    'High': {
-        'Metadata/Items/Currency/CurrencyRerollMagicShard': 5,
-    },
-    'VeryHigh': {
-        'Metadata/Items/Currency/CurrencyRerollMagicShard': 7,
-    },
-    'Special': {
-        'Metadata/Items/Currency/CurrencyUpgradeToRareShard': 1,
-    },
-    'UniqueLow': {
-        'Metadata/Items/Currency/CurrencyUpgradeToRareShard': 2,
-    },
-    'UniqueMedium': {
-        'Metadata/Items/Currency/CurrencyUpgradeToRareShard': 4,
-    },
-    'UniqueHigh': {
-        'Metadata/Items/Currency/CurrencyUpgradeToRareShard': 6,
-    },
+    'Low': {'Metadata/Items/Currency/CurrencyRerollMagicShard': 1,},
+    'Medium': {'Metadata/Items/Currency/CurrencyRerollMagicShard': 3,},
+    'High': {'Metadata/Items/Currency/CurrencyRerollMagicShard': 5,},
+    'VeryHigh': {'Metadata/Items/Currency/CurrencyRerollMagicShard': 7,},
+    'Special': {'Metadata/Items/Currency/CurrencyUpgradeToRareShard': 1,},
+    'UniqueLow': {'Metadata/Items/Currency/CurrencyUpgradeToRareShard': 2,},
+    'UniqueMedium': {'Metadata/Items/Currency/CurrencyUpgradeToRareShard': 4,},
+    'UniqueHigh': {'Metadata/Items/Currency/CurrencyUpgradeToRareShard': 6,},
     'UniqueVeryHigh': {
         'Metadata/Items/Currency/CurrencyUpgradeToRareShard': 8,
     },
-    'Kingmaker': {
-        'Metadata/Items/Currency/CurrencyUpgradeMagicToRare': 1,
-    },
-    'BreachFire': {
-        'Metadata/Items/Currency/CurrencyBreachFireShard': 3,
-    },
-    'BreachCold': {
-        'Metadata/Items/Currency/CurrencyBreachColdShard': 3,
-    },
+    'Kingmaker': {'Metadata/Items/Currency/CurrencyUpgradeMagicToRare': 1,},
+    'BreachFire': {'Metadata/Items/Currency/CurrencyBreachFireShard': 3,},
+    'BreachCold': {'Metadata/Items/Currency/CurrencyBreachColdShard': 3,},
     'BreachLightning': {
         'Metadata/Items/Currency/CurrencyBreachLightningShard': 3,
     },
     'BreachPhysical': {
         'Metadata/Items/Currency/CurrencyBreachPhysicalShard': 3,
     },
-    'BreachChaos': {
-        'Metadata/Items/Currency/CurrencyBreachChaosShard': 3,
-    },
+    'BreachChaos': {'Metadata/Items/Currency/CurrencyBreachChaosShard': 3,},
     'BreachFireUnleashed': {
         'Metadata/Items/Currency/CurrencyBreachFireShard': 10,
     },
@@ -154,9 +128,7 @@ MOD_SELL_PRICES = {
     'BreashChaosUnleashed': {
         'Metadata/Items/Currency/CurrencyBreachChaosShard': 10,
     },
-    'DelveFossilSellPrice1': {
-        'Metadata/Items/Currency/CurrencyRerollRare': 3,
-    },
+    'DelveFossilSellPrice1': {'Metadata/Items/Currency/CurrencyRerollRare': 3,},
     'DelveFossilSellPrice2': {
         'Metadata/Items/Currency/CurrencyAddModToRare': 1,
     },
@@ -203,21 +175,11 @@ MOD_SELL_PRICES = {
     'DelveFossilSellPrice9': {
         'Metadata/Items/Currency/CurrencyCorruptMonolith': 5,
     },
-    'VaalLegionJewel': {
-
-    },
-    'KaruiLegionJewel': {
-
-    },
-    'MarakethLegionJewel': {
-
-    },
-    'TemplarLegionJewel': {
-
-    },
-    'EternalEmpireLegionJewel': {
-
-    },
+    'VaalLegionJewel': {},
+    'KaruiLegionJewel': {},
+    'MarakethLegionJewel': {},
+    'TemplarLegionJewel': {},
+    'EternalEmpireLegionJewel': {},
 }
 
 # =============================================================================
@@ -307,6 +269,7 @@ class ACTIVE_SKILL_TYPES(IntEnumOverride):
     BUFF
         Buff that applies to the entity itself
     """
+
     ATTACK = 1
     SPELL = 2
     PROJECTILE = 3
@@ -404,6 +367,7 @@ class BETRAYAL_UPGRADE_SLOTS(IntEnumOverride):
     None
         Unused
     """
+
     HELMET = 0
     BOOTS = 1
     GLOVES = 2
@@ -440,6 +404,7 @@ class VERSION(IntEnumOverride):
         preferred and default selection.
 
     """
+
     STABLE = 1
     BETA = 2
     ALPHA = 4
@@ -474,6 +439,7 @@ class DISTRIBUTOR(IntEnumOverride):
     DEFAULT
         Default selection for clients, i.e. all.
     """
+
     GGG = 1
     STEAM = 2
     GARENA = 4
@@ -498,10 +464,11 @@ class SHOP_PACKAGE_PLATFORM(IntEnumOverride):
     PS
         Sony Playstation
     """
+
     PC = 1
     XBOX = 2
     PS = 3
-    
+
     PLAYSTATION = PS
 
 
@@ -532,6 +499,7 @@ class SOCKET_COLOUR(Enum):
         :attr:`SOCKET_COLOUR.BLUE`) the id attribute denotes the integer
         that is sometimes used in the game files to represent the colour
     """
+
     # IDs are from CharacterStarItems.dat->Sockets and game testing
     R = ('R', 1)
     G = ('G', 2)
@@ -585,6 +553,7 @@ class RARITY(Enum, metaclass=IntEnumMetaOverride):
         the colour attribute represents the textual representation of the
         associated colour
     """
+
     NORMAL = (1, 'Normal', 'normal', 'white')
     MAGIC = (2, 'Magic', 'magic', 'blue')
     RARE = (3, 'Rare', 'rare', 'yellow')
@@ -605,6 +574,7 @@ class MAP_FRAGMENT_FAMILIES(IntEnumOverride):
     """
     Representation of map fragment families (MapFragmentFamilies.dat)
     """
+
     BESTIARY = 0
     BREACH = 1
     CARTOGRAPHY = 2
@@ -670,6 +640,7 @@ class MOD_DOMAIN(IntEnumOverride):
     SYNTHESIS_BONUS
         Synthesis modifiers that grant a bonus to other modifiers
     """
+
     ITEM = 1
     FLASK = 2
     MONSTER = 3
@@ -744,6 +715,7 @@ class MOD_GENERATION_TYPE(IntEnumOverride):
     BLIGHT
         TODO
     """
+
     PREFIX = 1
     SUFFIX = 2
     UNIQUE = 3
@@ -793,6 +765,7 @@ class WORDLISTS(IntEnumOverride):
     ESSENCE
         Name of an essence
     """
+
     ITEM_PREFIX = 1
     ITEM_SUFFIX = 2
     MONSTER_PREFIX = 3
@@ -808,6 +781,7 @@ class DELVE_UPGRADE_TYPE(IntEnumOverride):
     """
     Representation of delve upgrade type ( DelveUpgradeType.dat )
     """
+
     SULPHITE_CAPACITY = 0
     FLARE_CAPACITY = 1
     DYNAMITE_CAPACITY = 2
@@ -852,6 +826,7 @@ class STAT_INTERPOLATION_TYPES(IntEnumOverride):
                 (1+GrantedEffects['IncrementalEffectiveness') ** (MonsterLevel - 1)
 
     """
+
     CONSTANT = 1
     LINEAR = 2
     EXPONENTIAL = 3
@@ -862,6 +837,7 @@ class PASSIVE_TYPES(IntEnumOverride):
     REGULAR2 = 2
     NOTABLE = 3
     KEYSTONE = 4
+
 
 # =============================================================================
 # Functions

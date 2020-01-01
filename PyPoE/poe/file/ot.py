@@ -110,16 +110,19 @@ class OTFile(AbstractKeyValueFile):
     Representation of a .ot file.
     """
 
-    SECTIONS = dict((s.NAME, s) for s in [
-        ActionKeyValueSection,
-        AnimatedKeyValueSection,
-        BaseKeyValueSection,
-        ModsKeyValueSection,
-        PathfindingKeyValueSection,
-        PositionedKeyValueSection,
-        SocketsKeyValueSection,
-        StatsKeyValueSection,
-    ])
+    SECTIONS = dict(
+        (s.NAME, s)
+        for s in [
+            ActionKeyValueSection,
+            AnimatedKeyValueSection,
+            BaseKeyValueSection,
+            ModsKeyValueSection,
+            PathfindingKeyValueSection,
+            PositionedKeyValueSection,
+            SocketsKeyValueSection,
+            StatsKeyValueSection,
+        ]
+    )
 
     EXTENSION = '.ot'
 
@@ -132,4 +135,5 @@ class OTFileCache(AbstractKeyValueFileCache):
     """
     Cache for OTFile instances.
     """
+
     FILE_TYPE = OTFile

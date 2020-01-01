@@ -77,8 +77,10 @@ class WikiHandler(BaseHandler):
         if value == old_value:
             return
         config.set_setup_variable('temp_dir', 'performed', False)
-        console('Setup needs to be performed due to changes to "%s"' % key,
-                msg=Msg.warning)
+        console(
+            'Setup needs to be performed due to changes to "%s"' % key,
+            msg=Msg.warning,
+        )
 
     def _setup(self, args):
         """
@@ -105,4 +107,3 @@ class WikiHandler(BaseHandler):
         config.set_setup_variable('temp_dir', 'hash', get_content_ggpk_hash())
 
         console('Done.')
-

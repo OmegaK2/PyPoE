@@ -45,6 +45,7 @@ __all__ = []
 # Classes
 # =============================================================================
 
+
 class InheritedDocStringsMeta(type):
     def __new__(cls, name, args, attrs):
         if not ('__doc__' in attrs and attrs['__doc__']):
@@ -52,7 +53,7 @@ class InheritedDocStringsMeta(type):
                 docstring = mro.__doc__
                 if docstring is not None:
                     cls.__doc__ = docstring
-                    #attrs['__doc__'] = docstring
+                    # attrs['__doc__'] = docstring
                     break
         for attr, attribute in attrs.items():
             if attribute.__doc__:
@@ -67,6 +68,7 @@ class InheritedDocStringsMeta(type):
                     break
 
         return type.__new__(cls, name, args, attrs)
+
 
 # =============================================================================
 # Functions

@@ -79,6 +79,7 @@ class CoordinateRecord(Record):
     y :  int
         y-coordinate
     """
+
     __slots__ = ['x', 'y']
 
     def __init__(self, x, y):
@@ -98,6 +99,7 @@ class CoordinateList(TypedList, metaclass=TypedContainerMeta):
     """
     A list that only accepts :class:`CoordinateRecord` instances.
     """
+
     ACCEPTED_TYPES = CoordinateRecord
 
 
@@ -149,6 +151,7 @@ class TextureList(TypedList, metaclass=TypedContainerMeta):
     """
     A list that only accepts TextureRecord instances.
     """
+
     ACCEPTED_TYPES = TextureRecord
 
 
@@ -156,15 +159,16 @@ class IDTFile(AbstractFile):
     """
     Encapsulated in-memory representation of .idt files.
     """
+
     # complete match
     _regex_parse = re.compile(
         r'^'
         r'version (?P<version>[0-9]+)[\r\n]*'
         r'image "(?P<image>[\w\./\\_\'\-]+)"[\r\n]*'
         r'(?P<texture_count>[0-9]+)[\r\n]*'
-        r'(?P<textures>.*)' # Match the rest
+        r'(?P<textures>.*)'  # Match the rest
         r'$',
-        re.UNICODE | re.MULTILINE | re.DOTALL
+        re.UNICODE | re.MULTILINE | re.DOTALL,
     )
 
     # for findall
@@ -174,15 +178,13 @@ class IDTFile(AbstractFile):
         r'(?P<count>[0-9]+)[ ]+'
         r'(?P<coordinates>(?:[0-9]+[ ]*)*)'
         r'[\r\n]*$',
-        re.UNICODE | re.MULTILINE | re.DOTALL
+        re.UNICODE | re.MULTILINE | re.DOTALL,
     )
 
     # for findall
     _regex_coordinates = re.compile(
-        r'(?P<x>[0-9]+)[ ]+'
-        r'(?P<y>[0-9]+)[ ]*'
-        r'',
-        re.UNICODE | re.MULTILINE | re.DOTALL
+        r'(?P<x>[0-9]+)[ ]+' r'(?P<y>[0-9]+)[ ]*' r'',
+        re.UNICODE | re.MULTILINE | re.DOTALL,
     )
 
     EXTENSION = '.idt'
@@ -313,21 +315,31 @@ class IDTFile(AbstractFile):
         match = self._regex_parse.match(data)
 
         if not match:
-            raise ParserError('Failed to find the base information. File may not be a .idt file or malformed.')
+            raise ParserError(
+                'Failed to find the base information. File may not be a .idt file or malformed.'
+            )
 
         textures = TextureList()
         for tex_match in self._regex_texture.finditer(match.group('textures')):
             coordinates = CoordinateList()
-            for coord_match in self._regex_coordinates.finditer(tex_match.group('coordinates')):
+            for coord_match in self._regex_coordinates.finditer(
+                tex_match.group('coordinates')
+            ):
                 coordinates.append(CoordinateRecord(**coord_match.groupdict()))
 
             if len(coordinates) != int(tex_match.group('count')):
-                raise ParserError('Amount of found coordinates (%s) does not match the amount of specified coordinates (%s)' % (len(coordinates), tex_match.group('count')))
+                raise ParserError(
+                    'Amount of found coordinates (%s) does not match the amount of specified coordinates (%s)'
+                    % (len(coordinates), tex_match.group('count'))
+                )
 
             textures.append(TextureRecord(tex_match.group('name'), coordinates))
 
         if len(textures) != int(match.group('texture_count')):
-            raise ParserError('Amount of found textures (%s) does not match the amount of specified textures (%s)' % (len(textures), match.group('texture_count')))
+            raise ParserError(
+                'Amount of found textures (%s) does not match the amount of specified textures (%s)'
+                % (len(textures), match.group('texture_count'))
+            )
 
         self._records = textures
         self.version = int(match.group('version'))

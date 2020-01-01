@@ -81,7 +81,7 @@ class SetupError(ValueError):
 # =============================================================================
 
 
-#TODO: add link to configobj doc or doc the extra stuff separatly.
+# TODO: add link to configobj doc or doc the extra stuff separatly.
 class ConfigHelper(ConfigObj):
     """
     Extended regular config obj that can perform special tasks and extended
@@ -90,6 +90,7 @@ class ConfigHelper(ConfigObj):
     Generally the new options should be used over the direct usage of inherited
     functions.
     """
+
     def __init__(self, *args, **kwargs):
         """
         Raises
@@ -218,8 +219,10 @@ class ConfigHelper(ConfigObj):
             value = self.option[key]
         except KeyError:
             console(
-                'Config variable "%s" is not configured. Consider running:' %
-                key, msg=Msg.error)
+                'Config variable "%s" is not configured. Consider running:'
+                % key,
+                msg=Msg.error,
+            )
             console('config set "%s" "<value>"' % key, msg=Msg.error)
             console('Exiting...', msg=Msg.error)
             sys.exit(-1)
@@ -284,26 +287,22 @@ class ConfigHelper(ConfigObj):
 
         """
         if key not in self.setup:
-            self.setup.update({
-                key: {
-                    'performed': False,
-                },
-            })
+            self.setup.update(
+                {key: {'performed': False,},}
+            )
 
-        self.setupspec.update({
-            key: {
-                'performed': 'boolean()',
-            },
-        })
+        self.setupspec.update(
+            {key: {'performed': 'boolean()',},}
+        )
 
         if isinstance(funcs, Iterable):
-           for f in funcs:
-               if not callable(f):
-                   raise TypeError('Callable expected.')
+            for f in funcs:
+                if not callable(f):
+                    raise TypeError('Callable expected.')
         elif not callable(funcs):
             raise TypeError('Callabe expected.')
         else:
-            funcs = (funcs, )
+            funcs = (funcs,)
 
         self.setup[key].functions = funcs
 
@@ -330,12 +329,14 @@ class ConfigHelper(ConfigObj):
             if function is not callable
         """
         if not callable(function):
-             raise TypeError('Callabe expected.')
+            raise TypeError('Callabe expected.')
 
         if config_key in self._listeners:
             self._listeners[config_key].append(function)
         else:
-            self._listeners[config_key] = [function, ]
+            self._listeners[config_key] = [
+                function,
+            ]
 
     def add_setup_variable(self, setup_key, variable_key, specification):
         """
@@ -405,7 +406,9 @@ class ConfigHelper(ConfigObj):
 
         """
         # Raise ValidationError
-        value = self.validator.check(self.setupspec[setup_key][variable_key], value)
+        value = self.validator.check(
+            self.setupspec[setup_key][variable_key], value
+        )
         self.setup[setup_key][variable_key] = value
 
     def needs_setup(self, key):

@@ -82,6 +82,7 @@ def _regex_build_from_handler_dict(handler_dict):
 
     return re.compile('|'.join(conditionals), re.MULTILINE | re.UNICODE)
 
+
 # =============================================================================
 # Classes
 # =============================================================================
@@ -258,32 +259,20 @@ class ItemParser:
         (found on currency and other stackables)
 
     """
-    _re_split = re.compile(
-        r'^\-{8}$',
-        re.UNICODE | re.MULTILINE
-    )
 
-    _re_split_newline = re.compile(
-        '(?:(?:\r|)\n)',
-        re.UNICODE
-    )
+    _re_split = re.compile(r'^\-{8}$', re.UNICODE | re.MULTILINE)
 
-    _re_replace = re.compile(
-        r' \((augmented|unmet)\)',
-        re.UNICODE
-    )
+    _re_split_newline = re.compile('(?:(?:\r|)\n)', re.UNICODE)
 
-    _re_rarity =  re.compile(
-        r'^Rarity: (?P<rarity>.*)$',
-        re.UNICODE | re.MULTILINE
+    _re_replace = re.compile(r' \((augmented|unmet)\)', re.UNICODE)
+
+    _re_rarity = re.compile(
+        r'^Rarity: (?P<rarity>.*)$', re.UNICODE | re.MULTILINE
     )
 
     _stat_handlers = {
         ITEM_TYPES.ITEM: {
-            'map_tier': {
-                're': 'Map Tier',
-                'func': int,
-            },
+            'map_tier': {'re': 'Map Tier', 'func': int,},
             'item_quantity': {
                 're': 'Item Quantity',
                 'func': lambda s: int(s.strip('%')),
@@ -296,22 +285,10 @@ class ItemParser:
                 're': 'Monster Pack Size',
                 'func': lambda s: int(s.strip('%')),
             },
-            'quality': {
-                're': 'Quality',
-                'func': lambda s: int(s.strip('%')),
-            },
-            'armour': {
-                're': 'Armour',
-                'func': int,
-            },
-            'evasion': {
-                're': 'Evasion Rating',
-                'func': int,
-            },
-            'energy_shield': {
-                're': 'Energy Shield',
-                'func': int,
-            },
+            'quality': {'re': 'Quality', 'func': lambda s: int(s.strip('%')),},
+            'armour': {'re': 'Armour', 'func': int,},
+            'evasion': {'re': 'Evasion Rating', 'func': int,},
+            'energy_shield': {'re': 'Energy Shield', 'func': int,},
             'physical_damage': {
                 're': 'Physical Damage',
                 'func': lambda s: [int(s2) for s2 in s.split('-')],
@@ -340,14 +317,8 @@ class ItemParser:
             },
         },
         ITEM_TYPES.GEM: {
-            'gem_level': {
-                're': 'Level',
-                'func': int,
-            },
-            'mana_cost': {
-                're': 'Mana Cost',
-                'func': int,
-            },
+            'gem_level': {'re': 'Level', 'func': int,},
+            'mana_cost': {'re': 'Mana Cost', 'func': int,},
             'mana_reserved': {
                 're': 'Mana Reserved',
                 'func': lambda s: int(s.strip('%')),
@@ -356,10 +327,7 @@ class ItemParser:
                 're': 'Mana Multiplier',
                 'func': lambda s: int(s.strip('%')),
             },
-            'souls_per_use': {
-                're': 'Souls Per Use',
-                'func': int,
-            },
+            'souls_per_use': {'re': 'Souls Per Use', 'func': int,},
             'stored_uses': {
                 're2': r'^Can Store (?P<stored_uses>[0-9]+) Use(?:|s)$',
                 'func': int,
@@ -380,14 +348,13 @@ class ItemParser:
                 're': 'Damage Effectiveness',
                 'func': lambda s: int(s.strip('%')) / 100,
             },
-            'quality': {
-                're': 'Quality',
-                'func': lambda s: int(s.strip('%')),
-            },
+            'quality': {'re': 'Quality', 'func': lambda s: int(s.strip('%')),},
             'experience': {
                 're': 'Experience',
-                'func': lambda s: [int(s2.replace('.', '')) for s2 in s.split('/')],
-            }
+                'func': lambda s: [
+                    int(s2.replace('.', '')) for s2 in s.split('/')
+                ],
+            },
         },
         ITEM_TYPES.CURRENCY: {
             'stack_size': {
@@ -410,43 +377,26 @@ class ItemParser:
     }
 
     _requirement_handlers = {
-        'required_level': {
-            're': 'Level',
-            'func': int,
-        },
-        'required_str': {
-            're': 'Str',
-            'func': int,
-        },
-        'required_dex': {
-            're': 'Dex',
-            'func': int,
-        },
-        'required_int': {
-            're': 'Int',
-            'func': int,
-        },
+        'required_level': {'re': 'Level', 'func': int,},
+        'required_str': {'re': 'Str', 'func': int,},
+        'required_dex': {'re': 'Dex', 'func': int,},
+        'required_int': {'re': 'Int', 'func': int,},
     }
 
-    _re_requirement_handlers = _regex_build_from_handler_dict(_requirement_handlers)
+    _re_requirement_handlers = _regex_build_from_handler_dict(
+        _requirement_handlers
+    )
 
     _re_requirement = re.compile(
         '^Requirements:',
         # No multi line, match start of section
-        re.UNICODE
+        re.UNICODE,
     )
 
     # Uses similar syntax, but is built for each value separately
     _re_singular = {
-        'limit': {
-            're': 'Limited to',
-            'func': int,
-        },
-        'item_level': {
-            're': 'Item Level',
-            'func': int,
-        },
-
+        'limit': {'re': 'Limited to', 'func': int,},
+        'item_level': {'re': 'Item Level', 'func': int,},
         'gem_tags': {
             're2': r'^(?P<gem_tags>[^:]+)$',
             'func': lambda s: s.split(', '),
@@ -455,51 +405,30 @@ class ItemParser:
     _regex_update_singular_dict(_re_singular)
 
     _re_sockets = _re_sockets_split = re.compile(
-        r'^Sockets: (?P<sockets>.+)$',
-        re.UNICODE
+        r'^Sockets: (?P<sockets>.+)$', re.UNICODE
     )
 
-    _re_sockets_split = re.compile(
-        '( |-)',
-        re.UNICODE
-    )
+    _re_sockets_split = re.compile('( |-)', re.UNICODE)
 
-    _re_help_text_item_name = re.compile(
-        '(Jewel|Map)',
-        re.UNICODE
-    )
+    _re_help_text_item_name = re.compile('(Jewel|Map)', re.UNICODE)
 
-    _re_is_map = re.compile(
-        '('
-        'Map'
-        ')',
-        re.UNICODE
-    )
+    _re_is_map = re.compile('(' 'Map' ')', re.UNICODE)
 
     _re_is_vaal_fragment = re.compile(
         '('
         'Sacrifice at (Dawn|Midnight|Noon|Dusk)|'
         'Mortal (Rage|Hope|Ignorance|Grief)'
         ')',
-        re.UNICODE
+        re.UNICODE,
     )
 
     _re_is_jewel = re.compile(
-        '('
-        '(Viridian|Cobalt|Crimson) Jewel'
-        ')',
-        re.UNICODE
+        '(' '(Viridian|Cobalt|Crimson) Jewel' ')', re.UNICODE
     )
 
-    _re_prefix = re.compile(
-        '^(?P<prefix>[\S]+) .+$',
-        re.UNICODE,
-    )
+    _re_prefix = re.compile('^(?P<prefix>[\S]+) .+$', re.UNICODE,)
 
-    _re_suffix = re.compile(
-        '^.+ (?P<suffix>of [\S]+)$',
-        re.UNICODE,
-    )
+    _re_suffix = re.compile('^.+ (?P<suffix>of [\S]+)$', re.UNICODE,)
 
     def __init__(self, item_info_string):
         """
@@ -526,7 +455,7 @@ class ItemParser:
                 current_sec += 1
 
         def section(index=None, offset=0):
-            return sections[index or (current_sec+offset)].strip('\r\n')
+            return sections[index or (current_sec + offset)].strip('\r\n')
 
         # Header section
         header = self._split(section())
@@ -537,8 +466,9 @@ class ItemParser:
         elif len(header) in (1, 2):
             self.name = header[-1]
         else:
-            raise ValueError('Header section is of unsupported length: %s' %
-                             len(header))
+            raise ValueError(
+                'Header section is of unsupported length: %s' % len(header)
+            )
 
         self.name = self.name
 
@@ -560,7 +490,9 @@ class ItemParser:
                 elif rarity == 'Currency':
                     self._type = ITEM_TYPES.CURRENCY
                 else:
-                    raise ValueError('Unsupported value for "Rarity": %s' % rarity)
+                    raise ValueError(
+                        'Unsupported value for "Rarity": %s' % rarity
+                    )
             elif self.rarity == RARITY.MAGIC:
                 self.prefix = None
                 self.suffix = None
@@ -568,7 +500,9 @@ class ItemParser:
                 match = self._re_suffix.match(self.base_item_name)
                 if match:
                     self.suffix = match.group('suffix')
-                    self.base_item_name = self.base_item_name.replace(' ' + self.suffix, '')
+                    self.base_item_name = self.base_item_name.replace(
+                        ' ' + self.suffix, ''
+                    )
 
                 # Can't reliably detect the prefix yet. Will have to do based on
                 # stats
@@ -594,7 +528,7 @@ class ItemParser:
                 self._handle_handlers(
                     next,
                     self._re_stat_handlers[self._type],
-                    self._stat_handlers[self._type]
+                    self._stat_handlers[self._type],
                 )
             )
 
@@ -615,7 +549,7 @@ class ItemParser:
             self.links = []
             last_linked = False
             for i, char in enumerate(
-                    self._re_sockets_split.split(match.group('sockets'))
+                self._re_sockets_split.split(match.group('sockets'))
             ):
                 if i % 2 == 0:
                     found = False
@@ -627,7 +561,7 @@ class ItemParser:
                     if not found:
                         raise ValueError('Unsupported socket colour: %s' % char)
 
-                    self.sockets.append(ItemSocket(i//2, socket_colour))
+                    self.sockets.append(ItemSocket(i // 2, socket_colour))
 
                     if last_linked:
                         self.links[-1].append(self.sockets[-1])
@@ -637,10 +571,14 @@ class ItemParser:
                         last_linked = False
                     elif char == '-':
                         if not last_linked:
-                            self.links.append([self.sockets[-1], ])
+                            self.links.append(
+                                [self.sockets[-1],]
+                            )
                         last_linked = True
                     else:
-                        raise ValueError('Unsupported link character: %s' % char)
+                        raise ValueError(
+                            'Unsupported link character: %s' % char
+                        )
             increment_sec()
         else:
             self.sockets = None
@@ -653,7 +591,7 @@ class ItemParser:
         increment_sec(self._handle_singular(section(), 'item_level'))
 
         # Stack size
-        #if self._type == ITEM_TYPES.CURRENCY:
+        # if self._type == ITEM_TYPES.CURRENCY:
         #    increment_sec(self._handle_singular(section(), 'stack_size'))
 
         # stats, flavour text and help text would be here.
@@ -668,12 +606,19 @@ class ItemParser:
             self.is_corrupted = False
 
         # Help text
-        if self._type in (ITEM_TYPES.GEM, ITEM_TYPES.CURRENCY) or is_jewel or is_map or is_vaal_fragment:
+        if (
+            self._type in (ITEM_TYPES.GEM, ITEM_TYPES.CURRENCY)
+            or is_jewel
+            or is_map
+            or is_vaal_fragment
+        ):
             self.help_text = section(index=last_sec)
             last_sec -= 1
 
         # Flavour text
-        if (self._type == ITEM_TYPES.ITEM and self.rarity == RARITY.UNIQUE) or is_vaal_fragment:
+        if (
+            self._type == ITEM_TYPES.ITEM and self.rarity == RARITY.UNIQUE
+        ) or is_vaal_fragment:
             self.flavour_text = section(index=last_sec)
             # Unidentified uniques don't have a flavour text, I think setting
             # "Unidentifed" is appropriate, but still have to make sure not to
@@ -694,32 +639,51 @@ class ItemParser:
             elif remaining == 1:
                 # Normal items can't have explicit stats
                 if self.rarity == RARITY.NORMAL:
-                    self.implicit_stats = self._re_split_newline.split(section())
+                    self.implicit_stats = self._re_split_newline.split(
+                        section()
+                    )
                     self.stats = []
                 # And magic/rare/unique items MUST have stats
                 else:
                     self.implicit_stats = []
                     self.stats = self._re_split_newline.split(section())
             else:
-                raise ValueError('Too many sections (%s) left for item stat parsing.' % remaining)
+                raise ValueError(
+                    'Too many sections (%s) left for item stat parsing.'
+                    % remaining
+                )
         elif self._type == ITEM_TYPES.GEM:
             if remaining == 0:
                 self.stats = []
             elif remaining == 1:
                 self.stats = self._re_split_newline.split(section())
             else:
-                raise ValueError('Too many sections (%s) left for gem stat parsing.' % remaining)
+                raise ValueError(
+                    'Too many sections (%s) left for gem stat parsing.'
+                    % remaining
+                )
         elif self._type == ITEM_TYPES.CURRENCY and remaining:
             if remaining == 1:
                 self.description = section()
             else:
-                raise ValueError('All sections (%s) should be parsed now.' % remaining)
+                raise ValueError(
+                    'All sections (%s) should be parsed now.' % remaining
+                )
 
         # Do a final pass on the prefix for magic items
-        if self._type == ITEM_TYPES.ITEM and self.rarity == RARITY.MAGIC and ((self.suffix is None and len(self.stats) >= 1) or (self.suffix is not None and len(self.stats) >= 2)):
+        if (
+            self._type == ITEM_TYPES.ITEM
+            and self.rarity == RARITY.MAGIC
+            and (
+                (self.suffix is None and len(self.stats) >= 1)
+                or (self.suffix is not None and len(self.stats) >= 2)
+            )
+        ):
             match = self._re_prefix.match(self.base_item_name)
             self.prefix = match.group('prefix')
-            self.base_item_name = self.base_item_name.replace(self.prefix + ' ', '')
+            self.base_item_name = self.base_item_name.replace(
+                self.prefix + ' ', ''
+            )
 
     def _split(self, section):
         return self._re_split_newline.split(section)
@@ -745,7 +709,7 @@ class ItemParser:
                 match.lastgroup,
                 handlers[match.lastgroup]['func'](
                     self._re_replace.sub('', match.group(match.lastgroup))
-                )
+                ),
             )
 
         return found

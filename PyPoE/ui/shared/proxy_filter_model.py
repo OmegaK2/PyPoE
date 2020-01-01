@@ -64,6 +64,7 @@ __all__ = []
 # Filters
 #
 
+
 class AbstractFilter:
 
     NAME = ''
@@ -100,7 +101,9 @@ class RegexFilter(AbstractFilter):
 
     def __repr__(self):
         return '%s(value=%s, flags=%s)' % (
-            self.__class__.__name__, self.value, self.flags
+            self.__class__.__name__,
+            self.value,
+            self.flags,
         )
 
     def apply(self, value):
@@ -118,9 +121,9 @@ class RegexFilter(AbstractFilter):
         qwizardpage.regex_flags = RegexFlagsBox(parent=qwizardpage)
         qwizardpage.layout.addWidget(qwizardpage.regex_flags)
 
-        qwizardpage.layout.addWidget(QLabel(qwizardpage.tr(
-            'Enter a regular expression:'
-        )))
+        qwizardpage.layout.addWidget(
+            QLabel(qwizardpage.tr('Enter a regular expression:'))
+        )
 
         qwizardpage.regex_edit = QLineEdit(parent=qwizardpage)
         qwizardpage.layout.addWidget(qwizardpage.regex_edit)
@@ -130,62 +133,65 @@ class RegexFilter(AbstractFilter):
         regex = qwizardpage.regex_edit.text()
         try:
             obj = RegexFilter(
-                value=regex,
-                flags=qwizardpage.regex_flags.get_flags()
+                value=regex, flags=qwizardpage.regex_flags.get_flags()
             )
         except re.error as e:
             QMessageBox.critical(
                 qwizardpage,
                 qwizardpage.tr('RegEx Error'),
-                qwizardpage.tr('Regular Expression error:\n %s') % e.args[0]
+                qwizardpage.tr('Regular Expression error:\n %s') % e.args[0],
             )
-            #TODO log error
+            # TODO log error
             return
 
         return obj
 
 
 class TypedFilter(AbstractFilter):
-    operations = OrderedDict((
-        ('lt', {
-            'name': '<',
-            'tooltip': QT_TR_NOOP('less than'),
-        }),
-        ('le', {
-            'name': '<=',
-            'tooltip': QT_TR_NOOP('less than or equal to'),
-        }),
-        ('eq', {
-            'name': '==',
-            'tooltip': QT_TR_NOOP('equal to'),
-        }),
-        ('ne', {
-            'name': '!=',
-            'tooltip': QT_TR_NOOP('not equal to'),
-        }),
-        ('ge', {
-            'name': '>=',
-            'tooltip': QT_TR_NOOP('greater than or equal to'),
-        }),
-        ('gt', {
-            'name': '>',
-            'tooltip': QT_TR_NOOP('greater than'),
-        }),
-    ))
-    types = OrderedDict((
-        (int, {
-            'name': QT_TR_NOOP('Integer'),
-            'tooltip': QT_TR_NOOP('Any kind of whole number'),
-        }),
-        (float, {
-            'name': QT_TR_NOOP('Float'),
-            'tooltip': QT_TR_NOOP('Any kind of floating point number.'),
-        }),
-        (str, {
-            'name': QT_TR_NOOP('String'),
-            'tooltip': QT_TR_NOOP('Any kind of string.'),
-        }),
-    ))
+    operations = OrderedDict(
+        (
+            ('lt', {'name': '<', 'tooltip': QT_TR_NOOP('less than'),}),
+            (
+                'le',
+                {'name': '<=', 'tooltip': QT_TR_NOOP('less than or equal to'),},
+            ),
+            ('eq', {'name': '==', 'tooltip': QT_TR_NOOP('equal to'),}),
+            ('ne', {'name': '!=', 'tooltip': QT_TR_NOOP('not equal to'),}),
+            (
+                'ge',
+                {
+                    'name': '>=',
+                    'tooltip': QT_TR_NOOP('greater than or equal to'),
+                },
+            ),
+            ('gt', {'name': '>', 'tooltip': QT_TR_NOOP('greater than'),}),
+        )
+    )
+    types = OrderedDict(
+        (
+            (
+                int,
+                {
+                    'name': QT_TR_NOOP('Integer'),
+                    'tooltip': QT_TR_NOOP('Any kind of whole number'),
+                },
+            ),
+            (
+                float,
+                {
+                    'name': QT_TR_NOOP('Float'),
+                    'tooltip': QT_TR_NOOP('Any kind of floating point number.'),
+                },
+            ),
+            (
+                str,
+                {
+                    'name': QT_TR_NOOP('String'),
+                    'tooltip': QT_TR_NOOP('Any kind of string.'),
+                },
+            ),
+        )
+    )
 
     NAME = QT_TR_NOOP('Simple Operation Filter')
 
@@ -205,7 +211,10 @@ class TypedFilter(AbstractFilter):
 
     def __repr__(self):
         return '%s(value=%s, operation=%s, type=%s)' % (
-            self.__class__.__name__, self.value, self.operation, self.type
+            self.__class__.__name__,
+            self.value,
+            self.operation,
+            self.type,
         )
 
     def apply(self, value):
@@ -247,8 +256,12 @@ class TypedFilter(AbstractFilter):
     def validate_settings(qwizardpage):
         kwargs = {
             'value': qwizardpage.value_edit.text(),
-            'operation': list(TypedFilter.operations.keys())[qwizardpage.operation_box.currentIndex()],
-            'type': list(TypedFilter.types.keys())[qwizardpage.type_box.currentIndex()],
+            'operation': list(TypedFilter.operations.keys())[
+                qwizardpage.operation_box.currentIndex()
+            ],
+            'type': list(TypedFilter.types.keys())[
+                qwizardpage.type_box.currentIndex()
+            ],
         }
 
         try:
@@ -257,9 +270,9 @@ class TypedFilter(AbstractFilter):
             QMessageBox.critical(
                 qwizardpage,
                 qwizardpage.tr('Error\n'),
-                qwizardpage.tr('Error:\n %s') % e.args[0]
+                qwizardpage.tr('Error:\n %s') % e.args[0],
             )
-            #TODO log error
+            # TODO log error
             return
 
         return obj
@@ -285,8 +298,7 @@ class FilterWizard(QWizard):
 
         self.setWindowTitle(self.tr('Modify filters'))
         self.setPage(
-            self.PAGE_COLUMN_SELECTION,
-            FilterWizardColumnPage(parent=self),
+            self.PAGE_COLUMN_SELECTION, FilterWizardColumnPage(parent=self),
         )
         self.setPage(
             self.PAGE_FILTER_SELECTION,
@@ -297,8 +309,7 @@ class FilterWizard(QWizard):
             FilterWizardFilterSettingsPage(parent=self),
         )
         self.setPage(
-            self.PAGE_FILTER_CREATE,
-            FilterWizardCreateFilterPage(parent=self),
+            self.PAGE_FILTER_CREATE, FilterWizardCreateFilterPage(parent=self),
         )
 
         self.currentIdChanged.connect(self._hide_back_button)
@@ -323,11 +334,14 @@ class FilterWizardColumnPage(FilterWizardPageShared):
         self.column_list = QComboBox(parent=self)
         fp = self.parent().filter_proxy
         for column_id in range(0, fp.sourceModel().columnCount()):
-            self.column_list.addItem(self.tr('%s: %s (%s filters)') % (
-                column_id,
-                fp.sourceModel().headerData(column_id, Qt.Horizontal),
-                len(fp.filters[column_id]),
-            ))
+            self.column_list.addItem(
+                self.tr('%s: %s (%s filters)')
+                % (
+                    column_id,
+                    fp.sourceModel().headerData(column_id, Qt.Horizontal),
+                    len(fp.filters[column_id]),
+                )
+            )
         self.registerField('COLUMN_LIST', self.column_list)
         self.layout.addWidget(self.column_list)
 
@@ -346,11 +360,10 @@ class FilterWizardFilterSelectionPage(FilterWizardPageShared):
 
     def initializePage(self):
         self.filter_list.clear()
-        for i, filter in enumerate(self.get_filters()[self.field('COLUMN_LIST')]):
-            self.filter_list.addItem(self.tr('%s: %s') % (
-                i,
-                repr(filter),
-            ))
+        for i, filter in enumerate(
+            self.get_filters()[self.field('COLUMN_LIST')]
+        ):
+            self.filter_list.addItem(self.tr('%s: %s') % (i, repr(filter),))
         self.filter_list.addItem(self.tr('Add new filter'))
 
     def nextId(self):
@@ -372,7 +385,9 @@ class FilterWizardFilterSettingsPage(FilterWizardPageShared):
         self.setLayout(self.layout)
 
     def _get_filter(self):
-        return self.get_filters()[self.field('COLUMN_LIST')][self.field('FILTER_LIST')]
+        return self.get_filters()[self.field('COLUMN_LIST')][
+            self.field('FILTER_LIST')
+        ]
 
     def nextId(self):
         return -1
@@ -449,31 +464,27 @@ class FilterMenu(QMenu):
         header.customContextMenuRequested.connect(self.popup)
 
         if not isinstance(proxy_model, FilterProxyModel):
-            raise TypeError("proxy_model has invalid type %s" % type(proxy_model))
+            raise TypeError(
+                "proxy_model has invalid type %s" % type(proxy_model)
+            )
         self.proxy_model = proxy_model
 
         self.action_add_filter = self.addAction(
-            self.tr("Add/Change filter"),
-            self.add_filter,
+            self.tr("Add/Change filter"), self.add_filter,
         )
         self.action_reset_filter = self.addAction(
-            self.tr("Reset filter"),
-            self.reset_filter,
+            self.tr("Reset filter"), self.reset_filter,
         )
         self.addSeparator()
         self.action_reset_all_filters = self.addAction(
-            self.tr("Reset all filters"),
-            self.reset_all_filters,
+            self.tr("Reset all filters"), self.reset_all_filters,
         )
 
         self.point = None
 
     def add_filter(self, *args, **kwargs):
         index = self.parent().logicalIndexAt(self.point)
-        wizard = FilterWizard(
-            filter_proxy=self.proxy_model,
-            parent=self,
-        )
+        wizard = FilterWizard(filter_proxy=self.proxy_model, parent=self,)
         wizard.setField('COLUMN_LIST', index)
         wizard.setStartId(FilterWizard.PAGE_FILTER_SELECTION)
         wizard.show()
@@ -506,7 +517,9 @@ class FilterProxyModel(QSortFilterProxyModel):
 
     def add_filter(self, row, filter):
         if row not in self.filters:
-            self.filters[row] = [filter, ]
+            self.filters[row] = [
+                filter,
+            ]
         else:
             self.filters[row].append(filter)
 
@@ -525,6 +538,7 @@ class FilterProxyModel(QSortFilterProxyModel):
                     return False
 
         return accepted
+
 
 # =============================================================================
 # Functions

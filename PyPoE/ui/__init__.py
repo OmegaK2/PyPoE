@@ -53,5 +53,6 @@ _apps = [GGPKViewerMainWindow]
 def main(*args, **kwargs):
     launchpad_main(_apps, *args, **kwargs)
 
+
 if __name__ == '__main__':
     main()

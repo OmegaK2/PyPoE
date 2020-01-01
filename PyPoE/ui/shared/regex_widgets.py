@@ -56,7 +56,10 @@ class RegexFlagsBox(QGroupBox):
 
     re.LOCALE is not supported, as it is deprecated in python 3.5
     """
-    def __init__(self, default_flags=0, disabled_flags=re.DEBUG, *args, **kwargs):
+
+    def __init__(
+        self, default_flags=0, disabled_flags=re.DEBUG, *args, **kwargs
+    ):
         QGroupBox.__init__(self, *args, **kwargs)
 
         self.setTitle(self.tr('RegEx Options'))
@@ -108,7 +111,6 @@ class RegexFlagsBox(QGroupBox):
                     'and immediately before the newline (if any) at the end '
                     'of the string.'
                 ),
-
             },
             {
                 'flag': re.DOTALL,

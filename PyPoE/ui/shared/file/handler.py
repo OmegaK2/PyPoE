@@ -40,6 +40,7 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtOpenGL import *
 from PySide2.QtWidgets import *
+
 try:
     from OpenGL import GL
 except ImportError:
@@ -51,7 +52,9 @@ from PyPoE.poe.file.ggpk import extract_dds
 from PyPoE.ui.shared.proxy_filter_model import FilterMenu
 from PyPoE.ui.shared.table_context_menus import TableContextReadOnlyMenu
 from PyPoE.ui.shared.file.model import (
-    DatTableModel, DatDataModel, DatValueProxyModel
+    DatTableModel,
+    DatDataModel,
+    DatValueProxyModel,
 )
 
 # =============================================================================
@@ -103,8 +106,10 @@ class DatStyle(QStyledItemDelegate):
         return dat_value.value
 
     def _show_value(self, outstr, dat_value, format='{0}'):
-        if self.data_style or \
-                self.parent().option_dereference_pointer.isChecked():
+        if (
+            self.data_style
+            or self.parent().option_dereference_pointer.isChecked()
+        ):
             if dat_value.is_pointer:
                 self._show_value(outstr, dat_value.child)
                 if self.parent().option_show_pointer.isChecked():
@@ -146,8 +151,12 @@ class DatStyle(QStyledItemDelegate):
 
         return text
 
-    def paint(self, painter=QPainter(), option=QStyleOptionViewItem(),
-              index=QModelIndex()):
+    def paint(
+        self,
+        painter=QPainter(),
+        option=QStyleOptionViewItem(),
+        index=QModelIndex(),
+    ):
         painter.save()
 
         QStyledItemDelegate.paint(self, painter, option, QModelIndex())
@@ -158,12 +167,12 @@ class DatStyle(QStyledItemDelegate):
         painter.drawText(rect, self.CELL_ALIGNMENT, text)
 
         # Doesnt work
-        #style = QApplication.style()
-        #rect = style.subElementRect(QStyle.SE_ItemViewItemText, option)
-        #QApplication.style().drawControl(QStyle.CE_ItemViewItem, option, painter, widget)
-            #index.data = lambda *args: self._show_value(data)
-            #self._dat_file.table_columns[c-1]['display_type']
-        #QStyledItemDelegate.paint(self, painter, option, index)
+        # style = QApplication.style()
+        # rect = style.subElementRect(QStyle.SE_ItemViewItemText, option)
+        # QApplication.style().drawControl(QStyle.CE_ItemViewItem, option, painter, widget)
+        # index.data = lambda *args: self._show_value(data)
+        # self._dat_file.table_columns[c-1]['display_type']
+        # QStyledItemDelegate.paint(self, painter, option, index)
 
         painter.restore()
 
@@ -171,7 +180,7 @@ class DatStyle(QStyledItemDelegate):
         fm = QFontMetrics(option.font)
         text = self._get_text(index.data())
         size = fm.boundingRect(option.rect, self.CELL_ALIGNMENT, text).size()
-        return size+QSize(4,0)
+        return size + QSize(4, 0)
 
 
 class DatTableViewContextMenu(TableContextReadOnlyMenu):
@@ -198,38 +207,31 @@ class DatFrame(QFrame):
         self.frame_info_layout.setColumnStretch(5, 1)
         self.frame_info.setLayout(self.frame_info_layout)
 
-        self.row_label = QLabel(
-            self.tr('Rows:'),
-            parent=self.frame_info
-        )
+        self.row_label = QLabel(self.tr('Rows:'), parent=self.frame_info)
         self.frame_info_layout.addWidget(self.row_label, 0, 0)
 
         self.row_value = QLabel(
-            str(dat_file.reader.table_rows),
-            parent=self.frame_info
+            str(dat_file.reader.table_rows), parent=self.frame_info
         )
         self.frame_info_layout.addWidget(self.row_value, 0, 1)
 
         self.length_label = QLabel(
-            self.tr('Record Length:'),
-            parent=self.frame_info
+            self.tr('Record Length:'), parent=self.frame_info
         )
         self.frame_info_layout.addWidget(self.length_label, 0, 2)
 
         self.length_value = QLabel(
-            str(dat_file.reader.table_record_length),
-            parent=self.frame_info,
+            str(dat_file.reader.table_record_length), parent=self.frame_info,
         )
         self.frame_info_layout.addWidget(self.length_value, 0, 3)
 
         self.data_length_label = QLabel(
-            self.tr('Data Length:'),
-            parent=self.frame_info,
+            self.tr('Data Length:'), parent=self.frame_info,
         )
         self.frame_info_layout.addWidget(self.data_length_label, 0, 4)
 
         self.data_length_value = QLabel(
-            str(dat_file.reader.file_length-dat_file.reader.data_offset),
+            str(dat_file.reader.file_length - dat_file.reader.data_offset),
             parent=self.frame_info,
         )
         self.frame_info_layout.addWidget(self.data_length_value, 0, 5)
@@ -244,8 +246,7 @@ class DatFrame(QFrame):
         self.option_group_box.setLayout(self.option_group_box_layout)
 
         self.option_dereference_pointer = QCheckBox(
-            self.tr('Dereference Pointer'),
-            parent=self.option_group_box
+            self.tr('Dereference Pointer'), parent=self.option_group_box
         )
         self.option_dereference_pointer.setChecked(True)
         self.option_dereference_pointer.stateChanged.connect(
@@ -276,7 +277,7 @@ class DatFrame(QFrame):
         self.table_main.setItemDelegate(DatStyle(self))
         head = self.table_main.horizontalHeader()
         head.setSectionResizeMode(QHeaderView.Interactive)
-        #head.setSectionResizeMode(QHeaderView.ResizeToContents)
+        # head.setSectionResizeMode(QHeaderView.ResizeToContents)
         self.layout.addWidget(self.table_main)
 
         self.table_main_filter_menu = FilterMenu(
@@ -385,8 +386,8 @@ class DDSDataHandler(FileDataHandler):
             raise DDSDataHandler.DDSException(*e.args)
         except ValueError as e:
             raise DDSDataHandler.DDSException(
-                'This file is a reference to "%s"' %
-                file_bytes[1:].decode('utf-8')
+                'This file is a reference to "%s"'
+                % file_bytes[1:].decode('utf-8')
             )
 
         with TemporaryDirectory() as tmp_dir:
@@ -398,7 +399,7 @@ class DDSDataHandler(FileDataHandler):
                 file_data.seek(24)
                 # Write all data entries until
                 # DDS_HEADER.DDS_PIXELFORMAT.dwFourCC
-                tmp_file.write(file_data.read(15*4))
+                tmp_file.write(file_data.read(15 * 4))
                 dxt_type = file_data.read(4).decode('ascii')
                 # Fix for displaying those. They have alpha precomputed, but it
                 # should be a non issue, rather want to have them shown
@@ -434,8 +435,17 @@ class DDSDataHandler(FileDataHandler):
 
 
 class ImageDataHandler(FileDataHandler):
-    extensions = ['.bmp', '.gif' '.jpg', '.png', '.pbm', '.pgm', '.ppm',
-                  '.tiff', '.xbm', '.xpm']
+    extensions = [
+        '.bmp',
+        '.gif' '.jpg',
+        '.png',
+        '.pbm',
+        '.pgm',
+        '.ppm',
+        '.tiff',
+        '.xbm',
+        '.xpm',
+    ]
 
     def get_widget(self, file_data, file_name, *args, **kwargs):
         self._verify_data(file_data)
@@ -466,4 +476,4 @@ class TextDataHandler(FileDataHandler):
         return widget
 
         # TODO ?
-        #file_data.close()
+        # file_data.close()

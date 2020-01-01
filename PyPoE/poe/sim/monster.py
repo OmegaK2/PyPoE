@@ -66,8 +66,11 @@ class Monster:
         self._mt = self.mv['MonsterTypesKey']
         self._res = self.mt['MonsterResistancesKey']
         self._ge = self.mv['GrantedEffectsKeys']
-        self._gepl = [gepl for gepl in parent.rr['GrantedEffectsPerLevel.dat']
-                     if gepl['GrantedEffectsKey'] == self._ge]
+        self._gepl = [
+            gepl
+            for gepl in parent.rr['GrantedEffectsPerLevel.dat']
+            if gepl['GrantedEffectsKey'] == self._ge
+        ]
         self._mods = self.mv['ModsKeys']
 
         self._level = None
@@ -75,8 +78,10 @@ class Monster:
     @property
     def level(self):
         if self._level is None:
-            raise ValueError('Set monster level first before performing actions'
-                             ' that require monster level')
+            raise ValueError(
+                'Set monster level first before performing actions'
+                ' that require monster level'
+            )
         return self._level
 
     @level.setter
@@ -116,8 +121,9 @@ class MonsterFactory:
         if isinstance(relational_reader, RelationalReader):
             self.rr = relational_reader
         else:
-            raise ValueError('relational_reader must be a RelationalReader '
-                             'instance')
+            raise ValueError(
+                'relational_reader must be a RelationalReader ' 'instance'
+            )
         if isinstance(otfile_cache, OTFileCache):
             self.ot = otcache
         else:
@@ -162,30 +168,36 @@ class MonsterFactory:
             List of Monster instances.
         """
         if isinstance(rowid, int):
-            mv = [self.rr['MonsterVarieties.dat'][rowid], ]
+            mv = [
+                self.rr['MonsterVarieties.dat'][rowid],
+            ]
         elif isinstance(rowid, Iterable):
             mv = [self.rr['MonsterVarieties.dat'][rid] for rid in rowid]
         elif isinstance(metaid, str):
-            mv = [self.rr['MonsterVarieties.dat'].index['Id'][metaid], ]
+            mv = [
+                self.rr['MonsterVarieties.dat'].index['Id'][metaid],
+            ]
         elif isinstance(metaid, Iterable):
-            mv = [self.rr['MonsterVarieties.dat'].index['Id'][mid] for mid
-                  in metaid]
+            mv = [
+                self.rr['MonsterVarieties.dat'].index['Id'][mid]
+                for mid in metaid
+            ]
         elif isinstance(name, str):
-            mv = [m for m in self.rr['MonsterVarieties.dat'] if
-                  m['Name'] == name]
+            mv = [
+                m for m in self.rr['MonsterVarieties.dat'] if m['Name'] == name
+            ]
         elif isinstance(name, Iterable):
-            mv = [m for m in self.rr['MonsterVarieties.dat'] if
-                  m['Name'] in name]
+            mv = [
+                m for m in self.rr['MonsterVarieties.dat'] if m['Name'] in name
+            ]
         else:
-            raise ValueError('One of rowid, metaid or name must be specified '
-                             'and be of the correct type')
+            raise ValueError(
+                'One of rowid, metaid or name must be specified '
+                'and be of the correct type'
+            )
 
-        return [Monster(
-            *args,
-            parent=self,
-            mv=m,
-            **kwargs
-        ) for m in mv]
+        return [Monster(*args, parent=self, mv=m, **kwargs) for m in mv]
+
 
 # =============================================================================
 # Functions

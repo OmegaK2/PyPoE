@@ -63,8 +63,7 @@ __all__ = []
 
 
 class IncursionRoomWikiCondition(parser.WikiCondition):
-    COPY_KEYS = (
-    )
+    COPY_KEYS = ()
 
     NAME = 'Incursion room'
     ADD_INCLUDE = False
@@ -74,21 +73,16 @@ class IncursionRoomWikiCondition(parser.WikiCondition):
 class IncursionCommandHandler(ExporterHandler):
     def __init__(self, sub_parser):
         self.parser = sub_parser.add_parser(
-            'incursion',
-            help='Incursion data exporter',
+            'incursion', help='Incursion data exporter',
         )
         self.parser.set_defaults(func=lambda args: self.parser.print_help())
 
         sub = self.parser.add_subparsers()
-        rooms = sub.add_parser(
-            'rooms',
-            help='Exporting incursion rooms',
-        )
+        rooms = sub.add_parser('rooms', help='Exporting incursion rooms',)
         rooms.set_defaults(func=lambda args: rooms.print_help())
 
         self.add_default_subparser_filters(
-            sub_parser=rooms.add_subparsers(),
-            cls=IncursionRoomParser,
+            sub_parser=rooms.add_subparsers(), cls=IncursionRoomParser,
         )
 
     def add_default_parsers(self, *args, **kwargs):
@@ -109,49 +103,58 @@ class IncursionRoomParser(parser.BaseParser):
         error_msg='Several incursion rooms have not been found:\n%s',
     )
 
-    _COPY_KEYS = OrderedDict((
-        ('Id', {
-            'template': 'id',
-        }),
-        ('Name', {
-            'template': 'name',
-        }),
-        ('Description', {
-            'template': 'description',
-            'format': lambda value: value.replace('\n', '<br />'),
-        }),
-        ('FlavourText', {
-            'template': 'flavour_text',
-            'format': lambda value: value.replace('\n', '<br />'),
-        }),
-        ('Tier', {
-            'template': 'tier',
-        }),
-        ('RoomUpgrade_IncursionRoomsKey', {
-            'template': 'upgrade_room_id',
-            'format': lambda value: value['Id'],
-            'condition': lambda value: value is not None,
-        }),
-        ('UIIcon', {
-            'template': 'icon',
-            'format': lambda value: value.replace(
-                'Art/2DArt/UIImages/InGame/Incursion/Rooms/', ''),
-        }),
-        ('MinLevel', {
-            'template': 'min_level',
-            'default': 0,
-        }),
-        ('ModsKey', {
-            'template': 'modifier_ids',
-            'format': lambda value: value['Id'],
-            'condition': lambda value: value is not None,
-        }),
-        #('IncursionArchitectKey', {
-        #    'template': 'architect_metadata_id',
-        #    'format': lambda value: value['MonsterVarietiesKey']['Id'],
-        #    'condition': lambda value: value is not None,
-        #}),
-    ))
+    _COPY_KEYS = OrderedDict(
+        (
+            ('Id', {'template': 'id',}),
+            ('Name', {'template': 'name',}),
+            (
+                'Description',
+                {
+                    'template': 'description',
+                    'format': lambda value: value.replace('\n', '<br />'),
+                },
+            ),
+            (
+                'FlavourText',
+                {
+                    'template': 'flavour_text',
+                    'format': lambda value: value.replace('\n', '<br />'),
+                },
+            ),
+            ('Tier', {'template': 'tier',}),
+            (
+                'RoomUpgrade_IncursionRoomsKey',
+                {
+                    'template': 'upgrade_room_id',
+                    'format': lambda value: value['Id'],
+                    'condition': lambda value: value is not None,
+                },
+            ),
+            (
+                'UIIcon',
+                {
+                    'template': 'icon',
+                    'format': lambda value: value.replace(
+                        'Art/2DArt/UIImages/InGame/Incursion/Rooms/', ''
+                    ),
+                },
+            ),
+            ('MinLevel', {'template': 'min_level', 'default': 0,}),
+            (
+                'ModsKey',
+                {
+                    'template': 'modifier_ids',
+                    'format': lambda value: value['Id'],
+                    'condition': lambda value: value is not None,
+                },
+            ),
+            # ('IncursionArchitectKey', {
+            #    'template': 'architect_metadata_id',
+            #    'format': lambda value: value['MonsterVarietiesKey']['Id'],
+            #    'condition': lambda value: value is not None,
+            # }),
+        )
+    )
 
     _incursion_room_page_name = {
         'English': 'incursion room',
@@ -161,18 +164,24 @@ class IncursionRoomParser(parser.BaseParser):
     def by_rowid(self, parsed_args):
         return self.export(
             parsed_args,
-            self.rr['IncursionRooms.dat'][parsed_args.start:parsed_args.end],
+            self.rr['IncursionRooms.dat'][parsed_args.start : parsed_args.end],
         )
 
     def by_id(self, parsed_args):
-        return self.export(parsed_args, self._incursion_column_index_filter(
-            column_id='Id', arg_list=parsed_args.id
-        ))
+        return self.export(
+            parsed_args,
+            self._incursion_column_index_filter(
+                column_id='Id', arg_list=parsed_args.id
+            ),
+        )
 
     def by_name(self, parsed_args):
-        return self.export(parsed_args, self._incursion_column_index_filter(
-            column_id='Name', arg_list=parsed_args.name
-        ))
+        return self.export(
+            parsed_args,
+            self._incursion_column_index_filter(
+                column_id='Name', arg_list=parsed_args.name
+            ),
+        )
 
     def export(self, parsed_args, incursion_rooms):
         r = ExporterResult()
@@ -186,14 +195,17 @@ class IncursionRoomParser(parser.BaseParser):
             return r
         console('Found %s rooms...' % len(incursion_rooms))
 
-        console('Additional files may be loaded. Processing information - this '
-                'may take a while...')
+        console(
+            'Additional files may be loaded. Processing information - this '
+            'may take a while...'
+        )
         self._image_init(parsed_args)
         idl_sources = set()
         if parsed_args.store_images:
             idl = IDLFile()
-            idl.read(file_path_or_raw=
-                     self.ggpk['Art/UIImages1.txt'].record.extract())
+            idl.read(
+                file_path_or_raw=self.ggpk['Art/UIImages1.txt'].record.extract()
+            )
             idl_lookup = idl.as_dict()
 
         console('Parsing data into templates...')
@@ -201,14 +213,14 @@ class IncursionRoomParser(parser.BaseParser):
             if 'TEMPLATE' in incursion_room['Id']:
                 console(
                     'Skipping template room "%s"' % incursion_room['Id'],
-                    msg=Msg.warning
+                    msg=Msg.warning,
                 )
                 continue
             elif not incursion_room['Name']:
                 console(
-                    'Skipping incursion room "%s" without a name' %
-                    incursion_room['Id'],
-                    msg=Msg.warning
+                    'Skipping incursion room "%s" without a name'
+                    % incursion_room['Id'],
+                    msg=Msg.warning,
                 )
                 continue
             data = OrderedDict()
@@ -231,27 +243,29 @@ class IncursionRoomParser(parser.BaseParser):
 
             if incursion_room['IncursionArchitectKey']:
                 mv = incursion_room['IncursionArchitectKey'][
-                    'MonsterVarietiesKey']
+                    'MonsterVarietiesKey'
+                ]
                 data['architect_metadata_id'] = mv['Id']
                 data['architect_name'] = mv['Name']
 
-            cond = IncursionRoomWikiCondition(
-                data=data,
-                cmdargs=parsed_args,
-            )
+            cond = IncursionRoomWikiCondition(data=data, cmdargs=parsed_args,)
 
-            if parsed_args.store_images and self.ggpk and \
-                    incursion_room['UIIcon']:
+            if (
+                parsed_args.store_images
+                and self.ggpk
+                and incursion_room['UIIcon']
+            ):
                 idl_record = idl_lookup[incursion_room['UIIcon']]
-                src = os.path.join(self._img_path, os.path.split(idl_record.source)[-1])
+                src = os.path.join(
+                    self._img_path, os.path.split(idl_record.source)[-1]
+                )
                 if src not in idl_sources:
-                    console(
-                        'Writing source file "%s" to images' % src
-                    )
+                    console('Writing source file "%s" to images' % src)
                     with open(src, 'wb') as f:
                         img_data = extract_dds(
-                            self.ggpk[
-                            idl_record.source].record.extract().read(),
+                            self.ggpk[idl_record.source]
+                            .record.extract()
+                            .read(),
                             path_or_ggpk=self.ggpk,
                         )
                         f.write(img_data[:84])
@@ -264,8 +278,8 @@ class IncursionRoomParser(parser.BaseParser):
 
                 os.system(
                     'magick "%(src)s" -crop %(w)sx%(h)s+%(x)s+%(y)s '
-                    '"%(dst)s incursion room icon.png"' %
-                    {
+                    '"%(dst)s incursion room icon.png"'
+                    % {
                         'src': src,
                         'dst': os.path.join(self._img_path, data['icon']),
                         'h': idl_record.h,
@@ -279,18 +293,17 @@ class IncursionRoomParser(parser.BaseParser):
                 text=cond,
                 out_file='incursion_room_%s.txt' % data['name'],
                 wiki_page=[
+                    {'page': data['name'], 'condition': cond,},
                     {
-                        'page': data['name'],
-                        'condition': cond,
-                    },
-                    {
-                        'page': data['name'] + ' (%s)' % (
+                        'page': data['name']
+                        + ' (%s)'
+                        % (
                             self._incursion_room_page_name[
                                 config.get_option('language')
                             ]
                         ),
                         'condition': cond,
-                    }
+                    },
                 ],
                 wiki_message='Incursion room updater',
             )

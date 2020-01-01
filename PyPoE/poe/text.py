@@ -78,6 +78,7 @@ class Tag(ReprMixin):
         parameter specified in the text to this tag if any
 
     """
+
     __slots__ = ['id', 'parent', 'parameter', 'children']
 
     _REPR_ARGUMENTS_IGNORE = {'parent'}
@@ -140,14 +141,19 @@ class Tag(ReprMixin):
         KeyError
             if a id is not present in the handlers parameter
         """
-        out_str = ''.join([
-            item.handle_tags(handlers=handlers) if isinstance(item, Tag)
-            else item for item in self.children
-        ])
+        out_str = ''.join(
+            [
+                item.handle_tags(handlers=handlers)
+                if isinstance(item, Tag)
+                else item
+                for item in self.children
+            ]
+        )
         if self.id is None:
             return out_str
         else:
             return handlers[self.id](hstr=out_str, parameter=self.parameter)
+
 
 # =============================================================================
 # Functions
@@ -169,20 +175,23 @@ def parse_description_tags(text):
     Tag
         the parsed text as Tag class (with no id)
     """
+
     def f(scanner, result, tid):
         return tid, scanner.match, result
 
-    scanner = re.Scanner([
-        (r'(?<!<)<(?!<)', partial(f, tid='lt')),
-        (r'(?<!>)>(?!>)', partial(f, tid='gt')),
-        (r'\{', partial(f, tid='lbrace')),
-        (r'\}', partial(f, tid='rbrace')),
-        (r':', partial(f, tid='colon')),
-        (r'[^<>\{\}:]+', partial(f, tid='text')),
-        # Harbinger stuff
-        (r'<<[^<>\{\}:]+>>', partial(f, tid='text')),
-
-    ], re.UNICODE | re.MULTILINE)
+    scanner = re.Scanner(
+        [
+            (r'(?<!<)<(?!<)', partial(f, tid='lt')),
+            (r'(?<!>)>(?!>)', partial(f, tid='gt')),
+            (r'\{', partial(f, tid='lbrace')),
+            (r'\}', partial(f, tid='rbrace')),
+            (r':', partial(f, tid='colon')),
+            (r'[^<>\{\}:]+', partial(f, tid='text')),
+            # Harbinger stuff
+            (r'<<[^<>\{\}:]+>>', partial(f, tid='text')),
+        ],
+        re.UNICODE | re.MULTILINE,
+    )
 
     in_tag = [False]
     in_text = [True]

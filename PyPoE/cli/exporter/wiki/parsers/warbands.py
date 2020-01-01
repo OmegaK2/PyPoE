@@ -44,16 +44,16 @@ from PyPoE.cli.exporter.wiki.parser import BaseParser
 # Classes
 # =============================================================================
 
+
 class WarbandsHandler(ExporterHandler):
     def __init__(self, sub_parser):
-        self.parser = sub_parser.add_parser('warbands', help='Warbands Exporter')
+        self.parser = sub_parser.add_parser(
+            'warbands', help='Warbands Exporter'
+        )
         self.parser.set_defaults(func=lambda args: self.parser.print_help())
         lua_sub = self.parser.add_subparsers()
 
-        parser = lua_sub.add_parser(
-            'warbands',
-            help='Extract warbands info.'
-        )
+        parser = lua_sub.add_parser('warbands', help='Extract warbands info.')
         self.add_default_parsers(
             parser=parser,
             cls=WarbandsParser,
@@ -62,8 +62,7 @@ class WarbandsHandler(ExporterHandler):
         )
 
         parser = lua_sub.add_parser(
-            'graph',
-            help='Extract the warbands movement graph.',
+            'graph', help='Extract the warbands movement graph.',
         )
         self.add_default_parsers(
             parser=parser,
@@ -77,11 +76,13 @@ class WarbandsHandler(ExporterHandler):
             help='The type of the graph file to extract.',
         )
         parser.add_argument(
-            '-f', '--format',
+            '-f',
+            '--format',
             choices=('svg', 'pdf', 'png'),
             default='svg',
             help='File format to use when extracting.',
         )
+
 
 class WarbandsParser(BaseParser):
 
@@ -97,8 +98,7 @@ class WarbandsParser(BaseParser):
     ]
 
     # Load translations in advance
-    _translations = [
-    ]
+    _translations = []
 
     def warbands(self, parsed_args):
         out = []
@@ -110,13 +110,12 @@ class WarbandsParser(BaseParser):
                 mob = self.monster_varieties.table_data[key]
                 out.append(mob['Name'])'''
 
-
             for i in range(1, 5):
                 out.append('Tier %s: %s\n' % (i, warband['Tier%sName' % i]))
                 for mv in warband['Tier%s_MonsterVarietiesKeys' % i]:
                     out.append("%s %s\n" % (mv['Name'], mv.rowid))
-                    #out.append(mob)
-                    #break
+                    # out.append(mob)
+                    # break
                 out.append('\n')
 
             out.append('-' * 80 + '\n')
@@ -135,7 +134,9 @@ class WarbandsParser(BaseParser):
             out_file = 'warbands_graph.cv'
 
         console('Creating Graph...')
-        dot = Digraph(comment='Warbands Graph', engine='dot', format=parsed_args.format)
+        dot = Digraph(
+            comment='Warbands Graph', engine='dot', format=parsed_args.format
+        )
         for row in dat_file:
             world_area = row['WorldAreasKey']
             dot.node(str(row.rowid), world_area['Name'])
