@@ -1613,44 +1613,44 @@ specification = Specification({
                 name='Tier4',
                 type='int',
             )),
-            ('Unknown16', Field(
-                name='Unknown16',
+            ('X0', Field(
+                name='X0',
                 type='float',
             )),
-            ('Unknown17', Field(
-                name='Unknown17',
+            ('X1', Field(
+                name='X1',
                 type='float',
             )),
-            ('Unknown18', Field(
-                name='Unknown18',
+            ('X2', Field(
+                name='X2',
                 type='float',
             )),
-            ('Unknown19', Field(
-                name='Unknown19',
+            ('X3', Field(
+                name='X3',
                 type='float',
             )),
-            ('Unknown20', Field(
-                name='Unknown20',
+            ('X4', Field(
+                name='X4',
                 type='float',
             )),
-            ('Unknown21', Field(
-                name='Unknown21',
+            ('Y0', Field(
+                name='Y0',
                 type='float',
             )),
-            ('Unknown22', Field(
-                name='Unknown22',
+            ('Y1', Field(
+                name='Y1',
                 type='float',
             )),
-            ('Unknown23', Field(
-                name='Unknown23',
+            ('Y2', Field(
+                name='Y2',
                 type='float',
             )),
-            ('Unknown24', Field(
-                name='Unknown24',
+            ('Y3', Field(
+                name='Y3',
                 type='float',
             )),
-            ('Unknown25', Field(
-                name='Unknown25',
+            ('Y4', Field(
+                name='Y4',
                 type='float',
             )),
             ('Unknown26', Field(

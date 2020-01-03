@@ -2636,10 +2636,12 @@ class ItemsParser(SkillParserShared):
                     lambda: ['False' for i in range(0, 5)])
                 for i in range(0, 5):
                     tier = atlas_node['Tier%s' % i]
+                    infobox['atlas_x%s' % i] = atlas_node['X%s' % i]
+                    infobox['atlas_y%s' % i] = atlas_node['Y%s' % i]
                     infobox['atlas_map_tier%s' % i] = tier
                     if tier:
-                        minimum = min(minimum, i)
-                    minimum += 1
+                        if minimum == 0:
+                            minimum = i
 
                     for atlas_node2 in atlas_node['AtlasNodeKeys%s' % i]:
                         ivi = atlas_node2['ItemVisualIdentityKey']
