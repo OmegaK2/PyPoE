@@ -31,8 +31,10 @@ See PyPoE/LICENSE
 
 # Python
 import os
+import time
 from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor
+from requests.exceptions import HTTPError
 
 # 3rd Party
 try:
@@ -84,6 +86,14 @@ class WikiHandler:
             action='store_true',
         )
 
+        parser.add_argument(
+            '-w-slp', '--wiki-sleep',
+            dest='wiki_sleep',
+            help='Time to sleep in seconds between requests',
+            type=int,
+            default=0,
+        )
+
     def _error_catcher(self, *args, **kwargs):
         fail = 1
         while fail > 0:
@@ -96,6 +106,19 @@ class WikiHandler:
                     msg=Msg.error
                 )
                 fail += 1
+            except HTTPError as e:
+                if '429' in e.args[0]:
+                    console(e.args[0], Msg.error)
+                    console('Retrying in 30s- total attempts: %s' % fail)
+                    time.sleep(30)
+                    fail +=1
+                else:
+                    console(
+                        'HTTPError occurred. Retrying - total attempts: %s' %
+                        fail,
+                        msg=Msg.error
+                    )
+                    fail += 1
 
     def handle_page(self, *a, row):
         if isinstance(row['wiki_page'], str):
@@ -215,7 +238,6 @@ class WikiHandler:
         self.cmdargs = cmdargs
         self.parser = parser
 
-
         if cmdargs.wiki_threads > 1:
             console('Starting thread pool...')
             tp = ThreadPoolExecutor(max_workers=cmdargs.wiki_threads)
@@ -231,6 +253,7 @@ class WikiHandler:
             console('Editing pages...')
             for row in result:
                 self._error_catcher(row=row)
+                time.sleep(cmdargs.wiki_sleep)
 
 
 class ExporterHandler(BaseHandler):

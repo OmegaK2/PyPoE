@@ -235,7 +235,32 @@ class ItemsHandler(ExporterHandler):
             func=ItemsParser.export_map,
         )
         self.add_image_arguments(parser)
+        self.add_map_series_parsers(parser)
 
+        parser.add_argument(
+            'name',
+            help='Visible name (i.e. the name you see in game). Can be '
+                 'specified multiple times.',
+            nargs='*',
+        )
+
+        #
+        # Atlas nodes
+        #
+
+        parser = core_sub.add_parser(
+            'atlas_icons', help='Atlas icons export')
+        parser.set_defaults(func=lambda args: parser.print_help())
+
+        self.add_default_parsers(
+            parser=parser,
+            cls=ItemsParser,
+            func=ItemsParser.export_map_icons,
+        )
+        self.add_image_arguments(parser)
+        self.add_map_series_parsers(parser)
+
+    def add_map_series_parsers(self, parser):
         group = parser.add_mutually_exclusive_group(required=False)
         group.add_argument(
             '-ms', '--map-series', '--filter-map-series',
@@ -247,13 +272,6 @@ class ItemsHandler(ExporterHandler):
             '-msid', '--map-series-id', '--filter-map-series-id',
             help='Filter by internal map series id',
             dest='map_series_id',
-        )
-
-        parser.add_argument(
-            'name',
-            help='Visible name (i.e. the name you see in game). Can be '
-                 'specified multiple times.',
-            nargs='*',
         )
 
     def add_default_parsers(self, *args, type=None, **kwargs):
@@ -2513,9 +2531,7 @@ class ItemsParser(SkillParserShared):
 
         return r
 
-    def export_map(self, parsed_args):
-        r = ExporterResult()
-
+    def _get_map_series(self, parsed_args):
         self.rr['MapSeries.dat'].build_index('Id')
         self.rr['MapSeries.dat'].build_index('Name')
         if parsed_args.map_series_id is not None:
@@ -2525,8 +2541,8 @@ class ItemsParser(SkillParserShared):
             except IndexError:
                 console(
                     'Invalid map series id',
-                        msg=Msg.error)
-                return r
+                    msg=Msg.error)
+                return False
         elif parsed_args.map_series is not None:
             try:
                 map_series = self.rr['MapSeries.dat'].index['Name'][
@@ -2534,8 +2550,8 @@ class ItemsParser(SkillParserShared):
             except IndexError:
                 console(
                     'Invalid map series name',
-                        msg=Msg.error)
-                return r
+                    msg=Msg.error)
+                return False
         else:
             map_series = self.rr['MapSeries.dat'][-1]
             console(
@@ -2543,6 +2559,60 @@ class ItemsParser(SkillParserShared):
                     map_series['Name'],
                 ), msg=Msg.warning
             )
+
+        return map_series
+
+    def export_map_icons(self, parsed_args):
+        r = ExporterResult()
+
+        if not parsed_args.store_images or not parsed_args.convert_images:
+            console(
+                'Image storage options must be specified for this function',
+                msg=Msg.error,
+            )
+            return r
+
+        map_series = self._get_map_series(parsed_args)
+        if map_series is False:
+            return r
+
+        # base images
+        self._image_init(parsed_args)
+        base_ico = os.path.join(self._img_path, 'Base.dds')
+
+        self._write_dds(
+            data=self.ggpk[map_series['BaseIcon_DDSFile']].record.extract().read(),
+            out_path=base_ico,
+            parsed_args=parsed_args,
+        )
+
+        for atlas_node in self.rr['AtlasNode.dat']:
+            if not atlas_node['ItemVisualIdentityKey']['DDSFile']:
+                warnings.warn(
+                   'Missing 2d art inventory icon at index %s' %
+                    atlas_node.index,
+                )
+                continue
+
+            name = atlas_node['WorldAreasKey']['Name']
+
+            ico = os.path.join(self._img_path, name + '.dds')
+
+            self._write_dds(
+                data=self.ggpk[atlas_node['ItemVisualIdentityKey'][
+                    'DDSFile']].record.extract().read(),
+                out_path=ico,
+                parsed_args=parsed_args,
+            )
+
+        return r
+
+    def export_map(self, parsed_args):
+        r = ExporterResult()
+
+        map_series = self._get_map_series(parsed_args)
+        if map_series is False:
+            return r
 
         if map_series.rowid <= 3:
             console(
