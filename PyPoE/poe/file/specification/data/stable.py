@@ -9576,51 +9576,51 @@ specification = Specification({
             )),
             ('Unknown2', Field(
                 name='Unknown2',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown3', Field(
                 name='Unknown3',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown4', Field(
                 name='Unknown4',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown5', Field(
                 name='Unknown5',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown6', Field(
                 name='Unknown6',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown7', Field(
                 name='Unknown7',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown8', Field(
                 name='Unknown8',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown9', Field(
                 name='Unknown9',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown10', Field(
                 name='Unknown10',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown11', Field(
                 name='Unknown11',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown12', Field(
                 name='Unknown12',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown13', Field(
                 name='Unknown13',
-                type='int',
+                type='ref|string',
             )),
             ('IsAtlasOfWorldsMapIcon', Field(
                 name='IsAtlasOfWorldsMapIcon',
@@ -9636,7 +9636,7 @@ specification = Specification({
             )),
             ('Unknown15', Field(
                 name='Unknown15',
-                type='int',
+                type='ref|string',
             )),
         )),
     ),
