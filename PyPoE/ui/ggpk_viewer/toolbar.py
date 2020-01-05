@@ -107,6 +107,23 @@ class ContextToolbar(QToolBar):
             return
         return indexes[0].internalPointer()
 
+    def _toolbar_extract_dds(self, path, node):
+        self.parent()._write_log(path)
+        with open(path, 'rb') as f:
+            data = f.read()
+        if data[:4] == b'DDS ':
+            return
+
+        try:
+            data = ggpk.extract_dds(
+                data, path_or_ggpk=node.record._container
+            )
+        except FileNotFoundError as e:
+            self.parent()._write_log('Broken symbolic link.\n%s' % e)
+
+        with open(path, 'wb') as f:
+            f.write(data)
+
     def _toolbar_extract(self):
         node = self._get_node()
         if node is None:
@@ -130,29 +147,17 @@ class ContextToolbar(QToolBar):
                         os.walk(os.path.join(target_dir, node.name)):
                     for file_name in files:
                         if file_name.endswith('.dds'):
-                            path = os.path.join(root, file_name)
-                            p._write_log(path)
-                            with open(path, 'rb') as f:
-                                data = f.read()
-                            if data[:4] == b'DDS ':
-                                continue
-                            data = ggpk.extract_dds(
-                                data, path_or_ggpk=node.record._container
+                            self._toolbar_extract_dds(
+                                os.path.join(root, file_name),
+                                node
                             )
-                            with open(path, 'wb') as f:
-                                f.write(data)
             elif isinstance(node.record, ggpk.FileRecord) and \
                     node.name.endswith('.dds'):
                 p._write_log(self.tr('Uncompressing DDS File...'))
-                path = os.path.join(target_dir, node.name)
-                with open(path, 'rb') as f:
-                    data = f.read()
-                if data[:4] != b'DDS ':
-                    data = ggpk.extract_dds(
-                        data, path_or_ggpk=node.record._container
-                    )
-                    with open(path, 'wb') as f:
-                        f.write(data)
+                self._toolbar_extract_dds(
+                    os.path.join(target_dir, node.name),
+                    node
+                )
 
         p._write_log(self.tr('Done.'))
 
