@@ -15742,21 +15742,15 @@ specification = Specification({
                 name='Keys2',
                 type='ref|list|ulong',
             )),
-            ('QuestFinished_OGGFile', Field(
-                name='QuestFinished_OGGFile',
-                type='ref|string',
-                file_path=True,
-                file_ext='.ogg',
-            )),
             ('Flag1', Field(
                 name='Flag1',
                 type='bool',
             )),
-            ('Objective', Field(
-                name='Objective',
-                type='ref|string',
-            )),
             ('Data1', Field(
+                name='Data1',
+                type='ref|list|int',
+            )),
+            ('Data2', Field(
                 name='Data1',
                 type='ref|list|int',
             )),
