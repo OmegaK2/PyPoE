@@ -15588,9 +15588,10 @@ specification = Specification({
                 name='Id',
                 type='ref|string',
             )),
-            ('Unknown1', Field(
-                name='Unknown1',
+            ('QuestKey', Field(
+                name='QuestKey',
                 type='ulong',
+                key='Quest.dat',
             )),
             ('QuestState', Field(
                 name='QuestState',
@@ -15614,10 +15615,10 @@ specification = Specification({
     ),
     'QuestRewards.dat': File(
         fields=OrderedDict((
-            ('QuestKey', Field(
-                name='QuestKey',
+            ('QuestRewardOffersKey', Field(
+                name='QuestRewardOffersKey',
                 type='ulong',
-                key='Quest.dat',
+                key='QuestRewardOffers.dat',
             )),
             ('Unknown1', Field(
                 name='Unknown1',
