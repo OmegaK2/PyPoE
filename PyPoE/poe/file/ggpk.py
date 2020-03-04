@@ -1016,6 +1016,8 @@ class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
                 ggpkfile=buffer,
                 offset=offset,
             )
+            if callable(kwargs['callback']):
+                kwargs['callback'](records, buffer, offset)
             offset = buffer.tell()
         self.records = records
 
