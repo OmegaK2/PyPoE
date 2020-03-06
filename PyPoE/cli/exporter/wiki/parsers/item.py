@@ -512,6 +512,11 @@ class ItemsParser(SkillParserShared):
         error_msg='Several items have not been found:\n%s',
     )
 
+    _MAP_COLORS = {
+        'mid tier': '255,210,100',
+        'high tier': '240,30,10',
+    }
+
     _MAP_RELEASE_VERSION = {
         'Betrayal': '3.5.0',
         'Synthesis': '3.6.0',
@@ -2605,6 +2610,15 @@ class ItemsParser(SkillParserShared):
                 parsed_args=parsed_args,
             )
 
+            if 'Unique' not in atlas_node['WorldAreasKey']['Id']:
+                ico = ico.replace('.dds', '.png')
+                for name, color in self._MAP_COLORS.items():
+                    #-tint
+                    os.system(
+                        '''magick convert "%s" -fill rgb(%s) -tint 100 "%s"''' % (
+                            ico, color, ico.replace('.png', ' %s.png' % name)
+                        ))
+
         return r
 
     def export_map(self, parsed_args):
@@ -2651,7 +2665,7 @@ class ItemsParser(SkillParserShared):
                 return r
 
             self._image_init(parsed_args)
-            base_ico = os.path.join(self._img_path, 'Base.dds')
+            base_ico = os.path.join(self._img_path, 'Map base icon.dds')
 
             self._write_dds(
                 data=self.ggpk[map_series['BaseIcon_DDSFile']].record.extract().read(),
@@ -2796,9 +2810,9 @@ class ItemsParser(SkillParserShared):
 
                 color = None
                 if 5 < tier <= 10:
-                    color = "255,210,100"
+                    color = self._MAP_COLORS['mid tier']
                 elif 10 < tier <= 15:
-                    color = "240,30,10"
+                    color = self._MAP_COLORS['high tier']
                 if color:
                     os.system(
                         '''magick convert "%s" -fill rgb(%s) -colorize 100 "%s"''' % (
