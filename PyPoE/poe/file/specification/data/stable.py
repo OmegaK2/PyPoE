@@ -15588,9 +15588,10 @@ specification = Specification({
                 name='Id',
                 type='ref|string',
             )),
-            ('Unknown1', Field(
-                name='Unknown1',
+            ('QuestKey', Field(
+                name='QuestKey',
                 type='ulong',
+                key='Quest.dat',
             )),
             ('QuestState', Field(
                 name='QuestState',
@@ -15614,10 +15615,10 @@ specification = Specification({
     ),
     'QuestRewards.dat': File(
         fields=OrderedDict((
-            ('QuestKey', Field(
-                name='QuestKey',
+            ('QuestRewardOffersKey', Field(
+                name='QuestRewardOffersKey',
                 type='ulong',
-                key='Quest.dat',
+                key='QuestRewardOffers.dat',
             )),
             ('Unknown1', Field(
                 name='Unknown1',
@@ -15742,21 +15743,15 @@ specification = Specification({
                 name='Keys2',
                 type='ref|list|ulong',
             )),
-            ('QuestFinished_OGGFile', Field(
-                name='QuestFinished_OGGFile',
-                type='ref|string',
-                file_path=True,
-                file_ext='.ogg',
-            )),
             ('Flag1', Field(
                 name='Flag1',
                 type='bool',
             )),
-            ('Objective', Field(
-                name='Objective',
-                type='ref|string',
-            )),
             ('Data1', Field(
+                name='Data1',
+                type='ref|list|int',
+            )),
+            ('Data2', Field(
                 name='Data1',
                 type='ref|list|int',
             )),
