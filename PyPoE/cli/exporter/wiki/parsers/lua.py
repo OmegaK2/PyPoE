@@ -844,7 +844,7 @@ class QuestRewardReader(BaseParser):
             # TODO: Skipping random map reward with zana mod here
             if item is None:
                 continue
-            quest = row['QuestKey']
+            quest = row['QuestRewardOffersKey']['QuestKey']
             character = row['CharactersKey']
 
 
