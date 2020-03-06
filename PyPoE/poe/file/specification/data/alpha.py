@@ -588,6 +588,11 @@ specification = Specification({
             )),
         )),
     ),
+    'AlternateBehaviourTypes.dat': File(
+        fields=OrderedDict((
+
+        )),
+    ),
     'AlternatePassiveAdditions.dat': File(
         fields=OrderedDict((
             ('Id', Field(
@@ -797,13 +802,29 @@ specification = Specification({
                 type='ref|string',
                 unique=True,
             )),
-            ('Unknown1', Field(
-                name='Unknown1',
+            ('Unknown4', Field(
+                name='Unknown4',
                 type='int',
             )),
             ('Key0', Field(
                 name='Key0',
                 type='ulong',
+            )),
+            ('Unknown0', Field(
+                name='Unknown0',
+                type='int',
+            )),
+            ('Unknown1', Field(
+                name='Unknown1',
+                type='int',
+            )),
+            ('Unknown2', Field(
+                name='Unknown2',
+                type='int',
+            )),
+            ('Unknown3', Field(
+                name='Unknown3',
+                type='int',
             )),
         )),
     ),
@@ -1360,20 +1381,6 @@ specification = Specification({
             )),
         )),
     ),
-    'AtlasExileInfluencePacks.dat': File(
-        fields=OrderedDict((
-            ('AtlasExileInfluenceOutcomesKey', Field(
-                name='AtlasExileInfluenceOutcomesKey',
-                type='ulong',
-                key='AtlasExileInfluenceOutcomes.dat',
-            )),
-            ('MonsterPacks', Field(
-                name='MonsterPacksKey',
-                type='ref|list|ulong',
-                key='MonsterPacks.dat'
-            )),
-        )),
-    ),
     'AtlasExileInfluenceSets.dat': File(
         fields=OrderedDict((
             ('Id', Field(
@@ -1381,10 +1388,11 @@ specification = Specification({
                 type='ref|string',
                 unique=True,
             )),
+            # Was removed at some point apprently
             ('AtlasExileInfluencePacksKey', Field(
                 name='AtlasExileInfluencePacksKey',
                 type='ref|list|ulong',
-                key='AtlasExileInfluencePacks.dat',
+                #key='AtlasExileInfluencePacks.dat',
             )),
         )),
     ),
@@ -1395,17 +1403,22 @@ specification = Specification({
                 type='ulong',
                 key='AtlasExiles.dat',
             )),
-            ('Key0', Field(
-                name='Key0',
+            ('AtlasRegionsKey', Field(
+                name='AtlasRegionsKey',
                 type='ulong',
+                key='AtlasRegions.dat',
             )),
-            ('Unknown2', Field(
-                name='Unknown2',
+            ('Unknown1', Field(
+                name='Unknown1',
                 type='int',
             )),
             ('Key1', Field(
                 name='Key1',
                 type='ulong',
+            )),
+            ('QuestState', Field(
+                name='QuestState',
+                type='int',
             )),
         )),
     ),
@@ -1464,6 +1477,14 @@ specification = Specification({
             )),
             ('Unknown10', Field(
                 name='Unknown10',
+                type='int',
+            )),
+            ('Unknown11', Field(
+                name='Unknown11',
+                type='int',
+            )),
+            ('Unknown12', Field(
+                name='Unknown12',
                 type='int',
             )),
         )),
@@ -1579,27 +1600,27 @@ specification = Specification({
             )),
             ('AtlasNodeKeys0', Field(
                 name='AtlasNodeKeys0',
-                type='ref|list|int',
+                type='ref|list|ref|generic',
                 key='AtlasNode.dat',
             )),
             ('AtlasNodeKeys1', Field(
                 name='AtlasNodeKeys1',
-                type='ref|list|int',
+                type='ref|list|ref|generic',
                 key='AtlasNode.dat',
             )),
             ('AtlasNodeKeys2', Field(
                 name='AtlasNodeKeys2',
-                type='ref|list|int',
+                type='ref|list|ref|generic',
                 key='AtlasNode.dat',
             )),
             ('AtlasNodeKeys3', Field(
                 name='AtlasNodeKeys3',
-                type='ref|list|int',
+                type='ref|list|ref|generic',
                 key='AtlasNode.dat',
             )),
             ('AtlasNodeKeys4', Field(
                 name='AtlasNodeKeys4',
-                type='ref|list|int',
+                type='ref|list|ref|generic',
                 key='AtlasNode.dat',
             )),
             ('Tier0', Field(
@@ -1622,44 +1643,44 @@ specification = Specification({
                 name='Tier4',
                 type='int',
             )),
-            ('Unknown16', Field(
-                name='Unknown16',
+            ('X0', Field(
+                name='X0',
                 type='float',
             )),
-            ('Unknown17', Field(
-                name='Unknown17',
+            ('X1', Field(
+                name='X1',
                 type='float',
             )),
-            ('Unknown18', Field(
-                name='Unknown18',
+            ('X2', Field(
+                name='X2',
                 type='float',
             )),
-            ('Unknown19', Field(
-                name='Unknown19',
+            ('X3', Field(
+                name='X3',
                 type='float',
             )),
-            ('Unknown20', Field(
-                name='Unknown20',
+            ('X4', Field(
+                name='X4',
                 type='float',
             )),
-            ('Unknown21', Field(
-                name='Unknown21',
+            ('Y0', Field(
+                name='Y0',
                 type='float',
             )),
-            ('Unknown22', Field(
-                name='Unknown22',
+            ('Y1', Field(
+                name='Y1',
                 type='float',
             )),
-            ('Unknown23', Field(
-                name='Unknown23',
+            ('Y2', Field(
+                name='Y2',
                 type='float',
             )),
-            ('Unknown24', Field(
-                name='Unknown24',
+            ('Y3', Field(
+                name='Y3',
                 type='float',
             )),
-            ('Unknown25', Field(
-                name='Unknown25',
+            ('Y4', Field(
+                name='Y4',
                 type='float',
             )),
             ('Unknown26', Field(
@@ -1952,7 +1973,7 @@ specification = Specification({
             )),
             ('NormalPurchase_BaseItemTypesKeys', Field(
                 name='NormalPurchase_BaseItemTypesKeys',
-                type='ref|list|uint',
+                type='ref|list|ref|generic',
                 key='BaseItemTypes.dat',
             )),
             ('NormalPurchase_Costs', Field(
@@ -1961,7 +1982,7 @@ specification = Specification({
             )),
             ('MagicPurchase_BaseItemTypesKeys', Field(
                 name='MagicPurchase_BaseItemTypesKeys',
-                type='ref|list|uint',
+                type='ref|list|ref|generic',
                 key='BaseItemTypes.dat',
             )),
             ('MagicPurchase_Costs', Field(
@@ -2003,7 +2024,7 @@ specification = Specification({
             )),
             ('RarePurchase_BaseItemTypesKeys', Field(
                 name='RarePurchase_BaseItemTypesKeys',
-                type='ref|list|uint',
+                type='ref|list|ref|generic',
                 key='BaseItemTypes.dat',
             )),
             ('RarePurchase_Costs', Field(
@@ -2012,7 +2033,7 @@ specification = Specification({
             )),
             ('UniquePurchase_BaseItemTypesKeys', Field(
                 name='UniquePurchase_BaseItemTypesKeys',
-                type='ref|list|uint',
+                type='ref|list|ref|generic',
                 key='BaseItemTypes.dat',
             )),
             ('UniquePurchase_Costs', Field(
@@ -2031,8 +2052,8 @@ specification = Specification({
                 key='AchievementItems.dat',
                 description='Achievement check when equipping this item',
             )),
-            ('IsPickedUpByMonsters', Field(
-                name='IsPickedUpByMonsters',
+            ('IsCorrupted', Field(
+                name='IsCorrupted',
                 type='bool',
             )),
             ('Identify_AchievementItemsKeys', Field(
@@ -2055,7 +2076,7 @@ specification = Specification({
             # can only hold currencies it seems
             ('FragmentBaseItemTypesKey', Field(
                 name='FragmentBaseItemTypesKey',
-                type='uint',
+                type='ref|generic',
                 key='BaseItemTypes.dat',
             )),
             ('IsBlessing', Field(
@@ -2144,7 +2165,7 @@ specification = Specification({
             )),
             ('BestiaryCapturableMonstersKey', Field(
                 name='BestiaryCapturableMonstersKey',
-                type='int',
+                type='ref|generic',
                 key='BestiaryCapturableMonsters.dat',
             )),
             ('Flag2', Field(
@@ -5300,8 +5321,8 @@ specification = Specification({
                 type='int',
             )),
             # 3.9
-            ('Unknown6', Field(
-                name='Unknown6',
+            ('Armour', Field(
+                name='Armour',
                 type='int',
             )),
         )),
@@ -8132,7 +8153,7 @@ specification = Specification({
             )),
             ('GrantedEffectsKey', Field(
                 name='GrantedEffectsKey',
-                type='int',
+                type='ref|generic',
                 key='GrantedEffects.dat',
             )),
         )),
@@ -8877,7 +8898,7 @@ specification = Specification({
             )),
             ('RoomUpgrade_IncursionRoomsKey', Field(
                 name='RoomUpgrade_IncursionRoomsKey',
-                type='uint',
+                type='ref|generic',
                 key='IncursionRooms.dat',
             )),
             ('ModsKey', Field(
@@ -8941,7 +8962,7 @@ specification = Specification({
             )),
             ('RoomUpgradeFrom_IncursionRoomsKey', Field(
                 name='RoomUpgradeFrom_IncursionRoomsKey',
-                type='uint',
+                type='ref|generic',
                 key='IncursionRooms.dat',
             )),
         )),
@@ -9585,51 +9606,51 @@ specification = Specification({
             )),
             ('Unknown2', Field(
                 name='Unknown2',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown3', Field(
                 name='Unknown3',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown4', Field(
                 name='Unknown4',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown5', Field(
                 name='Unknown5',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown6', Field(
                 name='Unknown6',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown7', Field(
                 name='Unknown7',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown8', Field(
                 name='Unknown8',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown9', Field(
                 name='Unknown9',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown10', Field(
                 name='Unknown10',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown11', Field(
                 name='Unknown11',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown12', Field(
                 name='Unknown12',
-                type='int',
+                type='ref|string',
             )),
             ('Unknown13', Field(
                 name='Unknown13',
-                type='int',
+                type='ref|string',
             )),
             ('IsAtlasOfWorldsMapIcon', Field(
                 name='IsAtlasOfWorldsMapIcon',
@@ -9645,7 +9666,7 @@ specification = Specification({
             )),
             ('Unknown15', Field(
                 name='Unknown15',
-                type='int',
+                type='ref|string',
             )),
         )),
     ),
@@ -10067,7 +10088,7 @@ specification = Specification({
             )),
             ('LabyrinthSectionLayoutKeys', Field(
                 name='LabyrinthSectionLayoutKeys',
-                type='ref|list|int',
+                type='ref|list|ref|generic',
                 key='LabyrinthSectionLayout.dat',
             )),
             ('LabyrinthSecretsKey0', Field(
@@ -10660,7 +10681,6 @@ specification = Specification({
             ('Id', Field(
                 name='Id',
                 type='ref|string',
-                unique=True,
             )),
         )),
     ),
@@ -11136,6 +11156,18 @@ specification = Specification({
                 file_path=True,
                 file_ext='.dds',
             )),
+            ('Shaper_DDSFile', Field(
+                name='Shaper_DDSFile',
+                type='ref|string',
+                file_path=True,
+                file_ext='.dds',
+            )),
+            ('Elder_DDSFile', Field(
+                name='Elder_DDSFile',
+                type='ref|string',
+                file_path=True,
+                file_ext='.dds',
+            )),
         )),
     ),
     'MapSeriesTiers.dat': File(
@@ -11283,7 +11315,7 @@ specification = Specification({
             )),
             ('Shaped_Base_MapsKey', Field(
                 name='Shaped_Base_MapsKey',
-                type='int',
+                type='ref|generic',
                 key='Maps.dat',
             )),
             ('Shaped_AreaLevel', Field(
@@ -11292,19 +11324,19 @@ specification = Specification({
             )),
             ('UpgradedFrom_MapsKey', Field(
                 name='UpgradedFrom_MapsKey',
-                type='int',
+                type='ref|generic',
                 key='Maps.dat',
             )),
             # TODO upgrades into?
             ('MapsKey2', Field(
                 name='MapsKey2',
-                type='int',
+                type='ref|generic',
                 key='Maps.dat',
             )),
             # TODO upgrades into for unique maps?
             ('MapsKey3', Field(
                 name='MapsKey3',
-                type='int',
+                type='ref|generic',
                 key='Maps.dat',
             )),
             ('MapSeriesKey', Field(
@@ -15598,9 +15630,10 @@ specification = Specification({
                 name='Id',
                 type='ref|string',
             )),
-            ('Unknown1', Field(
-                name='Unknown1',
+            ('QuestKey', Field(
+                name='QuestKey',
                 type='ulong',
+                key='Quest.dat',
             )),
             ('QuestState', Field(
                 name='QuestState',
@@ -15624,10 +15657,10 @@ specification = Specification({
     ),
     'QuestRewards.dat': File(
         fields=OrderedDict((
-            ('QuestKey', Field(
-                name='QuestKey',
+            ('QuestRewardOffersKey', Field(
+                name='QuestRewardOffersKey',
                 type='ulong',
-                key='Quest.dat',
+                key='QuestRewardOffers.dat',
             )),
             ('Unknown1', Field(
                 name='Unknown1',
@@ -15667,7 +15700,7 @@ specification = Specification({
             )),
             ('Key1', Field(
                 name='Key1',
-                type='ulong',
+                type='ref|list|ulong',
             )),
             ('Unknown3', Field(
                 name='Unknown3',
@@ -15752,21 +15785,15 @@ specification = Specification({
                 name='Keys2',
                 type='ref|list|ulong',
             )),
-            ('QuestFinished_OGGFile', Field(
-                name='QuestFinished_OGGFile',
-                type='ref|string',
-                file_path=True,
-                file_ext='.ogg',
-            )),
             ('Flag1', Field(
                 name='Flag1',
                 type='bool',
             )),
-            ('Objective', Field(
-                name='Objective',
-                type='ref|string',
-            )),
             ('Data1', Field(
+                name='Data1',
+                type='ref|list|int',
+            )),
+            ('Data2', Field(
                 name='Data1',
                 type='ref|list|int',
             )),
@@ -16396,7 +16423,7 @@ specification = Specification({
             )),
             ('Upgrade_ShopPaymentPackageKey', Field(
                 name='Upgrade_ShopPaymentPackageKey',
-                type='int',
+                type='ref|generic',
                 key='ShopPaymentPackage.dat',
             )),
             ('PhysicalItemPoints', Field(
@@ -17138,13 +17165,13 @@ specification = Specification({
             # value of the stat is added to MainHandAlias_StatsKey if weapon is in main-hand
             ('MainHandAlias_StatsKey', Field(
                 name='MainHandAlias_StatsKey',
-                type='int',
+                type='ref|generic',
                 key='Stats.dat',
             )),
             # value of the stat is added to OffHandAlias_StatsKey if weapon is in off-hand
             ('OffHandAlias_StatsKey', Field(
                 name='OffHandAlias_StatsKey',
-                type='int',
+                type='ref|generic',
                 key='Stats.dat',
             )),
             ('Flag7', Field(
@@ -18556,12 +18583,12 @@ specification = Specification({
             )),
             ('UniqueStashLayoutKey', Field(
                 name='UniqueStashLayoutKey',
-                type='int',
+                type='ref|generic',
                 key='UniqueStashLayout.dat',
             )),
             ('UniqueStashLayoutKey2', Field(
                 name='UniqueStashLayoutKey2',
-                type='int',
+                type='ref|generic',
                 key='UniqueStashLayout.dat',
             )),
             ('Flag2', Field(
@@ -18952,7 +18979,7 @@ specification = Specification({
             )),
             ('Connections_WorldAreasKeys', Field(
                 name='Connections_WorldAreasKeys',
-                type='ref|list|uint',
+                type='ref|list|ref|generic',
                 key='WorldAreas.dat',
             )),
             ('AreaLevel', Field(
@@ -18996,7 +19023,7 @@ specification = Specification({
             )),
             ('ParentTown_WorldAreasKey', Field(
                 name='ParentTown_WorldAreasKey',
-                type='uint',
+                type='ref|generic',
                 key='WorldAreas.dat',
             )),
             ('Unknown17', Field(
@@ -19069,7 +19096,7 @@ specification = Specification({
             )),
             ('VaalArea_WorldAreasKeys', Field(
                 name='VaalArea_WorldAreasKeys',
-                type='ref|list|int',
+                type='ref|list|ref|generic',
                 key='WorldAreas.dat',
             )),
             ('VaalArea_SpawnChance', Field(
