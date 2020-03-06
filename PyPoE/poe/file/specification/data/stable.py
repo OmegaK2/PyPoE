@@ -588,6 +588,11 @@ specification = Specification({
             )),
         )),
     ),
+    'AlternateBehaviourTypes.dat': File(
+        fields=OrderedDict((
+
+        )),
+    ),
     'AlternatePassiveAdditions.dat': File(
         fields=OrderedDict((
             ('Id', Field(
@@ -797,13 +802,29 @@ specification = Specification({
                 type='ref|string',
                 unique=True,
             )),
-            ('Unknown1', Field(
-                name='Unknown1',
+            ('Unknown4', Field(
+                name='Unknown4',
                 type='int',
             )),
             ('Key0', Field(
                 name='Key0',
                 type='ulong',
+            )),
+            ('Unknown0', Field(
+                name='Unknown0',
+                type='int',
+            )),
+            ('Unknown1', Field(
+                name='Unknown1',
+                type='int',
+            )),
+            ('Unknown2', Field(
+                name='Unknown2',
+                type='int',
+            )),
+            ('Unknown3', Field(
+                name='Unknown3',
+                type='int',
             )),
         )),
     ),
@@ -1367,10 +1388,11 @@ specification = Specification({
                 type='ref|string',
                 unique=True,
             )),
+            # Was removed at some point apprently
             ('AtlasExileInfluencePacksKey', Field(
                 name='AtlasExileInfluencePacksKey',
                 type='ref|list|ulong',
-                key='AtlasExileInfluencePacks.dat',
+                #key='AtlasExileInfluencePacks.dat',
             )),
         )),
     ),
@@ -1455,6 +1477,14 @@ specification = Specification({
             )),
             ('Unknown10', Field(
                 name='Unknown10',
+                type='int',
+            )),
+            ('Unknown11', Field(
+                name='Unknown11',
+                type='int',
+            )),
+            ('Unknown12', Field(
+                name='Unknown12',
                 type='int',
             )),
         )),
@@ -11122,6 +11152,18 @@ specification = Specification({
             )),
             ('Infected_DDSFile', Field(
                 name='Infected_DDSFile',
+                type='ref|string',
+                file_path=True,
+                file_ext='.dds',
+            )),
+            ('Shaper_DDSFile', Field(
+                name='Shaper_DDSFile',
+                type='ref|string',
+                file_path=True,
+                file_ext='.dds',
+            )),
+            ('Elder_DDSFile', Field(
+                name='Elder_DDSFile',
                 type='ref|string',
                 file_path=True,
                 file_ext='.dds',

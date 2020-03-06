@@ -63,7 +63,7 @@ def files(poe_version):
 
 # Kind of testing the reading of the files twice, but whatever.
 # dat_file_name is parametrized in conftest.py
-@pytest.mark.parametrize('x64', (True, False))
+@pytest.mark.parametrize('x64', (False, ))
 def test_definitions(dat_file_name, ggpkfile, x64):
     opt = {
         'use_dat_value': False,
