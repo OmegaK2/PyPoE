@@ -1042,6 +1042,7 @@ class TagHandler:
         'normal': partial(_default_handler, tid='normal'),
         'default': partial(_default_handler, tid='default'),
         'augmented': partial(_default_handler, tid='augmented'),
+        'enchanted': partial(_default_handler, tid='enchanted'),
 
         'size': _pass_through_handler,
         'smaller': _pass_through_handler,
