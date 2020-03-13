@@ -523,6 +523,7 @@ class ItemsParser(SkillParserShared):
         'Legion': '3.7.0',
         'Blight': '3.8.0',
         'Metamorphosis': '3.9.0',
+        'Delirium': '3.10.0',
     }
 
     _IGNORE_DROP_LEVEL_CLASSES = (
