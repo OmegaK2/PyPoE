@@ -617,7 +617,8 @@ class MAP_FRAGMENT_FAMILIES(IntEnumOverride):
     HARBINGER = 9
     PERANDUS = 10
     LEGION = 11
-    REGULAR = 12
+    METAMORPH = 12
+    REGULAR = 13
 
     DEFAULT = REGULAR
     STANDARD = REGULAR
@@ -669,6 +670,8 @@ class MOD_DOMAIN(IntEnumOverride):
         Synthesis global modifiers for areas
     SYNTHESIS_BONUS
         Synthesis modifiers that grant a bonus to other modifiers
+    AFFLICTION_JEWEL
+        Modifiers for the affliction jewels
     """
     ITEM = 1
     FLASK = 2
@@ -691,7 +694,8 @@ class MOD_DOMAIN(IntEnumOverride):
     SYNTHESIS_A = 18
     SYNTHESIS_GLOBALS = 19
     SYNTHESIS_BONUS = 20
-    UNDEFINED = 21
+    AFFLICTION_JEWEL = 21
+    UNDEFINED = 22
 
     # legacy names
     MASTER = CRAFTED
@@ -743,6 +747,8 @@ class MOD_GENERATION_TYPE(IntEnumOverride):
         TODO
     BLIGHT
         TODO
+    MONSTER_AFFLICTION
+        TODO
     """
     PREFIX = 1
     SUFFIX = 2
@@ -762,6 +768,7 @@ class MOD_GENERATION_TYPE(IntEnumOverride):
     SYNTHESIS_BONUS = 17
     BLIGHT = 18
     BLIGHT_TOWER = 19
+    MONSTER_AFFLICTION = 20
 
 
 class WORDLISTS(IntEnumOverride):
