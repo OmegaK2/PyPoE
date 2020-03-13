@@ -91,15 +91,17 @@ class GraphGroup(ReprMixin):
         id (index in list) of the this group
     nodes : list[GraphGroupNode]
         list of child :class:`GraphGroupNode` instances
+    flag : bool
+        ?
     """
 
-    __slots__ = ['x', 'y', 'id', 'nodes']
+    __slots__ = ['x', 'y', 'id', 'nodes', 'flag']
 
     _REPR_EXTRA_ATTRIBUTES = OrderedDict((
         ('nodes', None),
     ))
 
-    def __init__(self, x, y, id):
+    def __init__(self, x, y, id, flag):
         """
         Parameters
         ----------
@@ -111,11 +113,14 @@ class GraphGroup(ReprMixin):
             id (index in list) of the this group
         nodes : list[GraphGroupNode]
             list of child :class:`GraphGroupNode` instances
+        flag : bool
+            ?
         """
         self.x = x
         self.y = y
         self.id = id
         self.nodes = []
+        self.flag = flag
 
     @property
     def point(self):
@@ -286,12 +291,12 @@ class PSGFile(AbstractFileReadOnly):
 
         self.groups = []
         for i in range(0, group_length):
-            x, y, passive_length = struct.unpack_from(
-                '<ffI', data, offset=offset
+            x, y, flag, passive_length = struct.unpack_from(
+                '<ffbI', data, offset=offset
             )
-            offset += 4*2+4
+            offset += 4*2+4+1
 
-            group = GraphGroup(x=x, y=y, id=len(self.groups))
+            group = GraphGroup(x=x, y=y, id=len(self.groups), flag=flag)
 
             for j in range(0, passive_length):
                 rowid, radius, position, connections_length = struct.unpack_from(
@@ -336,3 +341,7 @@ class PSGFile(AbstractFileReadOnly):
 # =============================================================================
 # Functions
 # =============================================================================
+
+if __name__ == '__main__':
+    psg = PSGFile()
+    psg.read('C:/Temp/Metadata/PassiveSkillGraph.psg')

@@ -976,7 +976,7 @@ class QuestRewardReader(BaseParser):
                     data['act'] = quest['Act']
                     data['reward'] = item['Name']
 
-                    data['npc'] = row['NPCKey']['Name']
+                    data['npc'] = ', '.join([n['Name'] for n in row['NPCKeys']])
 
                     if classes:
                         data['classes'] = '\u001F'.join(

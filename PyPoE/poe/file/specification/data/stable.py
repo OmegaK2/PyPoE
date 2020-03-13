@@ -16482,9 +16482,9 @@ specification = Specification({
                 type='int',
                 unique=True,
             )),
-            ('NPCKey', Field(
-                name='NPCKey',
-                type='ulong',
+            ('NPCKeys', Field(
+                name='NPCKeys',
+                type='ref|list|ulong',
                 key='NPCs.dat',
             )),
             ('QuestState', Field(
