@@ -42,7 +42,7 @@ from collections import defaultdict
 # 3rd-party
 import mwclient
 import mwparserfromhell
-from fuzzywuzzy import fuzz
+from rapidfuzz import fuzz
 
 # self
 from PyPoE.poe.constants import WORDLISTS
