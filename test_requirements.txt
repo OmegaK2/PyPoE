@@ -5,7 +5,7 @@ graphviz
 tqdm
 mwclient
 mwparserfromhell
-fuzzywuzzy
+rapidfuzz
 sqlalchemy
 pymysql
 PyOpenGL

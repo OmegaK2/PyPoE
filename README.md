@@ -73,4 +73,4 @@ Credits - Libraries
 * graphviz ([pypi](https://pypi.org/project/graphviz/))
 * mwclient ([pypi](https://pypi.org/project/mwclient/))
 * mwclientparserfromhell ([pypi](https://pypi.org/project/mwparserfromhell/))
-* fuzzywuzzy ([pypi](https://pypi.org/project/fuzzywuzzy/))
+* rapidfuzz ([pypi](https://pypi.org/project/rapidfuzz/))
