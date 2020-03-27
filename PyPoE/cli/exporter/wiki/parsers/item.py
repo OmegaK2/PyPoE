@@ -1533,13 +1533,103 @@ class ItemsParser(SkillParserShared):
         max_level = len(exp_total)-1
         ge = skill_gem['GrantedEffectsKey']
 
-        self._skill(ge=ge, infobox=infobox, parsed_args=self._parsed_args,
+        primary = OrderedDict()
+        self._skill(ge=ge, infobox=primary, parsed_args=self._parsed_args,
                     msg_name=base_item_type['Name'], max_level=max_level)
+
+        # Some skills have a secondary skill effect.
+        #
+        # Currently there is no great way of handling this in the wiki, so the
+        # secondary effects are just added. Skills that have their own entry
+        # are excluded so we don't get vaal skill gems here.
+        second = False
+        if skill_gem['GrantedEffectsKey2']:
+            index = None
+            try:
+                index = self.rr['SkillGems.dat'].index['GrantedEffectsKey']
+            except KeyError:
+                self.rr['SkillGems.dat'].build_index('GrantedEffectsKey')
+                index = self.rr['SkillGems.dat'].index['GrantedEffectsKey']
+
+            if not index[skill_gem['GrantedEffectsKey2']]:
+                # If there is no skill granting this it's probably fine to
+                # include.
+                second = True
+
+        if second:
+            secondary = OrderedDict()
+            self._skill(
+                ge=skill_gem['GrantedEffectsKey2'],
+                infobox=secondary,
+                parsed_args=self._parsed_args,
+                msg_name=base_item_type['Name'],
+                max_level=max_level
+            )
+
+            for k, v in list(primary.items()) + list(secondary.items()):
+                # Just override the stuff if needs be.
+                if 'stat' not in k:
+                    infobox[k] = v
+
+            for k in ('stat_text', 'quality_stat_text'):
+                infobox[k] = '<br>'.join(
+                    [x for x in (primary[k], secondary[k]) if x]
+                )
+
+            # Stat merging...
+            def get_stat(i, prefix, data):
+                return (data['%s_stat%s_id' % (prefix, i)],
+                        data['%s_stat%s_value' % (prefix, i)])
+
+            def set_stat(i, prefix, sid, sv):
+                infobox['%s_stat%s_id' % (prefix, i)] = sid
+                infobox['%s_stat%s_value' % (prefix, i)] = sv
+
+            def cp_stats(prefix):
+                i = 1
+                while True:
+                    try:
+                        sid, sv = get_stat(i, prefix, primary)
+                    except KeyError:
+                        break
+                    set_stat(i, prefix, sid, sv)
+                    i += 1
+
+                j = 1
+                while True:
+                    try:
+                        sid, sv = get_stat(j, prefix, secondary)
+                    except KeyError:
+                        break
+                    set_stat(j + i - 1, prefix, sid, sv)
+                    j += 1
+
+            cp_stats('static')
+            lv = 1
+            while True:
+                prefix = 'level%s' % lv
+                try:
+                    primary[prefix]
+                except KeyError:
+                    break
+
+                for k in ('_stat_text', ):
+                    k = prefix + k
+                    infobox[k] = '<br>'.join(
+                        [x[k] for x in (primary, secondary) if k in x]
+                    )
+                cp_stats(prefix)
+
+                lv += 1
+        else:
+            for k, v in primary.items():
+                infobox[k] = v
 
         # some descriptions come from active skills which are parsed in above
         # function
         if 'gem_description' not in infobox:
-            infobox['gem_description'] = skill_gem['Description']
+            infobox['gem_description'] = skill_gem['Description'].replace(
+                '\n', '<br>')
 
         #
         # Output handling for progression
