@@ -402,7 +402,7 @@ class ProphecyParser(parser.BaseParser):
     )
 
     def __init__(self, *args, **kwargs):
-        super().__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.lang = config.get_option('language')
 
     def by_rowid(self, parsed_args):
