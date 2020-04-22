@@ -985,7 +985,7 @@ class QuestRewardReader(BaseParser):
                             [cls['Name'] for cls in classes]
                         )
 
-                    key = quest['Id'] + item['Id']
+                    key = quest['Id'] + item['Id'] + data['npc']
                     if key in compress:
                         if 'classes' in data:
                             compress[key]['classes'] += self._UNIT_SEP + \
