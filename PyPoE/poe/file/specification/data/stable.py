@@ -2077,6 +2077,14 @@ specification = Specification({
                 name='Name',
                 type='ref|string',
             )),
+            ('Unknown0', Field(
+                name='Unknown0',
+                type='int',
+            )),
+            ('Unknown1', Field(
+                name='Unknown1',
+                type='int',
+            )),
             ('Unknown2', Field(
                 name='Unknown2',
                 type='int',
@@ -6041,9 +6049,9 @@ specification = Specification({
                 name='MinTier',
                 type='int',
             )),
-            ('Tier', Field(
-                name='Tier',
-                type='int',
+            ('Type', Field(
+                name='Type',
+                type='ref|string',
             )),
             ('MinDepth', Field(
                 name='MinDepth',
