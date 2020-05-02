@@ -2287,23 +2287,12 @@ class ItemsParser(SkillParserShared):
     def _conflict_maps(self, infobox, base_item_type, rr, language):
         id = base_item_type['Id'].replace('Metadata/Items/Maps/', '')
         # Legacy maps
-        map_version = None
         for row in rr['MapSeries.dat']:
             if not id.startswith(row['Id']):
                 continue
-            map_version = row['Name']
+            break
 
-        if 'Harbinger' in id:
-            name = '%s (%s) (%s)' % (
-                base_item_type['Name'],
-                self._LANG[language][re.sub(r'^.*Harbinger', '', id)],
-                map_version,
-            )
-        else:
-            name = '%s (%s)' % (
-                base_item_type['Name'],
-                map_version
-            )
+        name = self._format_map_name(base_item_type, row)
 
         # Each iteration of maps has it's own art
         infobox['inventory_icon'] = name
@@ -2629,6 +2618,21 @@ class ItemsParser(SkillParserShared):
 
         return r
 
+    def _format_map_name(self, base_item_type, map_series, language=None):
+        if language is None:
+            language = self._language
+        if 'Harbinger' in base_item_type['Id']:
+            return '%s (%s) (%s)' % (
+                base_item_type['Name'],
+                self._LANG[language][re.sub(r'^.*Harbinger', '', base_item_type['Id'])],
+                map_series['Name']
+            )
+        else:
+            return '%s (%s)' % (
+                base_item_type['Name'],
+                map_series['Name']
+            )
+
     def _get_map_series(self, parsed_args):
         self.rr['MapSeries.dat'].build_index('Id')
         self.rr['MapSeries.dat'].build_index('Name')
@@ -2743,8 +2747,9 @@ class ItemsParser(SkillParserShared):
                         'IsAtlasOfWorldsMapIcon']:
                     break
             else:
-                # Safeguard in case all entries are unique for some reason (???)
-                continue
+                # Maps that are no longer on the atlas such as guardian maps
+                # or harbinger
+                atlas_node = None
             if names and maps['BaseItemTypesKey']['Name'] in names or \
                     not names:
                 map_series_tiers[row] = atlas_node
@@ -2776,7 +2781,10 @@ class ItemsParser(SkillParserShared):
         for row, atlas_node in map_series_tiers.items():
             maps = row['MapsKey']
             base_item_type = maps['BaseItemTypesKey']
-            name = '%s (%s)' % (base_item_type['Name'], map_series['Name'])
+            name = self._format_map_name(
+                base_item_type,
+                map_series
+            )
             tier = row['%sTier' % map_series['Id']]
 
             # Base info
@@ -2796,55 +2804,57 @@ class ItemsParser(SkillParserShared):
             infobox['inventory_icon'] = name
 
             if self._language != 'English' and parsed_args.english_file_link:
-                infobox['inventory_icon'] = '%s (%s)' % (
-                    self.rr2['BaseItemTypes.dat'][base_item_type.rowid]['Name'],
-                    self.rr2['MapSeries.dat'][map_series.rowid]['Name']
+                infobox['inventory_icon'] = self._format_map_name(
+                    self.rr2['BaseItemTypes.dat'][base_item_type.rowid],
+                    self.rr2['MapSeries.dat'][map_series.rowid],
+                    'English',
                 )
             else:
                 infobox['inventory_icon'] = name
 
-            if latest:
-                infobox['atlas_x'] = atlas_node['X']
-                infobox['atlas_y'] = atlas_node['Y']
-                infobox['atlas_region_id'] = atlas_node['AtlasRegionsKey']['Id']
+            if atlas_node:
+                if latest:
+                    infobox['atlas_x'] = atlas_node['X']
+                    infobox['atlas_y'] = atlas_node['Y']
+                    infobox['atlas_region_id'] = atlas_node['AtlasRegionsKey'][
+                        'Id']
 
-                minimum = 0
-                connections = defaultdict(
-                    lambda: ['False' for i in range(0, 5)])
-                for i in range(0, 5):
-                    tier = atlas_node['Tier%s' % i]
-                    infobox['atlas_x%s' % i] = atlas_node['X%s' % i]
-                    infobox['atlas_y%s' % i] = atlas_node['Y%s' % i]
-                    infobox['atlas_map_tier%s' % i] = tier
-                    if tier:
-                        if minimum == 0:
-                            minimum = i
+                    minimum = 0
+                    connections = defaultdict(
+                        lambda: ['False' for i in range(0, 5)])
+                    for i in range(0, 5):
+                        tier = atlas_node['Tier%s' % i]
+                        infobox['atlas_x%s' % i] = atlas_node['X%s' % i]
+                        infobox['atlas_y%s' % i] = atlas_node['Y%s' % i]
+                        infobox['atlas_map_tier%s' % i] = tier
+                        if tier:
+                            if minimum == 0:
+                                minimum = i
 
-                    for atlas_node2 in atlas_node['AtlasNodeKeys%s' % i]:
-                        ivi = atlas_node2['ItemVisualIdentityKey']
-                        if ivi['IsAtlasOfWorldsMapIcon']:
-                            key = '%s (%s)' % (
-                                atlas_node2['MapsKey']['BaseItemTypesKey'][
-                                    'Name'],
-                                map_series['Name']
-                            )
-                        else:
-                            key = '%s (%s)' % (
-                                self.rr['UniqueMaps.dat'].index[
-                                    'ItemVisualIdentityKey'][ivi]['WordsKey'][
-                                    'Text'],
-                                map_series['Name']
-                            )
-                        connections[key][i] = 'True'
+                        for atlas_node2 in atlas_node['AtlasNodeKeys%s' % i]:
+                            ivi = atlas_node2['ItemVisualIdentityKey']
+                            if ivi['IsAtlasOfWorldsMapIcon']:
+                                key = self._format_map_name(
+                                    atlas_node2['MapsKey']['BaseItemTypesKey'],
+                                    map_series,
+                                )
+                            else:
+                                key = '%s (%s)' % (
+                                    self.rr['UniqueMaps.dat'].index[
+                                        'ItemVisualIdentityKey'][ivi][
+                                        'WordsKey']['Text'],
+                                    map_series['Name']
+                                )
+                            connections[key][i] = 'True'
 
-                infobox['atlas_region_minimum'] = minimum
-                for i, (k, v) in enumerate(connections.items(), start=1):
-                    infobox['atlas_connection%s_target' % i] = k
-                    infobox['atlas_connection%s_tier' % i] = ', '.join(v)
+                    infobox['atlas_region_minimum'] = minimum
+                    for i, (k, v) in enumerate(connections.items(), start=1):
+                        infobox['atlas_connection%s_target' % i] = k
+                        infobox['atlas_connection%s_tier' % i] = ', '.join(v)
 
-            infobox['flavour_text'] = \
-                atlas_node['FlavourTextKey']['Text'].replace('\n', '<br>')\
-                .replace('\r', '')
+                infobox['flavour_text'] = \
+                    atlas_node['FlavourTextKey']['Text'].replace('\n', '<br>')\
+                    .replace('\r', '')
 
             if tier < 17:
                 self._process_purchase_costs(
@@ -2883,7 +2893,8 @@ class ItemsParser(SkillParserShared):
             )
 
             if parsed_args.store_images and self.ggpk:
-                if not atlas_node['ItemVisualIdentityKey']['DDSFile']:
+                if atlas_node is None or \
+                        not atlas_node['ItemVisualIdentityKey']['DDSFile']:
                     warnings.warn(
                         'Missing 2d art inventory icon for item "%s"' %
                         base_item_type['Name']
