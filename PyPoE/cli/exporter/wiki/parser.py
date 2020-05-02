@@ -96,72 +96,6 @@ DEFAULT_INDENT = 32
 _inter_wiki_map = {
     'English': (
         #
-        # Attibutes
-        #
-        ('Dexterity', {'link': 'Dexterity'}),
-        ('Intelligence', {'link': 'Intelligence'}),
-        ('Strength', {'link': 'Strength'}),
-        #
-        # Offense stats
-        #
-        ('Accuracy Rating', {'link': 'Accuracy Rating'}),
-        ('Accuracy', {'link': 'Accuracy'}),
-        ('Attack Speed', {'link': 'Attack Speed'}),
-        ('Cast Speed', {'link': 'Cast Speed'}),
-        ('Critical Strike Chance', {'link': 'Critical Strike Chance'}),
-        ('Critical Strike Multiplier', {'link': 'Critical Strike Multiplier'}),
-        ('Critical Strike', {'link': 'Critical Strike'}),
-        ('Movement Speed', {'link': 'Movement Speed'}),
-        ('Leech', {'link': 'Leech'}), # Life Leech, Mana Leech
-        ('Low Life', {'link': 'Low Life'}),
-        ('Full Life', {'link': 'Full Life'}),
-        ('Life', {'link': 'Life'}),
-        ('Mana Reservation', {'link': 'Mana Reservation'}),
-        ('Low Mana', {'link': 'Low Mana'}),
-        ('Full Mana', {'link': 'Full Mana'}),
-        ('Mana', {'link': 'Mana'}),
-        # Just damage
-        #('Damage', {'link': 'Damage'}),
-        #
-        # Defenses
-        #
-        ('Armour Rating', {'link': 'Armour Rating'}),
-        ('Armour', {'link': 'Armour'}),
-        ('Energy Shield', {'link': 'Energy Shield'}),
-        ('Evasion Rating', {'link': 'Evasion Rating'}),
-        ('Evasion', {'link': 'Evasion'}),
-        ('Spell Block', {'link': 'Spell Block'}),
-        ('Block', {'link': 'Block'}),
-        ('Spell Dodge', {'link': 'Spell Dodge'}),
-        ('Dodge', {'link': 'Dodge'}),
-        #
-        ('Chaos Resistance(?:|s)', {'link': 'Chaos Resistance'}),
-        ('Cold Resistance(?:|s)', {'link': 'Cold Resistance'}),
-        ('Fire Resistance(?:|s)', {'link': 'Fire Resistance'}),
-        ('Lightning Resistance(?:|s)', {'link': 'Lightning Resistance'}),
-        ('Elemental Resistance(?:|s)', {'link': 'Elemental Resistance'}),
-        #
-        # Buffs
-        #
-
-        # Charges
-        ('Endurance Charge(?:|s)', {'link': 'Endurance Charge'}),
-        ('Frenzy Charge(?:|s)', {'link': 'Frenzy Charge'}),
-        ('Power Charge(?:|s)', {'link': 'Power Charge'}),
-
-        # Friendly
-        ('Rampage', {'link': 'Rampage'}),
-
-        # Hostile
-        ('Corrupted Blood', {'link': 'Corrupted Blood'}),
-
-        #
-        # Misc stats
-        #
-
-        ('Character Size', {'link': 'Character Size'}),
-
-        #
         # Skills
         #
         ('Abyssal Cry', {'link': 'Abyssal Cry'}),
@@ -344,6 +278,9 @@ _inter_wiki_map = {
         ('Vaal Heavy Strike', {'link': 'Vaal Heavy Strike'}),
         ('Vaal Ice Nova', {'link': 'Vaal Ice Nova'}),
         ('Vaal Immortal Call', {'link': 'Vaal Immortal Call'}),
+        ('Vaal Impurity of Fire', {'link': 'Vaal Impurity of Fire'}),
+        ('Vaal Impurity of Ice', {'link': 'Vaal Impurity of Ice'}),
+        ('Vaal Impurity of Lightning', {'link': 'Vaal Impurity of Lightning'}),
         ('Vaal Lightning Strike', {'link': 'Vaal Lightning Strike'}),
         ('Vaal Lightning Trap', {'link': 'Vaal Lightning Trap'}),
         ('Vaal Lightning Warp', {'link': 'Vaal Lightning Warp'}),
@@ -584,6 +521,73 @@ _inter_wiki_map = {
         ('(?:level [0-9]+) Vile Toxins', {'link': 'Vile Toxins Support'}),
         ('(?:level [0-9]+) Void Manipulation', {
             'link': 'Void Manipulation Support'}),
+        #
+        # Attibutes
+        #
+        ('Dexterity', {'link': 'Dexterity'}),
+        ('Intelligence', {'link': 'Intelligence'}),
+        ('Strength', {'link': 'Strength'}),
+        #
+        # Offense stats
+        #
+        ('Accuracy Rating', {'link': 'Accuracy Rating'}),
+        ('Accuracy', {'link': 'Accuracy'}),
+        ('Attack Speed', {'link': 'Attack Speed'}),
+        ('Cast Speed', {'link': 'Cast Speed'}),
+        ('Critical Strike Chance', {'link': 'Critical Strike Chance'}),
+        ('Critical Strike Multiplier', {'link': 'Critical Strike Multiplier'}),
+        ('Critical Strike', {'link': 'Critical Strike'}),
+        ('Movement Speed', {'link': 'Movement Speed'}),
+        ('Leech', {'link': 'Leech'}),  # Life Leech, Mana Leech
+        ('Low Life', {'link': 'Low Life'}),
+        ('Full Life', {'link': 'Full Life'}),
+        ('Life', {'link': 'Life'}),
+        ('Mana Reservation', {'link': 'Mana Reservation'}),
+        ('Low Mana', {'link': 'Low Mana'}),
+        ('Full Mana', {'link': 'Full Mana'}),
+        ('Mana', {'link': 'Mana'}),
+        # Just damage
+        # ('Damage', {'link': 'Damage'}),
+        #
+        # Defenses
+        #
+        ('Armour Rating', {'link': 'Armour Rating'}),
+        ('Armour', {'link': 'Armour'}),
+        ('Energy Shield', {'link': 'Energy Shield'}),
+        ('Evasion Rating', {'link': 'Evasion Rating'}),
+        ('Evasion', {'link': 'Evasion'}),
+        ('Spell Block', {'link': 'Spell Block'}),
+        ('Block', {'link': 'Block'}),
+        ('Spell Dodge', {'link': 'Spell Dodge'}),
+        ('Dodge', {'link': 'Dodge'}),
+        #
+        ('Chaos Resistance(?:|s)', {'link': 'Chaos Resistance'}),
+        ('Cold Resistance(?:|s)', {'link': 'Cold Resistance'}),
+        ('Fire Resistance(?:|s)', {'link': 'Fire Resistance'}),
+        ('Lightning Resistance(?:|s)', {'link': 'Lightning Resistance'}),
+        ('Elemental Resistance(?:|s)', {'link': 'Elemental Resistance'}),
+        #
+        # Buffs
+        #
+
+        # Charges
+        ('Endurance Charge(?:|s)', {'link': 'Endurance Charge'}),
+        ('Frenzy Charge(?:|s)', {'link': 'Frenzy Charge'}),
+        ('Power Charge(?:|s)', {'link': 'Power Charge'}),
+
+        # Friendly
+        ('Rampage', {'link': 'Rampage'}),
+
+        # Hostile
+        ('Corrupted Blood', {'link': 'Corrupted Blood'}),
+
+        #
+        # Misc stats
+        #
+
+        ('Character Size', {'link': 'Character Size'}),
+
+
         #
         # Groups
         #
