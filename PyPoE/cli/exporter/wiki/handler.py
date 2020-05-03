@@ -60,6 +60,7 @@ WIKIS = {
     'Russian': 'pathofexile-ru.gamepedia.com',
     'German': 'pathofexile-de.gamepedia.com',
     'French': 'pathofexile-fr.gamepedia.com',
+    'Spanish': 'pathofexile-es.gamepedia.com',
 }
 
 # =============================================================================
