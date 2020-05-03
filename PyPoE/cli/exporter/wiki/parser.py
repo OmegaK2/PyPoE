@@ -1443,6 +1443,8 @@ class BaseParser:
     }
     _MISSING_MSG = 'Several arguments have not been found:\n%s'
 
+    _TC_KWARGS = {}
+
     _files = []
     _translations = []
 
@@ -1468,7 +1470,8 @@ class BaseParser:
             language=config.get_option('language'),
         )
         install_data_dependant_quantifiers(self.rr)
-        self.tc = TranslationFileCache(path_or_ggpk=base_path)
+        self.tc = TranslationFileCache(path_or_ggpk=base_path,
+                                       **self._TC_KWARGS)
         for file_name in self._translations:
             self.tc[file_name]
 

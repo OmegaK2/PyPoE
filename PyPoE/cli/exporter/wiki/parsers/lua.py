@@ -37,6 +37,7 @@ from collections import OrderedDict, defaultdict
 
 # Self
 from PyPoE.poe.constants import RARITY
+from PyPoE.poe.file.ot import OTFileCache
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter import config
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult
@@ -226,6 +227,70 @@ class LuaHandler(ExporterHandler):
             func=SynthesisParser.main,
         )
 
+        parser = lua_sub.add_parser(
+            'ot',
+            help='Extract .ot file information',
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=OTStatsParser,
+            func=OTStatsParser.main,
+        )
+
+
+class OTStatsParser(GenericLuaParser):
+    _DATA = (
+        {
+            'src': 'Metadata/Characters/Character.ot',
+            'fn': 'Character',
+        },
+        {
+            'src': 'Metadata/Monsters/Monster.ot',
+            'fn': 'Monster',
+        },
+    )
+
+    _TC_KWARGS = {
+        'merge_with_custom_file': True,
+    }
+
+    def main(self, parsed_args):
+        r = ExporterResult()
+        for data in self._DATA:
+            stats = []
+
+            ot = self.ot[data['src']]
+
+            for stat, value in ot['Stats'].items():
+                # Stats that are zero effectively do not exist, so might as well
+                # skip them
+                if value == 0:
+                    continue
+
+                txt = '<br>'.join(
+                    self.tc['stat_descriptions.txt'].get_translation(
+                    tags=[stat, ],
+                    values=[value, ],
+                    full_result=True
+                ).lines).replace('\n', '<br>')
+
+                stats.append(OrderedDict((
+                    ('name', data['fn']),
+                    ('id', stat),
+                    ('value', value),
+                    ('stat_text', txt or ''),
+                )))
+
+            r.add_result(
+                text=lua_formatter(stats),
+                out_file='%s_stats.lua' % data['fn'],
+                wiki_page=[{
+                    'page': 'Module:Data tables/%s_stats' % data['fn'],
+                    'condition': None,
+                }]
+            )
+
+        return r
 
 class AtlasParser(GenericLuaParser):
     _files = [
