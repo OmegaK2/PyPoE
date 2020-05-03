@@ -267,12 +267,13 @@ class OTStatsParser(GenericLuaParser):
                 if value == 0:
                     continue
 
-                txt = '<br>'.join(
+                txt = self._format_tr(
                     self.tc['stat_descriptions.txt'].get_translation(
-                    tags=[stat, ],
-                    values=[value, ],
-                    full_result=True
-                ).lines).replace('\n', '<br>')
+                        tags=[stat, ],
+                        values=[value, ],
+                        full_result=True
+                    )
+                )
 
                 stats.append(OrderedDict((
                     ('name', data['fn']),
@@ -746,7 +747,7 @@ class PantheonParser(GenericLuaParser):
                 od['id'] = row['Id']
                 od['ordinal'] = i
                 od['name'] = row['GodName%s' % i]
-                od['stat_text'] = '<br>'.join(tr.lines).replace('\n', '<br>')
+                od['stat_text'] = self._format_tr(tr)
 
                 # The first entry is the god itself
                 if i > 1:
@@ -1168,13 +1169,14 @@ class SynthesisParser(GenericLuaParser):
                 )
 
         for row in data['synthesis_mods']:
-            row['stat_text'] = \
-                '<br>'.join(self.tc['stat_descriptions.txt'].get_translation(
+            row['stat_text'] = self._format_tr(
+                self.tc['stat_descriptions.txt'].get_translation(
                     tags=(row['stat_id'], ),
                     values=(row['stat_value'], ),
                     lang=self.lang,
-                )).replace('\n', '')
-
+                    full_result=True
+                )
+            )
 
         r = ExporterResult()
         for definition in self._DATA:

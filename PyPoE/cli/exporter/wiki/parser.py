@@ -1510,6 +1510,9 @@ class BaseParser:
 
         return rows
 
+    def _format_tr(self, tr):
+        return make_inter_wiki_links(self._format_lines(tr.lines))
+
     def _format_lines(self, lines):
         return '<br>'.join(lines).replace('\n', '<br>')
 
