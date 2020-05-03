@@ -2287,12 +2287,13 @@ class ItemsParser(SkillParserShared):
     def _conflict_maps(self, infobox, base_item_type, rr, language):
         id = base_item_type['Id'].replace('Metadata/Items/Maps/', '')
         # Legacy maps
+        map_series = None
         for row in rr['MapSeries.dat']:
             if not id.startswith(row['Id']):
                 continue
-            break
+            map_series = row
 
-        name = self._format_map_name(base_item_type, row)
+        name = self._format_map_name(base_item_type, map_series)
 
         # Each iteration of maps has it's own art
         infobox['inventory_icon'] = name
