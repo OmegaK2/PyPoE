@@ -168,7 +168,7 @@ _inter_wiki_map = {
         ('Flicker Strike', {'link': 'Flicker Strike'}),
         ('Freeze Mine', {'link': 'Freeze Mine'}),
         ('Freezing Pulse', {'link': 'Freezing Pulse'}),
-        ('Frenzy', {'link': 'Frenzy'}),
+        ('Frenzy(?! Charge)', {'link': 'Frenzy'}),
         ('Frostbolt', {'link': 'Frostbolt'}),
         ('Frost Blades', {'link': 'Frost Blades'}),
         ('Frost Bomb', {'link': 'Frost Bomb'}),
