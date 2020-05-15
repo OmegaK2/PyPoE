@@ -62,32 +62,72 @@ def lua_format_value(key, value):
     return f % (key, value)
 
 
-def lua_formatter(outdata, key_order=None):
-    out = []
-    out.append('local data = {\n')
-    for data in outdata:
-        out.append('\t{\n')
-        for key, value in data.items():
-            if isinstance(value, (int, float)):
-                if isinstance(value, bool):
-                    value = str(value).lower()
-                out.append('\t\t%s=%s,\n' % (key, value))
-            elif isinstance(value, (tuple, set, list)):
-                values = []
-                for v in value:
-                    k = '%s' if isinstance(v, (int, float)) else '"%s"'
-                    values.append(k % v)
+class LuaFormatter:
+    def __init__(self):
+        pass
 
-                    values.append
-                out.append('\t\t%s={%s},\n' % (key, ', '.join(values)))
+    @classmethod
+    def format_module(self, data, indent=0, newline=True):
+        out = []
+        out.append('local data = %s' % self.format_value(
+            data, indent=indent+1, newline=newline)
+        )
+        out.append('\n')
+        out.append('return data')
+
+        return ''.join(out)
+
+    @classmethod
+    def format_key(self, key):
+        if not isinstance(key, str):
+            key = str(key)
+
+        if ' ' in key:
+            key = '[%s]' % key
+
+        return key
+
+    @classmethod
+    def format_value(self, value, indent=2, newline=True):
+        if isinstance(value, (int, float)):
+            if isinstance(value, bool):
+                return str(value).lower()
+            return str(value)
+        elif isinstance(value, (tuple, set, list)):
+            values = []
+            for v in value:
+                values.append(
+                    self.format_value(v, indent=indent+1, newline=newline)
+                )
+            if newline:
+                join = ',\n'
             else:
-                out.append('\t\t%s="%s",\n' % (key, value.replace('"', '\\"')))
-        out.append('\t},\n')
-    out.append('\n}')
-    out.append('\n')
-    out.append('return data')
+                join = ', '
+            return '{%s}' % (join.join(values))
+        elif isinstance(value, dict):
+            values = []
+            if newline:
+                fmt = '%s%%s = %%s, ' % ('\t' * indent)
+            else:
+                fmt = '%s = %s'
+            for k, v in value.items():
+                values.append(fmt % (
+                    self.format_key(k),
+                    self.format_value(v, indent=indent+1, newline=newline)
+                ))
 
-    return ''.join(out)
+            if newline:
+                fmt = '%(indent)s{\n%%s\n%(indent)s}' % {
+                    'indent': '\t' * (indent-1),
+                }
+                join = '\n'
+            else:
+                fmt = '{%s}'
+                join = ''
+
+            return fmt % join.join(values)
+        else:
+            return '"%s"' % value
 
 # =============================================================================
 # Classes
@@ -237,6 +277,52 @@ class LuaHandler(ExporterHandler):
             func=OTStatsParser.main,
         )
 
+        parser = lua_sub.add_parser(
+            'minimap',
+            help='Extract minimap icon information',
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=MinimapIconsParser,
+            func=MinimapIconsParser.main,
+        )
+
+
+class MinimapIconsParser(GenericLuaParser):
+    _files = [
+        'MinimapIcons.dat',
+    ]
+
+    _COPY_KEYS_MINIMAP_ICONS = (
+        ('Id', {
+            'key': 'id',
+        }),
+    )
+
+    def main(self, parsed_args):
+        minimap_icons = []
+        minimap_icons_lookup = OrderedDict()
+
+        for row in self.rr['MinimapIcons.dat']:
+            self._copy_from_keys(row, self._COPY_KEYS_MINIMAP_ICONS,
+                                 minimap_icons)
+
+            # Lua starts offsets at 1
+            minimap_icons_lookup[row['Id']] = row.rowid + 1
+
+        r = ExporterResult()
+        for k in ('minimap_icons', 'minimap_icons_lookup'):
+            r.add_result(
+                text=LuaFormatter.format_module(locals()[k]),
+                out_file='%s.lua' % k,
+                wiki_page=[{
+                    'page': 'Module:Minimap/%s' % k,
+                    'condition': None,
+                }]
+            )
+
+        return r
+
 
 class OTStatsParser(GenericLuaParser):
     _DATA = (
@@ -283,7 +369,7 @@ class OTStatsParser(GenericLuaParser):
                 )))
 
             r.add_result(
-                text=lua_formatter(stats),
+                text=LuaFormatter.format_module(stats),
                 out_file='%s_stats.lua' % data['fn'],
                 wiki_page=[{
                     'page': 'Module:Data tables/%s_stats' % data['fn'],
@@ -340,7 +426,7 @@ class AtlasParser(GenericLuaParser):
         r = ExporterResult()
         for k in ('atlas_regions', 'atlas_base_item_types'):
             r.add_result(
-                text=lua_formatter(locals()[k]),
+                text=LuaFormatter.format_module(locals()[k]),
                 out_file='%s.lua' % k,
                 wiki_page=[{
                     'page': 'Module:Atlas/%s' % k,
@@ -433,7 +519,7 @@ class BestiaryParser(GenericLuaParser):
         r = ExporterResult()
         for k in ('recipes', 'components', 'recipe_components'):
             r.add_result(
-                text=lua_formatter(locals()[k]),
+                text=LuaFormatter.format_module(locals()[k]),
                 out_file='bestiary_%s.lua' % k,
                 wiki_page=[{
                     'page': 'Module:Bestiary/%s' % k,
@@ -526,7 +612,7 @@ class BlightParser(GenericLuaParser):
         r = ExporterResult()
         for k in ('crafting_recipes', 'crafting_recipes_items', 'towers'):
             r.add_result(
-                text=lua_formatter(locals()['blight_' + k]),
+                text=LuaFormatter.format_module(locals()['blight_' + k]),
                 out_file='blight_%s.lua' % k,
                 wiki_page=[{
                     'page': 'Module:Blight/blight_%s' % k,
@@ -682,7 +768,7 @@ class DelveParser(GenericLuaParser):
                   'delve_upgrades', 'delve_upgrade_stats', 'fossils',
                   'fossil_weights'):
             r.add_result(
-                text=lua_formatter(locals()[ k]),
+                text=LuaFormatter.format_module(locals()[ k]),
                 out_file='%s.lua' % k,
                 wiki_page=[{
                     'page': 'Module:Delve/%s' % k,
@@ -771,7 +857,7 @@ class PantheonParser(GenericLuaParser):
         r = ExporterResult()
         for k in ('', '_souls', '_stats'):
             r.add_result(
-                text=lua_formatter(locals()['pantheon' + k]),
+                text=LuaFormatter.format_module(locals()['pantheon' + k]),
                 out_file='pantheon%s.lua' % k,
                 wiki_page=[{
                     'page': 'Module:Pantheon/pantheon%s' % k,
@@ -891,7 +977,7 @@ class QuestRewardReader(BaseParser):
 
         r = ExporterResult()
         r.add_result(
-            text=lua_formatter(outdata),
+            text=LuaFormatter.format_module(outdata),
             out_file='%s_rewards.txt' % data_type,
             wiki_page=[{
                 'page': 'Module:Quest reward/data/%s_rewards' % data_type,
@@ -1182,7 +1268,7 @@ class SynthesisParser(GenericLuaParser):
         for definition in self._DATA:
             key = definition['key']
             r.add_result(
-                text=lua_formatter(data[key]),
+                text=LuaFormatter.format_module(data[key]),
                 out_file='%s.lua' % key,
                 wiki_page=[{
                     'page': 'Module:Synthesis/%s' % key,
@@ -1381,7 +1467,7 @@ class MonsterParser(GenericLuaParser):
         r = ExporterResult()
         for key, v in data.items():
             r.add_result(
-                text=lua_formatter(v),
+                text=LuaFormatter.format_module(v),
                 out_file='%s.lua' % key,
                 wiki_page=[{
                     'page': 'Module:Monster/%s' % key,
@@ -1491,7 +1577,7 @@ class CraftingBenchParser(GenericLuaParser):
         r = ExporterResult()
         for key, data in data.items():
             r.add_result(
-                text=lua_formatter(data),
+                text=LuaFormatter.format_module(data),
                 out_file='%s.lua' % key,
                 wiki_page=[{
                     'page': 'Module:Crafting bench/%s' % key,
