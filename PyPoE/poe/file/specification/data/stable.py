@@ -15603,28 +15603,24 @@ specification = Specification({
                 type='ulong',
                 key='PassiveTreeExpansionJewelSizes.dat',
             )),
-            ('Unknown0', Field(
-                name='Unknown0',
+            ('MinNodes', Field(
+                name='MinNodes',
                 type='int',
             )),
-            ('Unknown1', Field(
-                name='Unknown1',
+            ('MaxNodes', Field(
+                name='MaxNodes',
                 type='int',
             )),
-            ('Unknown2', Field(
-                name='Unknown2',
-                type='int',
-            )),
-            ('Unknown3', Field(
-                name='Unknown3',
-                type='ref|string',
-            )),
-            ('Unknown4', Field(
-                name='Unknown4',
+            ('SmallIndices', Field(
+                name='SmallIndices',
                 type='ref|list|int',
             )),
-            ('Unknown5', Field(
-                name='Unknown5',
+            ('NotableIndices', Field(
+                name='NotableIndices',
+                type='ref|list|int',
+            )),
+            ('SocketIndices', Field(
+                name='SocketIndices',
                 type='ref|list|int',
             )),
             ('Art', Field(
@@ -15632,13 +15628,14 @@ specification = Specification({
                 type='ref|string',
                 file_path=True,
             )),
-            ('Unknown7', Field(
-                name='Unknown7',
+            ('TotalIndices', Field(
+                name='TotalIndices',
                 type='int',
             )),
-            ('Key2', Field(
-                name='Key2',
+            ('SoundEffectsKey', Field(
+                name='SoundEffectsKey',
                 type='ulong',
+                key='SoundEffects.dat',
             )),
         )),
     ),
@@ -15659,9 +15656,10 @@ specification = Specification({
                 type='ulong',
                 key='Tags.dat',
             )),
-            ('Key3', Field(
-                name='Key3',
+            ('PassiveTreeExpansionJewelSizesKey', Field(
+                name='PassiveTreeExpansionJewelSizesKey',
                 type='ulong',
+                key='PassiveTreeExpansionJewelSizes.dat',
             )),
         )),
     ),
