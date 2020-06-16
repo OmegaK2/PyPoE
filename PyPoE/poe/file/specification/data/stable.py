@@ -10659,6 +10659,10 @@ specification = Specification({
                 name='TrailerVideoLink',
                 type='ref|string',
             )),
+            ('Unknown0', Field(
+                name='Unknown0',
+                type='int',
+            )),
         )),
     ),
     'LeagueQuestFlags.dat': File(
@@ -15322,8 +15326,8 @@ specification = Specification({
                 name='Key0',
                 type='ulong',
             )),
-            ('Unknown1', Field(
-                name='Unknown1',
+            ('Unknown0', Field(
+                name='Unknown0',
                 type='int',
             )),
             ('PassiveJewelSlotsKey', Field(
@@ -15331,9 +15335,17 @@ specification = Specification({
                 type='ref|generic',
                 key='PassiveJewelSlots.dat',
             )),
+            ('Unknown1', Field(
+                name='Unknown1',
+                type='ulong',
+            )),
+            ('Unknown2', Field(
+                name='Unknown1',
+                type='int',
+            )),
             ('Unknown3', Field(
                 name='Unknown3',
-                type='ulong',
+                type='int',
             )),
         )),
     ),

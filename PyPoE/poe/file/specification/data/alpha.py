@@ -2077,6 +2077,14 @@ specification = Specification({
                 name='Name',
                 type='ref|string',
             )),
+            ('Unknown0', Field(
+                name='Unknown0',
+                type='int',
+            )),
+            ('Unknown1', Field(
+                name='Unknown1',
+                type='int',
+            )),
             ('Unknown2', Field(
                 name='Unknown2',
                 type='int',
@@ -6041,9 +6049,9 @@ specification = Specification({
                 name='MinTier',
                 type='int',
             )),
-            ('Tier', Field(
-                name='Tier',
-                type='int',
+            ('Type', Field(
+                name='Type',
+                type='ref|string',
             )),
             ('MinDepth', Field(
                 name='MinDepth',
@@ -6700,6 +6708,14 @@ specification = Specification({
             )),
             ('Flag8', Field(
                 name='Flag8',
+                type='byte',
+            )),
+            ('Unknown16', Field(
+                name='Unknown16',
+                type='int',
+            )),
+            ('Flag9', Field(
+                name='Flag9',
                 type='byte',
             )),
         )),
@@ -10643,6 +10659,10 @@ specification = Specification({
                 name='TrailerVideoLink',
                 type='ref|string',
             )),
+            ('Unknown0', Field(
+                name='Unknown0',
+                type='int',
+            )),
         )),
     ),
     'LeagueQuestFlags.dat': File(
@@ -12582,6 +12602,10 @@ specification = Specification({
             ('Key0', Field(
                 name='Key0',
                 type='ulong',
+            )),
+            ('Unknown2', Field(
+                name='Unknown2',
+                type='int',
             )),
         )),
     ),
@@ -15302,8 +15326,8 @@ specification = Specification({
                 name='Key0',
                 type='ulong',
             )),
-            ('Unknown1', Field(
-                name='Unknown1',
+            ('Unknown0', Field(
+                name='Unknown0',
                 type='int',
             )),
             ('PassiveJewelSlotsKey', Field(
@@ -15311,9 +15335,17 @@ specification = Specification({
                 type='ref|generic',
                 key='PassiveJewelSlots.dat',
             )),
+            ('Unknown1', Field(
+                name='Unknown1',
+                type='ulong',
+            )),
+            ('Unknown2', Field(
+                name='Unknown1',
+                type='int',
+            )),
             ('Unknown3', Field(
                 name='Unknown3',
-                type='ulong',
+                type='int',
             )),
         )),
     ),
@@ -16332,7 +16364,7 @@ specification = Specification({
             )),
         )),
     ),
-    'QuestStateCalcuation.dat': File(
+    'QuestStateCalculation.dat': File(
         fields=OrderedDict((
         )),
     ),
@@ -16470,9 +16502,9 @@ specification = Specification({
                 type='int',
                 unique=True,
             )),
-            ('NPCKey', Field(
-                name='NPCKey',
-                type='ulong',
+            ('NPCKeys', Field(
+                name='NPCKeys',
+                type='ref|list|ulong',
                 key='NPCs.dat',
             )),
             ('QuestState', Field(
