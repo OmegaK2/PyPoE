@@ -524,6 +524,7 @@ class ItemsParser(SkillParserShared):
         'Blight': '3.8.0',
         'Metamorphosis': '3.9.0',
         'Delirium': '3.10.0',
+        'Harvest': '3.11.0',
     }
 
     _IGNORE_DROP_LEVEL_CLASSES = (
@@ -1123,6 +1124,7 @@ class ItemsParser(SkillParserShared):
             'Low': 'Low Tier',
             'Mid': 'Mid Tier',
             'High': 'High Tier',
+            'Uber': 'Max Tier',
             'decoration': '%s (%s %s decoration)',
             'decoration_wounded': '%s (%s %s decoration, Wounded)',
             'of': '%s of %s',
@@ -1132,6 +1134,7 @@ class ItemsParser(SkillParserShared):
             'Low': 'Niedrige Stufe',
             'Mid': 'Mittlere Stufe',
             'High': 'Hohe Stufe',
+            'Uber': 'Maximale Stufe',
             'decoration': '%s (%s %s Dekoration)',
             'decoration_wounded': '%s (%s %s Dekoration, verletzt)',
             'of': '%s von %s',
@@ -1141,6 +1144,7 @@ class ItemsParser(SkillParserShared):
             'Low': 'низкий уровень',
             'Mid': 'средний уровень',
             'High': 'высокий уровень',
+            'Uber': '',
             'decoration': '%s (%s %s предмет убежища)',
             'decoration_wounded': '%s (%s %s предмет убежища, Раненый)',
             'of': '%s из %s',
@@ -2857,9 +2861,9 @@ class ItemsParser(SkillParserShared):
                     atlas_node['FlavourTextKey']['Text'].replace('\n', '<br>')\
                     .replace('\r', '')
 
-            if tier < 17:
+            if 0 < tier < 17:
                 self._process_purchase_costs(
-                    self.rr['MapPurchaseCosts.dat'].index['Tier'][maps['Tier']],
+                    self.rr['MapPurchaseCosts.dat'].index['Tier'][tier],
                     infobox
                 )
 

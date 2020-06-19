@@ -1998,6 +1998,18 @@ TranslationQuantifier(
 )
 
 TranslationQuantifier(
+    id='divide_by_three',
+    handler=lambda v: v/3,
+    reverse_handler=lambda v: float(v)*3,
+)
+
+TranslationQuantifier(
+    id='divide_by_five',
+    handler=lambda v: v/5,
+    reverse_handler=lambda v: float(v)*5,
+)
+
+TranslationQuantifier(
     id='divide_by_one_hundred',
     handler=lambda v: v/100,
     reverse_handler=lambda v: float(v)*100,

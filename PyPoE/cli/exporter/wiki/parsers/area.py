@@ -335,16 +335,19 @@ class AreaParser(parser.BaseParser):
             'Low': 'Low Tier',
             'Mid': 'Mid Tier',
             'High': 'High Tier',
+            'Uber': 'Maximum Tier',
         },
         'German': {
             'Low': 'Niedrige Stufe',
             'Mid': 'Mittlere Stufe',
             'High': 'Hohe Stufe',
+            'Uber': 'Maximale Stufe',
         },
         'Russian': {
             'Low': 'низкий уровень',
             'Mid': 'средний уровень',
             'High': 'высокий уровень',
+            'Uber': '',
         },
     }
 

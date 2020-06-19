@@ -864,6 +864,29 @@ class STAT_INTERPOLATION_TYPES(IntEnumOverride):
     EXPONENTIAL = 3
 
 
+class SCARAB_TYPES(IntEnumOverride):
+    """
+    Representation of scarab types (ScarabTypes.dat)
+
+    Attributes
+    ----------
+    """
+    BESTIARY = 0
+    BREACH = 1
+    CARTOGRAPHY = 2
+    RELIQUARY = 3
+    SHAPER = 4
+    ELDER = 5
+    DIVINATION = 6
+    TORMENT = 7
+    AMBUSH = 8
+    HARBINGER = 9
+    PERANDUS = 10
+    LEGION = 11
+    METAMORPH = 12
+    SULFITE = 13
+
+
 class PASSIVE_TYPES(IntEnumOverride):
     REGULAR1 = 1
     REGULAR2 = 2
