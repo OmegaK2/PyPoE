@@ -16542,7 +16542,7 @@ specification = Specification({
             ('Mastery_PassiveSkillsKey', Field(
                 name='Mastery_PassiveSkillsKey',
                 type='ulong',
-                key='Mastery_PassiveSkills.dat',
+                key='PassiveSkills.dat',
             )),
             ('TagsKey', Field(
                 name='TagsKey',
