@@ -827,7 +827,8 @@ class PantheonParser(GenericLuaParser):
                     continue
                 stats = [s['Id'] for s in row['Effect%s_StatsKeys' % i]]
                 tr = self.tc['stat_descriptions.txt'].get_translation(
-                    tags=stats, values=values, full_result=True)
+                    tags=stats, values=values, lang=self.lang, full_result=True
+                )
 
                 od = OrderedDict()
                 od['id'] = row['Id']
