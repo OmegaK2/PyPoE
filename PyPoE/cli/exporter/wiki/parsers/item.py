@@ -295,6 +295,13 @@ class ItemsHandler(ExporterHandler):
                 dest='item_class',
             )
 
+            parser.add_argument(
+                '-ft-cid', '--filter-class-id',
+                help='Filter by item class id(s). Case sensitive.',
+                nargs='*',
+                dest='item_class_id',
+            )
+
             self.add_image_arguments(parser)
         elif type == 'prophecy':
             parser.add_argument(
@@ -2351,8 +2358,11 @@ class ItemsParser(SkillParserShared):
     }
 
     def _parse_class_filter(self, parsed_args):
-        self.rr['ItemClasses.dat'].build_index('Name')
-        if parsed_args.item_class:
+        if parsed_args.item_class_id:
+            return [self.rr['ItemClasses.dat'].index['Id'][cls]['Name']
+                    for cls in parsed_args.item_class_id]
+        elif parsed_args.item_class:
+            self.rr['ItemClasses.dat'].build_index('Name')
             return [self.rr['ItemClasses.dat'].index['Name'][cls][0]['Name']
                    for cls in parsed_args.item_class]
         else:
