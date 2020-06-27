@@ -827,6 +827,8 @@ class ItemsParser(SkillParserShared):
                 ' (предмет убежища)',
             'Metadata/Items/Hideout/HideoutCharredSkeleton':
                 ' (предмет убежища)',
+            'Metadata/Items/HideoutInteractables/DexIntCraftingBench':
+                ' (предмет убежища)',
             # =================================================================
             # Piece
             # =================================================================
@@ -944,6 +946,70 @@ class ItemsParser(SkillParserShared):
                 ' (предмет)',
             'Metadata/Items/QuestItems/Act9/StormSword':
                 ' (предмет)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade1_1':
+                ' (1 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade1_2':
+                ' (2 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade1_3':
+                ' (3 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade1_4':
+                ' (4 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade1_5':
+                ' (5 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade1_6':
+                ' (6 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade1_7':
+                ' (7 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade1_8':
+                ' (8 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade2_1':
+                ' (1 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade2_2':
+                ' (2 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade2_3':
+                ' (3 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade2_4':
+                ' (4 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade2_5':
+                ' (5 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade2_6':
+                ' (6 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade2_7':
+                ' (7 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade2_8':
+                ' (8 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade3_1':
+                ' (1 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade3_2':
+                ' (2 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade3_3':
+                ' (3 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade3_4':
+                ' (4 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade3_5':
+                ' (5 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade3_6':
+                ' (6 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade3_7':
+                ' (7 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade3_8':
+                ' (8 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade4_1':
+                ' (1 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade4_2':
+                ' (2 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade4_3':
+                ' (3 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade4_4':
+                ' (4 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade4_5':
+                ' (5 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade4_6':
+                ' (6 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade4_7':
+                ' (7 из 8)',
+            'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade4_8':
+                ' (8 из 8)',
         },
         'German': {
             # =================================================================
@@ -1151,7 +1217,7 @@ class ItemsParser(SkillParserShared):
             'Low': 'низкий уровень',
             'Mid': 'средний уровень',
             'High': 'высокий уровень',
-            'Uber': '',
+            'Uber': 'максимальный уровень',
             'decoration': '%s (%s %s предмет убежища)',
             'decoration_wounded': '%s (%s %s предмет убежища, Раненый)',
             'of': '%s из %s',
