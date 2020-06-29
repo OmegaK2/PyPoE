@@ -2211,6 +2211,66 @@ class ItemsParser(SkillParserShared):
         row_index=True
     )
 
+    def _harvest_seed_extra(self, infobox, base_item_type, harvest_object):
+
+        if not self.rr['HarvestSeedTypes.dat'].index.get('HarvestObjectsKey'):
+            self.rr['HarvestSeedTypes.dat'].build_index('HarvestObjectsKey')
+
+        harvest_seed = self.rr['HarvestSeedTypes.dat'].index[
+            'HarvestObjectsKey'][harvest_object.rowid]
+
+        _apply_column_map(infobox, (
+                ('Text', {
+                    'template': 'description',
+                }),
+                ('Tier', {
+                    'template': 'seed_tier',
+                }),
+                ('GrowthCycles', {
+                    'template': 'seed_growth_cycles',
+                }),
+                ('RequiredNearbySeed_Tier', {
+                    'template': 'seed_required_nearby_tier',
+                    'condition': lambda v: v > 0,
+                }),
+                ('RequiredNearbySeed_Amount', {
+                    'template': 'seed_required_nearby_amount',
+                    'condition': lambda v: v > 0,
+                }),
+                ('WildLifeforceConsumedPercentage', {
+                    'template': 'seed_consumed_wild_lifeforce_percentage',
+                    'condition': lambda v: v > 0,
+                }),
+                ('VividLifeforceConsumedPercentage', {
+                    'template': 'seed_consumed_vivid_lifeforce_percentage',
+                    'condition': lambda v: v > 0,
+                }),
+                ('PrimalLifeforceConsumedPercentage', {
+                    'template': 'seed_consumed_primal_lifeforce_percentage',
+                    'condition': lambda v: v > 0,
+                }),
+                ('HarvestCraftOptionsKeys', {
+                    'template': 'seed_granted_craft_option_ids',
+                    'format': lambda v: ','.join([k['Id'] for k in v]),
+                    'condition': lambda v: v,
+                }),
+            ), harvest_seed)
+
+        return True
+
+    _type_harvest_seed =_type_factory(
+        data_file='HarvestObjects.dat',
+        data_mapping=(
+            ('ObjectType', {
+                'template': 'seed_type',
+                'format': lambda v: v.name.lower(),
+            }),
+        ),
+        function=_harvest_seed_extra,
+        #fail_condition=True,
+        row_index=True,
+    )
+
     _cls_map = {
         # Jewellery
         'Amulet': (_type_amulet, ),
@@ -2259,6 +2319,7 @@ class ItemsParser(SkillParserShared):
         'Microtransaction': (_type_currency, ),
         'DivinationCard': (_type_currency, ),
         'Incubator': (_type_currency, _type_incubator),
+        'HarvestSeed': (_type_currency, _type_harvest_seed),
         # Labyrinth stuff
         #'LabyrinthItem': (),
         'LabyrinthTrinket': (_type_labyrinth_trinket, ),

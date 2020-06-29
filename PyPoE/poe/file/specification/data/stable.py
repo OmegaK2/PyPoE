@@ -9273,9 +9273,11 @@ specification = Specification({
     ),
     'HarvestObjects.dat': File(
         fields=OrderedDict((
-            ('Key0', Field(
-                name='Key0',
+            ('BaseItemTypesKey', Field(
+                name='BaseItemTypesKey',
                 type='ulong',
+                key='BaseItemTypes.dat',
+                unique=True,
             )),
             ('AOFile', Field(
                 name='AOFile',
@@ -9283,9 +9285,10 @@ specification = Specification({
                 file_path=True,
                 file_ext='.ao',
             )),
-            ('Unknown2', Field(
-                name='Unknown2',
+            ('ObjectType', Field(
+                name='ObjectType',
                 type='int',
+                enum='HARVEST_OBJECT_TYPES'
             )),
         )),
     ),
@@ -9347,16 +9350,18 @@ specification = Specification({
     ),
     'HarvestSeedTypes.dat': File(
         fields=OrderedDict((
-            ('Key0', Field(
-                name='Key0',
+            ('HarvestObjectsKey', Field(
+                name='HarvestObjectsKey',
                 type='ulong',
+                key='HarvestObjects.dat',
+                unique=True,
             )),
             ('Key1', Field(
                 name='Key1',
                 type='ulong',
             )),
-            ('Unknown2', Field(
-                name='Unknown2',
+            ('GrowthCycles', Field(
+                name='GrowthCycles',
                 type='int',
             )),
             ('AOFiles', Field(
@@ -9373,37 +9378,38 @@ specification = Specification({
                 name='Unknown5',
                 type='int',
             )),
-            ('Unknown6', Field(
-                name='Unknown6',
+            ('Tier', Field(
+                name='Tier',
                 type='int',
             )),
-            ('Unknown7', Field(
-                name='Unknown7',
+            ('RequiredNearbySeed_Tier', Field(
+                name='RequiredNearbySeed_Tier',
                 type='int',
             )),
-            ('Unknown8', Field(
-                name='Unknown8',
+            ('RequiredNearbySeed_Amount', Field(
+                name='RequiredNearbySeed_Amount',
                 type='int',
             )),
-            ('Unknown9', Field(
-                name='Unknown9',
+            ('WildLifeforceConsumedPercentage', Field(
+                name='WildLifeforceConsumedPercentage',
                 type='int',
             )),
-            ('Unknown10', Field(
-                name='Unknown10',
+            ('VividLifeforceConsumedPercentage', Field(
+                name='VividLifeforceConsumedPercentage',
                 type='int',
             )),
-            ('Unknown11', Field(
-                name='Unknown11',
+            ('PrimalLifeforceConsumedPercentage', Field(
+                name='PrimalLifeforceConsumedPercentage',
                 type='int',
             )),
             ('Text', Field(
                 name='Text',
                 type='ref|string',
             )),
-            ('Keys0', Field(
-                name='Keys0',
+            ('HarvestCraftOptionsKeys', Field(
+                name='HarvestCraftOptionsKeys',
                 type='ref|list|ulong',
+                key='HarvestCraftOptions.dat',
             )),
             ('Unknown14', Field(
                 name='Unknown14',
@@ -9418,8 +9424,8 @@ specification = Specification({
                 type='ref|list|ulong',
                 key='AchievementItems.dat',
             )),
-            ('Unknown16', Field(
-                name='Unknown16',
+            ('OutcomeType', Field(
+                name='OutcomeType',
                 type='int',
             )),
         )),

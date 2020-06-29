@@ -887,6 +887,12 @@ class SCARAB_TYPES(IntEnumOverride):
     SULFITE = 13
 
 
+class HARVEST_OBJECT_TYPES(IntEnumOverride):
+    NONE = 0
+    WILD = 1
+    VIVID = 2
+    PRIMAL = 3
+
 class PASSIVE_TYPES(IntEnumOverride):
     REGULAR1 = 1
     REGULAR2 = 2
