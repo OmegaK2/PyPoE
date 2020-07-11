@@ -5156,6 +5156,10 @@ specification = Specification({
                 name='Description',
                 type='ref|string',
             )),
+            ('Flag1', Field(
+                name='Flag1',
+                type='bool',
+            )),
         )),
     ),
     'ComponentArmour.dat': File(
@@ -9119,6 +9123,21 @@ specification = Specification({
 
         )),
     ),
+    'HarvestCraftOptionIcons.dat': File(
+        fields=OrderedDict((
+            ('Id', Field(
+                name='Id',
+                type='ref|string',
+                unique=True,
+            )),
+            ('DDSFile', Field(
+                name='DDSFile',
+                type='ref|string',
+                file_path=True,
+                file_ext='.dds',
+            )),
+        )),
+    ),
     'HarvestCraftOptions.dat': File(
         fields=OrderedDict((
             ('Id', Field(
@@ -9156,13 +9175,18 @@ specification = Specification({
                 type='ref|list|ulong',
                 key='AchievementItems.dat'
             )),
-            ('Unknown2', Field(
-                name='Unknown2',
-                type='byte',
+            ('Flag0', Field(
+                name='Flag0',
+                type='bool',
             )),
             ('Unknown1', Field(
                 name='Unknown1',
                 type='int',
+            )),
+            ('HarvestCraftOptionIconsKeys', Field(
+                name='HarvestCraftOptionIconsKeys',
+                type='ref|list|ulong',
+                key='HarvestCraftOptionIcons.dat',
             )),
         )),
     ),
@@ -9344,6 +9368,45 @@ specification = Specification({
             )),
             ('Unknown12', Field(
                 name='Unknown12',
+                type='int',
+            )),
+        )),
+    ),
+    'HarvestPlantBoosterFamilies.dat': File(
+        fields=OrderedDict((
+
+        )),
+    ),
+    'HarvestPlantBoosters.dat': File(
+        fields=OrderedDict((
+            ('HarvestObjectsKey', Field(
+                name='HarvestObjectsKey',
+                type='ulong',
+                key='HarvestObjects.dat',
+                unique=True,
+            )),
+            ('Unknown1', Field(
+                name='Unknown1',
+                type='int',
+            )),
+            ('Key0', Field(
+                name='Key0',
+                type='ulong',
+            )),
+            ('Unknown3', Field(
+                name='Unknown3',
+                type='int',
+            )),
+            ('Unknown4', Field(
+                name='Unknown4',
+                type='int',
+            )),
+            ('Unknown5', Field(
+                name='Unknown5',
+                type='int',
+            )),
+            ('Unknown6', Field(
+                name='Unknown6',
                 type='int',
             )),
         )),
@@ -18360,6 +18423,15 @@ specification = Specification({
                 name='Unknown0',
                 type='ref|string',
             )),
+            # some time after 3.11
+            ('Flag1', Field(
+                name='Flag2',
+                type='bool',
+            )),
+            ('Flag2', Field(
+                name='Flag2',
+                type='bool',
+            )),
         )),
     ),
     'SkillMineVariations.dat': File(
@@ -19584,6 +19656,10 @@ specification = Specification({
                 name='Data0',
                 type='ref|list|int',
             )),
+            ('Unknown19', Field(
+                name='Unknown19',
+                type='int',
+            )),
         )),
     ),
     'Tags.dat': File(
@@ -19599,6 +19675,10 @@ specification = Specification({
             )),
             ('DisplayString', Field(
                 name='DisplayString',
+                type='ref|string',
+            )),
+            ('Name', Field(
+                name='Name',
                 type='ref|string',
             )),
         )),
@@ -19755,6 +19835,10 @@ specification = Specification({
             )),
             ('Text', Field(
                 name='Text',
+                type='ref|string',
+            )),
+            ('TextXBox', Field(
+                name='TextXBox',
                 type='ref|string',
             )),
         )),
