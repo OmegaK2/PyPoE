@@ -2221,7 +2221,7 @@ class ItemsParser(SkillParserShared):
 
         _apply_column_map(infobox, (
                 ('Text', {
-                    'template': 'description',
+                    'template': 'seed_effect',
                 }),
                 ('Tier', {
                     'template': 'seed_tier',
@@ -2230,11 +2230,11 @@ class ItemsParser(SkillParserShared):
                     'template': 'seed_growth_cycles',
                 }),
                 ('RequiredNearbySeed_Tier', {
-                    'template': 'seed_required_nearby_tier',
+                    'template': 'seed_required_nearby_seed_tier',
                     'condition': lambda v: v > 0,
                 }),
                 ('RequiredNearbySeed_Amount', {
-                    'template': 'seed_required_nearby_amount',
+                    'template': 'seed_required_nearby_seed_amount',
                     'condition': lambda v: v > 0,
                 }),
                 ('WildLifeforceConsumedPercentage', {
@@ -2262,7 +2262,7 @@ class ItemsParser(SkillParserShared):
         data_file='HarvestObjects.dat',
         data_mapping=(
             ('ObjectType', {
-                'template': 'seed_type',
+                'template': 'seed_type_id',
                 'format': lambda v: v.name.lower(),
             }),
         ),
