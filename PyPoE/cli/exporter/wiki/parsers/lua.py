@@ -34,14 +34,15 @@ See PyPoE/LICENSE
 # Python
 import warnings
 from collections import OrderedDict, defaultdict
+from functools import partial
 
 # Self
 from PyPoE.poe.constants import RARITY
-from PyPoE.poe.file.ot import OTFileCache
+from PyPoE.poe.text import parse_description_tags
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter import config
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult
-from PyPoE.cli.exporter.wiki.parser import BaseParser
+from PyPoE.cli.exporter.wiki.parser import BaseParser, TagHandler
 
 # =============================================================================
 # Globals
@@ -126,6 +127,8 @@ class LuaFormatter:
                 join = ''
 
             return fmt % join.join(values)
+        elif isinstance(value, str):
+            return '"%s"' % value.replace('"', '\\"').replace('\n', '<br>').replace('\r', '')
         else:
             return '"%s"' % value
 
@@ -235,6 +238,16 @@ class LuaHandler(ExporterHandler):
             parser=parser,
             cls=DelveParser,
             func=DelveParser.main,
+        )
+
+        parser = lua_sub.add_parser(
+            'harvest',
+            help='Extract harvest information (not covered by items)',
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=HarvestParser,
+            func=HarvestParser.main,
         )
 
         parser = lua_sub.add_parser(
@@ -564,7 +577,6 @@ class BlightParser(GenericLuaParser):
         }),
         ('Description', {
             'key': 'description',
-            'value': lambda v: v.replace('\n', '<br>').replace('\r', ''),
         }),
         ('Tier', {
             'key': 'tier',
@@ -772,6 +784,65 @@ class DelveParser(GenericLuaParser):
                 out_file='%s.lua' % k,
                 wiki_page=[{
                     'page': 'Module:Delve/%s' % k,
+                    'condition': None,
+                }]
+            )
+
+        return r
+
+
+class HarvestTagHandler(TagHandler):
+    tag_handlers = {
+        'white': partial(TagHandler._basic_handler, tid='white'),
+
+
+        'fuchsia': partial(TagHandler._basic_handler, tid='magenta'),
+        'yellow': partial(TagHandler._basic_handler, tid='yellow'),
+        'aqua': partial(TagHandler._basic_handler, tid='cyan'),
+    }
+
+
+class HarvestParser(GenericLuaParser):
+    _files = [
+        'HarvestCraftOptions.dat',
+    ]
+
+    _COPY_KEYS_HARVEST_CRAFT_OPTIONS = (
+        ('Id', {
+            'key': 'id',
+        }),
+        ('Text', {
+            'key': 'text',
+        }),
+        ('HarvestObjectsKey', {
+            'key': 'harvest_object',
+            'value': lambda v: v['BaseItemTypesKey']['Id']
+        }),
+        ('HarvestCraftTiersKey', {
+            'key': 'tier',
+            'value': lambda v: v.rowid,
+        }),
+    )
+
+    def main(self, parsed_args):
+        tag_handler = HarvestTagHandler(rr=self.rr)
+        harvest_craft_options = []
+
+        for row in self.rr['HarvestCraftOptions.dat']:
+            self._copy_from_keys(row, self._COPY_KEYS_HARVEST_CRAFT_OPTIONS,
+                                 harvest_craft_options)
+            harvest_craft_options[-1]['text'] = parse_description_tags(
+                harvest_craft_options[-1]['text']).handle_tags(
+                tag_handler.tag_handlers)
+
+
+        r = ExporterResult()
+        for k in ('harvest_craft_options', ):
+            r.add_result(
+                text=LuaFormatter.format_module(locals()[k]),
+                out_file='%s.lua' % k,
+                wiki_page=[{
+                    'page': 'Module:Harvest/%s' % k,
                     'condition': None,
                 }]
             )

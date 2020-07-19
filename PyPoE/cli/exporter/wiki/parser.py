@@ -1722,7 +1722,7 @@ class TagHandler:
         self.rr['Words.dat'].build_index('Text')
 
         self.tag_handlers = {}
-        for key, func in TagHandler.tag_handlers.items():
+        for key, func in self.__class__.tag_handlers.items():
             self.tag_handlers[key] = partial(func, self)
 
     def _check_link(self, string):
@@ -1735,6 +1735,9 @@ class TagHandler:
             else:
                 string = self._IL_FORMAT % string
         return string
+
+    def _basic_handler(self, hstr, parameter, tid):
+        return self._C_FORMAT % (tid, hstr)
 
     def _default_handler(self, hstr, parameter, tid):
         return self._C_FORMAT % (tid, self._check_link(hstr))
