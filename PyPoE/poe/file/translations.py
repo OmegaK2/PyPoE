@@ -2101,7 +2101,7 @@ TranslationQuantifier(
 
 TranslationQuantifier(
     id='per_minute_to_per_second_1dp',
-    handler=lambda v: int(round(v/60, 1)),
+    handler=lambda v: round(v/60, 1),
     reverse_handler=lambda v: float(v)*60,
 )
 
