@@ -9153,9 +9153,10 @@ specification = Specification({
                 name='Unknown0',
                 type='int',
             )),
-            ('Key0', Field(
-                name='Key0',
+            ('HarvestObjectsKey', Field(
+                name='HarvestObjectsKey',
                 type='ulong',
+                key='HarvestObjects.dat',
             )),
             ('HarvestCraftTiersKey', Field(
                 name='HarvestCraftTiersKey',
@@ -9211,12 +9212,14 @@ specification = Specification({
     ),
     'HarvestDurability.dat': File(
         fields=OrderedDict((
-            ('Key0', Field(
-                name='Key0',
+            ('HarvestObjectsKey', Field(
+                name='HarvestObjectsKey',
                 type='ulong',
+                key='HarvestObjects.dat',
+                unique=True,
             )),
-            ('Unknown1', Field(
-                name='Unknown1',
+            ('Durability', Field(
+                name='Durability',
                 type='int',
             )),
         )),
@@ -9243,9 +9246,11 @@ specification = Specification({
     ),
     'HarvestInfrastructure.dat': File(
         fields=OrderedDict((
-            ('Key0', Field(
-                name='Key0',
+            ('HarvestObjectsKey', Field(
+                name='HarvestObjectsKey',
                 type='ulong',
+                key='HarvestObjects.dat',
+                unique=True,
             )),
             ('Unknown1', Field(
                 name='Unknown1',
