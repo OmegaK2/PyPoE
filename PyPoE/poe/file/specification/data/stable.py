@@ -9390,28 +9390,28 @@ specification = Specification({
                 key='HarvestObjects.dat',
                 unique=True,
             )),
-            ('Unknown1', Field(
-                name='Unknown1',
+            ('Radius', Field(
+                name='Radius',
                 type='int',
             )),
             ('Key0', Field(
                 name='Key0',
                 type='ulong',
             )),
-            ('Unknown3', Field(
-                name='Unknown3',
+            ('Lifeforce', Field(
+                name='Lifeforce',
                 type='int',
             )),
-            ('Unknown4', Field(
-                name='Unknown4',
+            ('AdditionalCraftingOptionsChance', Field(
+                name='AdditionalCraftingOptionsChance',
                 type='int',
             )),
-            ('Unknown5', Field(
-                name='Unknown5',
+            ('RareExtraChances', Field(
+                name='RareExtraChances',
                 type='int',
             )),
-            ('Unknown6', Field(
-                name='Unknown6',
+            ('HarvestPlantBoosterFamilies', Field(
+                name='HarvestPlantBoosterFamilies',
                 type='int',
             )),
         )),
