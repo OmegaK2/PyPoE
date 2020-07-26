@@ -2271,6 +2271,44 @@ class ItemsParser(SkillParserShared):
         row_index=True,
     )
 
+    def _harvest_plant_booster_extra(self, infobox, base_item_type,
+                                     harvest_object):
+
+        if not self.rr['HarvestSeedTypes.dat'].index.get('HarvestObjectsKey'):
+            self.rr['HarvestSeedTypes.dat'].build_index('HarvestObjectsKey')
+
+        harvest_plant_booster = self.rr['HarvestPlantBoosters.dat'].index[
+            'HarvestObjectsKey'][harvest_object.rowid]
+
+        _apply_column_map(infobox, (
+                ('Radius', {
+                    'template': 'plant_booster_radius',
+                }),
+                ('Lifeforce', {
+                    'template': 'plant_booster_lifeforce',
+                    'condition': lambda v: v > 0,
+                }),
+                ('AdditionalCraftingOptionsChance', {
+                    'template': 'plant_booster_additional_crafting_options',
+                    'condition': lambda v: v > 0,
+                }),
+                ('RareExtraChances', {
+                    'template': 'plant_booster_extra_chances',
+                    'condition': lambda v: v > 0,
+                }),
+            ), harvest_plant_booster)
+
+        return True
+
+    _type_harvest_plant_booster =_type_factory(
+        data_file='HarvestObjects.dat',
+        data_mapping=(
+        ),
+        function=_harvest_plant_booster_extra,
+        #fail_condition=True,
+        row_index=True,
+    )
+
     _cls_map = {
         # Jewellery
         'Amulet': (_type_amulet, ),
@@ -2320,6 +2358,7 @@ class ItemsParser(SkillParserShared):
         'DivinationCard': (_type_currency, ),
         'Incubator': (_type_currency, _type_incubator),
         'HarvestSeed': (_type_currency, _type_harvest_seed),
+        'HarvestPlantBooster': (_type_currency, _type_harvest_plant_booster),
         # Labyrinth stuff
         #'LabyrinthItem': (),
         'LabyrinthTrinket': (_type_labyrinth_trinket, ),
