@@ -4714,10 +4714,10 @@ specification = Specification({
                 name='Description',
                 type='ref|string',
             )),
-            ('StartSkillGem_BaseItemTypesKey', Field(
-                name='StartSkillGem_BaseItemTypesKey',
+            ('StartSkillGem_SkillGemsKey', Field(
+                name='StartSkillGem_SkillGemsKey',
                 type='ulong',
-                key='BaseItemTypes.dat',
+                key='SkillGems.dat',
             )),
             ('Unknown13', Field(
                 name='Unknown13',
