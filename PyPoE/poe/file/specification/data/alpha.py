@@ -5465,8 +5465,8 @@ specification = Specification({
                 name='Action',
                 type='ref|string',
             )),
-            ('Directions', Field(
-                name='Directions',
+            ('Description', Field(
+                name='Description',
                 type='ref|string',
             )),
             ('FullStack_BaseItemTypesKey', Field(
@@ -5475,8 +5475,8 @@ specification = Specification({
                 key='BaseItemTypes.dat',
                 description='Full stack transforms into this item',
             )),
-            ('Description', Field(
-                name='Description',
+            ('Usage', Field(
+                name='Usage',
                 type='ref|string',
             )),
             ('Usage_AchievementItemsKeys', Field(
@@ -5513,8 +5513,8 @@ specification = Specification({
                 name='Abbreviation',
                 type='ref|string',
             )),
-            ('XBoxDirections', Field(
-                name='XBoxDirections',
+            ('XBoxDescription', Field(
+                name='XBoxDescription',
                 type='ref|string',
             )),
             ('Unknown1', Field(
