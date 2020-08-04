@@ -20182,9 +20182,10 @@ specification = Specification({
     ),
     'UniqueStashLayout.dat': File(
         fields=OrderedDict((
-            ('UniqueItemsKey', Field(
-                name='UniqueItemsKey',
+            ('WordsKey', Field(
+                name='WordsKey',
                 type='ulong',
+                key='Words.dat'
             )),
             ('ItemVisualIdentityKey', Field(
                 name='ItemVisualIdentityKey',
