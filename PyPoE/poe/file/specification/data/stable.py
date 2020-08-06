@@ -143,7 +143,6 @@ specification = Specification({
     ),
     'AccountQuestFlags.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'AchievementItemRewards.dat': File(
@@ -560,7 +559,6 @@ specification = Specification({
     ),
     'AdditionalMonsterPacksStatMode.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'AdvancedSkillsTutorial.dat': File(
@@ -809,7 +807,6 @@ specification = Specification({
     ),
     'AfflictionRewardTypes.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'AfflictionSplitDemons.dat': File(
@@ -849,7 +846,6 @@ specification = Specification({
     ),
     'AlternateBehaviourTypes.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'AlternatePassiveAdditions.dat': File(
@@ -1098,7 +1094,6 @@ specification = Specification({
     ),
     'AlternateTreePassiveSizes.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'AlternateTreeVersions.dat': File(
@@ -1144,7 +1139,6 @@ specification = Specification({
                 name='Unknown7',
                 type='int',
             )),
-
         )),
     ),
     'Animation.dat': File(
@@ -1183,7 +1177,6 @@ specification = Specification({
                 key='Animation.dat',
                 key_id='Id',
             )),
-
         )),
     ),
     'ApplyDamageFunctions.dat': File(
@@ -1595,7 +1588,6 @@ specification = Specification({
                 type='ref|list|ulong',
                 key='AtlasExileInfluenceSets.dat',
             )),
-
         )),
     ),
     'AtlasExileInfluenceData.dat': File(
@@ -1633,7 +1625,6 @@ specification = Specification({
     ),
     'AtlasExileInfluenceOutcomeTypes.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'AtlasExileInfluenceOutcomes.dat': File(
@@ -1823,7 +1814,6 @@ specification = Specification({
     ),
     'AtlasModTiers.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'AtlasMods.dat': File(
@@ -2089,7 +2079,6 @@ specification = Specification({
     ),
     'AtlasQuadrant.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'AtlasRegions.dat': File(
@@ -2892,7 +2881,6 @@ specification = Specification({
     ),
     'BetrayalFlags.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'BetrayalForts.dat': File(
@@ -3003,7 +2991,6 @@ specification = Specification({
     ),
     'BetrayalTargetFlags.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'BetrayalTargetJobAchievements.dat': File(
@@ -3138,7 +3125,6 @@ specification = Specification({
     ),
     'BetrayalUpgradeSlots.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'BetrayalUpgrades.dat': File(
@@ -3461,7 +3447,7 @@ specification = Specification({
             )),
         )),
     ),
-'BlightStashTabLayout.dat': File(
+    'BlightStashTabLayout.dat': File(
         fields=OrderedDict((
             ('Id', Field(
                 name='Id',
@@ -3926,7 +3912,6 @@ specification = Specification({
             )),
         )),
     ),
-
     'BuffCategories.dat': File(
         fields=OrderedDict((
         )),
@@ -4183,7 +4168,6 @@ specification = Specification({
     ),
     'BuffVisualSets.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'BuffVisuals.dat': File(
@@ -5074,7 +5058,6 @@ specification = Specification({
                 name='Key5',
                 type='ulong',
             )),
-
         )),
     ),
     'ClientStrings.dat': File(
@@ -5104,7 +5087,6 @@ specification = Specification({
     ),
     'ClientUIScreens.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'CloneShot.dat': File(
@@ -5663,10 +5645,8 @@ specification = Specification({
             )),
         )),
     ),
-
     'DamageParticleEffectTypes.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'DamageParticleEffects.dat': File(
@@ -6715,7 +6695,6 @@ specification = Specification({
     ),
     'Directions.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'DisplayMinionMonsterType.dat': File(
@@ -7559,7 +7538,6 @@ specification = Specification({
     ),
     'EvergreenAchievementTypes.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'EvergreenAchievements.dat': File(
@@ -7977,7 +7955,6 @@ specification = Specification({
                 type='ulong',
                 key='HideoutDoodads.dat',
             )),
-
         )),
     ),
     'FixedMissions.dat': File(
@@ -8039,7 +8016,6 @@ specification = Specification({
     ),
     'FlavourTextImages.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'Footprints.dat': File(
@@ -8357,7 +8333,6 @@ specification = Specification({
                 name='Unknown35',
                 type='byte',
             )),
-
         )),
     ),
     'GeometryProjectiles.dat': File(
@@ -9040,7 +9015,6 @@ specification = Specification({
     ),
     'GroundEffectTypes.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'GroundEffects.dat': File(
@@ -9120,7 +9094,6 @@ specification = Specification({
     ),
     'HarvestColours.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'HarvestCraftOptionIcons.dat': File(
@@ -9292,12 +9265,10 @@ specification = Specification({
     ),
     'HarvestInfrastructureCategories.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'HarvestMetaCraftingOptions.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'HarvestObjects.dat': File(
@@ -9379,7 +9350,6 @@ specification = Specification({
     ),
     'HarvestPlantBoosterFamilies.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'HarvestPlantBoosters.dat': File(
@@ -10112,7 +10082,6 @@ specification = Specification({
     ),
     'InfluenceTypes.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'InvasionMonsterGroups.dat': File(
@@ -10248,7 +10217,6 @@ specification = Specification({
     ),
     'ItemClassCategories.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'ItemClasses.dat': File(
@@ -10339,7 +10307,6 @@ specification = Specification({
     ),
     'ItemCreationTemplateCustomAction.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'ItemExperiencePerLevel.dat': File(
@@ -11405,7 +11372,6 @@ specification = Specification({
     ),
     'LeagueFlags.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'LeagueInfo.dat': File(
@@ -11703,7 +11669,6 @@ specification = Specification({
     ),
     'LegionMonsterTypes.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'LegionMonsterVarieties.dat': File(
@@ -11782,7 +11747,6 @@ specification = Specification({
     ),
     'LegionRankTypes.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'LegionRanks.dat': File(
@@ -11853,7 +11817,6 @@ specification = Specification({
     ),
     'LegionRewardTypes.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'LegionRewards.dat': File(
@@ -11896,7 +11859,6 @@ specification = Specification({
                 name='Unknown7',
                 type='float',
             )),
-
         )),
     ),
     'LevelRelativePlayerScaling.dat': File(
@@ -12412,7 +12374,6 @@ specification = Specification({
                 name='StatMax',
                 type='int',
             )),
-
         )),
     ),
     'MapStatsFromMapStats.dat': File(
@@ -13152,7 +13113,6 @@ specification = Specification({
     ),
     'MicrotransactionRecycleCategories.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'MicrotransactionRecycleOutcomes.dat': File(
@@ -13472,7 +13432,6 @@ specification = Specification({
     ),
     'ModSetNames.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'ModSets.dat': File(
@@ -14605,12 +14564,10 @@ specification = Specification({
     ),
     'MonsterSkillsAliveDead.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'MonsterSkillsAttackSpell.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'MonsterSkillsClientInstance.dat': File(
@@ -14619,7 +14576,6 @@ specification = Specification({
     ),
     'MonsterSkillsHull.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'MonsterSkillsOrientation.dat': File(
@@ -14628,7 +14584,6 @@ specification = Specification({
     ),
     'MonsterSkillsPlacement.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'MonsterSkillsReference.dat': File(
@@ -14637,7 +14592,6 @@ specification = Specification({
     ),
     'MonsterSkillsSequenceMode.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'MonsterSkillsShape.dat': File(
@@ -14646,12 +14600,10 @@ specification = Specification({
     ),
     'MonsterSkillsTargets.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'MonsterSkillsWaveDirection.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'MonsterSpawnerGroups.dat': File(
@@ -17113,7 +17065,6 @@ specification = Specification({
     ),
     'ProphecySetNames.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'ProphecySets.dat': File(
@@ -17249,10 +17200,8 @@ specification = Specification({
             )),
         )),
     ),
-
     'QuestRewardType.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'QuestRewards.dat': File(
@@ -17885,7 +17834,6 @@ specification = Specification({
     ),
     'ScarabTypes.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'Scarabs.dat': File(
@@ -18461,7 +18409,6 @@ specification = Specification({
     ),
     'SkillMines.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'SkillMorphDisplay.dat': File(
@@ -18766,7 +18713,6 @@ specification = Specification({
     ),
     'StashId.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'StashType.dat': File(
@@ -19294,7 +19240,6 @@ specification = Specification({
     ),
     'SurgeCategory.dat': File(
         fields=OrderedDict((
-
         )),
     ),
     'SurgeTypes.dat': File(
@@ -19997,7 +19942,6 @@ specification = Specification({
                 name='Unknown18',
                 type='int',
             )),
-
         )),
     ),
     'TriggerBeam.dat': File(
