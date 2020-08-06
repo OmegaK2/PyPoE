@@ -18398,8 +18398,8 @@ specification = Specification({
                 type='long',
                 key='BaseItemTypes.dat',
             )),
-            ('Flag0', Field(
-                name='Flag0',
+            ('IsVaalVariant', Field(
+                name='IsVaalVariant',
                 type='bool',
             )),
             ('Description', Field(
@@ -18419,13 +18419,16 @@ specification = Specification({
                 key='GrantedEffects.dat',
             )),
             # 3.8
-            ('Key0', Field(
-                name='Key0',
+            ('MinionGlobalSkillLevelStatsKey', Field(
+                name='MinionGlobalSkillLevelStatsKey',
                 type='ulong',
             )),
             # 3.10
-            ('Unknown0', Field(
-                name='Unknown0',
+            # Some active skill gem also support another linked active skill,
+            # like `Spellslinger`, `Arcanist Brand` and `General's Cry`.
+            # This is the second name for support version.
+            ('SupportSkillName', Field(
+                name='SupportSkillName',
                 type='ref|string',
             )),
             # some time after 3.11
@@ -18900,9 +18903,11 @@ specification = Specification({
                 name='Unknown1',
                 type='int',
             )),
-            ('Unknown2', Field(
-                name='Unknown2',
+            ('BelongsActiveSkillsKey', Field(
+                name='BelongsActiveSkillsKey',
                 type='ref|list|ref|string',
+                key='ActiveSkills.dat',
+                key_id='Id',
             )),
             ('Key0', Field(
                 name='Key0',
