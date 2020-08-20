@@ -7471,8 +7471,8 @@ specification = Specification({
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('AmuletsModsKey', Field(
-                name='AmuletsModsKey',
+            ('Amulet_ModsKey', Field(
+                name='Amulet_ModsKey',
                 type='ulong',
                 key='Mods.dat',
             )),
@@ -7481,8 +7481,8 @@ specification = Specification({
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Display_Jewellery_ModsKey', Field(
-                name='Display_Jewellery_ModsKey',
+            ('Display_Accessory_ModsKey', Field(
+                name='Display_Accessory_ModsKey',
                 type='ulong',
                 key='Mods.dat',
             )),
