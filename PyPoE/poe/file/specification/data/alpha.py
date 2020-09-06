@@ -4714,10 +4714,10 @@ specification = Specification({
                 name='Description',
                 type='ref|string',
             )),
-            ('StartSkillGem_BaseItemTypesKey', Field(
-                name='StartSkillGem_BaseItemTypesKey',
+            ('StartSkillGem_SkillGemsKey', Field(
+                name='StartSkillGem_SkillGemsKey',
                 type='ulong',
-                key='BaseItemTypes.dat',
+                key='SkillGems.dat',
             )),
             ('Unknown13', Field(
                 name='Unknown13',
@@ -7484,8 +7484,8 @@ specification = Specification({
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('AmuletsModsKey', Field(
-                name='AmuletsModsKey',
+            ('Amulet_ModsKey', Field(
+                name='Amulet_ModsKey',
                 type='ulong',
                 key='Mods.dat',
             )),
@@ -7494,8 +7494,8 @@ specification = Specification({
                 type='ulong',
                 key='Mods.dat',
             )),
-            ('Display_Jewellery_ModsKey', Field(
-                name='Display_Jewellery_ModsKey',
+            ('Display_Accessory_ModsKey', Field(
+                name='Display_Accessory_ModsKey',
                 type='ulong',
                 key='Mods.dat',
             )),
@@ -20182,9 +20182,10 @@ specification = Specification({
     ),
     'UniqueStashLayout.dat': File(
         fields=OrderedDict((
-            ('UniqueItemsKey', Field(
-                name='UniqueItemsKey',
+            ('WordsKey', Field(
+                name='WordsKey',
                 type='ulong',
+                key='Words.dat'
             )),
             ('ItemVisualIdentityKey', Field(
                 name='ItemVisualIdentityKey',
