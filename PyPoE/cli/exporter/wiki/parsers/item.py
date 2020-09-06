@@ -455,7 +455,8 @@ class ProphecyParser(parser.BaseParser):
                 'Metadata/Items/Currency/CurrencyItemisedProphecy'
             infobox['flavour_text'] = prophecy['FlavourText']
             infobox['prophecy_id'] = prophecy['Id']
-            infobox['prediction_text'] = prophecy['PredictionText']
+            infobox['prediction_text'] = prophecy['PredictionText2'] or \
+                                         prophecy['PredictionText']
             infobox['seal_cost'] = prophecy['SealCost']
 
             if not prophecy['IsEnabled']:
