@@ -127,10 +127,14 @@ class DatExportHandler:
                 remove.append(name)
                 continue
 
-            df = dat.DatFile(name)
-            df.read(file_path_or_raw=node.record.extract(), use_dat_value=False)
+            try:
+                df = dat.DatFile(name)
+                df.read(file_path_or_raw=node.record.extract(), use_dat_value=False)
 
-            dat_files[name] = df
+                dat_files[name] = df
+            except:
+                print('Error occured for %s' % name)
+                remove.append(name)
 
         for file_name in remove:
             args.files.remove(file_name)

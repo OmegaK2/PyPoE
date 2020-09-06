@@ -31,6 +31,7 @@ See PyPoE/LICENSE
 
 # Python
 import argparse
+from pathlib import Path
 from json import dump
 
 # self
@@ -101,66 +102,76 @@ class JSONExportHandler(DatExportHandler):
 
         dict_spec = args.spec.as_dict()
 
-        with open(
-                args.target,
-                mode='w',
-                encoding='ascii' if args.ascii else 'utf-8'
-        ) as f:
-            dat_files = self._read_dat_files(args)
+        dat_files = self._read_dat_files(args)
 
-            console('Building data object...')
-            out = []
+        console('Building data object...')
+        out = []
+        out_path = Path(args.target)
 
-            for file_name in args.files:
-                dat_file = dat_files[file_name]
-                
-                header = [
-                    dict({ 'name': name, 'rowid': index }, **props)
-                    for index, (name, props) 
-                    in enumerate(dict_spec[file_name]['fields'].items())
-                ]
+        for file_name in args.files:
+            dat_file = dat_files[file_name]
 
-                virtual_header = [
-                    dict({ 'name': name, 'rowid': index }, **props)
-                    for index, (name, props) 
-                    in enumerate(dict_spec[file_name]['virtual_fields'].items())
-                ]
+            header = [
+                dict({ 'name': name, 'rowid': index }, **props)
+                for index, (name, props)
+                in enumerate(dict_spec[file_name]['fields'].items())
+            ]
 
-                if args.use_object_format:
-                    out_obj = {
-                        'filename': file_name,
-                        'header': {row['name']: row for row in header},
-                        'data': [{
-                                cid: row[i] for i, cid in enumerate(
-                                    dat_file.reader.columns_data
-                                )
-                            } for row in dat_file.reader.table_data
-                        ],
-                    }
+            virtual_header = [
+                dict({ 'name': name, 'rowid': index }, **props)
+                for index, (name, props)
+                in enumerate(dict_spec[file_name]['virtual_fields'].items())
+            ]
 
-                    virtual_header = (
-                        {row['name']: row for row in virtual_header}
-                    )
-                else:
-                    out_obj = {
-                        'filename': file_name,
-                        'header': header,
-                        'data': dat_file.reader.table_data,
-                    }
+            if args.use_object_format:
+                out_obj = {
+                    'filename': file_name,
+                    'header': {row['name']: row for row in header},
+                    'data': [{
+                            cid: row[i] for i, cid in enumerate(
+                                dat_file.reader.columns_data
+                            )
+                        } for row in dat_file.reader.table_data
+                    ],
+                }
 
-                if args.include_virtual_fields:
-                    out_obj['virtual_header'] = virtual_header
+                virtual_header = (
+                    {row['name']: row for row in virtual_header}
+                )
+            else:
+                out_obj = {
+                    'filename': file_name,
+                    'header': header,
+                    'data': dat_file.reader.table_data,
+                }
 
-                if args.include_record_length:
-                    out_obj['record_length'] = dat_files[file_name].reader.table_record_length
+            if args.include_virtual_fields:
+                out_obj['virtual_header'] = virtual_header
 
+            if args.include_record_length:
+                out_obj['record_length'] = dat_files[file_name].reader.table_record_length
+
+            if out_path.is_dir():
+                file_path = (out_path / file_name).with_suffix('.json')
+                console('Dumping data to "%s"...' % file_path)
+                with file_path.open(
+                        mode='w',
+                        encoding='ascii' if args.ascii else 'utf-8'
+                ) as f:
+                    dump(out_obj, f, ensure_ascii=args.ascii, indent=4)
+            else:
                 out.append(out_obj)
 
+        if out_path.is_file():
             console('Dumping data to "%s"...' % args.target)
-
-            dump(out, f, ensure_ascii=args.ascii, indent=4)
+            with out_path.open(
+                    mode='w',
+                    encoding='ascii' if args.ascii else 'utf-8'
+            ) as f:
+                dump(out, f, ensure_ascii=args.ascii, indent=4)
 
         console('Done.')
+
 
 # =============================================================================
 # Functions
