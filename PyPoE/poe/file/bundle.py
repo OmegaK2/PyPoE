@@ -24,6 +24,22 @@ See PyPoE/LICENSE
 
 Documentation
 ===============================================================================
+
+Enums
+-------------------------------------------------------------------------------
+
+.. autoclass: ENCODE_TYPES
+
+.. authclass: ENCODE_TYPES_HEX
+
+.. autoclass: PATH_TYPES
+
+Classes
+-------------------------------------------------------------------------------
+
+.. autoclass: Bundle
+
+.. autoclass: Index
 """
 
 # =============================================================================
@@ -33,10 +49,10 @@ Documentation
 # python
 import struct
 import os
-import pprint
-from collections import defaultdict
 from enum import IntEnum
+from io import BytesIO
 from tempfile import TemporaryDirectory
+from typing import Union
 
 # 3rd party
 from fnvhash import fnv1a_64
@@ -47,11 +63,21 @@ except ImportError:
     cffi = None
 
 # self
+from PyPoE.shared.mixins import ReprMixin
+from PyPoE.shared.decorators import doc
 from PyPoE.poe.file.shared import AbstractFileReadOnly
 
 # =============================================================================
 # Setup
 # =============================================================================
+
+__all__ = [
+    'ENCODE_TYPES', 'ENCODE_TYPES_HEX', 'PATH_TYPES',
+
+    'IndexRecord', 'BundleRecord', 'FileRecord', 'DirectoryRecord',
+
+    'Bundle', 'Index'
+]
 
 if cffi:
     ffi = cffi.FFI()
@@ -108,7 +134,8 @@ class ENCODE_TYPES(IntEnum):
 
 
 class Bundle(AbstractFileReadOnly):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, *kwargs)
         self.encoder = None
         self.unknown = None
         self.size_decompressed = None
@@ -121,16 +148,12 @@ class Bundle(AbstractFileReadOnly):
         self.unknown6 = None
         self.chunks = None
         self.data = {}
-        self.is_decompressed = defaultdict(lambda: False)
 
-    def read(self, raw):
-        if isinstance(raw, bytes):
-            self._file_raw = raw
-        elif isinstance(raw, BytesIO):
-            self._file_raw = raw.read()
-        else:
-            raise TypeError('Raw must be bytes or BytesIO instance, got %s' %
-                            type)
+    def _read(self, buffer: BytesIO):
+        if isinstance(self.data, bytes):
+            raise ValueError('Bundle has been decompressed already')
+
+        raw = buffer.read()
 
         self.uncompressed_size, self.data_size, self.head_size = \
             struct.unpack_from('<III', raw, offset=0)
@@ -160,7 +183,7 @@ class Bundle(AbstractFileReadOnly):
 
             offset = offset2
 
-    def decompress(self, start=0, end=None):
+    def decompress(self, start: int = 0, end: int = None):
         if not self.data:
             raise ValueError()
 
@@ -170,9 +193,6 @@ class Bundle(AbstractFileReadOnly):
         last = self.entry_count - 1
         if ooz:
             for i in range(start, end):
-                if self.is_decompressed[i]:
-                    continue
-
                 if i != last:
                     size = self.chunk_size
                 else:
@@ -200,14 +220,9 @@ class Bundle(AbstractFileReadOnly):
                     raise ValueError('Decode error - returned 0 bytes')
 
                 self.data[i] = ffi.buffer(out)
-                self.is_decompressed[i] = True
         else:
-            tempdir = 'C:/temp/x/'
             with TemporaryDirectory() as tempdir:
                 for i in range(start, end):
-                    if self.is_decompressed[i]:
-                        continue
-
                     fn = '%s/chunk%s' % (tempdir, i)
 
                     with open('%s.in' % fn, 'wb') as f:
@@ -222,12 +237,89 @@ class Bundle(AbstractFileReadOnly):
 
                     with open('%s.out' % fn, 'rb') as f:
                         self.data[i] = f.read()
-                    self.is_decompressed[i] = True
+
+        self.data = b''.join(self.data.values())
 
 
 class PATH_TYPES(IntEnum):
     DIR = 1
     FILE = 2
+
+
+class IndexRecord(ReprMixin):
+    SIZE = None
+
+
+class BundleRecord(IndexRecord):
+    """
+    Attributes
+    ----------
+    parent : Index
+    name : str
+    size : int
+    contents : Bundle
+    BYTES : int
+    """
+    __slots__ = ['parent', 'name', 'size',  'contents', 'BYTES']
+
+    _REPR_EXTRA_ATTRIBUTES = {x: None for x in __slots__}
+
+    def __init__(self, raw: bytes, parent: 'Index', offset: int):
+        self.parent = parent
+
+        name_length = struct.unpack_from('<I', raw, offset=offset)[0]
+
+        self.name = struct.unpack_from(
+            '%ss' % name_length, raw, offset=offset+4)[0]
+
+        self.size = struct.unpack_from('<I', raw, offset=offset+4+name_length)[0]
+
+        self.BYTES = name_length + 8
+
+        self.contents = None
+
+    def read(self, file_path_or_raw):
+        if self.contents is None:
+            self.contents = Bundle()
+            self.contents.read(file_path_or_raw)
+            self.contents.decompress()
+
+
+class FileRecord(IndexRecord):
+    __slots__ = ['parent', 'hash', 'bundle', 'file_offset', 'file_size']
+
+    _REPR_EXTRA_ATTRIBUTES = {x: None for x in __slots__}
+    SIZE = 20
+
+    def __init__(self, raw: bytes, parent: 'Index', offset: int):
+        data = struct.unpack_from('<QIII', raw, offset=offset)
+
+        self.parent = parent
+        self.hash = data[0]
+        self.bundle = parent.bundles[data[1]]
+        self.file_offset = data[2]
+        self.file_size = data[3]
+
+    def get_file(self) -> bytes:
+        return self.bundle.contents.data[
+               self.file_offset:self.file_offset+self.file_size]
+
+
+class DirectoryRecord(IndexRecord):
+    __slots__ = ['parent', 'hash', 'offset', 'size', 'unknown', 'paths']
+
+    _REPR_EXTRA_ATTRIBUTES = {x: None for x in __slots__}
+    SIZE = 20
+
+    def __init__(self, raw: bytes, parent: 'Index', offset:int):
+        self.parent = parent
+        data = struct.unpack_from('<QIII', raw, offset=offset)
+
+        self.hash = data[0]
+        self.offset = data[1]
+        self.size = data[2]
+        self.unknown = data[3]
+        self.paths = None
 
 
 class Index(Bundle):
@@ -236,15 +328,30 @@ class Index(Bundle):
         self.bundles = {}
         self.files = {}
         self.directories = {}
-        self.directory_data = None
 
-    def get_dir_info(self, path):
-        return self.files[self.get_hash(path, type=PATH_TYPES.DIR)]
+    def get_dir_record(self, path: Union[str, bytes]) -> DirectoryRecord:
+        try:
+            return self.files[self.get_hash(path, type=PATH_TYPES.DIR)]
+        except IndexError:
+            raise FileNotFoundError()
 
-    def get_file_info(self, path):
-        return self.files[self.get_hash(path, type=PATH_TYPES.FILE)]
+    def get_file_record(self, path: Union[str, bytes]) -> FileRecord:
+        """
+        Parameters
+        ----------
+        path
+            Path
 
-    def get_hash(self, path, type=None):
+        Returns
+        -------
+        FileRecord
+        """
+        try:
+            return self.files[self.get_hash(path, type=PATH_TYPES.FILE)]
+        except IndexError:
+            raise FileNotFoundError()
+
+    def get_hash(self, path: Union[str, bytes], type: PATH_TYPES = None) -> int:
         if isinstance(path, str):
             path = path.encode('utf-8')
         elif not isinstance(path, bytes):
@@ -261,66 +368,47 @@ class Index(Bundle):
 
         return fnv1a_64(path)
 
-    def read(self, raw):
-        super().read(raw)
+    def _read(self, buffer: BytesIO):
+        if self.bundles:
+            raise ValueError('Index bundle has been read already.')
+        super()._read(buffer)
         self.decompress()
-        raw = b''.join(self.data.values())
+        raw = self.data
 
         bundle_count = struct.unpack_from('<I', raw)[0]
         offset = 4
 
         for i in range(0, bundle_count):
-            bundle = {}
+            br = BundleRecord(raw, self, offset)
 
-            name_length = struct.unpack_from('<I', raw, offset=offset)[0]
-            offset += 4
-
-            bundle['name'] = struct.unpack_from(
-                '%ss' % name_length, raw, offset=offset)[0]
-            offset += name_length
-
-            bundle['size'] = struct.unpack_from('<I', raw, offset=offset)[0]
-            offset += 4
-
-            self.bundles[i] = bundle
+            self.bundles[i] = br
+            offset += br.BYTES
 
         file_count = struct.unpack_from('<I', raw, offset=offset)[0]
         offset += 4
 
         for i in range(0, file_count):
-            data = struct.unpack_from('<QIII', raw, offset=offset)
-            offset += 20
-
-            self.files[data[0]] = {
-                'bundle': self.bundles[data[1]],
-                'file_offset': data[2],
-                'file_size': data[3],
-            }
+            fr = FileRecord(raw, self, offset)
+            self.files[fr.hash] = fr
+            offset += fr.SIZE
 
         count = struct.unpack_from('<I', raw, offset=offset)[0]
         offset += 4
         for i in range(0, count):
-            data = struct.unpack_from('<QIII', raw, offset=offset)
-            offset += 20
-
-            self.directories[data[0]] = {
-                'offset': data[1],
-                'size': data[2],
-                'unknown2': data[3],
-                'paths': None,
-            }
+            dr = DirectoryRecord(raw, self, offset)
+            self.directories[dr.hash] = dr
+            offset += dr.SIZE
 
         directory_bundle = Bundle()
         directory_bundle.read(raw[offset:])
         directory_bundle.decompress()
-        self.directory_data = b''.join(directory_bundle.data.values())
 
         for path in self.directories.values():
-            path['paths'] = self._make_paths(
-                self.directory_data[path['offset']:path['offset'] + path['size']]
+            path.paths = self._make_paths(
+                directory_bundle.data[path.offset:path.offset + path.size]
             )
 
-    def _make_paths(self, raw):
+    def _make_paths(self, raw: bytes):
         temp = []
         paths = []
         base = False
@@ -355,10 +443,10 @@ class Index(Bundle):
 
         return paths
 
+
 if __name__ == '__main__':
     ind = Index()
-    with open('C:/Temp/Bundles2/_.index.bin', 'rb') as f:
-        ind.read(f.read())
+    ind.read('C:/Temp/Bundles2/_.index.bin')
 
     print(ind['Metadata/minimap_colours.txt'])
 

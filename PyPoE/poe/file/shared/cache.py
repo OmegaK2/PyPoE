@@ -44,12 +44,14 @@ Documentation
 
 # Python
 import os
+from typing import Union, List, Dict, Any
 
 # 3rd-party
 
 # self
 from PyPoE.shared.mixins import ReprMixin
 from PyPoE.poe.file.ggpk import GGPKFile
+from PyPoE.poe.file.bundle import Bundle, Index, PATH_TYPES
 
 # =============================================================================
 # Globals
@@ -70,14 +72,22 @@ class AbstractFileCache(ReprMixin):
 
     '_path' : str
 
+    'is_unpacked' : bool
+
     'files' : dict[str, AbstractFileReadOnly]
         Dictionary of loaded file instances and their related path
     """
 
     FILE_TYPE = None
 
-    def __init__(self, path_or_ggpk=None, files=None, files_shortcut=True,
-                 instance_options=None, read_options=None):
+    def __init__(self,
+                 path_or_ggpk: Union[str, GGPKFile] = None,
+                 files: List[str] = None,
+                 files_shortcut: bool = True,
+                 instance_options: Dict[str, Any] = None,
+                 read_options: Dict[str, Any] = None,
+                 load_index: Union[bool, Index] = True,
+                 bundle_cache: Union[bool, Index] = False):
         """
         Parameters
         ----------
@@ -114,6 +124,32 @@ class AbstractFileCache(ReprMixin):
             raise TypeError(
                 'path_or_ggpk must be a valid directory or GGPKFile'
             )
+
+        if isinstance(load_index, bool):
+            if load_index:
+                self.index = Index()
+                if self._path:
+                    self.index.read(os.path.join(
+                        self._path, 'Bundles2', '_.index.bin')
+                    )
+                else:
+                    self.index.read(
+                        self._ggpk['Bundles/_.index.bin'].record.extract()
+                    )
+            else:
+                self.index = None
+        elif isinstance(load_index, Index):
+            self.index = load_index
+        else:
+            raise TypeError('load_index must be a bool or Index instance')
+
+        if isinstance(bundle_cache, bool):
+            if bundle_cache:
+                self.bundle_cache = self.index
+        elif isinstance(bundle_cache, Index):
+            self.bundle_cache = bundle_cache
+        else:
+            raise TypeError('bundle_cache must be a bool or Index instance')
 
         self.instance_options = {} if instance_options is None else \
             instance_options
@@ -166,7 +202,7 @@ class AbstractFileCache(ReprMixin):
         options = dict(self.instance_options)
         return options
 
-    def _get_read_args(self, file_name, *args, **kwargs):
+    def _get_read_args(self, file_name : str, *args, **kwargs) -> Dict[str, Any]:
         """
         Returns a dictionary of keyword arguments to pass to the file's
         read method upon initial reading.
@@ -186,10 +222,34 @@ class AbstractFileCache(ReprMixin):
             Dictionary of keyword arguments
         """
         options = dict(self.read_options)
+        is_bundle = False
         if self._ggpk:
-            options['file_path_or_raw'] = self._ggpk[file_name].record.extract()
+            try:
+                options['file_path_or_raw'] = \
+                    self._ggpk[file_name].record.extract()
+            except FileNotFoundError:
+                is_bundle = True
         elif self._path:
-            options['file_path_or_raw'] = os.path.join(self._path, file_name)
+            target = os.path.join(self._path, file_name)
+            if os.path.exists(target):
+                options['file_path_or_raw'] = target
+            else:
+                is_bundle = True
+
+        if is_bundle:
+            file_record = self.index.get_file_record(file_name)
+            bundle_record = file_record.bundle
+
+            if bundle_record.contents is None:
+                fn = (bundle_record.name + b'.bundle.bin').decode()
+                if self._ggpk:
+                    file_path_or_raw = self._ggpk[fn].record.extract()
+                elif self._path:
+                    file_path_or_raw = os.path.join(self._path, 'Bundles2', fn)
+
+                bundle_record.read(file_path_or_raw)
+
+            options['file_path_or_raw'] = file_record.get_file()
 
         return options
 
