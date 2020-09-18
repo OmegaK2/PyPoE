@@ -198,7 +198,7 @@ class Bundle(AbstractFileReadOnly):
                 else:
                     size = self.size_decompressed % self.chunk_size
 
-                out = ffi.new('uint8_t[]', size)
+                out = ffi.new('uint8_t[]', size+64)
                 rtrcode = ooz.Ooz_Decompress(
                     self.data[i],  # src_buff
                     len(self.data[i]),  # src_len
@@ -219,7 +219,7 @@ class Bundle(AbstractFileReadOnly):
                 if rtrcode == 0:
                     raise ValueError('Decode error - returned 0 bytes')
 
-                self.data[i] = ffi.buffer(out)
+                self.data[i] = ffi.buffer(out)[:-64]
         else:
             with TemporaryDirectory() as tempdir:
                 for i in range(start, end):
