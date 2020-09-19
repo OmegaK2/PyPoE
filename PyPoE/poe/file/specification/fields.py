@@ -192,6 +192,7 @@ Documentation
 
 # Python
 from collections import OrderedDict
+from typing import Tuple
 
 # 3rd-party
 
@@ -388,7 +389,10 @@ class File:
         'columns_zip',
     ]
 
-    def __init__(self, fields=None, virtual_fields=None):
+    def __init__(self,
+                 fields: Tuple['Field', ...] = None,
+                 virtual_fields: Tuple['VirtualField', ...] = None
+                 ):
         """
         Parameters
         ----------
@@ -401,9 +405,13 @@ class File:
         """
         if fields is None:
             fields = OrderedDict()
+        else:
+            fields = OrderedDict(((field.name, field) for field in fields))
         self.fields = fields
         if virtual_fields is None:
             virtual_fields = OrderedDict()
+        else:
+            virtual_fields = OrderedDict(((field.name, field) for field in virtual_fields))
         self.virtual_fields = virtual_fields
 
         # Set utility columns from the given data
@@ -594,21 +602,27 @@ class VirtualField(_Common):
     Virtual fields are based off other Field instances and provide additional
     convenience options such as grouping certain fields together.
     """
-    __slots__ = ['fields', 'zip']
+    __slots__ = ['name', 'fields', 'zip']
 
-    def __init__(self, fields, zip=False):
+    def __init__(self,
+                 name: str,
+                 fields: Tuple[str, ...],
+                 zip: bool = False):
         """
 
         Parameters
         ----------
-        fields : list[str]
+        name
+
+        fields
             List of fields to coerce into one field.
             All fields must be exist, but they can be either a regular or
             virtual field or combination of.
-        zip : bool
+        zip
              Whether to zip the fields together.
              This option requires each of the referenced fields to be a list.
         """
+        self.name = name
         self.fields = fields
         self.zip = zip
 
