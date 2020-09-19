@@ -130,11 +130,11 @@ class AbstractFileCache(ReprMixin):
                 self.index = Index()
                 if self._path:
                     self.index.read(os.path.join(
-                        self._path, 'Bundles2', '_.index.bin')
+                        self._path, Index.PATH)
                     )
                 else:
                     self.index.read(
-                        self._ggpk['Bundles/_.index.bin'].record.extract()
+                        self._ggpk[Index.PATH].record.extract()
                     )
             else:
                 self.index = None
@@ -241,11 +241,13 @@ class AbstractFileCache(ReprMixin):
             bundle_record = file_record.bundle
 
             if bundle_record.contents is None:
-                fn = (bundle_record.name + b'.bundle.bin').decode()
                 if self._ggpk:
-                    file_path_or_raw = self._ggpk[fn].record.extract()
+                    file_path_or_raw = \
+                        self._ggpk[bundle_record.ggpk_path].record.extract()
                 elif self._path:
-                    file_path_or_raw = os.path.join(self._path, 'Bundles2', fn)
+                    file_path_or_raw = os.path.join(
+                        self._path, bundle_record.ggpk_path
+                    )
 
                 bundle_record.read(file_path_or_raw)
 

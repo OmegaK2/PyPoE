@@ -52,7 +52,7 @@ import os
 from enum import IntEnum
 from io import BytesIO
 from tempfile import TemporaryDirectory
-from typing import Union
+from typing import List, Union
 
 # 3rd party
 from fnvhash import fnv1a_64
@@ -270,7 +270,7 @@ class BundleRecord(IndexRecord):
         name_length = struct.unpack_from('<I', raw, offset=offset)[0]
 
         self.name = struct.unpack_from(
-            '%ss' % name_length, raw, offset=offset+4)[0]
+            '%ss' % name_length, raw, offset=offset+4)[0].decode()
 
         self.size = struct.unpack_from('<I', raw, offset=offset+4+name_length)[0]
 
@@ -278,7 +278,15 @@ class BundleRecord(IndexRecord):
 
         self.contents = None
 
-    def read(self, file_path_or_raw):
+    @property
+    def file_name(self) -> str:
+        return self.name + '.bundle.bin'
+
+    @property
+    def ggpk_path(self) -> str:
+        return 'Bundles2/' + self.file_name
+
+    def read(self, file_path_or_raw: Union[str, bytes]):
         if self.contents is None:
             self.contents = Bundle()
             self.contents.read(file_path_or_raw)
@@ -306,7 +314,7 @@ class FileRecord(IndexRecord):
 
 
 class DirectoryRecord(IndexRecord):
-    __slots__ = ['parent', 'hash', 'offset', 'size', 'unknown', 'paths']
+    __slots__ = ['parent', 'hash', 'offset', 'size', 'unknown', '_paths']
 
     _REPR_EXTRA_ATTRIBUTES = {x: None for x in __slots__}
     SIZE = 20
@@ -319,10 +327,20 @@ class DirectoryRecord(IndexRecord):
         self.offset = data[1]
         self.size = data[2]
         self.unknown = data[3]
-        self.paths = None
+        self._paths = None
+
+    @property
+    def paths(self):
+        return [x.decode() for x in self._paths]
+
+    @property
+    def files(self) -> List[str]:
+        return [x.rsplit('/', maxsplit=1)[-1] for x in self.paths]
 
 
 class Index(Bundle):
+    PATH = 'Bundles2/_.index.bin'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bundles = {}
@@ -331,8 +349,8 @@ class Index(Bundle):
 
     def get_dir_record(self, path: Union[str, bytes]) -> DirectoryRecord:
         try:
-            return self.files[self.get_hash(path, type=PATH_TYPES.DIR)]
-        except IndexError:
+            return self.directories[self.get_hash(path, type=PATH_TYPES.DIR)]
+        except KeyError:
             raise FileNotFoundError()
 
     def get_file_record(self, path: Union[str, bytes]) -> FileRecord:
@@ -348,7 +366,7 @@ class Index(Bundle):
         """
         try:
             return self.files[self.get_hash(path, type=PATH_TYPES.FILE)]
-        except IndexError:
+        except KeyError:
             raise FileNotFoundError()
 
     def get_hash(self, path: Union[str, bytes], type: PATH_TYPES = None) -> int:
@@ -403,9 +421,12 @@ class Index(Bundle):
         directory_bundle.read(raw[offset:])
         directory_bundle.decompress()
 
-        for path in self.directories.values():
-            path.paths = self._make_paths(
-                directory_bundle.data[path.offset:path.offset + path.size]
+        for directory_record in self.directories.values():
+            directory_record._paths = self._make_paths(
+                directory_bundle.data[
+                    directory_record.offset:
+                    directory_record.offset + directory_record.size
+                ]
             )
 
     def _make_paths(self, raw: bytes):
