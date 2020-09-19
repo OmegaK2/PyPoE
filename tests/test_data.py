@@ -64,7 +64,7 @@ def files(poe_version):
 # Kind of testing the reading of the files twice, but whatever.
 # dat_file_name is parametrized in conftest.py
 @pytest.mark.parametrize('x64', (False, ))
-def test_definitions(dat_file_name, ggpkfile, x64):
+def test_definitions(dat_file_name, ggpkfile, indexfile, x64):
     opt = {
         'use_dat_value': False,
         'x64': x64
@@ -74,25 +74,26 @@ def test_definitions(dat_file_name, ggpkfile, x64):
     # Will raise errors accordingly if it fails
     df = dat.DatFile(dat_file_name)
     try:
-        node = ggpkfile['Data/' + dat_file_name]
-        df.read(node.record.extract(), **opt)
+        fr = indexfile.get_file_record('Data/' + dat_file_name)
+        fr.bundle.read(ggpkfile[fr.bundle.ggpk_path].record.extract())
+        df.read(fr.get_file(), **opt)
     # If a file is in the spec, but not in the dat file this is allright
     except FileNotFoundError:
         return
 
-def test_missing(files, ggpkfile):
+
+def test_missing(files, indexfile):
     file_set = set()
 
-    for node in ggpkfile['Data'].files:
-        name = node.record.name
-        if not name.endswith('.dat'):
+    for fn in indexfile.get_dir_record('Data/').files:
+        if not fn.endswith('.dat'):
             continue
 
         # Not a regular dat file, ignore
-        if name in ['Languages.dat']:
+        if fn in ['Languages.dat']:
             continue
 
-        file_set.add(name)
+        file_set.add(fn)
 
     # Sorting by name makes this easier to correct when error shows up
     assert sorted(file_set.difference(set(files))) == [], 'ggpk contains unhandled .dat files'

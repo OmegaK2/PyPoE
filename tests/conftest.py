@@ -34,11 +34,13 @@ import os.path
 
 # 3rd-party
 import pytest
+from typing import List
 
 # self
 from PyPoE.poe.constants import VERSION, DISTRIBUTOR
 from PyPoE.poe.path import PoEPath
 from PyPoE.poe.file import dat
+from PyPoE.poe.file.bundle import Index
 from PyPoE.poe.file.specification import load
 from PyPoE.poe.file.ggpk import GGPKFile
 from PyPoE.cli.exporter.core import setup_config
@@ -118,14 +120,14 @@ def pytest_generate_tests(metafunc):
 # =============================================================================
 
 @pytest.fixture(scope='session')
-def poe_version(request):
+def poe_version(request) -> VERSION:
     v = get_version(request.config)
     dat.set_default_spec(v)
     return v
 
 
 @pytest.fixture(scope='session')
-def poe_path(poe_version):
+def poe_path(poe_version: VERSION) -> List[str]:
     paths = PoEPath(
         version=poe_version,
         distributor=DISTRIBUTOR.INTERNATIONAL
@@ -138,7 +140,7 @@ def poe_path(poe_version):
 
 
 @pytest.fixture(scope='session')
-def ggpkfile(poe_path):
+def ggpkfile(poe_path) -> GGPKFile:
     ggpk = GGPKFile()
     ggpk.read(os.path.join(poe_path, 'content.ggpk'))
     ggpk.directory_build()
@@ -147,7 +149,14 @@ def ggpkfile(poe_path):
 
 
 @pytest.fixture(scope='session')
-def rr(ggpkfile):
+def indexfile(ggpkfile: GGPKFile) -> Index:
+    index = Index()
+    index.read(ggpkfile[Index.PATH].record.extract())
+    return index
+
+
+@pytest.fixture(scope='session')
+def rr(ggpkfile: GGPKFile) -> dat.RelationalReader:
     return dat.RelationalReader(
         path_or_ggpk=ggpkfile,
         read_options={
