@@ -166,7 +166,7 @@ class TestKeyValuesFile:
 class TestKeyValuesFileCache:
     @pytest.fixture
     def kf_cache(self):
-        kfc = KeyValuesFileCache(path_or_ggpk=data_dir)
+        kfc = KeyValuesFileCache(path_or_ggpk=data_dir, load_index=False)
 
         return kfc
 

@@ -76,7 +76,10 @@ def dextended():
 
 @pytest.fixture(scope='module')
 def tcache():
-    return translations.TranslationFileCache(path_or_ggpk=data_dir)
+    return translations.TranslationFileCache(
+        path_or_ggpk=data_dir,
+        load_index=False,
+    )
 
 
 @pytest.fixture(scope='module')

@@ -152,6 +152,7 @@ def rr_temp_dir(tmpdir_factory):
 def rr_instance(rr_temp_dir):
     return dat.RelationalReader(
         path_or_ggpk=rr_temp_dir,
+        load_index=False,
         read_options={
             'specification': load(os.path.join(
                 spec_dir, 'rr_test.py'
@@ -437,6 +438,7 @@ class TestSpecificationErrors:
         rr = dat.RelationalReader(
             path_or_ggpk=rr_temp_dir,
             raise_error_on_missing_relation=True,
+            load_index=False,
             read_options={
                 'specification': load(os.path.join(
                     spec_dir, spec_name
@@ -462,6 +464,7 @@ class TestRelationalReader():
     def test_relations(self, rr_temp_dir, use_dat_value):
         rr = dat.RelationalReader(
             path_or_ggpk=rr_temp_dir,
+            load_index=False,
             read_options={
                 'specification': load(os.path.join(
                     spec_dir, 'rr_test.py'
@@ -488,6 +491,7 @@ class TestRelationalReader():
     def test_enums(self, rr_temp_dir, use_dat_value):
         rr = dat.RelationalReader(
             path_or_ggpk=rr_temp_dir,
+            load_index=False,
             read_options={
                 'specification': load(os.path.join(
                     spec_dir, 'rr_test.py'

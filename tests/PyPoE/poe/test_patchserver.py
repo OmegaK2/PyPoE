@@ -52,7 +52,7 @@ from PyPoE.poe.file import ggpk
 # Setup
 # =============================================================================
 
-_TEST_FILE = 'Metadata/Items/Amulets/Amulet.ao'
+_TEST_FILE = 'Redist/brotliLicense.txt'
 _re_version = re.compile(r'[\d]+\.[\d]+\.[\d]+\.[\d]+', re.UNICODE)
 
 def get_node_folders(file):
