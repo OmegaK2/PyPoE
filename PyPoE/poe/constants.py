@@ -672,6 +672,14 @@ class MOD_DOMAIN(IntEnumOverride):
         Synthesis modifiers that grant a bonus to other modifiers
     AFFLICTION_JEWEL
         Modifiers for the affliction jewels
+    HEIST_AREA
+        TODO
+    HEIST_NPC
+        TODO
+    HEIST_TRINKET
+        TODO
+    UNDEFINED
+        TODO
     """
     ITEM = 1
     FLASK = 2
@@ -695,7 +703,10 @@ class MOD_DOMAIN(IntEnumOverride):
     SYNTHESIS_GLOBALS = 19
     SYNTHESIS_BONUS = 20
     AFFLICTION_JEWEL = 21
-    UNDEFINED = 22
+    HEIST_AREA = 22
+    HEIST_NPC = 23
+    HEIST_TRINKET = 24
+    UNDEFINED = 25
 
     # legacy names
     MASTER = CRAFTED
@@ -892,6 +903,7 @@ class HARVEST_OBJECT_TYPES(IntEnumOverride):
     WILD = 1
     VIVID = 2
     PRIMAL = 3
+
 
 class PASSIVE_TYPES(IntEnumOverride):
     REGULAR1 = 1
