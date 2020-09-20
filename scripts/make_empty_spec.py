@@ -47,6 +47,7 @@ from PyPoE.poe.constants import VERSION, DISTRIBUTOR
 from PyPoE.poe.path import PoEPath
 from PyPoE.poe.file import dat
 from PyPoE.poe.file.ggpk import GGPKFile
+from PyPoE.poe.file.bundle import Index, Bundle
 
 # =============================================================================
 # Globals
@@ -66,22 +67,22 @@ __all__ = []
 def spec_unknown(size, i=0):
     if size == 0:
         return ''
-    spec = "('Unknown%s', Field("
+    spec = "Field("
     out = []
     while size >= 4:
-        out.append(spec % i)
+        out.append(spec)
         out.append("    name='Unknown%s'," % i)
         out.append("    type='int',")
-        out.append(")),")
+        out.append("),")
         size -= 4
         i+=1
 
     mod = size % 4
     for j in range(0, mod):
-        out.append(spec % i)
+        out.append(spec)
         out.append("    name='Unknown%s'," % i)
         out.append("    type='byte',")
-        out.append(")),")
+        out.append("),")
         i+=1
 
     return ' '*12 + ('\n' + ' '*12).join(out)
@@ -99,10 +100,12 @@ def run():
     ggpk.read(os.path.join(path, 'content.ggpk'))
     ggpk.directory_build()
 
+    index = Index()
+    index.read(ggpk[Index.PATH].record.extract())
+
     file_set = set()
 
-    for node in ggpk['Data'].files:
-        name = node.record.name
+    for name in index.get_dir_record('Data').files:
         if not name.endswith('.dat'):
             continue
 
@@ -115,7 +118,9 @@ def run():
     new = sorted(file_set.difference(set(existing_set)))
 
     for fn in new:
-        binary = ggpk['Data'][fn].record.extract().read()
+        fr = index.get_file_record('Data/' + fn)
+        fr.bundle.read(ggpk[fr.bundle.ggpk_path].record.extract())
+        binary = fr.get_file()
         data_offset = binary.find(dat.DAT_FILE_MAGIC_NUMBER)
         n_rows = struct.unpack('<I', binary[0:4])[0]
         length = data_offset - 4
@@ -123,9 +128,9 @@ def run():
             record_length = length//n_rows
 
         out.append("""    '%s': File(
-        fields=OrderedDict((
+        fields=(
 %s
-        )),
+        ),
     ),""" % (fn, spec_unknown(record_length)))
 
     print('\n'.join(out))
