@@ -28,8 +28,6 @@ See PyPoE/LICENSE
 # =============================================================================
 
 # Python
-from collections import OrderedDict
-
 # 3rd-party
 
 # self
@@ -41,106 +39,131 @@ from PyPoE.poe.file.specification.fields import *
 
 specification = Specification({
     'TestSpec.dat': File(
-        fields=OrderedDict((
-            ('bool', Field(
+        fields=(
+            Field(
+                name='bool',
                 type='bool',
-            )),
-            ('byte', Field(
+            ),
+            Field(
+                name='byte',
                 type='byte',
-            )),
-            ('ubyte', Field(
+            ),
+            Field(
+                name='ubyte',
                 type='ubyte',
-            )),
-            ('short', Field(
+            ),
+            Field(
+                name='short',
                 type='short',
-            )),
-            ('ushort', Field(
+            ),
+            Field(
+                name='ushort',
                 type='ushort',
-            )),
-            ('int', Field(
+            ),
+            Field(
+                name='int',
                 type='int',
-            )),
-            ('uint', Field(
+            ),
+            Field(
+                name='uint',
                 type='uint',
-            )),
-            ('long', Field(
+            ),
+            Field(
+                name='long',
                 type='long',
-            )),
-            ('ulong', Field(
+            ),
+            Field(
+                name='ulong',
                 type='ulong',
-            )),
-            ('ref|string', Field(
+            ),
+            Field(
+                name='ref|string',
                 type='ref|string',
-            )),
-            ('ref|list|int', Field(
+            ),
+            Field(
+                name='ref|list|int',
                 type='ref|list|int',
-            )),
-            ('ref|ref|ref|int', Field(
+            ),
+            Field(
+                name='ref|ref|ref|int',
                 type='ref|ref|ref|int',
-            )),
-        )),
+            ),
+        ),
     ),
     'Index.dat': File(
-        fields=OrderedDict((
-            ('int', Field(
+        fields=(
+            Field(
+                name='int',
                 type='int',
                 unique=True,
-            )),
-        )),
+            ),
+        ),
     ),
     'VirtualFields.dat': File(
-        fields=OrderedDict((
-            ('A', Field(
+        fields=(
+            Field(
+                name='A',
                 type='int',
-            )),
-            ('B', Field(
+            ),
+            Field(
+                name='B',
                 type='int',
-            )),
-            ('ListA', Field(
+            ),
+            Field(
+                name='ListA',
                 type='ref|list|int',
-            )),
-            ('ListB', Field(
+            ),
+            Field(
+                name='ListB',
                 type='ref|list|int',
-            )),
-        )),
-        virtual_fields=OrderedDict((
-            ('CombinedA', VirtualField(
+            ),
+        ),
+        virtual_fields=(
+            VirtualField(
+                name='CombinedA',
                 fields=('A', 'ListA'),
-            )),
-            ('CombinedB', VirtualField(
+            ),
+            VirtualField(
+                name='CombinedB',
                 fields=('B', 'ListB'),
-            )),
-            ('ZipList', VirtualField(
+            ),
+            VirtualField(
+                name='ZipList',
                 fields=('ListA', 'ListB'),
                 zip=True,
-            )),
-            ('CombinedVirtual', VirtualField(
+            ),
+            VirtualField(
+                name='CombinedVirtual',
                 fields=('CombinedA', 'CombinedB'),
-            )),
-        )),
+            ),
+        ),
     ),
     'RelationParent.dat': File(
-        fields=OrderedDict((
-            ('ForeignKey', Field(
+        fields=(
+            Field(
+                name='ForeignKey',
                 type='ulong',
                 key='RelationChild.dat',
-            )),
-            ('ForeignKeyColumn', Field(
+            ),
+            Field(
+                name='ForeignKeyColumn',
                 type='int',
                 key='RelationChild.dat',
                 key_id='UniqueKey',
-            )),
-        )),
+            ),
+        ),
     ),
     'RelationChild.dat': File(
-        fields=OrderedDict((
-            ('UniqueKey', Field(
+        fields=(
+            Field(
+                name='UniqueKey',
                 type='ulong',
                 unique=True,
-            )),
-            ('Data', Field(
+            ),
+            Field(
+                name='Data',
                 type='int',
-            )),
-        )),
+            ),
+        ),
     ),
 })

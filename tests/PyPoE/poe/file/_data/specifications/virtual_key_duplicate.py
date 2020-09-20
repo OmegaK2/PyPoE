@@ -28,8 +28,6 @@ See PyPoE/LICENSE
 # =============================================================================
 
 # Python
-from collections import OrderedDict
-
 # 3rd-party
 
 # self
@@ -41,24 +39,29 @@ from PyPoE.poe.file.specification.fields import *
 
 specification = Specification({
     'Main.dat': File(
-        fields=OrderedDict((
-            ('One', Field(
+        fields=(
+            Field(
+                name='One',
                 type='int',
-            )),
-            ('Two', Field(
+            ),
+            Field(
+                name='Two',
                 type='int',
-            )),
-            ('Three', Field(
+            ),
+            Field(
+                name='Three',
                 type='int',
-            )),
-            ('Four', Field(
+            ),
+            Field(
+                name='Four',
                 type='int',
-            )),
-        )),
-        virtual_fields=OrderedDict((
-            ('One', VirtualField(
+            ),
+        ),
+        virtual_fields=(
+            VirtualField(
+                name='One',
                 fields=('Two', 'Three'),
-            )),
-        )),
+            ),
+        ),
     ),
 })

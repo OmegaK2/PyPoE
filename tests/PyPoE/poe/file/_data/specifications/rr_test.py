@@ -28,7 +28,6 @@ See PyPoE/LICENSE
 # =============================================================================
 
 # Python
-from collections import OrderedDict
 
 # 3rd-party
 
@@ -41,40 +40,47 @@ from PyPoE.poe.file.specification.fields import *
 
 specification = Specification({
     'Main.dat': File(
-        fields=OrderedDict((
-            ('ForeignKey', Field(
+        fields=(
+            Field(
+                name='ForeignKey',
                 type='int',
                 key='Other.dat',
-            )),
-            ('ForeignKeyOffset', Field(
+            ),
+            Field(
+                name='ForeignKeyOffset',
                 type='int',
                 key='Other.dat',
                 key_offset=1,
-            )),
-            ('ForeignKeyMismatch', Field(
+            ),
+            Field(
+                name='ForeignKeyMismatch',
                 type='int',
-            )),
-            ('ForeignKeyNone', Field(
+            ),
+            Field(
+                name='ForeignKeyNone',
                 type='int',
                 key='Other.dat',
-            )),
-            ('ForeignKeyCellValue', Field(
+            ),
+            Field(
+                name='ForeignKeyCellValue',
                 type='int',
                 key='Other.dat',
                 key_id='Value',
-            )),
-            ('ConstTest', Field(
+            ),
+            Field(
+                name='ConstTest',
                 type='int',
                 enum='MOD_DOMAIN',
-            )),
-        )),
+            ),
+        ),
     ),
     'Other.dat': File(
-        fields=OrderedDict((
-            ('Value', Field(
+        fields=(
+            Field(
+                name='Value',
                 type='int',
                 unique=True,
-            )),
-        )),
+            ),
+        ),
     ),
 })

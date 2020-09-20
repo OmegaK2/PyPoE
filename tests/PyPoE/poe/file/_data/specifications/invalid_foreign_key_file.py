@@ -28,8 +28,6 @@ See PyPoE/LICENSE
 # =============================================================================
 
 # Python
-from collections import OrderedDict
-
 # 3rd-party
 
 # self
@@ -41,11 +39,12 @@ from PyPoE.poe.file.specification.fields import *
 
 specification = Specification({
     'Main.dat': File(
-        fields=OrderedDict((
-            ('Missing', Field(
+        fields=(
+            Field(
+                name='Missing',
                 type='int',
                 key='Missing.dat',
-            )),
-        )),
+            ),
+        ),
     ),
 })
