@@ -8619,6 +8619,14 @@ specification = Specification({
                 name='Unknown31',
                 type='int',
             ),
+            Field(
+                name='Unknown32',
+                type='byte',
+            ),
+            Field(
+                name='Unknown33',
+                type='byte',
+            ),
         ),
     ),
     'GlobalAudioConfig.dat': File(
@@ -8837,6 +8845,10 @@ specification = Specification({
                 type='float',
             ),
             Field(
+                name='Stat9Float',
+                type='float',
+            ),
+            Field(
                 name='EffectivenessCostConstantsKeys',
                 type='ref|list|ulong',
                 key='EffectivenessCostConstants.dat',
@@ -8871,6 +8883,10 @@ specification = Specification({
             ),
             Field(
                 name='Stat8Value',
+                type='int',
+            ),
+            Field(
+                name='Stat9Value',
                 type='int',
             ),
             Field(
@@ -8974,18 +8990,12 @@ specification = Specification({
                 name='Unknown46',
                 type='int',
             ),
-            # TODO: 3.0.0 Related to the stats of skills
             Field(
                 name='StatInterpolationTypesKeys',
                 type='ref|list|int',
                 # key = 'StatInterpolationTypes.dat',
                 enum='STAT_INTERPOLATION_TYPES',
             ),
-            Field(
-                name='Unknown0',
-                type='int',
-            ),
-            # 3.3
             Field(
                 name='VaalSoulGainPreventionTime',
                 type='int',
@@ -8995,36 +9005,9 @@ specification = Specification({
                 name='BaseDuration',
                 type='ulong',
             ),
-            # 3.4
-            Field(
-                name='Stat9Value',
-                type='int',
-            ),
             Field(
                 name='AttackSpeedMultiplier',
                 type='int',
-            ),
-        ),
-        virtual_fields=(
-            VirtualField(
-                name='StatValues',
-                fields=(
-                    'Stat1Value', 'Stat2Value', 'Stat3Value', 'Stat4Value',
-                    'Stat5Value', 'Stat6Value', 'Stat7Value', 'Stat8Value',
-                    'Stat9Value',
-                ),
-            ),
-            VirtualField(
-                name='StatFloats',
-                fields=(
-                    'Stat1Float', 'Stat2Float', 'Stat3Float', 'Stat4Float',
-                    'Stat5Float', 'Stat6Float', 'Stat7Float', 'Stat8Float'
-                ),
-            ),
-            VirtualField(
-                name='Stats',
-                fields=('StatsKeys', 'StatValues'),
-                zip=True,
             ),
         ),
     ),
@@ -9049,11 +9032,11 @@ specification = Specification({
                 type='ulong',
             ),
             Field(
-                name='Key0',
+                name='Key1',
                 type='ulong',
             ),
             Field(
-                name='Key0',
+                name='Key2',
                 type='ulong',
             ),
         ),
@@ -15762,6 +15745,14 @@ specification = Specification({
                 name='Unknown9',
                 type='ref|list|int',
             ),
+            Field(
+                name='Unknown10',
+                type='int',
+            ),
+            Field(
+                name='Flag4',
+                type='bool',
+            ),
         ),
     ),
     'NPCMaster.dat': File(
@@ -15872,8 +15863,12 @@ specification = Specification({
                 type='ref|list|ulong',
             ),
             Field(
-                name='Unknown3',
+                name='Data0',
                 type='ref|list|int',
+            ),
+            Field(
+                name='Unknown2',
+                type='int',
             ),
         ),
     ),
@@ -16080,6 +16075,18 @@ specification = Specification({
                 type='ref|string',
                 description='the inflection identifier used for i18n in related fields'
             ),
+            Field(
+                name='Unknown0',
+                type='int',
+            ),
+            Field(
+                name='Unknown1',
+                type='int',
+            ),
+            Field(
+                name='Unknown2',
+                type='int',
+            ),
         ),
     ),
     'NPCs.dat': File(
@@ -16139,6 +16146,12 @@ specification = Specification({
             Field(
                 name='Unknown3',
                 type='int',
+            ),
+            # 3.12
+            Field(
+                name='PortraitFile',
+                type='ref|string',
+                file_path=True,
             ),
         ),
     ),
@@ -16205,11 +16218,11 @@ specification = Specification({
                 unique=True,
             ),
             Field(
-                name='Unknown0',
+                name='Flag0',
                 type='bool',
             ),
             Field(
-                name='Unknown1',
+                name='Flag1',
                 type='bool',
             ),
             Field(
@@ -16222,11 +16235,15 @@ specification = Specification({
             ),
             Field(
                 name='Unknown3',
+                type='int',
+            ),
+            Field(
+                name='Flag2',
                 type='bool',
             ),
             Field(
-                name='Unknown4',
-                type='int',
+                name='Flag3',
+                type='bool',
             ),
         ),
     ),
@@ -16423,7 +16440,7 @@ specification = Specification({
                 type='ulong',
             ),
             Field(
-                name='Unknown1',
+                name='Unknown2',
                 type='int',
             ),
             Field(
@@ -17003,7 +17020,7 @@ specification = Specification({
                 key='BuffDefinitions.dat',
             ),
             Field(
-                name='Unknown8',
+                name='Flag0',
                 type='bool',
             ),
             Field(
@@ -17021,12 +17038,20 @@ specification = Specification({
                 key='Stats.dat',
             ),
             Field(
-                name='Unknown9',
+                name='Flag1',
                 type='bool',
             ),
             Field(
                 name='StatValue',
                 type='int',
+            ),
+            Field(
+                name='Keys0',
+                type='ref|list|ulong',
+            ),
+            Field(
+                name='Flag2',
+                type='bool',
             ),
         ),
     ),
@@ -17176,6 +17201,11 @@ specification = Specification({
             Field(
                 name='Unknown12',
                 type='int',
+            ),
+            # TODO 3.12
+            Field(
+                name='Key3',
+                type='ulong',
             ),
         ),
     ),
@@ -17556,6 +17586,14 @@ specification = Specification({
             Field(
                 name='Key0',
                 type='ulong',
+            ),
+            Field(
+                name='Unknown3',
+                type='int',
+            ),
+            Field(
+                name='Unknown4',
+                type='int',
             ),
         ),
     ),
@@ -18591,6 +18629,16 @@ specification = Specification({
                 name='Flag2',
                 type='bool',
             ),
+            # 3.12
+            Field(
+                name='Flag3',
+                type='bool',
+            ),
+            # TODO 3.12
+            Field(
+                name='Key0',
+                type='ulong',
+            ),
         ),
     ),
     'SkillMineVariations.dat': File(
@@ -18629,6 +18677,30 @@ specification = Specification({
                 type='ref|list|ref|string',
                 file_path=True,
                 file_ext='.dds',
+            ),
+            Field(
+                name='Unknown0',
+                type='int',
+            ),
+            Field(
+                name='Unknown1',
+                type='ref|list|int',
+            ),
+            Field(
+                name='Unknown2',
+                type='int',
+            ),
+            Field(
+                name='Unknown3',
+                type='ref|list|float',
+            ),
+            Field(
+                name='Flag0',
+                type='bool',
+            ),
+            Field(
+                name='Flag1',
+                type='bool',
             ),
         ),
     ),
@@ -18673,25 +18745,24 @@ specification = Specification({
                 type='int',
             ),
             Field(
-                name='Unknown1',
-                type='int',
-            ),
-            # 3.11
-            Field(
-                name='Unknown5',
-                type='byte',
+                name='Flag5',
+                type='bool',
             ),
             Field(
-                name='Unknown2',
-                type='ref|string',
+                name='Data0',
+                type='ref|list|float',
             ),
             Field(
-                name='Unknown3',
-                type='int',
+                name='Keys',
+                type='ref|list|ulong',
             ),
             Field(
-                name='Unknown4',
-                type='ref|string',
+                name='Flag6',
+                type='bool',
+            ),
+            Field(
+                name='Data1',
+                type='ref|list|int',
             ),
         ),
     ),
@@ -18943,8 +19014,8 @@ specification = Specification({
                 type='int',
             ),
             Field(
-                name='Key0',
-                type='ulong',
+                name='Unknown5',
+                type='int',
             ),
         ),
     ),
@@ -19374,6 +19445,10 @@ specification = Specification({
             Field(
                 name='Flag3',
                 type='bool',
+            ),
+            Field(
+                name='Unknown4',
+                type='int',
             ),
         ),
     ),
@@ -19818,6 +19893,10 @@ specification = Specification({
                 name='Unknown19',
                 type='int',
             ),
+            Field(
+                name='Unknown20',
+                type='int',
+            ),
         ),
     ),
     'Tags.dat': File(
@@ -20166,7 +20245,7 @@ specification = Specification({
                 type='ref|list|int',
             ),
             Field(
-                name='Unknown10',
+                name='Flag0',
                 type='byte',
             ),
             Field(
@@ -20180,6 +20259,22 @@ specification = Specification({
             Field(
                 name='Unknown6',
                 type='int',
+            ),
+            Field(
+                name='Unknown7',
+                type='int',
+            ),
+            Field(
+                name='Flag1',
+                type='byte',
+            ),
+            Field(
+                name='Data0',
+                type='ref|list|int',
+            ),
+            Field(
+                name='Flag2',
+                type='byte',
             ),
         ),
     ),
@@ -21375,6 +21470,10 @@ specification = Specification({
             ),
             Field(
                 name='HarvestChance',
+                type='int',
+            ),
+            Field(
+                name='HeistChance',
                 type='int',
             ),
         ),
