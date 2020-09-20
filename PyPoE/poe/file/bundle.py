@@ -40,6 +40,17 @@ Classes
 .. autoclass: Bundle
 
 .. autoclass: Index
+
+Index Records
+-------------------------------------------------------------------------------
+
+.. autoclass: IndexRecord
+
+.. autoclass: BundleRecord
+
+.. autoclass: FileRecord
+
+.. autoclass: DirectoryRecord
 """
 
 # =============================================================================
@@ -184,6 +195,19 @@ class Bundle(AbstractFileReadOnly):
             offset = offset2
 
     def decompress(self, start: int = 0, end: int = None):
+        """
+        Decompresses this bundle's contents.
+
+        This requires either the oozdll to be available or the ooz commandline
+        tool.
+
+        Parameters
+        ----------
+        start
+            Start chunk
+        end
+            End chunk
+        """
         if not self.data:
             raise ValueError()
 
@@ -280,13 +304,31 @@ class BundleRecord(IndexRecord):
 
     @property
     def file_name(self) -> str:
+        """
+        Returns
+        -------
+        The full filename of this bundle file
+        """
         return self.name + '.bundle.bin'
 
     @property
     def ggpk_path(self) -> str:
+        """
+        Returns
+        -------
+        The path relative to the content.ggpk
+        """
         return 'Bundles2/' + self.file_name
 
     def read(self, file_path_or_raw: Union[str, bytes]):
+        """
+        Reads the contents of this bundle if they haven't been read already
+
+        Parameters
+        ----------
+        file_path_or_raw
+            see Bundle.read
+        """
         if self.contents is None:
             self.contents = Bundle()
             self.contents.read(file_path_or_raw)
@@ -294,6 +336,15 @@ class BundleRecord(IndexRecord):
 
 
 class FileRecord(IndexRecord):
+    """
+    Attributes
+    ----------
+    parent: Index
+    hash: int
+    bundle: BundleRecord
+    file_offset: int
+    file_size: int
+    """
     __slots__ = ['parent', 'hash', 'bundle', 'file_offset', 'file_size']
 
     _REPR_EXTRA_ATTRIBUTES = {x: None for x in __slots__}
@@ -309,11 +360,28 @@ class FileRecord(IndexRecord):
         self.file_size = data[3]
 
     def get_file(self) -> bytes:
+        """
+        Returns the file contents associated with this record. For this to work
+        the parent's bundle must loaded.
+
+        Returns
+        -------
+        The contents of the file associated with this record.
+        """
         return self.bundle.contents.data[
                self.file_offset:self.file_offset+self.file_size]
 
 
 class DirectoryRecord(IndexRecord):
+    """
+    Attributes
+    ----------
+    parent: Index
+    hash: int
+    offset: int
+    size: int
+    unknown: int
+    """
     __slots__ = ['parent', 'hash', 'offset', 'size', 'unknown', '_paths']
 
     _REPR_EXTRA_ATTRIBUTES = {x: None for x in __slots__}
@@ -330,11 +398,22 @@ class DirectoryRecord(IndexRecord):
         self._paths = None
 
     @property
-    def paths(self):
+    def paths(self) -> List[str]:
+        """
+        Returns
+        -------
+        A list of all files with their full paths (relative to the game root)
+        contained within this directory
+        """
         return [x.decode() for x in self._paths]
 
     @property
     def files(self) -> List[str]:
+        """
+        Returns
+        -------
+        A list of files contained in this directory.
+        """
         return [x.rsplit('/', maxsplit=1)[-1] for x in self.paths]
 
 
@@ -348,6 +427,24 @@ class Index(Bundle):
         self.directories = {}
 
     def get_dir_record(self, path: Union[str, bytes]) -> DirectoryRecord:
+        """
+        Returns the directory record for the given directory path
+
+        Parameters
+        ----------
+        path
+            Directory path
+
+        Returns
+        -------
+        DirectoryRecord
+            The directory record for the given directory path
+
+        Raises
+        ------
+        FileNotFoundError
+            if the path is not valid
+        """
         try:
             return self.directories[self.get_hash(path, type=PATH_TYPES.DIR)]
         except KeyError:
@@ -355,14 +452,22 @@ class Index(Bundle):
 
     def get_file_record(self, path: Union[str, bytes]) -> FileRecord:
         """
+        Returns the file record for the given file path
+
         Parameters
         ----------
         path
-            Path
+            File path
 
         Returns
         -------
         FileRecord
+            The file record for the given file path
+
+        Raises
+        ------
+        FileNotFoundError
+            if the path is not valid
         """
         try:
             return self.files[self.get_hash(path, type=PATH_TYPES.FILE)]
@@ -370,6 +475,22 @@ class Index(Bundle):
             raise FileNotFoundError()
 
     def get_hash(self, path: Union[str, bytes], type: PATH_TYPES = None) -> int:
+        """
+        Calculates the 64 bit FNA1a hash value for a given path
+
+        Parameters
+        ----------
+        path
+            path to calculate the hash for
+        type
+            type of the path (i.e. whether this is a file or directory)
+
+            if not given, it is attempted to infer from the path
+
+        Returns
+        -------
+        Calculated 64bit FNV1a hash value
+        """
         if isinstance(path, str):
             path = path.encode('utf-8')
         elif not isinstance(path, bytes):
@@ -429,7 +550,18 @@ class Index(Bundle):
                 ]
             )
 
-    def _make_paths(self, raw: bytes):
+    def _make_paths(self, raw: bytes) -> List[bytes]:
+        """
+
+        Parameters
+        ----------
+        raw
+            packed paths
+
+        Returns
+        -------
+        A list of unpacked paths
+        """
         temp = []
         paths = []
         base = False
