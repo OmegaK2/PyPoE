@@ -120,6 +120,9 @@ def check_hash():
     :return: True if match, False otherwise
     :rtype: bool
     """
+    if 1:
+        return True
+
     hash_old = config.get_setup_variable('temp_dir', 'hash')
     hash_new = get_content_ggpk_hash()
 

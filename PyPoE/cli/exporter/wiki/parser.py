@@ -1468,14 +1468,21 @@ class BaseParser:
             read_options=opt,
             raise_error_on_missing_relation=False,
             language=config.get_option('language'),
+            load_index=False,
         )
         install_data_dependant_quantifiers(self.rr)
-        self.tc = TranslationFileCache(path_or_ggpk=base_path,
-                                       **self._TC_KWARGS)
+        self.tc = TranslationFileCache(
+            path_or_ggpk=base_path,
+            load_index=False,
+            **self._TC_KWARGS
+        )
         for file_name in self._translations:
             self.tc[file_name]
 
-        self.ot = OTFileCache(path_or_ggpk=base_path)
+        self.ot = OTFileCache(
+            path_or_ggpk=base_path,
+            load_index=False,
+        )
 
         self.custom = get_custom_translation_file()
 
