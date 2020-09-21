@@ -96,7 +96,7 @@ if cffi:
             uint8_t* dst, size_t dst_size, int, int, int, uint8_t*, size_t, 
             void*, void*, void*, size_t, int);""")
     try:
-        ooz = ffi.dlopen(r'C:\Code\Scripts\PoE\ooz\libooz.dll')
+        ooz = ffi.dlopen(r'libooz.dll')
     except OSError:
         cffi = None
         ooz = None
