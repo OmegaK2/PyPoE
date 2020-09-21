@@ -469,7 +469,7 @@ class TranslationString(TranslationReprMixin):
 
     # replacement tags used in translations
     _re_split = re.compile(
-        r'(?:%(?P<id>[0-9]*)(?P<type>[\$]?[\+]?d[%]?|%))',
+        r'(?:\{(?P<id>[0-9]*)(?:[\:]*)(?P<type>[^\}]*)\})',
         re.UNICODE
     )
 
@@ -509,9 +509,16 @@ class TranslationString(TranslationReprMixin):
         start = None
         for match in self._re_split.finditer(string):
             self.strings.append(string[start:match.start()])
-            # Py indexes start at 0, not at 1
-            self.tags.append(int(match.group('id') or 1)-1)
-            # Can be none for %d% tag
+            intid = match.group('id')
+            if intid:
+                self.tags.append(int(intid))
+            # Empty values appear in order
+            else:
+                if len(self.tags):
+                    self.tags.append(self.tags[-1] + 1)
+                else:
+                    self.tags.append(0)
+
             self.tags_types.append(match.group('type'))
             start = match.end()
         self.strings.append(string[start:])
@@ -529,9 +536,10 @@ class TranslationString(TranslationReprMixin):
         s = []
         for i, tag in enumerate(self.tags):
             s.append(self.strings[i])
-            s.append('%')
-            s.append(str(tag+1))
-            s.append(self.tags_types[i])
+            if self.tags_types[i]:
+                s.append('{%s:%s}' % (tag, self.tags_types[i]))
+            else:
+                s.append('{%s}' % tag)
         s.append(self.strings[-1])
         return ''.join(s)
 
@@ -651,9 +659,6 @@ class TranslationString(TranslationReprMixin):
                     value = use_placeholder(i)
             string.append(value)
             used.add(tagid)
-
-            if self.tags_types[i].endswith('d%'):
-                string.append('%')
 
         unused = []
         for i, val in enumerate(values):
@@ -2028,6 +2033,42 @@ TranslationQuantifier(
 )
 
 TranslationQuantifier(
+    id='divide_by_two_0dp',
+    handler=lambda v: v//2,
+    reverse_handler=lambda v: int(v)*2,
+)
+
+TranslationQuantifier(
+    id='divide_by_six',
+    handler=lambda v: v/6,
+    reverse_handler=lambda v: int(v)*6,
+)
+
+TranslationQuantifier(
+    id='divide_by_ten_0dp',
+    handler=lambda v: v//10,
+    reverse_handler=lambda v: int(v)*10,
+)
+
+TranslationQuantifier(
+    id='divide_by_twelve',
+    handler=lambda v: v/12,
+    reverse_handler=lambda v: int(v)*12,
+)
+
+TranslationQuantifier(
+    id='divide_by_fifteen_0dp',
+    handler=lambda v: v//15,
+    reverse_handler=lambda v: int(v)*15,
+)
+
+TranslationQuantifier(
+    id='divide_by_twenty_then_double_0dp',
+    handler=lambda v: v//20*2,
+    reverse_handler=lambda v: int(v)*20//2,
+)
+
+TranslationQuantifier(
     id='milliseconds_to_seconds',
     handler=lambda v: v/1000,
     reverse_handler=lambda v: float(v)*1000,
@@ -2067,6 +2108,12 @@ TranslationQuantifier(
     id='multiplicative_permyriad_damage_modifier',
     handler=lambda v: v/100+100,
     reverse_handler=lambda v: (float(v)-100)*100,
+)
+
+TranslationQuantifier(
+    id='multiply_by_four',
+    handler=lambda v: v*4,
+    reverse_handler=lambda v: int(v)//4,
 )
 
 TranslationQuantifier(
@@ -2115,42 +2162,6 @@ TranslationQuantifier(
     id='per_minute_to_per_second_2dp_if_required',
     handler=lambda v: round(v/60, 2) if v % 60 != 0 else v//60,
     reverse_handler=lambda v: float(v)*60,
-)
-
-TranslationQuantifier(
-    id='divide_by_two_0dp',
-    handler=lambda v: v//2,
-    reverse_handler=lambda v: int(v)*2,
-)
-
-TranslationQuantifier(
-    id='divide_by_six',
-    handler=lambda v: v/6,
-    reverse_handler=lambda v: int(v)*6,
-)
-
-TranslationQuantifier(
-    id='divide_by_ten_0dp',
-    handler=lambda v: v//10,
-    reverse_handler=lambda v: int(v)*10,
-)
-
-TranslationQuantifier(
-    id='divide_by_twelve',
-    handler=lambda v: v/12,
-    reverse_handler=lambda v: int(v)*12,
-)
-
-TranslationQuantifier(
-    id='divide_by_fifteen_0dp',
-    handler=lambda v: v//15,
-    reverse_handler=lambda v: int(v)*15,
-)
-
-TranslationQuantifier(
-    id='divide_by_twenty_then_double_0dp',
-    handler=lambda v: v//20*2,
-    reverse_handler=lambda v: int(v)*20//2,
 )
 
 TranslationQuantifier(

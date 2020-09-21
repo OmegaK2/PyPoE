@@ -84,7 +84,10 @@ def tcache():
 
 @pytest.fixture(scope='module')
 def ggpk_tc(ggpkfile):
-    return translations.TranslationFileCache(path_or_ggpk=ggpkfile)
+    return translations.TranslationFileCache(
+        path_or_ggpk=ggpkfile,
+        load_index=False,
+    )
 
 
 @pytest.fixture(scope='module')
@@ -248,36 +251,12 @@ class TestTranslationResults:
             {},
             {},
         ),
-        (
-            ['test_plus_percentage', ],
-            [20, ],
-            ['Plus percent: +20%'],
-            '$+d%% format',
-            {},
-            {},
-        ),
-        (
-            ['test_plus_percentage', ],
-            [-20, ],
-            ['Plus percent: -20%'],
-            '$+d%% format with negative value',
-            {},
-            {},
-        ),
         # Used in skills like hypothermia
         (
             ['test_dollar_d', ],
             [20, ],
             ['Test d: 20'],
             '%1$d format',
-            {},
-            {},
-        ),
-        (
-            ['test_dollar_d_percent', ],
-            [20, ],
-            ['Test d percent: 20%'],
-            '%1$d% format',
             {},
             {},
         ),
@@ -326,6 +305,49 @@ class TestTranslationResults:
             'string starting with value',
             {},
             {},
+        ),
+        (
+            ['test_uq1_empty_value1', ],
+            [50, ],
+            ['50 emp1'],
+            'Test empty formatter with no positional value, i.e. {}',
+            {},
+            None,
+        ),
+        (
+            ['test_uq2_empty_value1', 'test_uq2_empty_value2'],
+            [50, 100],
+            ['50 100 emp2'],
+            'Test 2 empty formatters with no positional value, i.e. {} {}',
+            {},
+            None,
+        ),
+        (
+            ['test_uq3_empty_value1', 'test_uq3_empty_value2',
+             'test_uq3_empty_value3'],
+            [50, 100, 150],
+            ['50 100 150 emp3'],
+            'Test 3 empty formatters with no positional value, i.e. {} {} {}',
+            {},
+            None,
+        ),
+        (
+            ['test_empty_value_d', ],
+            [50, ],
+            ['50 emp_value_d'],
+            'Test empty formatter with no positional value and the d format '
+            'type, i.e. {:d}',
+            {},
+            None,
+        ),
+        (
+            ['test_empty_value_plus_d', ],
+            [50, ],
+            ['+50 emp_value_plus_d'],
+            'Test empty formatter with no positional value and the +d format '
+            'type, i.e. {:+d}',
+            {},
+            None,
         ),
         #
         # Quantifier tests
@@ -463,11 +485,14 @@ class TestTranslationLanguage:
 
 class TestTranslationString:
     def test_original_string(self, ts):
-        assert ts.string == 'Multiple: %1% %2% %1% %2%'
+        assert ts.string == 'Multiple: {0} {1} {0} {1}'
 
     def test_as_format_string(self, ts):
         assert ts.as_format_string == 'Multiple: {0} {1} {0} {1}'
 
+
+def test_custom_file():
+    translations.get_custom_translation_file()
 
 '''def test_tag1_value1():
     t = ['life_regeneration_rate_+%']
