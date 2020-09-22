@@ -247,7 +247,7 @@ class Bundle(AbstractFileReadOnly):
         else:
             with TemporaryDirectory() as tempdir:
                 for i in range(start, end):
-                    fn = '%s/chunk%s' % (tempdir, i)
+                    fn = os.path.join(tempdir,'chunk%s' % i)
 
                     with open('%s.in' % fn, 'wb') as f:
                         if i != last:
