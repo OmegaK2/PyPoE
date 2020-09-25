@@ -237,6 +237,8 @@ class AbstractFileCache(ReprMixin):
                 is_bundle = True
 
         if is_bundle:
+            if self.index is None:
+                raise FileNotFoundError(file_name)
             file_record = self.index.get_file_record(file_name)
             bundle_record = file_record.bundle
 
