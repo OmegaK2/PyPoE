@@ -52,7 +52,7 @@ from PyPoE.poe.file import ggpk
 # Setup
 # =============================================================================
 
-_TEST_FILE = 'Redist/brotliLicense.txt'
+_TEST_FILE = 'Bundles/Startup_x64.bundle.txt'
 _re_version = re.compile(r'[\d]+\.[\d]+\.[\d]+\.[\d]+', re.UNICODE)
 
 def get_node_folders(file):
@@ -167,6 +167,7 @@ class TestPatchFileList:
         # check that there is a record for the queried node
         assert patch_file_list.directory[node_path].record
 
+@pytest.mark.skip
 @pytest.mark.dependency(name="test_node_check_hash",
                         depends=["test_updatelist",
                                  "test_download_file"])
