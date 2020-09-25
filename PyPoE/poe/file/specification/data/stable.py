@@ -8612,10 +8612,8 @@ specification = Specification({
                 key='GrantedEffects.dat',
             ),
             Field(
-                name='GrantedEffectsQualityTypesKey',
+                name='SetId',
                 type='int',
-                key='GrantedEffectsQualityTypes.dat',
-                key_id='Id',
             ),
             Field(
                 name='StatsKeys',
@@ -8623,7 +8621,7 @@ specification = Specification({
                 key='Stats.dat'
             ),
             Field(
-                name='StatsValuesPermyiad',
+                name='StatsValuesPermille',
                 type='ref|list|int',
             ),
             Field(
@@ -8974,6 +8972,28 @@ specification = Specification({
             Field(
                 name='AttackSpeedMultiplier',
                 type='int',
+            ),
+        ),
+        virtual_fields=(
+            VirtualField(
+                name='StatValues',
+                fields=(
+                'Stat1Value', 'Stat2Value', 'Stat3Value', 'Stat4Value',
+                'Stat5Value', 'Stat6Value', 'Stat7Value', 'Stat8Value',
+                'Stat9Value',
+                ),
+            ),
+            VirtualField(
+                name='StatFloats',
+                fields=(
+                    'Stat1Float', 'Stat2Float', 'Stat3Float', 'Stat4Float',
+                    'Stat5Float', 'Stat6Float', 'Stat7Float', 'Stat8Float'
+                ),
+            ),
+            VirtualField(
+                name='Stats',
+                fields=('StatsKeys', 'StatValues'),
+                zip=True,
             ),
         ),
     ),
