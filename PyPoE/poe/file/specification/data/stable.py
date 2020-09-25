@@ -670,15 +670,6 @@ specification = Specification({
             ),
         ),
     ),
-    'AfflictionEndgameAreas.dat': File(
-        fields=(
-            Field(
-                name='WorldAreasKey',
-                type='ulong',
-                key='WorldAreas.dat',
-            ),
-        ),
-    ),
     'AfflictionEndgameWaveMods.dat': File(
         fields=(
             Field(
@@ -723,61 +714,6 @@ specification = Specification({
             Field(
                 name='Unknown1',
                 type='byte',
-            ),
-        ),
-    ),
-    'AfflictionRandomSpawns.dat': File(
-        fields=(
-            Field(
-                name='Id',
-                type='ref|string',
-                unique=True,
-            ),
-            Field(
-                name='MinLevel',
-                type='int',
-            ),
-            Field(
-                name='MaxLevel',
-                type='int',
-            ),
-            Field(
-                name='Unknown3',
-                type='int',
-            ),
-            Field(
-                name='Unknown4',
-                type='int',
-            ),
-            Field(
-                name='MonsterVarietiesKey',
-                type='ulong',
-                key='MonsterVarieties.dat',
-            ),
-            Field(
-                name='MonsterPacksKey',
-                type='ulong',
-                key='MonsterPacks.dat',
-            ),
-            Field(
-                name='Unknown9',
-                type='int',
-            ),
-            Field(
-                name='Unknown10',
-                type='int',
-            ),
-            Field(
-                name='Unknown11',
-                type='int',
-            ),
-            Field(
-                name='Unknown12',
-                type='int',
-            ),
-            Field(
-                name='Unknown13',
-                type='bool',
             ),
         ),
     ),
@@ -2716,23 +2652,6 @@ specification = Specification({
             ),
         ),
     ),
-    'BestiaryRecipeItemCreation.dat': File(
-        fields=(
-            Field(
-                name='BestiaryRecipesKey',
-                type='ulong',
-                key='BestiaryRecipes.dat'
-            ),
-            Field(
-                name='Key0',
-                type='ulong',
-            ),
-            Field(
-                name='Command',
-                type='ref|string',
-            ),
-        ),
-    ),
     'BestiaryRecipes.dat': File(
         fields=(
             Field(
@@ -4495,84 +4414,6 @@ specification = Specification({
             ),
         ),
     ),
-    'CharacterStartItems.dat': File(
-        fields=(
-            Field(
-                name='CharacterStartStatesKey',
-                type='ulong',
-                key='CharacterStartStates.dat',
-            ),
-            Field(
-                name='Unknown0',
-                type='int',
-            ),
-            Field(
-                name='BaseItemTypesKey',
-                type='ulong',
-                key='BaseItemTypes.dat',
-            ),
-            Field(
-                name='Sockets',
-                type='ref|list|int',
-                # TODO: Virtual Mapping to SOCKET_COLOUR
-                description='Number and colour of the sockets (in order).',
-            ),
-            Field(
-                name='Socketed_SkillGemsKeys',
-                type='ref|list|ulong',
-                key='SkillGems.dat',
-                description='Skill Gems socketed into the starting items',
-            ),
-            Field(
-                name='ModsKeys',
-                type='ref|list|ulong',
-                key='Mods.dat',
-                description='Mods that are applied to the starting item',
-            ),
-            Field(
-                name='InventoryIndex',
-                type='ref|string',
-            ),
-            Field(
-                name='SlotX',
-                type='int',
-            ),
-            Field(
-                name='SlotY',
-                type='int',
-            ),
-            Field(
-                name='StackSize',
-                type='int',
-                description='The size of the stack, i.e. number of wisdom scrolls',
-            ),
-            Field(
-                name='Links',
-                type='ref|list|int',
-            ),
-            Field(
-                name='SkillGemLevels',
-                type='ref|list|int',
-            ),
-            Field(
-                name='Flag0',
-                type='bool',
-            ),
-            Field(
-                name='Key0',
-                type='ulong',
-            ),
-            Field(
-                name='Data0',
-                type='ref|list|int',
-            ),
-            # 3.9
-            Field(
-                name='Unknown1',
-                type='int',
-            ),
-        ),
-    ),
     'CharacterStartQuestState.dat': File(
         fields=(
             Field(
@@ -4951,48 +4792,6 @@ specification = Specification({
                 type='ref|string',
                 file_path=True,
                 file_ext='.ao',
-            ),
-        ),
-    ),
-    'ChestItemTemplates.dat': File(
-        fields=(
-            Field(
-                name='Id',
-                type='ref|string',
-                unique=True,
-            ),
-            Field(
-                name='ChestsKey',
-                type='ulong',
-                key='Chests.dat'
-            ),
-            Field(
-                name='Keys0',
-                type='ref|list|ulong',
-            ),
-            Field(
-                name='Unknown0',
-                type='int',
-            ),
-            Field(
-                name='Unknown1',
-                type='int',
-            ),
-            Field(
-                name='Unknown2',
-                type='int',
-            ),
-            Field(
-                name='Unknown3',
-                type='int',
-            ),
-            Field(
-                name='Unknown4',
-                type='int',
-            ),
-            Field(
-                name='Unknown5',
-                type='int',
             ),
         ),
     ),
@@ -6367,20 +6166,6 @@ specification = Specification({
             Field(
                 name='Data3',
                 type='ref|list|int',
-            ),
-        ),
-    ),
-    'DelveFeatureRewards.dat': File(
-        fields=(
-            Field(
-                name='DelveFeaturesKey',
-                type='ulong',
-                key='DelveFeatures.dat',
-            ),
-            # pretty sure this is a link towards delve specific file
-            Field(
-                name='DelveRewardsKey',
-                type='ref|list|ulong',
             ),
         ),
     ),
@@ -9322,25 +9107,6 @@ specification = Specification({
             ),
         ),
     ),
-    'HarbingerMaps.dat': File(
-        fields=(
-            Field(
-                name='Id',
-                type='ref|string',
-                unique=True,
-            ),
-            Field(
-                name='IntegerId',
-                type='int',
-                unique=True,
-            ),
-            Field(
-                name='BaseItemTypesKey',
-                type='ulong',
-                key='BaseItemTypes.dat',
-            ),
-        ),
-    ),
     'Harbingers.dat': File(
         fields=(
             Field(
@@ -10254,7 +10020,7 @@ specification = Specification({
                 type='ref|string',
             ),
             Field(
-                name='Key0',
+                name='Key1',
                 type='ulong',
             ),
         ),
@@ -11392,10 +11158,6 @@ specification = Specification({
             ),
         ),
     ),
-    'IncursionRoomAdditionalBossDrops.dat': File(
-        fields=(
-        ),
-    ),
     'IncursionRoomBossFightEvents.dat': File(
         fields=(
             Field(
@@ -11528,19 +11290,6 @@ specification = Specification({
                 name='BaseItemTypesKey',
                 type='ulong',
                 key='BaseItemTypes.dat'
-            ),
-        ),
-    ),
-    'IncursionUniqueUpgrades.dat': File(
-        fields=(
-            Field(
-                name='IncursionUniqueUpgradeComponentsKey',
-                type='ulong',
-                key='IncursionUniqueUpgradeComponents.dat',
-            ),
-            Field(
-                name='UniqueItemsKey',
-                type='ulong',
             ),
         ),
     ),
@@ -11913,41 +11662,6 @@ specification = Specification({
             Field(
                 name='Name',
                 type='ref|string',
-            ),
-        ),
-    ),
-    'ItemTradeData.dat': File(
-        fields=(
-            Field(
-                name='Id',
-                type='ref|string',
-                unique=True,
-            ),
-            Field(
-                name='Keys0',
-                type='ref|list|ulong',
-            ),
-            Field(
-                name='Flag0',
-                type='bool',
-            ),
-            Field(
-                name='CategoryId',
-                type='ref|string',
-            ),
-            Field(
-                name='MapIds',
-                type='ref|list|ref|string',
-            ),
-            Field(
-                name='ProphecyKeys',
-                type='ref|list|ref|string',
-                key='Prophecies.dat',
-                key_id='Id',
-            ),
-            Field(
-                name='Flag1',
-                type='bool',
             ),
         ),
     ),
@@ -12570,41 +12284,6 @@ specification = Specification({
                 name='ObjectPath',
                 type='ref|string',
                 file_path=True,
-            ),
-        ),
-    ),
-    'LabyrinthRewards.dat': File(
-        fields=(
-            Field(
-                name='Id',
-                type='ref|string',
-            ),
-            Field(
-                name='ChestsKey',
-                type='ulong',
-                key='Chests.dat',
-            ),
-            Field(
-                name='SpawnWeight',
-                type='int',
-            ),
-            # TODO: also chests key?
-            Field(
-                name='Unknown3',
-                type='ulong',
-            ),
-            Field(
-                name='MinLabyrinthTier',
-                type='int',
-            ),
-            Field(
-                name='MaxLabyrinthTier',
-                type='int',
-            ),
-            Field(
-                name='LabyrinthRewardTypesKey',
-                type='ulong',
-                key='LabyrinthRewardTypes.dat',
             ),
         ),
     ),
@@ -13393,48 +13072,6 @@ specification = Specification({
         fields=(
         ),
     ),
-    'LegionRewards.dat': File(
-        fields=(
-            Field(
-                name='LegionFactionsKey',
-                type='ulong',
-                key='LegionFactions.dat',
-            ),
-            Field(
-                name='Key1',
-                type='ulong',
-            ),
-            Field(
-                name='LegionRewardTypesKeys',
-                type='ref|list|ulong',
-                key='LegionRewardTypes.dat',
-            ),
-            Field(
-                name='Unknown3',
-                type='int',
-            ),
-            Field(
-                name='Unknown4',
-                type='int',
-            ),
-            Field(
-                name='Unknown5',
-                type='float',
-            ),
-            Field(
-                name='Flag0',
-                type='bool',
-            ),
-            Field(
-                name='Unknown6',
-                type='int',
-            ),
-            Field(
-                name='Unknown7',
-                type='float',
-            ),
-        ),
-    ),
     'LevelRelativePlayerScaling.dat': File(
         fields=(
             Field(
@@ -13954,26 +13591,6 @@ specification = Specification({
             ),
             Field(
                 name='StatMax',
-                type='int',
-            ),
-        ),
-    ),
-    'MapStatsFromMapStats.dat': File(
-        fields=(
-            Field(
-                name='Key0',
-                type='ulong',
-            ),
-            Field(
-                name='Keys1',
-                type='ref|list|ulong',
-            ),
-            Field(
-                name='Unknown0',
-                type='ref|list|int',
-            ),
-            Field(
-                name='Unknown2',
                 type='int',
             ),
         ),
@@ -15397,19 +15014,6 @@ specification = Specification({
             ),
         ),
     ),
-    'MonsterAdditionalMonsterDrops.dat': File(
-        fields=(
-            Field(
-                name='MonsterVarietiesKey',
-                type='ulong',
-                key='MonsterVarieties.dat',
-            ),
-            Field(
-                name='Keys0',
-                type='ref|list|ulong',
-            ),
-        ),
-    ),
     'MonsterArmours.dat': File(
         fields=(
             Field(
@@ -15459,26 +15063,6 @@ specification = Specification({
             Field(
                 name='StatValues',
                 type='ref|list|int',
-            ),
-        ),
-    ),
-    'MonsterChanceToDropItemTemplate.dat': File(
-        fields=(
-            Field(
-                name='Key0',
-                type='ulong',
-            ),
-            Field(
-                name='Key1',
-                type='ulong',
-            ),
-            Field(
-                name='Keys0',
-                type='ref|list|ulong',
-            ),
-            Field(
-                name='Unknown0',
-                type='int',
             ),
         ),
     ),
@@ -16367,53 +15951,6 @@ specification = Specification({
             ),
         ),
     ),
-    'MonsterStatsFromMapStats.dat': File(
-        fields=(
-            Field(
-                name='StatsKey',
-                type='ulong',
-                key='Stats.dat',
-            ),
-            Field(
-                name='Keys0',
-                type='ref|list|ulong',
-            ),
-            Field(
-                name='Keys1',
-                type='ref|list|ulong',
-            ),
-            Field(
-                name='StatsKeys',
-                type='ref|list|ulong',
-                key='Stats.dat',
-            ),
-            Field(
-                name='Key0',
-                type='ulong',
-            ),
-            Field(
-                name='Keys2',
-                type='ref|list|ulong',
-            ),
-            Field(
-                name='Unknown0',
-                type='int',
-            ),
-            Field(
-                name='Unknown13',
-                type='byte',
-            ),
-            Field(
-                name='Unknown1',
-                type='int',
-            ),
-            # 3.11
-            Field(
-                name='Unknown2',
-                type='int',
-            ),
-        ),
-    ),
     'MonsterTypes.dat': File(
         fields=(
             Field(
@@ -17143,56 +16680,6 @@ specification = Specification({
             ),
         ),
     ),
-    'NPCAdditionalVendorItems.dat': File(
-        fields=(
-            Field(
-                name='Id',
-                type='ref|string',
-                unique=True,
-            ),
-            Field(
-                name='Unknown1',
-                type='int',
-            ),
-            Field(
-                name='Unknown2',
-                type='int',
-            ),
-            Field(
-                name='Unknown3',
-                type='int',
-            ),
-            Field(
-                name='Unknown4',
-                type='int',
-            ),
-            Field(
-                name='Unknown5',
-                type='ref|list|int',
-            ),
-            Field(
-                name='Keys0',
-                type='ref|list|ulong',
-            ),
-            # Level?
-            Field(
-                name='Unknown7',
-                type='int',
-            ),
-            Field(
-                name='Unknown8',
-                type='int',
-            ),
-            Field(
-                name='Key0',
-                type='ulong',
-            ),
-            Field(
-                name='Unknown9',
-                type='int',
-            ),
-        ),
-    ),
     'NPCAudio.dat': File(
         fields=(
             Field(
@@ -17505,20 +16992,6 @@ specification = Specification({
             Field(
                 name='Unknown2',
                 type='int',
-            ),
-        ),
-    ),
-    'NPCShopAdditionalItems.dat': File(
-        fields=(
-            Field(
-                name='NPCShopKey',
-                type='ulong',
-                key='NPCShop.dat',
-            ),
-            Field(
-                name='ItemClassesKeys',
-                type='ref|list|ulong',
-                key='ItemClasses.dat',
             ),
         ),
     ),
@@ -18485,43 +17958,6 @@ specification = Specification({
             ),
         ),
     ),
-    'PathOfEndurance.dat': File(
-        fields=(
-            Field(
-                name='Unknown0',
-                type='int',
-            ),
-            Field(
-                name='Unknown1',
-                type='int',
-            ),
-            Field(
-                name='Unknown2',
-                type='int',
-            ),
-            Field(
-                name='ModsKeys',
-                type='ref|list|ulong',
-                key='Mods.dat',
-            ),
-            Field(
-                name='Unknown5',
-                type='int',
-            ),
-            Field(
-                name='Unknown6',
-                type='int',
-            ),
-            Field(
-                name='Keys0',
-                type='ref|list|ulong',
-            ),
-            Field(
-                name='Data0',
-                type='ref|list|int',
-            ),
-        ),
-    ),
     'PerLevelValues.dat': File(
         fields=(
         ),
@@ -18970,24 +18406,6 @@ specification = Specification({
         fields=(
         ),
     ),
-    'ProphecySets.dat': File(
-        fields=(
-            Field(
-                name='Id',
-                type='ref|string',
-            ),
-            # TODO: Enum
-            Field(
-                name='ProphecySetNamesKey',
-                type='int',
-            ),
-            Field(
-                name='PropheciesKey',
-                type='ulong',
-                key='Prophecies.dat',
-            ),
-        ),
-    ),
     'ProphecyType.dat': File(
         fields=(
             Field(
@@ -19105,79 +18523,6 @@ specification = Specification({
     ),
     'QuestRewardType.dat': File(
         fields=(
-        ),
-    ),
-    'QuestRewards.dat': File(
-        fields=(
-            Field(
-                name='QuestRewardOffersKey',
-                type='ulong',
-                key='QuestRewardOffers.dat',
-            ),
-            Field(
-                name='Unknown1',
-                type='int',
-            ),
-            Field(
-                name='CharactersKey',
-                type='ulong',
-                key='Characters.dat',
-            ),
-            Field(
-                name='BaseItemTypesKey',
-                type='ulong',
-                key='BaseItemTypes.dat',
-            ),
-            Field(
-                name='ItemLevel',
-                type='int',
-            ),
-            Field(
-                name='RarityKey',
-                type='int',
-                enum='RARITY',
-            ),
-            # TODO RARITY constant
-            Field(
-                name='Unknown2',
-                type='int',
-            ),
-            Field(
-                name='SocketGems',
-                type='ref|string',
-            ),
-            Field(
-                name='Key0',
-                type='ulong',
-            ),
-            Field(
-                name='Key1',
-                type='ref|list|ulong',
-            ),
-            Field(
-                name='Unknown3',
-                type='int',
-            ),
-            Field(
-                name='Flag1',
-                type='bool',
-            ),
-            Field(
-                name='Flag2',
-                type='bool',
-            ),
-            Field(
-                name='Keys0',
-                type='ref|list|ulong',
-            ),
-            Field(
-                name='Unknown4',
-                type='int',
-            ),
-            Field(
-                name='Unknown5',
-                type='int',
-            ),
         ),
     ),
     'QuestStateCalculation.dat': File(
@@ -19315,83 +18660,6 @@ specification = Specification({
             ),
             Field(
                 name='Unknown1',
-                type='ref|list|int',
-            ),
-        ),
-    ),
-    'QuestVendorRewards.dat': File(
-        fields=(
-            Field(
-                name='Id',
-                type='int',
-                unique=True,
-            ),
-            Field(
-                name='NPCKeys',
-                type='ref|list|ulong',
-                key='NPCs.dat',
-            ),
-            Field(
-                name='QuestState',
-                type='int',
-            ),
-            Field(
-                name='CharactersKeys',
-                type='ref|list|ulong',
-                key='Characters.dat',
-            ),
-            Field(
-                name='BaseItemTypesKeys',
-                type='ref|list|ulong',
-                key='BaseItemTypes.dat',
-            ),
-            Field(
-                name='Flag0',
-                type='bool',
-            ),
-            Field(
-                name='Flag1',
-                type='bool',
-            ),
-            Field(
-                name='UniqueItemsKeys',
-                type='ref|list|ulong',
-            ),
-            # key = UniqueItems.dat
-            Field(
-                name='Key0',
-                type='ulong',
-            ),
-            Field(
-                name='Unknown4',
-                type='int',
-            ),
-        ),
-    ),
-    'RaceAreas.dat': File(
-        fields=(
-            Field(
-                name='RacesKey',
-                type='ulong',
-                key='Races.dat',
-            ),
-            Field(
-                name='WorldAreasKey',
-                type='ulong',
-                key='WorldAreas.dat',
-            ),
-            Field(
-                name='ModsKeys',
-                type='ref|list|ulong',
-                key='Mods.dat',
-            ),
-            Field(
-                name='Keys0',
-                type='ref|list|ulong',
-            ),
-            # TODO: No entries, dont know data size
-            Field(
-                name='Keys1',
                 type='ref|list|int',
             ),
         ),
@@ -19938,34 +19206,6 @@ specification = Specification({
             Field(
                 name='Unknown8',
                 type='ref|string',
-            ),
-        ),
-    ),
-    'ShopPaymentPackageItems.dat': File(
-        fields=(
-            Field(
-                name='Id',
-                type='int',
-                unique=True,
-            ),
-            Field(
-                name='ShopPaymentPackageKey',
-                type='ulong',
-                key='ShopPaymentPackage.dat',
-            ),
-            Field(
-                name='ShopItemKey',
-                type='ulong',
-                # key='ShopItem.dat',
-            ),
-            Field(
-                name='Unknown0',
-                type='ref|string',
-            ),
-            Field(
-                name='ShopTokenKey',
-                type='ulong',
-                key='ShopToken.dat',
             ),
         ),
     ),
@@ -20719,27 +19959,6 @@ specification = Specification({
     ),
     'StatSemantics.dat': File(
         fields=(
-        ),
-    ),
-    'StatSets.dat': File(
-        fields=(
-            Field(
-                name='Id',
-                type='ref|string',
-                unique=True,
-            ),
-            Field(
-                name='Unknown1',
-                type='ref|list|int',
-            ),
-            Field(
-                name='Unknown2',
-                type='ref|list|int',
-            ),
-            Field(
-                name='Keys0',
-                type='ref|list|ulong',
-            ),
         ),
     ),
     'Stats.dat': File(
@@ -22136,47 +21355,6 @@ specification = Specification({
             ),
         ),
     ),
-    'UniqueFragments.dat': File(
-        fields=(
-            Field(
-                name='BaseItemTypesKey',
-                type='ulong',
-                key='BaseItemTypes.dat',
-            ),
-            Field(
-                name='Key1',
-                type='ulong',
-            ),
-            Field(
-                name='Unknown2',
-                type='int',
-            ),
-            Field(
-                name='Unknown3',
-                type='int',
-            ),
-            Field(
-                name='Unknown4',
-                type='int',
-            ),
-            Field(
-                name='Unknown5',
-                type='int',
-            ),
-            Field(
-                name='Unknown6',
-                type='int',
-            ),
-            Field(
-                name='Unknown7',
-                type='int',
-            ),
-            Field(
-                name='Keys0',
-                type='ref|list|ulong',
-            ),
-        ),
-    ),
     'UniqueJewelLimits.dat': File(
         fields=(
             Field(
@@ -22228,7 +21406,6 @@ specification = Specification({
                 name='WorldAreasKey',
                 type='ulong',
                 key='WorldAreas.dat',
-                unique=True,
             ),
             Field(
                 name='WordsKey',
