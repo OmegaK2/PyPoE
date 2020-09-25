@@ -117,6 +117,7 @@ from enum import IntEnum
 from string import ascii_letters
 from collections.abc import Iterable
 from collections import OrderedDict, defaultdict
+from typing import Union, Tuple, List, Iterable as t_Iterable, Dict
 
 # self
 from PyPoE import DATA_DIR
@@ -261,7 +262,8 @@ class Translation(TranslationReprMixin):
         if self.languages != other.languages:
             _diff_list(self.languages, other.languages)
 
-    def get_language(self, language='English'):
+    def get_language(self,
+                     language: str = 'English') -> 'TranslationLanguage':
         """
         Returns the :class:`TranslationLanguage` record for the specified
         language.
@@ -277,7 +279,6 @@ class Translation(TranslationReprMixin):
 
         Returns
         -------
-        TranslationLanguage
             Returns the :class:`TranslationLanguage` record for the specified
             language or the English one if not found
         """
@@ -339,32 +340,18 @@ class TranslationLanguage(TranslationReprMixin):
         if self.strings != other.strings:
             _diff_list(self.strings, other.strings)
 
-    def get_string(self, values, use_placeholder=False, only_values=False):
+    def get_string(self,
+                   values: Union[List[int], List[List[int]]]) ->\
+            Tuple['TranslationString', List[bool], List[int]]:
         """
-        Formats the string according with the given values and
-        returns the string and any left over (unused) values.
-
-        If use_placeholder is specified, the values will be replaced with
-        a placeholder instead of the actual value.
-
-        If only_values is specified, the instead of the string the formatted
-        values will be returned.
+        Formats the string according with the given values and returns the
+        TranslationString instance as well as any left over (unused) values.
 
 
         Parameters
         ----------
-        values : list[int]
+        values
             A list of values to be used for substitution
-        use_placeholder : bool or callable
-            If true, Instead of values in the translations a placeholder (i.e.
-            x, y, z) will be used. Values are still required however to find
-            the "correct" wording of the translation.
-            If a callable is specified, it will call the function with
-            the index as first parameter. The callable should return a
-            string to use as placeholder.
-        only_values : bool
-            Whether to return formatted values instead of the formatted string.
-
 
         Returns
         -------
@@ -408,7 +395,49 @@ class TranslationLanguage(TranslationReprMixin):
         if rating <= 0:
             return None
 
-        return ts.format_string(short_values, is_range, use_placeholder, only_values)
+        return ts, short_values, is_range
+
+    def format_string(self,
+                      values: Union[List[int], List[List[int]]],
+                      use_placeholder: bool = False,
+                      only_values: bool = False) -> str:
+        """
+        Formats the string according with the given values and
+        returns the string and any left over (unused) values.
+
+        If use_placeholder is specified, the values will be replaced with
+        a placeholder instead of the actual value.
+
+        If only_values is specified, the instead of the string the formatted
+        values will be returned.
+
+
+        Parameters
+        ----------
+        values : list[int]
+            A list of values to be used for substitution
+        use_placeholder : bool or callable
+            If true, Instead of values in the translations a placeholder (i.e.
+            x, y, z) will be used. Values are still required however to find
+            the "correct" wording of the translation.
+            If a callable is specified, it will call the function with
+            the index as first parameter. The callable should return a
+            string to use as placeholder.
+        only_values : bool
+            Whether to return formatted values instead of the formatted string.
+
+
+        Returns
+        -------
+        str or list[int], list[int], list[int], dict[str, str]
+            Returns the formatted string. See
+            :meth:`TranslationString:format_string` for details.
+        """
+        ts, short_values, is_range = self.get_string(values)
+
+        return ts.format_string(
+            short_values, is_range, use_placeholder, only_values
+        )
 
     def reverse_string(self, string):
         """
@@ -524,13 +553,12 @@ class TranslationString(TranslationReprMixin):
         self.strings.append(string[start:])
 
     @property
-    def string(self):
+    def string(self) -> str:
         """
         Reconstructed original string that would be used for translation
 
         Returns
         -------
-        str
             the original string
         """
         s = []
@@ -573,7 +601,11 @@ class TranslationString(TranslationReprMixin):
         if self.string != other.string:
             print('String mismatch: %s vs %s' % (self.string, other.string))
 
-    def format_string(self, values, is_range, use_placeholder=False, only_values=False):
+    def format_string(self,
+                      values,
+                      is_range,
+                      use_placeholder=False,
+                      only_values=False):
         """
         Formats the string for the given values.
 
@@ -1154,29 +1186,29 @@ class TranslationResult(TranslationReprMixin):
 
     Attributes
     ----------
-    found : list[Translation]
+    found
         List of found :class:`Translation` instances (in order)
-    found_lines : list[str]:
+    found_lines
         List of related translated strings (in order)L
-    lines : list[str]
+    lines
         List of translated strings (minus missing ones)
-    missing_ids : list[str]
+    missing_ids
         List of missing identifier tags
-    missing_values : list[int]
+    missing_values
         List of missing identifier values
-    partial: list[Translation]
+    partial
         List of partial matches of translation tags (in order)
-    values : list[int]
+    values
         List of values (in order)
-    values_unused : list[int]
+    values_unused
         List of unused values
-    values_parsed : list[str]
+    values_parsed
         List of parsed values (i.e. with quantifier applied)
-    source_ids : list[str]
+    source_ids
         List of the original tags passed before the translation occurred
-    source_values : list[int] or list[int, int]
+    source_values
         List of the original values passed before the translation occurred
-    extra_strings : list[dict[str, str]]
+    extra_strings
         List of dictionary containing extra strings returned.
         The key is the quantifier id used and the value is the string returned.
     """
@@ -1193,23 +1225,38 @@ class TranslationResult(TranslationReprMixin):
         'source_ids',
         'source_values',
         'extra_strings',
+        'string_instances'
     ]
 
-    def __init__(self, found, found_lines, lines, missing,
-                 missing_values, partial, values, unused, values_parsed,
-                 source_ids, source_values, extra_strings):
-        self.found = found
-        self.found_lines = found_lines
-        self.lines = lines
-        self.missing_ids = missing
-        self.missing_values = missing_values
-        self.partial = partial
-        self.values = values
-        self.values_unused = unused
-        self.values_parsed = values_parsed
-        self.source_ids = source_ids
-        self.source_values = source_values
-        self.extra_strings = extra_strings
+    def __init__(self,
+                 found,
+                 found_lines,
+                 lines,
+                 missing,
+                 missing_values,
+                 partial,
+                 values,
+                 unused,
+                 values_parsed,
+                 source_ids,
+                 source_values,
+                 extra_strings,
+                 string_instances,
+                 ):
+        self.found: List[Translation, ...] = found
+        self.found_lines: List[str, ...] = found_lines
+        self.lines: List[str, ...] = lines
+        self.missing_ids: List[str, ...] = missing
+        self.missing_values: List[int, ...] = missing_values
+        self.partial: List[Translation, ...] = partial
+        self.values: List[int, ...] = values
+        self.values_unused: List[int, ...] = unused
+        self.values_parsed: List[str, ...] = values_parsed
+        self.source_ids: List[str, ...] = source_ids
+        self.source_values: Union[List[int, ...], List[List[int, int], ...]] = \
+            source_values
+        self.extra_strings: List[Dict[str, str], ...] = extra_strings
+        self.string_instances: List[TranslationString, ...] = string_instances
 
     def _get_found_ids(self):
         """
@@ -1655,10 +1702,16 @@ class TranslationFile(AbstractFileReadOnly):
         unused = []
         values_parsed = []
         extra_strings = []
+        string_instances = []
         for i, tr in enumerate(trans_found):
 
             tl = tr.get_language(lang)
-            result = tl.get_string(trans_found_values[i], use_placeholder, only_values)
+            ts, short_values, is_range = tl.get_string(trans_found_values[i])
+            string_instances.append(ts)
+
+            result = ts.format_string(
+                short_values, is_range, use_placeholder, only_values
+            )
             if result:
                 trans_lines.append(result[0])
                 trans_found_lines.append(result[0])
@@ -1685,6 +1738,7 @@ class TranslationFile(AbstractFileReadOnly):
                 source_ids=tags,
                 source_values=values,
                 extra_strings=extra_strings,
+                string_instances=string_instances,
             )
         if only_values:
             return values_parsed
