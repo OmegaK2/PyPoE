@@ -13776,7 +13776,7 @@ specification = Specification({
             ),
             Field(
                 name='AchievementItemsKey',
-                type='ulong',
+                type='ref|list|ulong',
                 key='AchievementItems.dat',
             ),
             Field(
@@ -13844,6 +13844,33 @@ specification = Specification({
             Field(
                 name='Keys1',
                 type='ref|list|ulong',
+            ),
+            # 3.12.2
+            Field(
+                name='Heist_SubStatValue1',
+                type='int',
+            ),
+            Field(
+                name='Heist_SubStatValue2',
+                type='int',
+            ),
+            Field(
+                name='Heist_StatsKey0',
+                type='ulong',
+                key='Stats.dat',
+            ),
+            Field(
+                name='Heist_StatsKey1',
+                type='ulong',
+                key='Stats.dat',
+            ),
+            Field(
+                name='Heist_AddStatValue1',
+                type='int',
+            ),
+            Field(
+                name='Heist_AddStatValue2',
+                type='int',
             ),
         ),
         virtual_fields=(
