@@ -144,6 +144,7 @@ class SkillParserShared(parser.BaseParser):
         'ActiveSkills.dat',
         'GrantedEffects.dat',
         'GrantedEffectsPerLevel.dat',
+        'GrantedEffectQualityStats.dat',
     ]
 
     _GEPL_COPY = (
@@ -319,7 +320,6 @@ class SkillParserShared(parser.BaseParser):
         level_data = []
         stat_key_order = {
             'stats': OrderedDict(),
-            'qstats': OrderedDict(),
         }
 
         for i, row in enumerate(gepl):
@@ -348,84 +348,53 @@ class SkillParserShared(parser.BaseParser):
             )
             data['_tr'] = tr
 
-            qtr = tf.get_translation(
-                tags=[r['Id'] for r in row['Quality_StatsKeys']],
-                # Offset Q1000
-                values=[v//50 for v in row['Quality_Values']],
-                full_result=True,
-                use_placeholder=lambda i: "{%s}" % i,
-                lang=config.get_option('language'),
-            )
-            data['_qtr'] = qtr
-
             data['stats'] = {}
-            data['qstats'] = {}
 
-            for result, key in (
-                    (tr, 'stats'),
-                    (qtr, 'qstats'),
-            ):
-                for j, stats in enumerate(result.found_ids):
-                    values = list(result.values[j])
-                    stats = list(stats)
-                    values_parsed = list(result.values_parsed[j])
-                    # Skip zero stats again, since some translations might
-                    # provide them
-                    while True:
-                        try:
-                            index = values.index(0)
-                        except ValueError:
-                            break
+            for j, stats in enumerate(tr.found_ids):
+                values = list(tr.values[j])
+                stats = list(stats)
+                values_parsed = list(tr.values_parsed[j])
+                # Skip zero stats again, since some translations might
+                # provide them
+                while True:
+                    try:
+                        index = values.index(0)
+                    except ValueError:
+                        break
 
-                        try:
-                            del values[index]
-                        except IndexError:
-                            pass
+                    try:
+                        del values[index]
+                    except IndexError:
+                        pass
 
-                        try:
-                            del values_parsed[index]
-                        except IndexError:
-                            pass
+                    try:
+                        del values_parsed[index]
+                    except IndexError:
+                        pass
 
-                        try:
-                            del stats[index]
-                        except IndexError:
-                            pass
-                    if result.values[j] == 0:
-                        continue
-                    k = '__'.join(stats)
-                    stat_key_order[key][k] = None
-                    data[key]['__'.join(stats)] = {
-                        'line': result.found_lines[j],
-                        'stats': stats,
-                        'values': values,
-                        'values_parsed': values_parsed,
-                    }
-                for stat, value in result.missing:
-                    warnings.warn('Missing translation for %s' % stat)
-                    stat_key_order[key][stat] = None
-                    data[key][stat] = {
-                        'line': '',
-                        'stats': [stat, ],
-                        'values': [value, ],
-                        'values_parsed': [value, ],
-                    }
-
-            for stat_dict in data['qstats'].values():
-                for k in ('values', 'values_parsed'):
-                    new = []
-                    for v in stat_dict[k]:
-                        v /= 20
-                        if v.is_integer():
-                            v = int(v)
-                        new.append(v)
-                    stat_dict[k] = new
-                # TODO: Storm Barrier support has 0-value lines here
-                # Zero padding to avoid errors for now
-                stat_dict['values_parsed'].extend([0 for i in range(0, 3)])
-                stat_dict['line'] = stat_dict['line'].format(
-                    *stat_dict['values_parsed']
-                )
+                    try:
+                        del stats[index]
+                    except IndexError:
+                        pass
+                if tr.values[j] == 0:
+                    continue
+                k = '__'.join(stats)
+                stat_key_order['stats'][k] = None
+                data['stats']['__'.join(stats)] = {
+                    'line': tr.found_lines[j],
+                    'stats': stats,
+                    'values': values,
+                    'values_parsed': values_parsed,
+                }
+            for stat, value in tr.missing:
+                warnings.warn('Missing translation for %s' % stat)
+                stat_key_order['stats'][stat] = None
+                data['stats'][stat] = {
+                    'line': '',
+                    'stats': [stat, ],
+                    'values': [value, ],
+                    'values_parsed': [value, ],
+                }
 
             for column in self._GEPL_COPY:
                 data[column] = row[column]
@@ -437,12 +406,10 @@ class SkillParserShared(parser.BaseParser):
         static = {
             'columns': set(self._GEPL_COPY),
             'stats': OrderedDict(stat_key_order['stats']),
-            'qstats': OrderedDict(stat_key_order['qstats']),
         }
         dynamic = {
             'columns': set(),
             'stats': OrderedDict(),
-            'qstats': OrderedDict(),
         }
         last = level_data[0]
         for data in level_data[1:]:
@@ -450,17 +417,16 @@ class SkillParserShared(parser.BaseParser):
                 if last[key] != data[key]:
                     static['columns'].remove(key)
                     dynamic['columns'].add(key)
-            for stat_key in ('stats', 'qstats'):
-                for key in list(static[stat_key]):
-                    if key not in last[stat_key]:
-                        continue
-                    if key not in data[stat_key]:
-                        continue
+            for key in list(static['stats']):
+                if key not in last['stats']:
+                    continue
+                if key not in data['stats']:
+                    continue
 
-                    if last[stat_key][key]['values'] != data[stat_key][key][
-                            'values']:
-                        del static[stat_key][key]
-                        dynamic[stat_key][key] = None
+                if last['stats'][key]['values'] != data['stats'][key][
+                        'values']:
+                    del static['stats'][key]
+                    dynamic['stats'][key] = None
             last = data
 
         #
@@ -494,6 +460,61 @@ class SkillParserShared(parser.BaseParser):
 
         # GrantedEffectsPerLevel.dat
         infobox['required_level'] = level_data[0]['LevelRequirement']
+
+
+        #
+        # Quality stats
+        #
+        geq = []
+        for row in self.rr['GrantedEffectQualityStats.dat']:
+            if row['GrantedEffectsKey'] == ge:
+                geq.append(row)
+
+        geq.sort(key=lambda row: row['SetId'])
+
+        for row in geq:
+            prefix = 'quality_type%s_' % \
+                     (row['SetId'] + 1)
+            infobox[prefix + 'weight'] = row['Weight']
+
+            # Quality stat data
+            stat_ids = [r['Id'] for r in row['StatsKeys']]
+            qtr = tf.get_translation(
+                tags=stat_ids,
+                # Offset Q1000
+                values=[v // 50 for v in row['StatsValuesPermille']],
+                full_result=True,
+                lang=config.get_option('language'),
+            )
+
+            lines = []
+            for i, ts in enumerate(qtr.string_instances):
+                values = []
+                for stat_id in qtr.found_ids[i]:
+                    try:
+                        index = stat_ids.index(stat_id)
+                    except ValueError:
+                        pass
+                    else:
+                        values.append(
+                            row['StatsValuesPermille'][index] / 1000
+                        )
+                lines.append(ts.format_string(
+                    values=values,
+                    is_range=[False, ] * len(row['StatsValuesPermille']),
+                )[0])
+
+            infobox[prefix + 'stat_text'] = '<br>'.join(lines)
+
+            self._write_stats(
+                infobox,
+                zip(stats, row['StatsValuesPermille']),
+                prefix,
+            )
+
+        #
+        # GrantedEffectsPerLevel.dat
+        #
 
         # Don't add columns that are zero/default
         for column, column_data in self._SKILL_COLUMN_MAP:
@@ -599,19 +620,6 @@ class SkillParserShared(parser.BaseParser):
 
         infobox['stat_text'] = self._format_lines(lines)
 
-        # Quality stats
-        lines = []
-        stats = []
-        values = []
-        for key in static['qstats']:
-            stat_dict = level_data[0]['qstats'][key]
-            lines.append(stat_dict['line'])
-            stats.extend(stat_dict['stats'])
-            values.extend(stat_dict['values'])
-
-        infobox['quality_stat_text'] = self._format_lines(lines)
-        self._write_stats(infobox, zip(stats, values), 'static_quality_')
-
         #
         # Output handling for progression
         #
@@ -635,33 +643,29 @@ class SkillParserShared(parser.BaseParser):
                     column_data['format'](row[column])
 
             # Stat handling
-            for stat_key, stat_prefix in (
-                    ('stats', ''),
-                    ('qstats', 'quality_'),
-            ):
-                lines = []
-                values = []
-                stats = []
-                for key in stat_key_order[stat_key]:
-                    if key not in dynamic[stat_key]:
-                        continue
+            lines = []
+            values = []
+            stats = []
+            for key in stat_key_order['stats']:
+                if key not in dynamic['stats']:
+                    continue
 
-                    try:
-                        stat_dict = row[stat_key][key]
-                    # No need to add stat that don't exist at specific levels
-                    except KeyError:
-                        continue
-                    # Don't add empty lines
-                    if stat_dict['line']:
-                        lines.append(stat_dict['line'])
-                    stats.extend(stat_dict['stats'])
-                    values.extend(stat_dict['values'])
-                if lines:
-                    infobox[prefix + stat_prefix + 'stat_text'] = \
-                        self._format_lines(lines)
-                self._write_stats(
-                    infobox, zip(stats, values), prefix + stat_prefix
-                )
+                try:
+                    stat_dict = row['stats'][key]
+                # No need to add stat that don't exist at specific levels
+                except KeyError:
+                    continue
+                # Don't add empty lines
+                if stat_dict['line']:
+                    lines.append(stat_dict['line'])
+                stats.extend(stat_dict['stats'])
+                values.extend(stat_dict['values'])
+            if lines:
+                infobox[prefix + 'stat_text'] = \
+                    self._format_lines(lines)
+            self._write_stats(
+                infobox, zip(stats, values), prefix
+            )
 
         return True
 
