@@ -17903,27 +17903,23 @@ specification = Specification({
                 key='PassiveTreeExpansionJewelSizes.dat',
             ),
             Field(
-                name='Unknown0',
+                name='MinNodes',
                 type='int',
             ),
             Field(
-                name='Unknown1',
+                name='MaxNodes',
                 type='int',
             ),
             Field(
-                name='Unknown2',
-                type='int',
-            ),
-            Field(
-                name='Unknown3',
-                type='ref|string',
-            ),
-            Field(
-                name='Unknown4',
+                name='SmallIndices',
                 type='ref|list|int',
             ),
             Field(
-                name='Unknown5',
+                name='NotableIndices',
+                type='ref|list|int',
+            ),
+            Field(
+                name='SocketIndices',
                 type='ref|list|int',
             ),
             Field(
@@ -17932,12 +17928,13 @@ specification = Specification({
                 file_path=True,
             ),
             Field(
-                name='Unknown7',
+                name='TotalIndices',
                 type='int',
             ),
             Field(
-                name='Key2',
+                name='SoundEffectsKey',
                 type='ulong',
+                key='SoundEffects.dat',
             ),
         ),
     ),
@@ -17959,8 +17956,9 @@ specification = Specification({
                 key='Tags.dat',
             ),
             Field(
-                name='Key3',
+                name='PassiveTreeExpansionJewelSizesKey',
                 type='ulong',
+                key='PassiveTreeExpansionJewelSizes.dat',
             ),
         ),
     ),
