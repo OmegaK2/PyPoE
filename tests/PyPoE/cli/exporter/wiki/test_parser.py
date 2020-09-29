@@ -58,9 +58,11 @@ def parserobj(poe_version, cli_config):
         pytest.skip('temp dir from pypoe_exporter not found')
     return parser.BaseParser(base_path=path)
 
+
 @pytest.fixture(scope='module')
 def tag_handler_obj(rr):
     return parser.TagHandler(rr)
+
 
 @pytest.fixture(scope='module')
 def divination_card_texts(rr):

@@ -51,6 +51,6 @@ import pytest
 # =============================================================================
 
 
-def test_psg(ggpkfile, rr):
+def test_psg(file_system, rr):
     f = psg.PSGFile(passive_skills_dat_file=rr)
-    f.read(ggpkfile['Metadata/PassiveSkillGraph.psg'].record.extract())
+    f.read(file_system.get_file('Metadata/PassiveSkillGraph.psg'))

@@ -67,8 +67,9 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.installTranslator(translator)
     frame = QMainWindow()
+    frame.setMinimumSize(2000, 1000)
 
-    f = 'CharacterStartItems.dat'
+    f = 'GrantedEffectQualityTypes.dat'
     with open('C:/Temp/Data/' + f, 'rb') as file:
         data = file.read()
     #for item in dir(o):

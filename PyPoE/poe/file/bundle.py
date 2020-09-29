@@ -63,7 +63,7 @@ import os
 from enum import IntEnum
 from io import BytesIO
 from tempfile import TemporaryDirectory
-from typing import List, Union
+from typing import List, Union, Dict, Tuple
 
 # 3rd party
 from fnvhash import fnv1a_64
@@ -147,21 +147,25 @@ class ENCODE_TYPES(IntEnum):
 class Bundle(AbstractFileReadOnly):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, *kwargs)
-        self.encoder = None
-        self.unknown = None
-        self.size_decompressed = None
-        self.size_compressed = None
-        self.entry_count = None
-        self.chunk_size = None
-        self.unknown3 = None
-        self.unknown4 = None
-        self.unknown5 = None
-        self.unknown6 = None
-        self.chunks = None
-        self.data = {}
+        self.encoder: Union[ENCODE_TYPES, None] = None
+        self.unknown: Union[int, None] = None
+        self.size_decompressed: Union[int, None] = None
+        self.size_compressed: Union[int, None] = None
+        self.entry_count: Union[int, None] = None
+        self.chunk_size: Union[int, None] = None
+        self.unknown3: Union[int, None] = None
+        self.unknown4: Union[int, None] = None
+        self.unknown5: Union[int, None] = None
+        self.unknown6: Union[int, None] = None
+        self.chunks: Union[Tuple[int, ...], None] = None
+        self.data: Union[Dict[int, bytes], bytes] = {}
+
+    @property
+    def is_decompressed(self) -> bool:
+        return isinstance(self.data, bytes)
 
     def _read(self, buffer: BytesIO):
-        if isinstance(self.data, bytes):
+        if self.is_decompressed:
             raise ValueError('Bundle has been decompressed already')
 
         raw = buffer.read()
@@ -289,18 +293,19 @@ class BundleRecord(IndexRecord):
     _REPR_EXTRA_ATTRIBUTES = {x: None for x in __slots__}
 
     def __init__(self, raw: bytes, parent: 'Index', offset: int):
-        self.parent = parent
+        self.parent: Index = parent
 
         name_length = struct.unpack_from('<I', raw, offset=offset)[0]
 
-        self.name = struct.unpack_from(
+        self.name: str = struct.unpack_from(
             '%ss' % name_length, raw, offset=offset+4)[0].decode()
 
-        self.size = struct.unpack_from('<I', raw, offset=offset+4+name_length)[0]
+        self.size: int = \
+            struct.unpack_from('<I', raw, offset=offset+4+name_length)[0]
 
-        self.BYTES = name_length + 8
+        self.BYTES: int = name_length + 8
 
-        self.contents = None
+        self.contents: Union[Bundle, None] = None
 
     @property
     def file_name(self) -> str:
@@ -353,11 +358,11 @@ class FileRecord(IndexRecord):
     def __init__(self, raw: bytes, parent: 'Index', offset: int):
         data = struct.unpack_from('<QIII', raw, offset=offset)
 
-        self.parent = parent
-        self.hash = data[0]
-        self.bundle = parent.bundles[data[1]]
-        self.file_offset = data[2]
-        self.file_size = data[3]
+        self.parent: Index = parent
+        self.hash: int = data[0]
+        self.bundle: BundleRecord = parent.bundles[data[1]]
+        self.file_offset: int = data[2]
+        self.file_size: int = data[3]
 
     def get_file(self) -> bytes:
         """
@@ -387,14 +392,14 @@ class DirectoryRecord(IndexRecord):
     _REPR_EXTRA_ATTRIBUTES = {x: None for x in __slots__}
     SIZE = 20
 
-    def __init__(self, raw: bytes, parent: 'Index', offset:int):
-        self.parent = parent
+    def __init__(self, raw: bytes, parent: 'Index', offset: int):
+        self.parent: Index = parent
         data = struct.unpack_from('<QIII', raw, offset=offset)
 
-        self.hash = data[0]
-        self.offset = data[1]
-        self.size = data[2]
-        self.unknown = data[3]
+        self.hash: int = data[0]
+        self.offset: int = data[1]
+        self.size: int = data[2]
+        self.unknown: int = data[3]
         self._paths = None
 
     @property
@@ -422,9 +427,9 @@ class Index(Bundle):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.bundles = {}
-        self.files = {}
-        self.directories = {}
+        self.bundles: Dict[int, BundleRecord] = {}
+        self.files: Dict[int, FileRecord] = {}
+        self.directories: Dict[int, DirectoryRecord] = {}
 
     def get_dir_record(self, path: Union[str, bytes]) -> DirectoryRecord:
         """

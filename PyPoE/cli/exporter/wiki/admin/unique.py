@@ -39,6 +39,9 @@ Documentation
 import traceback
 from collections import defaultdict
 
+import time
+import random
+
 # 3rd-party
 import mwclient
 import mwparserfromhell
@@ -104,6 +107,14 @@ class UniqueCommandHandler(ExporterHandler):
         )
 
         copy.add_argument(
+            '--ignore-drop-text',
+            dest='ignore_drop_text',
+            help='ingore drop text and do not prompt for translation',
+            action='store_true',
+            default=False,
+        )
+
+        copy.add_argument(
             'page',
             help='page of the unique item to process',
             nargs='+',
@@ -163,7 +174,7 @@ class UniqueCopy(BaseParser):
         if key not in self.rr_english[file_name].index:
             self.rr_english[file_name].build_index(key)
         results = self.rr_english[file_name].index[key][text]
-        if len(results) == 1:
+        if isinstance(results, str) or len(results) == 1:
             return self.rr[file_name][results[0].rowid][key]
 
         # Try to find translation for the name using fuzzy search
@@ -178,14 +189,14 @@ class UniqueCopy(BaseParser):
                 })
 
         if len(results) == 0:
-            console('No matching text found.')
+            console('No matching text found for %s.' % key)
             text = input('Enter translated text.\n')
             if text == '':
                 console('No text specified - skipping search for "%s".' % text)
                 return
             return text
         elif len(results) >= 2:
-            console('Multiple matching names found.\n')
+            console('Multiple matching values found for %s\n' % key)
             for i, row in enumerate(results):
                 row['i'] = i
                 console('%(i)s: %(ratio)s\n%(text)s\n----------------' % row)
@@ -199,7 +210,7 @@ class UniqueCopy(BaseParser):
         else:
             return self.rr[file_name][results[0]['id']][key]
 
-    def copy(self, pn):
+    def copy(self, parsed_args, pn):
         console('Processing %s' % pn)
         page = self.site_english.pages[pn]
         if not page.exists:
@@ -213,6 +224,7 @@ class UniqueCopy(BaseParser):
             raise Exception('Item template not found')
 
         console('Finding flavour text...')
+        ftext = None
         if not mwtemplate.has('flavour_text_id') and mwtemplate.has('flavour_text'):
             console('Missing flavour_text_id. Trying to find flavour text in FlavourText.dat')
 
@@ -220,45 +232,16 @@ class UniqueCopy(BaseParser):
                 mwtemplate.get('flavour_text'),
                 'FlavourText.dat',
                 'Text',
-                fuzzy_func=fuzz.partial_token_set_ratio
+                fuzzy_func=fuzz.partial_ratio
             )
-
-            results = []
-            for row in self.rr_english['FlavourText.dat']:
-                ratio = fuzz.partial_token_set_ratio(row['Text'], ftext)
-                if ratio > 90:
-                    results.append({
-                        'id': row['Id'],
-                        'text': row['Text'],
-                        'ratio': ratio,
-                    })
-
-            if len(results) == 0:
-                console('No matching flavour text found.')
-                text = input('Enter translated flavour text. Type None to skip item entirely.\n')
-                if text == 'None':
-                    console('Skipping item %s.' % pn)
-                    return
-                mwtemplate.get('flavour_text').value = text
-            elif len(results) >= 2:
-                console('Multiple matching flavour text entries found.\n')
-                for i, row in enumerate(results):
-                    row['i'] = i
-                    console('%(i)s %(id)s: %(ratio)s\n%(text)s\n----------------' % row)
-
-                try:
-                    correct = results[int(input('Enter index of correct translation.'))]
-                except Exception as e:
-                    traceback.print_exc()
-
-                mwtemplate.get('flavour_text_id').value = correct['id']
-            else:
-                mwtemplate.get('flavour_text_id').value = results[0]['id']
-
+            mwtemplate.get('flavour_text').value = ftext
         # Grab flavour text from other language
-        if mwtemplate.has('flavour_text_id'):
-            mwtemplate.get('flavour_text').value = ' %s\n' % self.rr['FlavourText.dat'].index['Id'][
-                mwtemplate.get('flavour_text_id').value.strip()]['Text'].replace('\r', '').replace('\n', '<br>')
+        elif mwtemplate.has('flavour_text_id'):
+            ftext = self.rr['FlavourText.dat'].index['Id'][
+                mwtemplate.get('flavour_text_id').value.strip()]['Text']
+
+        if ftext:
+            mwtemplate.get('flavour_text').value = ' %s\n' % ftext.replace('\r', '').replace('\n', '<br>')
 
         # Need this for multiple things
         name = mwtemplate.get('name').value.strip()
@@ -286,7 +269,7 @@ class UniqueCopy(BaseParser):
             pass
         elif mwtemplate.has('base_item'):
             base = self.fuzzy_find_text(
-                mwtemplate.get('base_item'),
+                mwtemplate.get('base_item').value,
                 'BaseItemTypes.dat',
                 'Name',
                 source_list=self.cache[mwtemplate.get('class_id').value.strip()]
@@ -304,18 +287,18 @@ class UniqueCopy(BaseParser):
             # Need to copy the list or it won't be deleted properly as it deletes from itself during iteration
             for mwparam in list(mwtemplate.params):
                 pname = mwparam.name.strip()
-                if pname.startswith('upgraded_from'):
+                if pname.startswith('upgraded_from') and \
+                        pname != 'upgraded_from_disabled':
                     mwtemplate.remove(mwparam.name)
                 elif pname in ('class'):
                     mwtemplate.remove(mwparam.name)
 
-        if mwtemplate.has('drop_text'):
+        if mwtemplate.has('drop_text') and not parsed_args.ignore_drop_text:
             console('Drop text might need a translation. Current text:\n\n%s' % mwtemplate.get('drop_text').value.strip())
             text = input('\nNew text (leave empty to copy old):\n')
             if text:
                 mwtemplate.get('drop_text').value = ' %s\n' % text
 
-        console('Saving on other wiki...')
         if pn == name:
             page = self.site_other.pages[new]
         else:
@@ -327,13 +310,15 @@ class UniqueCopy(BaseParser):
                 cont = input('y/n?\n') != 'y'
             page = self.site_other.pages[t]
 
+        console('Saving to "%s" on other wiki...' % page.name)
         page.save('%s\n\n[[en:%s]]' % (str(mwtemplate), pn))
         console('Done.')
 
     def run(self, parsed_args, **kwargs):
         console('Parsing...')
         for item in parsed_args.page:
-            self.copy(item)
+            self.copy(parsed_args, item)
+            time.sleep(random.randint(180, 300))
 
 
 class BaseItemCacheInstance(list):

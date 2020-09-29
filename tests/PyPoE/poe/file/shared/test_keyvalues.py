@@ -39,6 +39,7 @@ import pytest
 
 # self
 from PyPoE.poe.file.shared import keyvalues
+from PyPoE.poe.file.file_system import FileSystem
 
 # =============================================================================
 # Setup
@@ -121,7 +122,7 @@ class TestKeyValuesFile:
 
     @pytest.fixture
     def kf_file(self):
-        kf = KeyValuesFile(parent_or_base_dir_or_ggpk=data_dir)
+        kf = KeyValuesFile(parent_or_file_system=FileSystem(root_path=data_dir))
         kf.read(os.path.join(data_dir, _read_file_name))
         return kf
 
@@ -166,7 +167,7 @@ class TestKeyValuesFile:
 class TestKeyValuesFileCache:
     @pytest.fixture
     def kf_cache(self):
-        kfc = KeyValuesFileCache(path_or_ggpk=data_dir, load_index=False)
+        kfc = KeyValuesFileCache(path_or_ggpk=data_dir)
 
         return kfc
 

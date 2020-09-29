@@ -43,6 +43,7 @@ from PyPoE.poe.file import dat
 from PyPoE.poe.file.bundle import Index
 from PyPoE.poe.file.specification import load
 from PyPoE.poe.file.ggpk import GGPKFile
+from PyPoE.poe.file.file_system import FileSystem
 from PyPoE.cli.exporter.core import setup_config
 from PyPoE.cli.exporter import config
 
@@ -119,6 +120,7 @@ def pytest_generate_tests(metafunc):
 # Fixtures
 # =============================================================================
 
+
 @pytest.fixture(scope='session')
 def poe_version(request) -> VERSION:
     v = get_version(request.config)
@@ -140,25 +142,14 @@ def poe_path(poe_version: VERSION) -> List[str]:
 
 
 @pytest.fixture(scope='session')
-def ggpkfile(poe_path) -> GGPKFile:
-    ggpk = GGPKFile()
-    ggpk.read(os.path.join(poe_path, 'content.ggpk'))
-    ggpk.directory_build()
-
-    return ggpk
+def file_system(poe_path) -> FileSystem:
+    return FileSystem(poe_path)
 
 
 @pytest.fixture(scope='session')
-def indexfile(ggpkfile: GGPKFile) -> Index:
-    index = Index()
-    index.read(ggpkfile[Index.PATH].record.extract())
-    return index
-
-
-@pytest.fixture(scope='session')
-def rr(ggpkfile: GGPKFile) -> dat.RelationalReader:
+def rr(file_system: FileSystem) -> dat.RelationalReader:
     return dat.RelationalReader(
-        path_or_ggpk=ggpkfile,
+        path_or_ggpk=file_system,
         read_options={
             # When we use this, speed > dat value features
             'use_dat_value': False

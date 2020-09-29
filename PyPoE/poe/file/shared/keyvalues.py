@@ -86,6 +86,7 @@ import re
 import warnings
 import os
 from collections import defaultdict, OrderedDict
+from typing import Union
 
 # 3rd-party
 
@@ -93,7 +94,7 @@ from collections import defaultdict, OrderedDict
 from PyPoE.shared.decorators import doc
 from PyPoE.poe.file.shared import AbstractFile, ParserError, ParserWarning
 from PyPoE.poe.file.shared.cache import AbstractFileCache
-from PyPoE.poe.file.ggpk import GGPKFile
+from PyPoE.poe.file.file_system import FileSystem
 
 # =============================================================================
 # Globals
@@ -130,11 +131,11 @@ class AbstractKeyValueSection(dict):
 
     def __init__(self, parent, name=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.parent = parent
+        self.parent: 'AbstractKeyValueFile' = parent
         if name:
-            self.name = name
+            self.name: str = name
         elif self.NAME:
-            self.name = self.NAME
+            self.name: str = self.NAME
         else:
             raise ParserError('Missing name for section')
 
@@ -156,7 +157,7 @@ class AbstractKeyValueSection(dict):
                     value = [value, ]
         super().__setitem__(key, value)
 
-    def merge(self, other):
+    def merge(self, other: 'AbstractKeyValueSection'):
         if not isinstance(other, AbstractKeyValueSection):
             raise TypeError(
                 'Other must be a AbstractKeyValuesSection instance, got "%s" '
@@ -246,39 +247,40 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
         re.UNICODE | re.MULTILINE,
     )
 
-    def __init__(self, parent_or_base_dir_or_ggpk=None, version=None,
-                 extends=None, keys=None):
+    def __init__(self,
+                 parent_or_file_system: Union['AbstractKeyValueFile', FileSystem,
+                                              None] = None,
+                 version: Union[int, None] = None,
+                 extends: Union[str, None] = None,
+                 keys=None
+                 ):
         AbstractFile.__init__(self)
         defaultdict.__init__(self, keys)
 
-        self.version = version
-        self.extends = extends
-        #self._keys = keys if keys else {}
+        self.version: Union[int, None] = version
+        self.extends: Union[str, None] = extends
 
-        self._parent_dir = None
-        self._parent_file = None
-        self._parent_ggpk = None
+        self._parent_file: Union[AbstractKeyValueFile, None] = None
+        self._parent_file_system: Union[FileSystem, None] = None
 
-        if isinstance(parent_or_base_dir_or_ggpk, AbstractKeyValueFile):
-            self._parent_file = parent_or_base_dir_or_ggpk
-        elif isinstance(parent_or_base_dir_or_ggpk, GGPKFile):
-            self._parent_ggpk = parent_or_base_dir_or_ggpk
-        elif isinstance(parent_or_base_dir_or_ggpk, str):
-            self._parent_dir = parent_or_base_dir_or_ggpk
-        elif parent_or_base_dir_or_ggpk is not None:
-            raise TypeError('parent_or_base_dir_or_ggpk is of invalid type.')
+        if isinstance(parent_or_file_system, AbstractKeyValueFile):
+            self._parent_file = parent_or_file_system
+        elif isinstance(parent_or_file_system, FileSystem):
+            self._parent_file_system = parent_or_file_system
+        elif parent_or_file_system is not None:
+            raise TypeError('parent_or_file_system is of invalid type.')
 
     #
     # Properties
     #
     @property
-    def parent_or_base_dir_or_ggpk(self):
-        return self._parent_file or self._parent_dir or self._parent_ggpk
+    def parent_or_file_system(self) -> Union['AbstractKeyValueFile', FileSystem]:
+        return self._parent_file or self._parent_file_system
 
     #
     # Special
     #
-    def __missing__(self, key):
+    def __missing__(self, key) -> AbstractKeyValueSection:
         try:
             self[key] = self.SECTIONS[key](parent=self)
         except KeyError:
@@ -289,7 +291,7 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
     def __delitem__(self, key):
         raise NotImplementedError()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '%(name)s(extends="%(extends)s", version="%(version)s", ' \
                'keys=%(keys)s' % {
                     'name': self.__class__.__name__,
@@ -352,26 +354,19 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
                         'name "%s"' % (self._parent_file.name, extend),
                         ParserWarning,
                     )
-            elif self._parent_dir:
+            elif self._parent_file_system:
                 obj = self.__class__(
-                    parent_or_base_dir_or_ggpk=self._parent_dir
+                    parent_or_file_system=self._parent_file_system
                 )
-                obj.read(file_path_or_raw=os.path.join(
-                    self._parent_dir, extend + self.EXTENSION
-                ))
-                self.merge(obj)
-            elif self._parent_ggpk:
-                obj = self.__class__(
-                    parent_or_base_dir_or_ggpk=self._parent_ggpk
-                )
-                obj.read(file_path_or_raw=
-                    self._parent_ggpk.directory[
-                        extend + self.EXTENSION].record.extract()
+                obj.read(
+                    file_path_or_raw=self._parent_file_system.get_file(
+                        extend + self.EXTENSION
+                    ),
                 )
                 self.merge(obj)
             else:
                 raise ParserError(
-                    'File extends "%s", but parent_or_base_dir_or_ggpk has not '
+                    'File extends "%s", but parent_or_file_system has not '
                     'been specified on class creation.' % extend
                 )
             self.extends = extend
@@ -410,7 +405,7 @@ class AbstractKeyValueFile(AbstractFile, defaultdict):
     def _get_write_line(self, key, value):
         return '\t%s = "%s"' % (key, value)
 
-    def merge(self, other):
+    def merge(self, other: 'AbstractKeyValueFile'):
         """
         Merge with other file.
 
@@ -444,7 +439,7 @@ class AbstractKeyValueFileCache(AbstractFileCache):
     @doc(doc=AbstractFileCache._get_file_instance_args)
     def _get_file_instance_args(self, file_name):
         options = super()._get_file_instance_args(file_name)
-        options['parent_or_base_dir_or_ggpk'] = self._ggpk or self._path
+        options['parent_or_file_system'] = self.file_system
 
         return options
 # =============================================================================
