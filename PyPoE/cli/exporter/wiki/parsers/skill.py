@@ -494,14 +494,14 @@ class SkillParserShared(parser.BaseParser):
                     try:
                         index = stat_ids.index(stat_id)
                     except ValueError:
-                        pass
+                        values.append(0)
                     else:
                         values.append(
                             row['StatsValuesPermille'][index] / 1000
                         )
                 lines.append(ts.format_string(
                     values=values,
-                    is_range=[False, ] * len(row['StatsValuesPermille']),
+                    is_range=[False, ] * len(values),
                 )[0])
 
             infobox[prefix + 'stat_text'] = '<br>'.join(lines)

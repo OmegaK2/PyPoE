@@ -533,6 +533,7 @@ class ItemsParser(SkillParserShared):
         'Metamorphosis': '3.9.0',
         'Delirium': '3.10.0',
         'Harvest': '3.11.0',
+        'Heist': '3.12.0',
     }
 
     _IGNORE_DROP_LEVEL_CLASSES = (
@@ -1649,10 +1650,9 @@ class ItemsParser(SkillParserShared):
                 if 'stat' not in k:
                     infobox[k] = v
 
-            for k in ('stat_text', 'quality_stat_text'):
-                infobox[k] = '<br>'.join(
-                    [x for x in (primary[k], secondary[k]) if x]
-                )
+            infobox['stat_text'] = '<br>'.join(
+                [x for x in (primary['stat_text'], secondary['stat_text']) if x]
+            )
 
             # Stat merging...
             def get_stat(i, prefix, data):
