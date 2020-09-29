@@ -342,7 +342,9 @@ class TranslationLanguage(TranslationReprMixin):
 
     def get_string(self,
                    values: Union[List[int], List[List[int]]]) ->\
-            Tuple['TranslationString', List[bool], List[int]]:
+            Tuple[Union['TranslationString', None],
+                  Union[List[bool], None],
+                  Union[List[int], None]]:
         """
         Formats the string according with the given values and returns the
         TranslationString instance as well as any left over (unused) values.
@@ -393,7 +395,7 @@ class TranslationLanguage(TranslationReprMixin):
         rating, ts = temp[0]
 
         if rating <= 0:
-            return None
+            return None, None, None
 
         return ts, short_values, is_range
 
@@ -1707,12 +1709,11 @@ class TranslationFile(AbstractFileReadOnly):
 
             tl = tr.get_language(lang)
             ts, short_values, is_range = tl.get_string(trans_found_values[i])
-            string_instances.append(ts)
-
-            result = ts.format_string(
-                short_values, is_range, use_placeholder, only_values
-            )
-            if result:
+            if ts:
+                string_instances.append(ts)
+                result = ts.format_string(
+                    short_values, is_range, use_placeholder, only_values
+                )
                 trans_lines.append(result[0])
                 trans_found_lines.append(result[0])
                 values_parsed.append(result[2])
