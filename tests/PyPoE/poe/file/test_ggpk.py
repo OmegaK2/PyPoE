@@ -41,7 +41,6 @@ from tempfile import TemporaryDirectory
 import pytest
 
 # self
-from PyPoE.poe.file import ggpk
 
 # =============================================================================
 # Setup
@@ -56,33 +55,15 @@ DDS_COMPRESSED = 'Art/2DArt/BuffIcons/AssassinsMark.dds'
 # =============================================================================
 
 
-class TestGGPKFile:
-    # This kinda tests it already by reading the global fixture
-    def test_init(self, ggpkfile):
-        assert ggpkfile.is_parsed == True
-
-
 # These tests will raise errors if something is wrong, like decompression
 # errors
 class TestDDSExtract:
-    def test_uncompressed(self, ggpkfile):
-        data = ggpkfile[DDS_UNCOMPRESSED].record.extract().read()
-        ggpk.extract_dds(data=data)
+    def test_uncompressed(self, file_system):
+        file_system.extract_dds(file_system.get_file(DDS_UNCOMPRESSED))
 
-    def test_compressed(self, ggpkfile):
-        data = ggpkfile[DDS_COMPRESSED].record.extract().read()
-        ggpk.extract_dds(data=data)
+    def test_compressed(self, file_system):
+        file_system.extract_dds(file_system.get_file(DDS_COMPRESSED))
 
-    def test_reference_ggpk(self, ggpkfile):
+    def test_reference(self, file_system):
         data = b'*' + DDS_COMPRESSED.encode('ascii')
-        ggpk.extract_dds(data=data, path_or_ggpk=ggpkfile)
-
-    def test_reference_path(self, ggpkfile):
-        data = b'*' + DDS_COMPRESSED.encode('ascii')
-        path = os.path.split(DDS_COMPRESSED)[0]
-        with TemporaryDirectory() as tmp_dir:
-            path = os.path.join(tmp_dir, path)
-            os.makedirs(path)
-            ggpkfile[DDS_COMPRESSED].record.extract_to(path)
-
-            ggpk.extract_dds(data=data, path_or_ggpk=tmp_dir)
+        file_system.extract_dds(data)

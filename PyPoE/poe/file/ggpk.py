@@ -36,7 +36,6 @@ Public API
 
     .. automethod:: __getitem__
 
-.. autofunction:: extract_dds
 
 Internal API
 -------------------------------------------------------------------------------
@@ -80,7 +79,6 @@ import re
 import warnings
 
 # 3rd Party
-import brotli
 
 # self
 from PyPoE.shared import InheritedDocStringsMeta
@@ -99,81 +97,14 @@ __all__ = ['GGPKFile']
 # Functions
 # =============================================================================
 
-
-def extract_dds(data, path_or_ggpk=None):
-    """
-    Attempts to extract a .dds from the given data bytes.
-
-    .dds files in the content.ggpk may be compressed with brotli or may be
-    a reference to another .dds file.
-
-    This function will take of those kind of files accordingly and try to return
-    a file instead.
-    If any problems arise an error will be raised instead.
-
-    Parameters
-    ----------
-    data : bytes
-        The raw data to extract the dds from.
-    path_or_ggpk : str or GGPKFile
-        A str containing the path where the extracted content.ggpk is located or
-        an :class:`GGPKFile` instance
-
-    Returns
-    -------
-    bytes
-        the uncompressed, dereferenced .dds file data
-
-    Raises
-    -------
-    ValueError
-        If the file data contains a reference, but path_or_ggpk is not specified
-    TypeError
-        If the file data contains a reference, but path_or_ggpk is of invalid
-        type (i.e. not str or :class:`GGPKFile`
-    ParserError
-        If the uncompressed size does not match the size in the header
-    brotli.error
-        If whatever bytes were read were not brotli compressed
-    """
-    # Already a DDS file, so return it
-    if data[:4] == b'DDS ':
-        return data
-    # Is this a reference?
-    elif data[:1] == b'*':
-        path = data[1:].decode()
-        if path_or_ggpk is None:
-            raise ValueError(
-                '.dds file is a reference, but path_or_ggpk is not specified.'
-            )
-        elif isinstance(path_or_ggpk, GGPKFile):
-            data = path_or_ggpk.directory[path].record.extract().read()
-        elif isinstance(path_or_ggpk, str):
-            with open(os.path.join(path_or_ggpk, path), 'rb') as f:
-                data = f.read()
-        else:
-            raise TypeError(
-                'path_or_ggpk has an invalid type "%s" %' % type(path_or_ggpk)
-            )
-        return extract_dds(
-            data,
-            path_or_ggpk=path_or_ggpk,
-        )
-    else:
-        size = int.from_bytes(data[:4], 'little')
-        dec = brotli.decompress(data[4:])
-        if len(dec) != size:
-            raise ParserError(
-                'Decompressed size does not match size in the header'
-            )
-        return dec
-
 # =============================================================================
 # Errors
 # =============================================================================
 
+
 class GGPKException(Exception):
     pass
+
 
 class InvalidTagException(GGPKException):
     pass
@@ -1067,10 +998,6 @@ class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
     def read(self, file_path_or_raw, *args, **kwargs):
         super().read(file_path_or_raw, *args, **kwargs)
         self._file_path_or_raw = file_path_or_raw
-
-    @doc(doc=extract_dds)
-    def extract_dds(self, data, path_or_ggpk=None):
-        return extract_dds(data, path_or_ggpk=path_or_ggpk or self)
 
 
 if __name__ == '__main__':
