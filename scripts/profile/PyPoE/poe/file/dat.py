@@ -60,7 +60,7 @@ def read_dat(file_name='GrantedEffects.dat'):
     return d
 
 def rr(files=['BaseItemTypes.dat']):
-    rr = dat.RelationalReader(path_or_ggpk=dir, files=files)
+    rr = dat.RelationalReader(path_or_file_system=dir, files=files)
 
 
 
@@ -85,6 +85,6 @@ if __name__ == '__main__':
     #profiler.add_function(dat.RelationalReader._dv_set_value)
     #profiler.add_function(dat.RelationalReader._simple_set_value)
     #profiler.add_function(dat.RelationalReader.read_file)
-    #profiler.run("rr = dat.RelationalReader(path_or_ggpk=dir, files=['Data/BaseItemTypes.dat'], read_options={'use_dat_value': False})")
+    #profiler.run("rr = dat.RelationalReader(path_or_file_system=dir, files=['Data/BaseItemTypes.dat'], read_options={'use_dat_value': False})")
     #profiler.print_stats()
-    rr = dat.RelationalReader(path_or_ggpk=dir, files=['Data/MonsterVarieties.dat'], read_options={'use_dat_value': False})
+    rr = dat.RelationalReader(path_or_file_system=dir, files=['Data/MonsterVarieties.dat'], read_options={'use_dat_value': False})

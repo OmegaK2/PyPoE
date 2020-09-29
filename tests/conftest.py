@@ -149,7 +149,7 @@ def file_system(poe_path) -> FileSystem:
 @pytest.fixture(scope='session')
 def rr(file_system: FileSystem) -> dat.RelationalReader:
     return dat.RelationalReader(
-        path_or_ggpk=file_system,
+        path_or_file_system=file_system,
         read_options={
             # When we use this, speed > dat value features
             'use_dat_value': False

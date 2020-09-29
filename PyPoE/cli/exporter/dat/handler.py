@@ -39,8 +39,8 @@ from PyPoE.poe.constants import VERSION
 from PyPoE.poe.file import dat
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter import config
-from PyPoE.cli.exporter.util import get_content_ggpk, get_content_ggpk_path
-from PyPoE.poe.file.bundle import Index, Bundle
+from PyPoE.cli.exporter.util import get_content_path
+from PyPoE.poe.file.file_system import FileSystem
 
 # =============================================================================
 # Globals
@@ -106,21 +106,15 @@ class DatExportHandler:
         args.spec = spec
 
     def _read_dat_files(self, args, prefix=''):
-        path = get_content_ggpk_path()
+        path = get_content_path()
 
-        console(prefix + 'Reading "%s"...' % path)
+        console(prefix + 'Loading file system...')
 
-        ggpk = get_content_ggpk(path)
-
-        index = Index()
-        print ("Extracting index record...")
-        extracted_record = ggpk[Index.PATH].record.extract()
-        index.read(extracted_record)
+        file_system = FileSystem(root_path=path)
         
         console(prefix + 'Reading .dat files')
 
         dat_files = {}
-        ggpk_data = index.get_dir_record('Data')
         lang = args.language or config.get_option('language')
         dir_path = "Data/"
         if lang != 'English':
@@ -130,17 +124,15 @@ class DatExportHandler:
         for name in tqdm(args.files):
             file_path = dir_path + name
             try:
-                node = index.get_file_record(file_path)
+                data = file_system.get_file(file_path)
             except FileNotFoundError:
                 console('Skipping "%s" (missing)' % file_path, msg=Msg.warning)
                 remove.append(name)
                 continue
 
             df = dat.DatFile(name)
-            
-            print("Reading %s" % file_path)
-            node.bundle.read(ggpk[node.bundle.ggpk_path].record.extract())#contents.decompress()
-            df.read(file_path_or_raw=node.get_file(), use_dat_value=False)
+
+            df.read(file_path_or_raw=data, use_dat_value=False)
 
             dat_files[name] = df
 

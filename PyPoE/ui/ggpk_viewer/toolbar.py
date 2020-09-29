@@ -116,7 +116,7 @@ class ContextToolbar(QToolBar):
 
         try:
             data = ggpk.extract_dds(
-                data, path_or_ggpk=node.record._container
+                data, path_or_file_system=node.record._container
             )
         except FileNotFoundError as e:
             self.parent()._write_log('Broken symbolic link.\n%s' % e)

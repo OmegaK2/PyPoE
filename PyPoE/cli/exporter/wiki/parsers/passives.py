@@ -343,14 +343,13 @@ class PassiveSkillParser(parser.BaseParser):
                         psg_id]['Id'] for psg_id in node.connections])
 
             # extract icons if specified
-            if parsed_args.store_images and self.ggpk:
+            if parsed_args.store_images:
                 fn = data['icon'] + ' passive skill icon'
                 dds = os.path.join(self._img_path, fn + '.dds')
                 png = os.path.join(self._img_path, fn + '.png')
                 if not (os.path.exists(dds) or os.path.exists(png)):
                     self._write_dds(
-                        data=self.ggpk[passive['Icon_DDSFile']].record.extract(
-                            ).read(),
+                        data=self.file_system.get_file(passive['Icon_DDSFile']),
                         out_path=dds,
                         parsed_args=parsed_args,
                     )

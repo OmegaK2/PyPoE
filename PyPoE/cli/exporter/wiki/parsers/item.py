@@ -1560,7 +1560,7 @@ class ItemsParser(SkillParserShared):
         self._language = config.get_option('language')
         if self._language != 'English':
             self.rr2 = RelationalReader(
-                path_or_ggpk=self.base_path,
+                path_or_file_system=self.base_path,
                 files=['BaseItemTypes.dat', 'Prophecies.dat'],
                 read_options={
                     'use_dat_value': False,
@@ -2608,7 +2608,7 @@ class ItemsParser(SkillParserShared):
                     m_id not in self._IGNORE_DROP_LEVEL_ITEMS_BY_ID:
                 infobox['drop_level'] = base_item_type['DropLevel']
 
-            base_ot = OTFile(parent_or_base_dir_or_ggpk=self.base_path)
+            base_ot = OTFile(parent_or_file_system=self.file_system)
             base_ot.read(
                 self.base_path + '/' + base_item_type['InheritsFrom'] + '.ot')
             try:
@@ -2780,7 +2780,7 @@ class ItemsParser(SkillParserShared):
                 wiki_message='Item exporter',
             )
 
-            if parsed_args.store_images and self.ggpk:
+            if parsed_args.store_images:
                 if not base_item_type['ItemVisualIdentityKey']['DDSFile']:
                     warnings.warn(
                         'Missing 2d art inventory icon for item "%s"' %
@@ -2789,8 +2789,8 @@ class ItemsParser(SkillParserShared):
                     continue
 
                 self._write_dds(
-                    data=self.ggpk[base_item_type['ItemVisualIdentityKey'][
-                        'DDSFile']].record.extract().read(),
+                    data=self.file_system.get_file(
+                        base_item_type['ItemVisualIdentityKey']['DDSFile']),
                     out_path=os.path.join(self._img_path, (
                         infobox.get('inventory_icon') or page) +
                         ' inventory icon.dds',
@@ -2865,7 +2865,7 @@ class ItemsParser(SkillParserShared):
         base_ico = os.path.join(self._img_path, 'Base.dds')
 
         self._write_dds(
-            data=self.ggpk[map_series['BaseIcon_DDSFile']].record.extract().read(),
+            data=self.file_system.get_file(map_series['BaseIcon_DDSFile']),
             out_path=base_ico,
             parsed_args=parsed_args,
         )
@@ -2883,8 +2883,8 @@ class ItemsParser(SkillParserShared):
             ico = os.path.join(self._img_path, name + '.dds')
 
             self._write_dds(
-                data=self.ggpk[atlas_node['ItemVisualIdentityKey'][
-                    'DDSFile']].record.extract().read(),
+                data=self.file_system.get_file(
+                    atlas_node['ItemVisualIdentityKey']['DDSFile']),
                 out_path=ico,
                 parsed_args=parsed_args,
             )
@@ -2948,7 +2948,7 @@ class ItemsParser(SkillParserShared):
             base_ico = os.path.join(self._img_path, 'Map base icon.dds')
 
             self._write_dds(
-                data=self.ggpk[map_series['BaseIcon_DDSFile']].record.extract().read(),
+                data=self.file_system.get_file(map_series['BaseIcon_DDSFile']),
                 out_path=base_ico,
                 parsed_args=parsed_args,
             )
@@ -3074,7 +3074,7 @@ class ItemsParser(SkillParserShared):
                 wiki_message='Map exporter',
             )
 
-            if parsed_args.store_images and self.ggpk:
+            if parsed_args.store_images:
                 if atlas_node is None or \
                         not atlas_node['ItemVisualIdentityKey']['DDSFile']:
                     warnings.warn(
@@ -3086,8 +3086,8 @@ class ItemsParser(SkillParserShared):
                 ico = os.path.join(self._img_path, name + ' inventory icon.dds')
 
                 self._write_dds(
-                    data=self.ggpk[atlas_node['ItemVisualIdentityKey'][
-                        'DDSFile']].record.extract().read(),
+                    data=self.file_system.get_file(
+                        atlas_node['ItemVisualIdentityKey']['DDSFile']),
                     out_path=ico,
                     parsed_args=parsed_args,
                 )

@@ -48,7 +48,6 @@ from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter import config
 from PyPoE.cli.exporter.wiki import parser
 from PyPoE.cli.exporter.wiki.handler import ExporterHandler, ExporterResult
-from PyPoE.poe.file.ggpk import extract_dds
 from PyPoE.poe.file.idl import IDLFile
 
 # =============================================================================
@@ -192,8 +191,9 @@ class IncursionRoomParser(parser.BaseParser):
         idl_sources = set()
         if parsed_args.store_images:
             idl = IDLFile()
-            idl.read(file_path_or_raw=
-                     self.ggpk['Art/UIImages1.txt'].record.extract())
+            idl.read(
+                file_path_or_raw=self.file_system.get_file('Art/UIImages1.txt')
+            )
             idl_lookup = idl.as_dict()
 
         console('Parsing data into templates...')
@@ -249,10 +249,8 @@ class IncursionRoomParser(parser.BaseParser):
                         'Writing source file "%s" to images' % src
                     )
                     with open(src, 'wb') as f:
-                        img_data = extract_dds(
-                            self.ggpk[
-                            idl_record.source].record.extract().read(),
-                            path_or_ggpk=self.ggpk,
+                        img_data = self.file_system.extract_dds(
+                            self.file_system.get_file(idl_record.source)
                         )
                         f.write(img_data[:84])
                         if img_data[84:88].decode('ascii') == 'DXT4':

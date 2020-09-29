@@ -30,14 +30,11 @@ See PyPoE/LICENSE
 # =============================================================================
 
 # Python
-import os
 
 # self
-from PyPoE.poe.file.ggpk import GGPKFile
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.handler import BaseHandler
 from PyPoE.cli.exporter import config
-from PyPoE.cli.exporter.util import get_content_ggpk_hash, get_content_ggpk_path
 from PyPoE.cli.exporter.wiki.parsers import WIKI_HANDLERS
 from PyPoE.cli.exporter.wiki.admin import ADMIN_HANDLERS
 
@@ -85,24 +82,5 @@ class WikiHandler(BaseHandler):
         :param args: argparse args passed on
         :return:
         """
-        temp_dir = config.get_option('temp_dir', safe=False)
-
-        content_ggpk = get_content_ggpk_path()
-
-        console('Reading "%s"...' % content_ggpk)
-        ggpk = GGPKFile()
-        ggpk.read(content_ggpk)
-
-        console('Building directory...')
-        ggpk.directory_build()
-
-        console('Extracting data files to "%s"...' % temp_dir)
-        ggpk['Data'].extract_to(temp_dir)
-        ggpk['Metadata'].extract_to(temp_dir)
-
-        console('Hashing...')
-
-        config.set_setup_variable('temp_dir', 'hash', get_content_ggpk_hash())
-
         console('Done.')
 

@@ -67,9 +67,6 @@ class AbstractFileCache(ReprMixin):
     """
     Attributes
     ----------
-    '_ggpk' : GGPKFile
-
-    '_path' : str
 
     'is_unpacked' : bool
 
@@ -80,7 +77,7 @@ class AbstractFileCache(ReprMixin):
     FILE_TYPE = None
 
     def __init__(self,
-                 path_or_ggpk: Union[str, FileSystem] = None,
+                 path_or_file_system: Union[str, FileSystem] = None,
                  files: List[str] = None,
                  files_shortcut: bool = True,
                  instance_options: Dict[str, Any] = None,
@@ -88,16 +85,16 @@ class AbstractFileCache(ReprMixin):
         """
         Parameters
         ----------
-        path_or_ggpk : str | GGPKFile
+        path_or_file_system
             The root path (i.e. relative to content.ggpk) where the files are
             stored or a :class:`PyPoE.poe.file.ggpk.GGPKFile` instance
-        files : Iterable
+        files
             Iterable of files that will be loaded right away
-        files_shortcut : bool
+        files_shortcut
             Whether to use the shortcut function, i.e. self.__getitem__
-        instance_options : dict[str, object]
+        instance_options
             options to pass to the file's __init__ method
-        read_options : dict[str, object]
+        read_options
             options to pass to the file instance's read method
 
 
@@ -110,10 +107,10 @@ class AbstractFileCache(ReprMixin):
             not parsed
         """
 
-        if isinstance(path_or_ggpk, FileSystem):
-            self.file_system: FileSystem = path_or_ggpk
+        if isinstance(path_or_file_system, FileSystem):
+            self.file_system: FileSystem = path_or_file_system
         else:
-            self.file_system: FileSystem = FileSystem(root_path=path_or_ggpk)
+            self.file_system: FileSystem = FileSystem(root_path=path_or_file_system)
 
         self.instance_options: Dict[str, Any] = {} if \
             instance_options is None else instance_options
@@ -128,7 +125,7 @@ class AbstractFileCache(ReprMixin):
             for file in files:
                 read_func(file)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> Any:
         """
         Shortcut.
 
@@ -148,14 +145,17 @@ class AbstractFileCache(ReprMixin):
         """
         return self.get_file(item)
 
-    def _get_file_instance_args(self, file_name, *args, **kwargs):
+    def _get_file_instance_args(self,
+                                file_name: str,
+                                *args,
+                                **kwargs) -> Dict[str, Any]:
         """
         Returns a dictionary of keyword arguments to pass to the file's
         __init__ method upon initial reading.
 
         Parameters
         ----------
-        file_name :  str
+        file_name
             Name of the file
 
 
@@ -167,7 +167,10 @@ class AbstractFileCache(ReprMixin):
         options = dict(self.instance_options)
         return options
 
-    def _get_read_args(self, file_name : str, *args, **kwargs) -> Dict[str, Any]:
+    def _get_read_args(self,
+                       file_name: str,
+                       *args,
+                       **kwargs) -> Dict[str, Any]:
         """
         Returns a dictionary of keyword arguments to pass to the file's
         read method upon initial reading.
@@ -191,7 +194,10 @@ class AbstractFileCache(ReprMixin):
 
         return options
 
-    def _create_instance(self, file_name, *args, **kwargs):
+    def _create_instance(self,
+                         file_name: str,
+                         *args,
+                         **kwargs) -> Any:
         """
         Creates a new instance for the given file name
 
@@ -212,7 +218,10 @@ class AbstractFileCache(ReprMixin):
         f.read(**self._get_read_args(file_name=file_name, *args, **kwargs))
         return f
 
-    def get_file(self, file_name, *args, **kwargs):
+    def get_file(self,
+                 file_name: str,
+                 *args,
+                 **kwargs) -> AbstractFileReadOnly:
         """
         Returns the the specified file from the cache.
 

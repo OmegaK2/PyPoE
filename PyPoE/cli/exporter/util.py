@@ -44,9 +44,8 @@ from PyPoE.cli.exporter import config
 # =============================================================================
 
 __all__ = [
-    'get_content_ggpk_path',
-    'get_content_ggpk_hash',
-    'get_content_ggpk',
+    'get_content_path',
+    'get_content_hash',
     'check_hash',
 ]
 
@@ -55,7 +54,7 @@ __all__ = [
 # =============================================================================
 
 
-def get_content_ggpk_path():
+def get_content_path():
     """
     Returns the path to the current content.ggpk based on the specified
     config variables for the version & distributor.
@@ -73,12 +72,12 @@ def get_content_ggpk_path():
         if not paths:
             raise SetupError('No PoE Installation found.')
 
-        return os.path.join(paths[0], 'content.ggpk')
+        return paths[0]
     else:
         return path
 
 
-def get_content_ggpk_hash():
+def get_content_hash():
     """
     Gets the content ggpk based on the stored config variables and returns
     the calculated hash.
@@ -86,31 +85,11 @@ def get_content_ggpk_hash():
     :return: Hash of content.ggpk
     :rtype: str
     """
-    ggpk = get_content_ggpk_path()
+    ggpk = get_content_path()
     with open(ggpk, 'rb') as f:
         data = f.read(2**16)
 
     return hashlib.md5(data).hexdigest()
-
-
-def get_content_ggpk(path=None):
-    """
-    Gets the GGPKFile instance based on the stored config variables.
-
-    :param path: path to use if not None, otherwise determine path automatically
-    :type path: str or None
-
-    :return: Parsed GGPKFile instance
-    :rtype: GGPKFile()
-    """
-    if path is None:
-        path = get_content_ggpk_path()
-
-    ggpk = GGPKFile()
-    ggpk.read(path)
-    ggpk.directory_build()
-
-    return ggpk
 
 
 def check_hash():
@@ -124,7 +103,7 @@ def check_hash():
         return True
 
     hash_old = config.get_setup_variable('temp_dir', 'hash')
-    hash_new = get_content_ggpk_hash()
+    hash_new = get_content_hash()
 
     if hash_old == hash_new:
         return True

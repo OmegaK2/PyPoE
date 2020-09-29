@@ -151,7 +151,7 @@ def rr_temp_dir(tmpdir_factory):
 @pytest.fixture(scope='module')
 def rr_instance(rr_temp_dir):
     return dat.RelationalReader(
-        path_or_ggpk=rr_temp_dir,
+        path_or_file_system=rr_temp_dir,
         read_options={
             'specification': load(os.path.join(
                 spec_dir, 'rr_test.py'
@@ -435,7 +435,7 @@ class TestSpecificationErrors:
     @pytest.mark.parametrize('spec_name', foreign_key_errors)
     def test_runtime_missing_foreign_key(self, rr_temp_dir, spec_name):
         rr = dat.RelationalReader(
-            path_or_ggpk=rr_temp_dir,
+            path_or_file_system=rr_temp_dir,
             raise_error_on_missing_relation=True,
             read_options={
                 'specification': load(os.path.join(
@@ -461,7 +461,7 @@ class TestRelationalReader():
     @pytest.mark.parametrize('use_dat_value', (True, False))
     def test_relations(self, rr_temp_dir, use_dat_value):
         rr = dat.RelationalReader(
-            path_or_ggpk=rr_temp_dir,
+            path_or_file_system=rr_temp_dir,
             read_options={
                 'specification': load(os.path.join(
                     spec_dir, 'rr_test.py'
@@ -487,7 +487,7 @@ class TestRelationalReader():
     @pytest.mark.parametrize('use_dat_value', (True, False))
     def test_enums(self, rr_temp_dir, use_dat_value):
         rr = dat.RelationalReader(
-            path_or_ggpk=rr_temp_dir,
+            path_or_file_system=rr_temp_dir,
             read_options={
                 'specification': load(os.path.join(
                     spec_dir, 'rr_test.py'
