@@ -240,8 +240,7 @@ class IncursionRoomParser(parser.BaseParser):
                 cmdargs=parsed_args,
             )
 
-            if parsed_args.store_images and self.ggpk and \
-                    incursion_room['UIIcon']:
+            if parsed_args.store_images and incursion_room['UIIcon']:
                 idl_record = idl_lookup[incursion_room['UIIcon']]
                 src = os.path.join(self._img_path, os.path.split(idl_record.source)[-1])
                 if src not in idl_sources:

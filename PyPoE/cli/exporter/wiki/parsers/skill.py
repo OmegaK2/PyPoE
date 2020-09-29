@@ -306,7 +306,7 @@ class SkillParserShared(parser.BaseParser):
 
             if parsed_args.store_images and ae['Icon_DDSFile']:
                 self._write_dds(
-                    data=self.ggpk[ae['Icon_DDSFile']].record.extract().read(),
+                    data=self.file_system.get_file(ae['Icon_DDSFile']),
                     out_path=os.path.join(
                         self._img_path,
                         '%s skill icon.dds' % msg_name
