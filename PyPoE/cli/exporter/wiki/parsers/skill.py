@@ -508,7 +508,7 @@ class SkillParserShared(parser.BaseParser):
 
             self._write_stats(
                 infobox,
-                zip(stats, row['StatsValuesPermille']),
+                zip(stat_ids, row['StatsValuesPermille']),
                 prefix,
             )
 
