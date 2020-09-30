@@ -8966,8 +8966,12 @@ specification = Specification({
                 description='Time in milliseconds',
             ),
             Field(
+                name='Unknown47',
+                type='int',
+            ),
+            Field(
                 name='BaseDuration',
-                type='ulong',
+                type='int',
             ),
             Field(
                 name='AttackSpeedMultiplier',
