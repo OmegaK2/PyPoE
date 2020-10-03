@@ -81,7 +81,7 @@ def setup_config():
     config.add_option('distributor', 'is_distributor(default=%s)' %
                       DISTRIBUTOR.DEFAULT.value)
     config.add_option(
-        'ggpk_path', 'is_file(default="", exists=True, allow_empty=True)'
+        'ggpk_path', 'is_directory(default="", exists=True, allow_empty=True)'
     )
     config.add_option('language',
                       'option("English", "French", "German", "Portuguese",'
