@@ -7351,7 +7351,7 @@ specification = Specification({
                 key='Mods.dat',
             ),
             Field(
-                name='Display_Accessory_ModsKey',
+                name='Display_Jewellery_ModsKey',
                 type='ulong',
                 key='Mods.dat',
             ),
