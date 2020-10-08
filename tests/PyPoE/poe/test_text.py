@@ -79,7 +79,12 @@ class TestTags():
             'Test <<TEST>>',
             'Test <<TEST>>',
             [],
-        )
+        ),
+        (
+            'Format string {0} test',
+            'Format string {0} test',
+            [],
+        ),
     ]
 
     @pytest.mark.parametrize('input,output,handler_ids', sample_strings)

@@ -37,6 +37,7 @@ Documentation
 # Python
 import re
 from functools import partial
+from typing import Callable, Dict, Union, List
 
 # 3rd-party
 
@@ -68,13 +69,13 @@ class Tag(ReprMixin):
 
     Parameters
     ----------
-    id : str
+    id
         identifier string of the tag
-    parent : tag
+    parent
         parent Tag instance if any
-    children : list[str or Tag]
+    children
         list of child strings or tag instances
-    parameter : str
+    parameter
         parameter specified in the text to this tag if any
 
     """
@@ -82,26 +83,47 @@ class Tag(ReprMixin):
 
     _REPR_ARGUMENTS_IGNORE = {'parent'}
 
-    def __init__(self, id=None, parent=None, children=None, parameter=None):
+    def __init__(self,
+                 id: Union[str, None] = None,
+                 parent: Union['Tag', None] = None,
+                 children: Union[List[Union[str, 'Tag']], None] = None,
+                 parameter: Union[str, None] = None):
         """
         Parameters
         ----------
-        id : str
+        id
             identifier string of the tag
-        parent : tag
+        parent
             parent Tag instance if any
-        children : list[str or Tag]
+        children
             list of child strings or tag instances
-        parameter : str
+        parameter
             parameter specified in the text to this tag if any
         """
-        self.id = id
-        self.parent = parent
-        self.parameter = parameter
+        self.id: Union[str, None] = id
+        self.parent: Union['Tag', None] = parent
+        self.parameter: Union[str, None] = parameter
         if children is None:
-            self.children = []
+            self.children: List[Union[str, 'Tag']] = []
 
-    def root(self):
+    def append_to_children(self, text: str):
+        """
+        Appends a given text to the children attribute
+
+        Parameters
+        ----------
+        text
+            Text to append to the children
+        """
+        if self.children:
+            if isinstance(self.children[-1], Tag):
+                self.children.append(text)
+            else:
+                self.children[-1] += text
+        else:
+            self.children.append(text)
+
+    def root(self) -> 'Tag':
         """
         Returns the root Tag node
 
@@ -116,13 +138,13 @@ class Tag(ReprMixin):
 
         return parent
 
-    def handle_tags(self, handlers):
+    def handle_tags(self, handlers: Dict[str, Callable]) -> str:
         """
         Handle this and child tags with the handlers passed to this function.
 
         Parameters
         ----------
-        handlers : dict[str, callable]
+        handlers
             Dictionary containing a mapping of handler ids to callables that
             handle them.
 
@@ -132,7 +154,6 @@ class Tag(ReprMixin):
 
         Returns
         -------
-        str
             The handled string
 
         Raises
@@ -154,19 +175,18 @@ class Tag(ReprMixin):
 # =============================================================================
 
 
-def parse_description_tags(text):
+def parse_description_tags(text: str) -> Tag:
     """
     Parses a text containing description tags into :class:`Tag` classes which
     can be used for further handling.
 
     Parameters
     ----------
-    text : str
+    text
         The text to parse
 
     Returns
     -------
-    Tag
         the parsed text as Tag class (with no id)
     """
     def f(scanner, result, tid):
@@ -186,6 +206,7 @@ def parse_description_tags(text):
 
     in_tag = [False]
     in_text = [True]
+    has_tag = [False]
     parameter = [False]
     depth = 0
     out = Tag(id=None)
@@ -195,18 +216,26 @@ def parse_description_tags(text):
         if tid == 'lt':
             depth += 1
             in_tag.append(True)
+            has_tag.append(True)
             parameter.append(False)
         elif tid == 'gt':
             in_tag[depth] = False
             parameter[depth] = False
         elif tid == 'lbrace':
-            in_text.append(True)
+            if has_tag[depth]:
+                in_text.append(True)
+            else:
+                last.append_to_children(text)
         elif tid == 'rbrace':
-            del in_tag[depth]
-            del in_text[depth]
-            del parameter[depth]
-            last = last.parent
-            depth -= 1
+            if has_tag[depth]:
+                del in_tag[depth]
+                del in_text[depth]
+                del parameter[depth]
+                del has_tag[depth]
+                last = last.parent
+                depth -= 1
+            else:
+                last.append_to_children(text)
         elif tid == 'colon':
             if in_tag[depth]:
                 parameter[depth] = True
@@ -221,12 +250,6 @@ def parse_description_tags(text):
                     last.children.append(tag)
                     last = tag
             else:
-                if last.children:
-                    if isinstance(last.children[-1], Tag):
-                        last.children.append(text)
-                    else:
-                        last.children[-1] += text
-                else:
-                    last.children.append(text)
+                last.append_to_children(text)
 
     return out
