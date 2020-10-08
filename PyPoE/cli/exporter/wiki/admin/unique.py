@@ -144,7 +144,7 @@ class UniqueCopy(BaseParser):
             raise ValueError('Can\'t export unique items TO English wiki')
 
         self.rr_english = RelationalReader(
-            path_or_ggpk=self.base_path,
+            path_or_file_system=self.file_system,
             raise_error_on_missing_relation=False,
             read_options={
                 'use_dat_value': False,
@@ -318,7 +318,6 @@ class UniqueCopy(BaseParser):
         console('Parsing...')
         for item in parsed_args.page:
             self.copy(parsed_args, item)
-            time.sleep(random.randint(180, 300))
 
 
 class BaseItemCacheInstance(list):

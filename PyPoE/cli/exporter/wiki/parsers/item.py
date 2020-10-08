@@ -1509,6 +1509,12 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/Hideout/HideoutTotemPole13Test',
         'Metadata/Items/Hideout/HideoutTotemPole14Test',
         'Metadata/Items/Hideout/HideoutTotemPole15Test',
+        'Metadata/Items/Hideout/HideoutTotemPole16Test',
+        'Metadata/Items/Hideout/HideoutTotemPole17Test',
+        'Metadata/Items/Hideout/HideoutTotemPole18Test',
+        'Metadata/Items/Hideout/HideoutTotemPole19Test',
+        'Metadata/Items/Hideout/HideoutTotemPole20Test',
+        'Metadata/Items/Hideout/HideoutTotemPole21Test',
 
         #
         # Stackable currency
@@ -1560,7 +1566,7 @@ class ItemsParser(SkillParserShared):
         self._language = config.get_option('language')
         if self._language != 'English':
             self.rr2 = RelationalReader(
-                path_or_file_system=self.base_path,
+                path_or_file_system=self.file_system,
                 files=['BaseItemTypes.dat', 'Prophecies.dat'],
                 read_options={
                     'use_dat_value': False,
@@ -2609,8 +2615,7 @@ class ItemsParser(SkillParserShared):
                 infobox['drop_level'] = base_item_type['DropLevel']
 
             base_ot = OTFile(parent_or_file_system=self.file_system)
-            base_ot.read(
-                self.base_path + '/' + base_item_type['InheritsFrom'] + '.ot')
+            base_ot.read(self.file_system.get_file(base_item_type['InheritsFrom'] + '.ot'))
             try:
                 ot = self.ot[m_id + '.ot']
             except FileNotFoundError:

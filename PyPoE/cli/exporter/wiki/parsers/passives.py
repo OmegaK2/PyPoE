@@ -240,8 +240,8 @@ class PassiveSkillParser(parser.BaseParser):
 
         psg = PSGFile()
         psg.read(
-            file_path_or_raw=os.path.join(
-                self.base_path, 'Metadata', 'PassiveSkillGraph.psg'
+            file_path_or_raw=self.file_system.get_file(
+                 'Metadata/PassiveSkillGraph.psg'
             ),
         )
 
