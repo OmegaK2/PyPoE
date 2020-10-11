@@ -231,6 +231,16 @@ class LuaHandler(ExporterHandler):
         )
 
         parser = lua_sub.add_parser(
+            'heist',
+            help='Extract heist information (not covered by items)',
+        )
+        self.add_default_parsers(
+            parser=parser,
+            cls=HeistParser,
+            func=HeistParser.main,
+        )
+
+        parser = lua_sub.add_parser(
             'monster',
             help='Extract monster information',
         )
@@ -823,6 +833,116 @@ class HarvestParser(GenericLuaParser):
                 out_file='%s.lua' % k,
                 wiki_page=[{
                     'page': 'Module:Harvest/%s' % k,
+                    'condition': None,
+                }]
+            )
+
+        return r
+
+
+class HeistParser(GenericLuaParser):
+    _files = [
+        'HeistAreas.dat',
+        'HeistJobs.dat',
+        'HeistNPCs.dat',
+    ]
+
+    _COPY_KEYS_HEIST_AREAS = (
+        ('Id', {
+            'key': 'id',
+        }),
+        ('WorldAreasKeys', {
+            'key': 'area_ids',
+            'value': lambda v: ','.join([r['Id'] for r in v]),
+        }),
+        ('HeistJobsKeys', {
+            'key': 'job_ids',
+            'value': lambda v: ','.join([r['Id'] for r in v]),
+        }),
+        ('Contract_BaseItemTypesKey', {
+            'key': 'contract_id',
+            'value': lambda v: v['Id'],
+        }),
+        ('Blueprint_BaseItemTypesKey', {
+            'key': 'blueprint_id',
+            'value': lambda v: v['Id'],
+        }),
+        ('ClientStringsKey', {
+            'key': 'reward_text',
+            'value': lambda v: v['Text'],
+        }),
+    )
+
+    _COPY_KEYS_HEIST_JOBS = (
+        ('Id', {
+            'key': 'id',
+        }),
+        ('Name', {
+            'key': 'name',
+        }),
+    )
+
+    _COPY_KEYS_HEIST_NPCS = (
+        ('MonsterVarietiesKey', {
+            'key': 'id',
+            'value': lambda v: v['Id'],
+        }),
+        ('Name', {
+            'key': 'name',
+        }),
+        ('HeistJobsKey', {
+            'key': 'job_id',
+            'value': lambda v: v['Id'],
+        }),
+    )
+
+    def main(self, parsed_args):
+        heist_areas = []
+        for row in self.rr['HeistAreas.dat']:
+            self._copy_from_keys(row, self._COPY_KEYS_HEIST_AREAS, heist_areas)
+
+        heist_jobs = []
+        for row in self.rr['HeistJobs.dat']:
+            self._copy_from_keys(row, self._COPY_KEYS_HEIST_JOBS, heist_jobs)
+
+        heist_npcs = []
+        heist_npc_skills = []
+        heist_npc_stats = []
+        for row in self.rr['HeistNPCs.dat']:
+            mid = row['MonsterVarietiesKey']['Id']
+            self._copy_from_keys(row, self._COPY_KEYS_HEIST_NPCS, heist_npcs)
+
+            skills = [r['Id'] for r in row['SkillLevel_HeistJobsKeys']]
+            for i, job_id in enumerate(skills):
+                entry = OrderedDict()
+                entry['npc_id'] = mid
+                entry['job_id'] = job_id
+                entry['level'] = row['SkillLevel_Values'][i]
+                # StatValues2?
+                heist_npc_skills.append(entry)
+
+            stats = [r['StatsKey']['Id'] for r in row['HeistNPCStatsKeys']]
+            for i, stat_id in enumerate(stats):
+                entry = OrderedDict()
+                entry['npc_id'] = mid
+                entry['stat_id'] = stat_id
+                entry['value'] = row['StatValues'][i]
+                # StatValues2?
+                heist_npc_stats.append(entry)
+
+            heist_npcs[-1]['stat_text'] = self._format_tr(self.tc[
+                'stat_descriptions.txt'].get_translation(
+                stats, [int(v) for v in row['StatValues']], full_result=True
+            ))
+
+        r = ExporterResult()
+        for k in ('heist_areas', 'heist_jobs', 'heist_npcs', 'heist_npc_skills',
+                  'heist_npc_stats'):
+            r.add_result(
+                text=LuaFormatter.format_module(locals()[k]),
+                out_file='%s.lua' % k,
+                wiki_page=[{
+                    'page': 'Module:Heist/%s' % k,
                     'condition': None,
                 }]
             )

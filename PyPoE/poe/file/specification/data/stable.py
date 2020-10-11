@@ -9707,24 +9707,29 @@ specification = Specification({
                 type='int',
             ),
             Field(
-                name='Key0',
+                name='EnvironmentsKey1',
                 type='ulong',
+                key='Environments.dat',
             ),
             Field(
-                name='Key1',
+                name='EnvironmentsKey2',
                 type='ulong',
+                key='Environments.dat',
             ),
             Field(
-                name='Keys0',
+                name='HeistJobsKeys',
                 type='ref|list|ulong',
+                key='HeistJobs.dat',
             ),
             Field(
-                name='Key2',
+                name='Contract_BaseItemTypesKey',
                 type='ulong',
+                key='BaseItemTypes.dat'
             ),
             Field(
-                name='Key3',
+                name='Blueprint_BaseItemTypesKey',
                 type='ulong',
+                key='BaseItemTypes.dat',
             ),
             Field(
                 name='DGRFile',
@@ -9755,16 +9760,19 @@ specification = Specification({
                 file_ext='.dds',
             ),
             Field(
-                name='Keys1',
+                name='AchievementItemsKeys',
                 type='ref|list|ulong',
+                key='AchievementItems.dat',
             ),
             Field(
-                name='Keys2',
+                name='AchievementItemsKeys2',
                 type='ref|list|ulong',
+                key='AchievementItems.dat',
             ),
             Field(
-                name='Key4',
+                name='ClientStringsKey',
                 type='ulong',
+                key='ClientStrings.dat',
             ),
         ),
     ),
@@ -9850,6 +9858,10 @@ specification = Specification({
                 name='Unknown24',
                 type='float',
             ),
+            Field(
+                name='Unknown25',
+                type='int'
+            )
         ),
     ),
     'HeistBlueprintWindowTypes.dat': File(
@@ -9874,7 +9886,7 @@ specification = Specification({
                 type='ref|string',
             ),
             Field(
-                name='Unknown3',
+                name='Unknown0',
                 type='int',
             ),
             Field(
@@ -9900,6 +9912,10 @@ specification = Specification({
             Field(
                 name='Keys0',
                 type='ref|list|ulong',
+            ),
+            Field(
+                name='Unknown1',
+                type='int',
             ),
         ),
     ),
@@ -9994,12 +10010,14 @@ specification = Specification({
     'HeistContracts.dat': File(
         fields=(
             Field(
-                name='Key0',
+                name='BaseItemTypesKey',
                 type='ulong',
+                key='BaseItemTypes.dat',
             ),
             Field(
-                name='Key1',
+                name='HeistAreasKey',
                 type='ulong',
+                key='HeistAreas.dat'
             ),
             Field(
                 name='Unknown2',
@@ -10093,15 +10111,17 @@ specification = Specification({
     'HeistEquipment.dat': File(
         fields=(
             Field(
-                name='Key0',
+                name='BaseItemTypesKey',
                 type='ulong',
+                key='BaseItemTypes.dat',
             ),
             Field(
-                name='Key1',
+                name='RequiredJob_HeistJobsKey',
                 type='ulong',
+                key='HeistJobs.dat',
             ),
             Field(
-                name='Unknown2',
+                name='RequiredLevel',
                 type='int',
             ),
         ),
@@ -10191,6 +10211,10 @@ specification = Specification({
             ),
             Field(
                 name='Unknown19',
+                type='int',
+            ),
+            Field(
+                name='Unknown20',
                 type='int',
             ),
         ),
@@ -10427,15 +10451,17 @@ specification = Specification({
     'HeistNPCs.dat': File(
         fields=(
             Field(
-                name='Key0',
+                name='NPCsKey',
                 type='ulong',
+                key='NPCs.dat',
             ),
             Field(
-                name='Key1',
+                name='MonsterVarietiesKey',
                 type='ulong',
+                key='MonsterVarieties.dat',
             ),
             Field(
-                name='HeistJobsKeys',
+                name='SkillLevel_HeistJobsKeys',
                 type='ref|list|ulong',
                 key='HeistJobs.dat',
             ),
@@ -10445,11 +10471,12 @@ specification = Specification({
                 file_path=True,
             ),
             Field(
-                name='Keys0',
+                name='HeistNPCStatsKeys',
                 type='ref|list|ulong',
+                key='HeistNPCStats.dat',
             ),
             Field(
-                name='Unknown5',
+                name='StatValues',
                 type='ref|list|float',
             ),
             Field(
@@ -10457,7 +10484,7 @@ specification = Specification({
                 type='float',
             ),
             Field(
-                name='Unknown7',
+                name='SkillLevel_Values',
                 type='ref|list|int',
             ),
             Field(
@@ -10487,12 +10514,13 @@ specification = Specification({
                 key='HeistNPCs.dat',
             ),
             Field(
-                name='Unknown14',
+                name='StatValues2',
                 type='ref|list|float',
             ),
             Field(
-                name='Key2',
+                name='Ally_NPCsKey',
                 type='ulong',
+                key='NPCs.dat',
             ),
             Field(
                 name='ActiveNPCIcon',
@@ -10505,14 +10533,27 @@ specification = Specification({
                 key='HeistJobs.dat',
             ),
             Field(
-                name='Keys1',
+                name='Equip_AchievementItemsKeys',
                 type='ref|list|ulong',
+                key='AchievementItems.dat'
             ),
             Field(
                 name='AOFile',
                 type='ref|string',
                 file_path=True,
                 file_ext='.ao',
+            ),
+        ),
+    ),
+    'HeistObjectiveValueDescriptions.dat': File(
+        fields=(
+            Field(
+                name='Unknown0',
+                type='int',
+            ),
+            Field(
+                name='Unknown1',
+                type='int',
             ),
         ),
     ),
@@ -10670,6 +10711,26 @@ specification = Specification({
             Field(
                 name='Key5',
                 type='ulong',
+            ),
+            Field(
+                name='Unknown21',
+                type='byte',
+            ),
+            Field(
+                name='Key6',
+                type='ulong',
+            ),
+            Field(
+                name='Unknown16',
+                type='int',
+            ),
+            Field(
+                name='Key7',
+                type='ulong',
+            ),
+            Field(
+                name='Unknown18',
+                type='ref|string',
             ),
         ),
     ),
