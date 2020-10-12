@@ -29,6 +29,8 @@ Classes
 -------------------------------------------------------------------------------
 
 .. autoclass: FileSystem
+
+.. autoclass: FileSystemNode
 """
 
 # =============================================================================
@@ -37,13 +39,13 @@ Classes
 
 # Python
 import os
-from enum import IntEnum
-from typing import Union, List
+from typing import Union
 
 # 3rd-party
 import brotli
 
 # self
+from PyPoE.poe.file.shared import FILE_SYSTEM_TYPES, AbstractFileSystemNode
 from PyPoE.poe.file.ggpk import GGPKFile
 from PyPoE.poe.file.bundle import Index
 from PyPoE.poe.file.shared import ParserError
@@ -59,14 +61,62 @@ __all__ = ['FileSystem']
 # =============================================================================
 
 
-class FS_TYPES(IntEnum):
-    BUNDLE = 0
-    GGPK = 1
-    DISK = 2
+class FileSystemNode(AbstractFileSystemNode):
+    _REPR_ARGUMENTS_IGNORE = {'parent'}
+
+    __slots__ = ['file_system'] + AbstractFileSystemNode.__slots__
+
+    def __init__(self,
+                 *args,
+                 parent: 'FileSystemNode',
+                 file_system_type: FILE_SYSTEM_TYPES,
+                 is_file: bool,
+                 file_system: 'FileSystem',
+                 name: str,
+                 **kwargs):
+
+        super().__init__(
+            *args,
+            parent=parent,
+            file_system_type=file_system_type,
+            is_file=is_file,
+            **kwargs)
+
+        self.file_system: 'FileSystem' = file_system
+        self._name: str = name
+
+    @property
+    def data(self) -> bytes:
+        if self.is_file:
+            return self.file_system.get_file(self.get_path())
+        else:
+            raise ValueError
+
+    @property
+    def name(self) -> str:
+        return self._name
 
 
 class FileSystem:
-    def __init__(self, root_path):
+    """
+    The FileSystem class is used to simplify accessing files from the game via
+    a single call rather then checking disk, ggpk or bundles separately.
+
+    Upon initialization of the class, the corresponding Index bundle and GGPK
+    will be automatically read if present.
+
+    Further decompression of bundles or reading of data will be only be done
+    when the get_file method is called.
+    """
+    def __init__(self, root_path: str):
+        """
+        Parameters
+        ----------
+        root_path
+            The root game directory path (where PathOfExile.exe is located)
+        """
+        self.directory: Union[FileSystemNode, None] = None
+
         self.root_path: str = root_path
         self.ggpk: Union[GGPKFile, None] = None
 
@@ -86,6 +136,19 @@ class FileSystem:
             self.index = None
 
     def get_file(self, path: str) -> bytes:
+        """
+        Retrieves a file contents as binary data via the given path (relative
+        to the root directory)
+
+        Parameters
+        ----------
+        path
+            The path relative to the root game directory (i.e. root_path)
+
+        Returns
+        -------
+            The unbuffered binary file data in bytes
+        """
         if self.index:
             try:
                 fr = self.index.get_file_record(path)
@@ -167,3 +230,90 @@ class FileSystem:
                     'Decompressed size does not match size in the header'
                 )
             return dec
+
+    def build_directory(self) -> FileSystemNode:
+        """
+        Builds a joint directory from the files available on disk, in ggpk and
+        in bundles.
+
+        The directory is not required to retrieve files from the file system
+        and serves more educational purposes.
+
+        Returns
+        -------
+            The directory.
+        """
+        self.directory = FileSystemNode(
+            file_system=self,
+            name='',
+            parent=None,
+            file_system_type=FILE_SYSTEM_TYPES.ROOT,
+            is_file=False,
+        )
+
+        for path, directories, files in os.walk(self.root_path):
+            p = os.path.commonprefix([self.root_path, path])
+            node = self.directory[path.replace(p, '')]
+            params = {
+                'file_system': self,
+                'parent': node,
+                'file_system_type': FILE_SYSTEM_TYPES.DISK,
+            }
+            for name in directories:
+                node.children[name] = FileSystemNode(
+                    name=name,
+                    is_file=False,
+                    **params
+                )
+            for name in files:
+                node.children[name] = FileSystemNode(
+                    name=name,
+                    is_file=True,
+                    **params
+                )
+
+        if self.ggpk:
+            def add_to_directory(node, depth):
+                # Return at depth 0? Root object
+
+                if node.parent:
+                    root = self.directory[node.parent.get_path()]
+                else:
+                    root = self.directory
+
+                root.children[node.name] = FileSystemNode(
+                    file_system=self,
+                    name=node.name,
+                    file_system_type=FILE_SYSTEM_TYPES.GGPK,
+                    is_file=node.is_file,
+                    parent=root,
+                )
+            self.ggpk.directory.walk(function=add_to_directory)
+
+        for dir_record in self.index.directories.values():
+            parent = self.directory
+            for directory in dir_record.path.split('/'):
+                try:
+                    parent = parent.children[directory]
+                except KeyError:
+                    node = FileSystemNode(
+                        file_system=self,
+                        name=directory,
+                        file_system_type=FILE_SYSTEM_TYPES.BUNDLE,
+                        is_file=False,
+                        parent=parent
+                    )
+                    parent.children[directory] = node
+                    parent = node
+
+            for file_name in dir_record.files:
+                node = FileSystemNode(
+                    file_system=self,
+                    name=file_name,
+                    file_system_type=FILE_SYSTEM_TYPES.BUNDLE,
+                    is_file=True,
+                    parent=parent
+                )
+                parent.children[file_name] = node
+
+        return self.directory

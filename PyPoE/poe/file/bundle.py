@@ -403,12 +403,25 @@ class DirectoryRecord(IndexRecord):
         self._paths = None
 
     @property
+    def path(self) -> str:
+        """
+        Returns
+        -------
+            The common path of all file paths contained within this directory
+        """
+        # Paths can be empty
+        if self._paths:
+            return self.paths[0].rsplit('/', maxsplit=1)[0]
+        else:
+            return ''
+
+    @property
     def paths(self) -> List[str]:
         """
         Returns
         -------
-        A list of all files with their full paths (relative to the game root)
-        contained within this directory
+            A list of all files with their full paths (relative to the game
+            root) contained within this directory
         """
         return [x.decode() for x in self._paths]
 
@@ -417,7 +430,7 @@ class DirectoryRecord(IndexRecord):
         """
         Returns
         -------
-        A list of files contained in this directory.
+            A list of files contained in this directory.
         """
         return [x.rsplit('/', maxsplit=1)[-1] for x in self.paths]
 

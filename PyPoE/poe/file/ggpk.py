@@ -75,8 +75,8 @@ Miscellaneous
 import io
 import struct
 import os
-import re
 import warnings
+from typing import Union, Dict
 
 # 3rd Party
 
@@ -84,7 +84,8 @@ import warnings
 from PyPoE.shared import InheritedDocStringsMeta
 from PyPoE.shared.decorators import doc
 from PyPoE.shared.mixins import ReprMixin
-from PyPoE.poe.file.shared import AbstractFileReadOnly, ParserError
+from PyPoE.poe.file.shared import AbstractFileReadOnly, \
+    AbstractFileSystemNode, FILE_SYSTEM_TYPES, ParserError
 
 # =============================================================================
 # Globals
@@ -433,7 +434,7 @@ class FreeRecord(BaseRecord):
         ggpkfile.write(struct.pack('<q', self.next_free))
 
 
-class DirectoryNode:
+class DirectoryNode(AbstractFileSystemNode):
     """
     Attributes
     ----------
@@ -448,254 +449,36 @@ class DirectoryNode:
         some kind of hash the game uses
     """
 
-    __slots__ = ['children', 'parent', 'record', 'hash']
+    __slots__ = ['record', 'hash'] + AbstractFileSystemNode.__slots__
 
-    def __init__(self, record, hash, parent):
-        self.children = []
-        self.parent = parent
-        self.record = record
-        self.hash = hash
+    _REPR_ARGUMENTS_IGNORE = {'parent'}
 
-    def __getitem__(self, item):
-        """
-        Return the the specified file or directory path.
-
-        The path will accept valid paths for the current operating system,
-        however I suggest using forward slashes ( / ) as they are supported on
-        both Windows and Linux.
-
-        Since the each node supports the same syntax, all these calls are
-        equivalent:
-
-        .. code-block:: python
-
-            self['directory1']['directory2']['file.ext']
-            self['directory1']['directory2/file.ext']
-            self['directory1/directory2']['file.ext']
-            self['directory1/directory2/file.ext']
-
-        Parameters
-        ----------
-        item : str
-            file path or file name
-
-        Returns
-        -------
-        DirectoryNode
-            returns the :class:`DirectoryNode` of the specified item
-
-        Raises
-        ------
-        FileNotFoundError
-            if the specified item is not found
-        """
-        path = []
-        partial = item
-        while partial:
-            partial, result = os.path.split(partial)
-            path.insert(0, result)
-
-        obj = self
-        while True:
-            try:
-                partial = path.pop(0)
-            except IndexError:
-                return obj
-
-            for child in obj.children:
-                if child.name == partial:
-                    obj = child
-                    break
-            else:
-                raise FileNotFoundError('%s/%s not found' % (
-                    self.get_path(), item
-                ))
+    def __init__(self,
+                 *args,
+                 parent: 'DirectoryNode',
+                 is_file: bool,
+                 record: Union[DirectoryRecord, FileRecord],
+                 hash: str,
+                 **kwargs):
+        super().__init__(
+            *args,
+            parent=parent,
+            is_file=is_file,
+            file_system_type=FILE_SYSTEM_TYPES.GGPK,
+            **kwargs)
+        self.record: Union[DirectoryRecord, FileRecord] = record
+        self.hash: str = hash
 
     @property
-    def directories(self):
-        """
-        Returns a list of nodes which belong to directories
-
-        Returns
-        -------
-        list[DirectoryNode]
-            list of :class:`DirectoryNode` instances which contain a
-            :class:`DirectoryRecord`
-        """
-        return [node for node in self.children if isinstance(node.record, DirectoryRecord)]
+    def name(self) -> str:
+        return self.record.name
 
     @property
-    def files(self):
-        """
-        Returns a list of nodes which belong to files
-
-        Returns
-        -------
-        list[DirectoryNode]
-            list of :class:`DirectoryNode` instances which contain a
-            :class:`FileRecord`
-        """
-        return [node for node in self.children if isinstance(node.record, FileRecord)]
-
-    @property
-    def name(self):
-        """
-        Returns the name associated with the stored record.
-
-        Returns
-        -------
-        str
-            name of the file/directory
-        """
-        return self.record.name if self.record.name else 'ROOT'
-
-    def search(self, regex, search_files=True, search_directories=True):
-        """
-
-        Parameters
-        ----------
-        regex : re.compile()
-            compiled regular expression to use
-        search_files : bool
-            Whether :class:`FileRecord` instances should be searched
-        search_directories : bool
-            Whether :class:`DirectoryRecord` instances should be searched
-
-
-        Returns
-        -------
-        list[DirectoryNode]
-            List of matching :class:`DirectoryNode` instances
-        """
-        if isinstance(regex, str):
-            regex = re.compile(regex)
-
-        nodes = []
-
-        #func = lambda n: nodes.append(n) if re.search(regex, n.name) else None
-        #self.walk(func)
-
-        q = []
-        q.append(self)
-
-        while len(q) > 0:
-            node = q.pop()
-            if ((search_files and isinstance(node.record, FileRecord) or
-                search_directories and isinstance(node.record, DirectoryRecord))
-                    and re.search(regex, node.name)):
-                nodes.append(node)
-
-            for child in node.children:
-                q.append(child)
-
-        return nodes
-
-    def get_path(self):
-        """
-        Returns the full path
-
-        Returns
-        -------
-        str
-            Full path
-        """
-        return '/'.join([n.name for n in self.get_parent(make_list=True)])
-
-    def get_parent(self, n=-1, stop_at=None, make_list=False):
-        """
-        Gets the n-th parent or returns root parent if at top level.
-        Negative values for n will iterate until the root is found.
-
-        If the make_list keyword is set to True, a list of Nodes in the
-        following form will be returned:
-
-        [n-th parent, (n-1)-th parent, ..., self]
-
-        Parameters
-        ----------
-        n : int
-            Up to which depth to go to.
-        stop_at : DirectoryNode or None
-            :class:`DirectoryNode` instance to stop the iteration at
-        make_list : bool
-            Return a list of :class:`DirectoryNode` instances instead of parent
-
-
-        Returns
-        -------
-        DirectoryNode
-            Returns parent or root :class:`DirectoryNode` instance
-        """
-        nodes = []
-        node = self
-        while (n != 0):
-            if node.parent is None:
-                break
-
-            if node is stop_at:
-                break
-
-            if make_list:
-                nodes.insert(0, node)
-            node = node.parent
-            n -= 1
-
-        return nodes if make_list else node
-
-    def walk(self, function):
-        """
-        .. todo::
-            function = None -> generator like os.walk (dir, [dirs], [files])
-
-        Walks over the nodes and it's sub nodes and executes the specified
-        function.
-
-        The function will be called with the following dictionary arguments:
-
-        * node - :class:`DirectoryNode`
-        * depth - Depth
-
-        Parameters
-        ----------
-        function : callable
-            function to call when walking
-        """
-
-        q = []
-        q.append({'node': self, 'depth': 0})
-
-        while len(q) > 0:
-            data = q.pop()
-            function(**data)
-            for child in data['node'].children:
-                q.append({'node': child, 'depth': data['depth']+1})
-
-        """for child in self.children:
-            function(child)
-            child.walk(function)"""
-        
-    def extract_to(self, target_directory):
-        """
-        Extracts the node and its contents (including sub-directories) to the
-        specified target directory.
-        
-        Parameters
-        ----------
-        target_directory : str
-            Path to directory where to extract to.
-        """
-        if isinstance(self.record, DirectoryRecord):
-            dir_path = os.path.join(target_directory, self.name)
-            if not os.path.exists(dir_path):
-                os.mkdir(dir_path)
-
-            for node in self.children:
-                if isinstance(node.record, FileRecord):
-                    node.record.extract_to(dir_path)
-                elif isinstance(node.record, DirectoryRecord):
-                    node.extract_to(dir_path)
+    def data(self) -> bytes:
+        if self.is_file:
+            return self.record.extract()
         else:
-            self.record.extract_to(target_directory)
+            raise ValueError('Only files can have their data extracted')
         
 
 class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
@@ -714,21 +497,20 @@ class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
 
     def __init__(self, *args, **kwargs):
         AbstractFileReadOnly.__init__(self, *args, **kwargs)
-        self.directory = None
-        self.records = {}
+        self.directory: Union[DirectoryNode, None] = None
+        self.records: Dict[int, BaseRecord] = {}
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> DirectoryNode:
         """
         Returns the specified node for the specified file path
 
         Parameters
         ----------
-        item : str
+        item
             file path
 
         Returns
         -------
-        DirectoryNode
             the :class:`DirectoryNode` instance if found
 
         Raises
@@ -753,13 +535,9 @@ class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
     # Properties
     #
 
-    def _is_parsed(self):
+    def _is_parsed(self) -> bool:
         """
         Whether the directory has been built.
-
-        Returns
-        -------
-        bool
         """
         return self.directory is not None
 
@@ -769,7 +547,7 @@ class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
     # Private
     #
 
-    def _read_record(self, records, ggpkfile, offset):
+    def _read_record(self, records, ggpkfile, offset: int):
         length = struct.unpack('<i', ggpkfile.read(4))[0]
         tag = ggpkfile.read(4)
         
@@ -878,7 +656,7 @@ class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
 
         return new_files, deleted_files, changed_files
 
-    def directory_build(self, parent=None):
+    def build_directory(self, parent: DirectoryNode = None) -> DirectoryNode:
         """
         Rebuilds the directory or the specified :class:`DirectoryNode`
         If the root directory is rebuild it will be stored in the directory
@@ -917,7 +695,12 @@ class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
                 raise ParserError('GGPKRecord does not contain a DirectoryRecord,\
                     got %s' % type(record))
 
-            root = DirectoryNode(record, None, None)
+            root = DirectoryNode(
+                parent=None,
+                is_file=False,
+                record=record,
+                hash=None,
+            )
 
             self.directory = root
         else:
@@ -935,16 +718,23 @@ class GGPKFile(AbstractFileReadOnly, metaclass=InheritedDocStringsMeta):
                 except KeyError:
                     pass
                 else:
-                    node = DirectoryNode(record, hash, parent)
-                    parent.children.append(node)
+                    node = DirectoryNode(
+                        parent=parent,
+                        is_file=isinstance(record, FileRecord),
+                        record=record,
+                        hash=hash,
+                    )
+                    parent.children[record.name] = node
 
-                    if isinstance(record, DirectoryRecord):
+                    if node.is_directory:
                         for entry in record.entries:
                             l.append((entry.offset, entry.hash, node))
         except IndexError:
             pass
 
         return root
+
+    directory_build = build_directory
         
     def _read(self, buffer, *args, **kwargs):
         """
@@ -1010,9 +800,9 @@ if __name__ == '__main__':
         profiler.add_function(record.read)'''
 
     ggpk = GGPKFile()
-    ggpk.read(r'C:\Games\Path of Exile\Content.ggpk')
+    ggpk.read(r'M:\Path of Exile\Content.ggpk')
     ggpk.directory_build()
-    print(ggpk['Metadata/Items/Rings/AbstractRing.ot'].get_path())
+    print(ggpk[r'Bundles2\_.index.bin'].get_path())
     #profiler.run("ggpk.read()")
 
     #profiler.add_function(GGPKFile.directory_build)
