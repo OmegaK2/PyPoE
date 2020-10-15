@@ -2118,7 +2118,7 @@ class ItemsParser(SkillParserShared):
             out.append(
                 self.rr['ClientStrings.dat'].index['Id'][
                     'EssenceModLevelRestriction']['Text'].replace(
-                    '%1%', str(essence['ItemLevelRestriction']))
+                    '{0}', str(essence['ItemLevelRestriction']))
             )
             out[-1] += '<br />'
 
@@ -2151,12 +2151,12 @@ class ItemsParser(SkillParserShared):
             if category_mod is not None and category_mod != item_mod:
                 text = get_str(category)
                 if cur != len(out):
-                    text = get_str('Other').replace('%1%', text)
+                    text = get_str('Other').replace('{0}', text)
                 add_line(text, category_mod)
 
         if item_mod:
             # TODO: Can't find items in clientstrings
-            add_line(get_str('Other').replace('%1%', 'Items'), item_mod)
+            add_line(get_str('Other').replace('{0}', 'Items'), item_mod)
 
         infobox['description'] +='<br />' +  '<br />'.join(out)
 
