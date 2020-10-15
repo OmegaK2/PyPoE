@@ -9999,7 +9999,7 @@ specification = Specification({
             Field(
                 name='Id',
                 type='ref|string',
-                unique=True
+                unique=True,
             ),
             Field(
                 name='Value',
@@ -10013,6 +10013,7 @@ specification = Specification({
                 name='BaseItemTypesKey',
                 type='ulong',
                 key='BaseItemTypes.dat',
+                unique=True,
             ),
             Field(
                 name='HeistAreasKey',
@@ -10114,6 +10115,7 @@ specification = Specification({
                 name='BaseItemTypesKey',
                 type='ulong',
                 key='BaseItemTypes.dat',
+                unique=True,
             ),
             Field(
                 name='RequiredJob_HeistJobsKey',

@@ -40,6 +40,7 @@ from PySide2.QtCore import *
 from PySide2.QtWidgets import *
 
 # self
+from PyPoE.poe.file.file_system import FileSystem
 from PyPoE.ui.shared.file.handler import DatStyle
 from PyPoE.ui.shared.file.manager import FileDataManager
 
@@ -69,9 +70,11 @@ if __name__ == '__main__':
     frame = QMainWindow()
     frame.setMinimumSize(2000, 1000)
 
-    f = 'GrantedEffectQualityTypes.dat'
-    with open('C:/Temp/Data/' + f, 'rb') as file:
-        data = file.read()
+    fs = FileSystem(r'M:\Steam\steamapps\common\Path of Exile')
+
+    f = 'HeistEquipment.dat'
+
+    data = fs.get_file('Data/' + f)
     #for item in dir(o):
      #   print(item, getattr(o, item))
     fm = FileDataManager(None)

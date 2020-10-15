@@ -712,6 +712,8 @@ class ItemsParser(SkillParserShared):
             'Metadata/Items/MicrotransactionItemEffects/Microtransaction'
             'ScholarBoots': ' (microtransaction)',
             'Metadata/Items/Pets/DemonLion': ' (Pet)',
+            'Metadata/Items/MicrotransactionItemEffects/MicrotransactionHooded'
+            'Cloak': ' (microtransaction)',
             # =================================================================
             # Quest items
             # =================================================================
@@ -739,6 +741,10 @@ class ItemsParser(SkillParserShared):
                 ' (2 of 3)',
             'Metadata/Items/QuestItems/MapUpgrades/MapUpgradeTier10_3':
                 ' (3 of 3)',
+            # =================================================================
+            # Misc
+            # =================================================================
+            'Metadata/Items/Heist/HeistEquipmentCloak3': '',
         },
         'Russian': {
             # =================================================================
@@ -1552,6 +1558,14 @@ class ItemsParser(SkillParserShared):
         'Metadata/Items/MapFragments/BreachFragmentPhysical',
         'Metadata/Items/MapFragments/BreachFragmentChaos',
         'Metadata/Items/Labyrinth/OfferingToTheGoddess',
+
+        #
+        # Misc
+        #
+        'Metadata/Items/Heist/HeistEquipmentToolTest',
+        'Metadata/Items/Heist/HeistEquipmentWeaponTest',
+        'Metadata/Items/Heist/HeistEquipmentUtilityTest',
+        'Metadata/Items/Heist/HeistEquipmentRewardTest',
     }
 
     _attribute_map = OrderedDict((
@@ -2316,6 +2330,33 @@ class ItemsParser(SkillParserShared):
         row_index=True,
     )
 
+    _type_heist_contract = _type_factory(
+        data_file='HeistContracts.dat',
+        data_mapping=(
+            ('HeistAreasKey', {
+                'template': 'heist_area_id',
+                'format': lambda v: v['Id'],
+            }),
+        ),
+        row_index=True,
+    )
+
+    _type_heist_equipment = _type_factory(
+        data_file='HeistEquipment.dat',
+        data_mapping=(
+            ('RequiredJob_HeistJobsKey', {
+                'template': 'heist_required_job_id',
+                'format': lambda v: v['Id'],
+                'condition': lambda v: v,
+            }),
+            ('RequiredLevel', {
+                'template': 'heist_required_job_level',
+                'condition': lambda v: v > 0,
+            }),
+        ),
+        row_index=True,
+    )
+
     _cls_map = {
         # Jewellery
         'Amulet': (_type_amulet, ),
@@ -2376,6 +2417,15 @@ class ItemsParser(SkillParserShared):
         'QuestItem': (),
         'AtlasRegionUpgradeItem': (),
         'MetamorphosisDNA': (),
+        # heist league
+        'HeistContract': (_type_heist_contract, ),
+        'HeistEquipmentWeapon': (_type_heist_equipment, ),
+        'HeistEquipmentTool': (_type_heist_equipment, ),
+        'HeistEquipmentUtility': (_type_heist_equipment, ),
+        'HeistEquipmentReward': (_type_heist_equipment, ),
+        'HeistBlueprint': (),
+        'Trinket': (),
+        'HeistObjective': (),
     }
 
     _conflict_active_skill_gems_map = {
