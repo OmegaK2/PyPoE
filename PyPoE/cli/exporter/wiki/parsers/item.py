@@ -2818,6 +2818,10 @@ class ItemsParser(SkillParserShared):
             if m_id in self._DROP_DISABLED_ITEMS_BY_ID:
                 infobox['drop_enabled'] = False
 
+            inventory_icon = infobox.get('inventory_icon') or page
+            if ':' in inventory_icon:
+                infobox['inventory_icon'] = inventory_icon.replace(':', '')
+
             cond = ItemWikiCondition(
                 data=infobox,
                 cmdargs=parsed_args,

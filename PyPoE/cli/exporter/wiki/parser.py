@@ -62,7 +62,7 @@ from functools import partial
 # self
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.exporter import config
-from PyPoE.cli.exporter.util import get_content_path
+from PyPoE.cli.exporter.util import get_content_path, fix_path
 from PyPoE.poe.constants import MOD_DOMAIN, WORDLISTS, MOD_STATS_RANGE
 from PyPoE.poe.text import parse_description_tags
 from PyPoE.poe.file.dat import RelationalReader, set_default_spec
@@ -1534,6 +1534,7 @@ class BaseParser:
         )
 
     def _write_dds(self, data, out_path, parsed_args):
+        out_path = fix_path(out_path)
         with open(out_path, 'wb') as f:
             f.write(self.file_system.extract_dds(data))
 

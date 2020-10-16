@@ -32,6 +32,7 @@ See PyPoE/LICENSE
 # Python
 import os
 import time
+import re
 from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor
 from requests.exceptions import HTTPError
@@ -47,7 +48,7 @@ from PyPoE import __version__
 from PyPoE.cli.core import console, Msg
 from PyPoE.cli.handler import BaseHandler
 from PyPoE.cli.exporter import config
-from PyPoE.cli.exporter.util import check_hash
+from PyPoE.cli.exporter.util import fix_path
 
 # =============================================================================
 # Globals
@@ -263,10 +264,6 @@ class ExporterHandler(BaseHandler):
 
     def get_wrap(self, cls, func, handler, wiki_handler):
         def wrapper(pargs, *args, **kwargs):
-            # Check Hash
-            if not check_hash():
-                console('Game file hash mismatch. Please rerun setup.', msg=Msg.error)
-                return -1
             # Check outdir, if specified:
             if hasattr(pargs, 'outdir') and pargs.outdir:
                 out_dir = pargs.outdir
@@ -297,7 +294,7 @@ class ExporterHandler(BaseHandler):
                         console(text)
 
                     if pargs.write:
-                        out_path = os.path.join(out_dir, item['out_file'])
+                        out_path = fix_path(item['out_file'])
                         console('Writing data to "%s"...' % out_path)
                         with open(out_path, 'w', encoding='utf-8') as f:
                             f.write(text)
