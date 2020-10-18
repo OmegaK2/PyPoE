@@ -131,6 +131,8 @@ class WikiCondition(parser.WikiCondition):
         'drop_text',
         'drop_monsters',
         'upgraded_from_disabled',
+        'is_drop_restricted',
+        'influences',
 
         # Item flags
         'is_corrupted',
