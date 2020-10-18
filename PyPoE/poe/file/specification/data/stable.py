@@ -7593,6 +7593,10 @@ specification = Specification({
                 name='Unknown34',
                 type='int',
             ),
+            Field(
+                name='Unknown35',
+                type='int',
+            ),
         ),
     ),
     'ExpandingPulse.dat': File(
@@ -8627,6 +8631,14 @@ specification = Specification({
             Field(
                 name='Weight',
                 type='int',
+            ),
+            Field(
+                name='Unknown0',
+                type='ref|list|int',
+            ),
+            Field(
+                name='Unknown1',
+                type='ref|list|int',
             ),
         ),
     ),
@@ -10555,6 +10567,10 @@ specification = Specification({
             ),
             Field(
                 name='Unknown1',
+                type='int',
+            ),
+            Field(
+                name='Unknown2',
                 type='int',
             ),
         ),
@@ -18393,10 +18409,9 @@ specification = Specification({
                 name='Unknown12',
                 type='int',
             ),
-            # TODO 3.12
             Field(
-                name='Key3',
-                type='ulong',
+                name='Unknown13',
+                type='int',
             ),
         ),
     ),
