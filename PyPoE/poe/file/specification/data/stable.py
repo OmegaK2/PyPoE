@@ -2392,7 +2392,7 @@ specification = Specification({
                 key='BestiaryCapturableMonsters.dat',
             ),
             Field(
-                name='Flag2',
+                name='IsDisabled',
                 type='bool',
             ),
             Field(
@@ -20076,13 +20076,20 @@ specification = Specification({
                 name='IsLocal',
                 type='bool',
             ),
-            # true iff MainHandAlias_StatsKey and/or OffHandAlias_StatsKey are not None
+            # true if MainHandAlias_StatsKey and/or OffHandAlias_StatsKey are not None
             Field(
                 name='IsWeaponLocal',
                 type='bool',
             ),
+            # 1 - Percent
+            # 2 - Maximum (value as-is)
+            # 3 - Value as-is
+            # 4 - State/Status/Tag (IsValueUsed=false)
+            # 5 - Maximum (percent)
+            # 6 - Permyriad
+            # NOTE: StatSemantics.dat has 6 rows
             Field(
-                name='Unknown0',
+                name='Semantics',
                 type='int',
             ),
             Field(
@@ -20098,7 +20105,7 @@ specification = Specification({
                 type='bool',
             ),
             Field(
-                name='Flag6',
+                name='IsVirtual',
                 type='bool',
             ),
             # for some reason ints... maybe cause same file?
@@ -20144,7 +20151,7 @@ specification = Specification({
             ),
             # 3.9.0
             Field(
-                name='Flag10',
+                name='IsValueUsed',
                 type='bool',
             ),
         ),
