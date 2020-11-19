@@ -52,11 +52,11 @@ specification = Specification({
                 type='ref|string',
             ),
             Field(
-                name='Unknown1',
+                name='MinLevel',
                 type='int',
             ),
             Field(
-                name='Unknown2',
+                name='MaxLevel',
                 type='int',
             ),
             Field(
@@ -77,8 +77,9 @@ specification = Specification({
                 type='int',
             ),
             Field(
-                name='Keys0',
+                name='SpawnsMonstersKeys',
                 type='ref|list|ulong',
+                key='MonsterVarieties.dat',
             ),
             Field(
                 name='Unknown9',
@@ -89,8 +90,9 @@ specification = Specification({
                 type='int',
             ),
             Field(
-                name='Key0',
+                name='SubAreaKey',
                 type='ulong',
+                key='WorldAreas.dat',
             ),
             Field(
                 name='Unknown12',
@@ -214,7 +216,7 @@ specification = Specification({
                 key_offset=1,
             ),
             Field(
-                name='Unknown1',
+                name='AchievementsRequired',
                 type='int',
             ),
             Field(
@@ -223,7 +225,7 @@ specification = Specification({
                 key='BaseItemTypes.dat',
             ),
             Field(
-                name='Unknown2',
+                name='AchievementsForTotemPiece',
                 type='int',
             ),
             Field(
@@ -286,7 +288,7 @@ specification = Specification({
                 type='bool',
             ),
             Field(
-                name='Flag1',
+                name='HideAchievementItems',
                 type='bool',
             ),
             Field(
@@ -294,15 +296,15 @@ specification = Specification({
                 type='bool',
             ),
             Field(
-                name='Unknown3',
+                name='MinCompletedItems',
                 type='int',
             ),
             Field(
-                name='Flag3',
+                name='TwoColumnLayout',
                 type='bool',
             ),
             Field(
-                name='Flag4',
+                name='ShowItemCompletionsAsOne',
                 type='bool',
             ),
             Field(
@@ -310,11 +312,11 @@ specification = Specification({
                 type='ref|string',
             ),
             Field(
-                name='Flag5',
+                name='SoftcoreOnly',
                 type='bool',
             ),
             Field(
-                name='Flag6',
+                name='HardcoreOnly',
                 type='bool',
             ),
             Field(
@@ -694,8 +696,14 @@ specification = Specification({
     'AfflictionFixedMods.dat': File(
         fields=(
             Field(
-                name='Key0',
+                name='RarityKey',
                 type='ulong',
+                key='Rarity.dat',
+                key_offset=1,
+            ),
+            Field(
+                name='Unknown0',
+                type='int',
             ),
             Field(
                 name='ModsKey',
@@ -1731,11 +1739,11 @@ specification = Specification({
                 type='int',
             ),
             Field(
-                name='Unknown3',
+                name='MinTier',
                 type='int',
             ),
             Field(
-                name='Unknown4',
+                name='MaxTier',
                 type='int',
             ),
             Field(
@@ -3338,8 +3346,9 @@ specification = Specification({
                 type='ref|string',
             ),
             Field(
-                name='Key0',
+                name='EncounterTypeKey',
                 type='ulong',
+                key='BlightEncounterTypes.dat',
             ),
             Field(
                 name='Unknown2',
@@ -4998,7 +5007,7 @@ specification = Specification({
                 type='bool',
             ),
             Field(
-                name='Command2',
+                name='EnglishCommand',
                 type='ref|string',
             ),
             Field(
