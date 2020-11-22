@@ -11407,14 +11407,15 @@ specification = Specification({
     ),
     'IndexableSupportGems.dat': File(
         fields=(
+            # used by `display_indexable_support` quantifier
             Field(
-                name='Unknown0',
+                name='Index',
                 type='int',
             ),
             Field(
-                name='BaseItemTypesKey',
+                name='SkillGemsKey',
                 type='ulong',
-                key='BaseItemTypes.dat',
+                key='SkillGems.dat',
             ),
             Field(
                 name='Name',
@@ -19603,7 +19604,7 @@ specification = Specification({
             ),
             Field(
                 name='VaalVariant_BaseItemTypesKey',
-                type='long',
+                type='ulong',
                 key='BaseItemTypes.dat',
             ),
             Field(
@@ -19644,19 +19645,20 @@ specification = Specification({
                 name='Flag2',
                 type='bool',
             ),
-            Field(
-                name='Flag2',
-                type='bool',
-            ),
             # 3.12
             Field(
                 name='Flag3',
                 type='bool',
             ),
-            # TODO 3.12
             Field(
-                name='Key0',
-                type='ulong',
+                name='AwakenedVariantKey',
+                type='ref|generic',
+                key='SkillGems.dat',
+            ),
+            Field(
+                name='RegularVariantKey',
+                type='ref|generic',
+                key='SkillGems.dat',
             ),
         ),
     ),
