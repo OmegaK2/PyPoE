@@ -2300,14 +2300,13 @@ specification = Specification({
                 key='BaseItemTypes.dat',
             ),
             Field(
-                name='IsBlessing',
+                name='Flag1',
                 type='bool',
             ),
-            # TODO 3.12
-            # mtx related?
             Field(
-                name='Key0',
+                name='ItemShopTypeKey',
                 type='ulong',
+                key='ItemShopType.dat',
             ),
             # harvest related?
             Field(
@@ -3310,9 +3309,8 @@ specification = Specification({
     ),
     'BlightCraftingUniques.dat': File(
         fields=(
-            # TODO: ItemVisualIdentity?
             Field(
-                name='Unknown0',
+                name='Key0',
                 type='ulong',
             ),
         ),
@@ -11596,7 +11594,7 @@ specification = Specification({
                 key='Tags.dat',
             ),
             Field(
-                name='Flag0',
+                name='RemovedIfLeavesArea',
                 type='bool',
             ),
             Field(
@@ -11652,7 +11650,7 @@ specification = Specification({
             ),
             #3.12
             Field(
-                name='Flag4',
+                name='CannotStoreInStash',
                 type='bool',
             ),
         ),
@@ -16175,11 +16173,11 @@ specification = Specification({
             ),
             Field(
                 name='Unknown15',
-                type='int',
+                type='ref|string',
             ),
             Field(
                 name='Unknown16',
-                type='int',
+                type='ref|string',
             ),
             Field(
                 name='ModelSizeMultiplier',
@@ -16366,16 +16364,16 @@ specification = Specification({
                 type='int',
             ),
             Field(
-                name='Unknown72',
+                name='Hash',
                 type='int',
             ),
             Field(
                 name='Flag1',
-                type='byte',
+                type='bool',
             ),
             Field(
                 name='Unknown73',
-                type='int',
+                type='ref|string',
             ),
             Field(
                 name='KillWhileOnslaughtIsActive_AchievementItemsKey',
@@ -16444,7 +16442,7 @@ specification = Specification({
             ),
             Field(
                 name='Flag2',
-                type='byte',
+                type='bool',
             ),
             Field(
                 name='Keys2',
@@ -16452,15 +16450,15 @@ specification = Specification({
             ),
             Field(
                 name='Flag3',
-                type='byte',
+                type='bool',
             ),
             Field(
                 name='Flag4',
-                type='byte',
+                type='bool',
             ),
             Field(
                 name='Flag5',
-                type='byte',
+                type='bool',
             ),
             Field(
                 name='Unknown100',
@@ -16472,7 +16470,7 @@ specification = Specification({
             ),
             Field(
                 name='Unknown102',
-                type='int',
+                type='float',
             ),
             Field(
                 name='Unknown103',
@@ -16480,8 +16478,10 @@ specification = Specification({
             ),
             # 3.11
             Field(
-                name='Unknown104',
-                type='int',
+                name='EPKFile',
+                type='ref|string',
+                file_path=True,
+                file_ext='.epk',
             ),
             # 3.12
             Field(
@@ -16489,8 +16489,9 @@ specification = Specification({
                 type='int',
             ),
             Field(
-                name='Key3',
+                name='MonsterConditionalEffectPacksKey',
                 type='ulong',
+                key='MonsterConditionalEffectPacks.dat',
             ),
         ),
     ),
