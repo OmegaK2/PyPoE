@@ -47,7 +47,7 @@ except ImportError:
 
 # self
 from PyPoE.poe.file.dat import DatFile, DatValue
-from PyPoE.poe.file.ggpk import extract_dds
+import PyPoE.poe.file.file_system as file_system
 from PyPoE.ui.shared.proxy_filter_model import FilterMenu
 from PyPoE.ui.shared.table_context_menus import TableContextReadOnlyMenu
 from PyPoE.ui.shared.file.model import (
@@ -380,7 +380,7 @@ class DDSDataHandler(FileDataHandler):
         """
         file_bytes = file_data.read()
         try:
-            file_data = io.BytesIO(extract_dds(file_bytes))
+            file_data = io.BytesIO(file_system.extract_dds(file_bytes))
         except NotImplementedError as e:
             raise DDSDataHandler.DDSException(*e.args)
         except ValueError as e:
