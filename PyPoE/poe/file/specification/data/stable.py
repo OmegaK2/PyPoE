@@ -2222,7 +2222,7 @@ specification = Specification({
                 # key='ModDomains.dat',
             ),
             Field(
-                name='Flag0',
+                name='IsDropDisabled',
                 type='bool',
             ),
             Field(
