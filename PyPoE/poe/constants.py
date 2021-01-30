@@ -678,6 +678,8 @@ class MOD_DOMAIN(IntEnumOverride):
         TODO
     HEIST_TRINKET
         TODO
+    UNKNOWN4
+        TODO
     UNDEFINED
         TODO
     """
@@ -706,7 +708,8 @@ class MOD_DOMAIN(IntEnumOverride):
     HEIST_AREA = 22
     HEIST_NPC = 23
     HEIST_TRINKET = 24
-    UNDEFINED = 25
+    UNKNOWN4 = 25
+    UNDEFINED = 26
 
     # legacy names
     MASTER = CRAFTED
