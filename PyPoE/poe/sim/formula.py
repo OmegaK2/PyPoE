@@ -194,6 +194,8 @@ def gem_stat_requirement(level, gtype=GemTypes.support, multi=100):
             a = 2.1
             # can't find a good a for 8
             b = 7.75
+        elif multi == 75:
+            a = 1.6
         elif multi == 60:
             a = 1.325
         elif multi == 40:
