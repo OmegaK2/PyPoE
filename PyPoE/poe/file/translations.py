@@ -2026,16 +2026,19 @@ def install_data_dependant_quantifiers(relational_reader):
         :class:`RelationalReader` instance to read the required game data
         files from.
     """
-    def _mod_value_to_item_class_reverse( value):
-        for row in relational_reader['ItemClasses.dat']:
-            if row['Name'] == value:
-                return row.rowid
-        return None
+
+    def _get_reverse_lookup_from_reader(relational_reader, key):
+        def _get_from_value(value):
+            for row in relational_reader:
+                if row[key] == value:
+                    return row.rowid
+        return _get_from_value
+
 
     TranslationQuantifier(
         id='mod_value_to_item_class',
         handler=lambda v: relational_reader['ItemClasses.dat'][v]['Name'],
-        reverse_handler=_mod_value_to_item_class_reverse,
+        reverse_handler=_get_reverse_lookup_from_reader(relational_reader['ItemClasses.dat'], 'Name'),
     )
 
     def _tempest_mod_text_reverse(value):
@@ -2043,7 +2046,7 @@ def install_data_dependant_quantifiers(relational_reader):
         for row in relational_reader['Mods.dat']:
             if row['GenerationType'] != MOD_GENERATION_TYPE.TEMPEST:
                 continue
-            if row['Name'] == value:
+            if row['Name'] == value: 
                 results.append(row.rowid)
 
         if len(results) == 1:
@@ -2057,6 +2060,43 @@ def install_data_dependant_quantifiers(relational_reader):
         id='tempest_mod_text',
         handler=lambda v: relational_reader['Mods.dat'][v]['Name'],
         reverse_handler=_tempest_mod_text_reverse,
+    )
+
+
+    def _get_reverse_lookup_from_reader(relational_reader, key):
+        def _get_from_value(value):
+            for row in relational_reader:
+                if row[key] == value:
+                    return row.rowid
+        return _get_from_value
+
+
+    TranslationQuantifier(
+        id='display_indexable_support',
+        handler=lambda v: relational_reader['IndexableSupports.dat'][v]['Name'],
+        reverse_handler=_get_reverse_lookup_from_reader(relational_reader['IndexableSupports.dat'], 'Name'),
+    )
+
+
+    TranslationQuantifier(
+        id='tree_expansion_jewel_passive',
+        handler=lambda v: relational_reader['Data/PassiveTreeExpansionJewelSizes.dat'][v]['Name'],
+        reverse_handler=_get_reverse_lookup_from_reader(relational_reader['Data/PassiveTreeExpansionJewelSizes.dat'], 'Name'),
+    )
+
+    
+    TranslationQuantifier(
+        id='affliction_reward_type',
+        handler=lambda v: relational_reader['Data/AfflictionRewardTypeVisuals.dat'][v]['Name'],
+        reverse_handler=_get_reverse_lookup_from_reader(relational_reader['Data/AfflictionRewardTypeVisuals.dat'], 'Name'),
+    )
+
+    # I believe this is currently not right, as the handler actually uses a value located in additionalProperties of the item, and 
+    # not in the mod itself. THe mod itself has min = max = 0.
+    TranslationQuantifier(
+        id='passive_hash',
+        handler=lambda v: relational_reader['Data/PassiveSkills.dat'][v]['PassiveSkillGraphId'],
+        reverse_handler=_get_reverse_lookup_from_reader(relational_reader['Data/PassiveSkills.dat'], 'PassiveSkillGraphId'),
     )
 
     TQReminderString(relational_reader=relational_reader)
@@ -2286,6 +2326,23 @@ TranslationQuantifier(
 TranslationQuantifier(
     id='tempest_mod_text',
 )
+
+TranslationQuantifier(
+    id='display_indexable_support',
+)
+
+TranslationQuantifier(
+    id='tree_expansion_jewel_passive',
+)
+
+TranslationQuantifier(
+    id='affliction_reward_type',
+)
+
+TranslationQuantifier(
+    id='passive_hash',
+)
+
 
 TranslationQuantifier(
     id='reminderstring',
