@@ -1,5 +1,8 @@
+**Development is currently discontinued**
+
 PyPoE
 ========
+
 Collection of Python Tools for [Path of Exile](https://www.pathofexile.com/).
 
 More detailed docs: [http://omegak2.net/poe/PyPoE/](http://omegak2.net/poe/PyPoE/)
