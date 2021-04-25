@@ -755,6 +755,12 @@ class ItemsParser(SkillParserShared):
 
             'Metadata/Items/Gems/SkillGemPortal':
                 ' (камень умения)',
+            'Metadata/Items/Gems/SkillGemPunishment':
+                '',
+            'Metadata/Items/Gems/SkillGemDesecrate':
+                '',
+            'Metadata/Items/Gems/SkillGemShockNova':
+                '',
             # =================================================================
             # One Hand Axes
             # =================================================================
@@ -762,12 +768,19 @@ class ItemsParser(SkillParserShared):
             'Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/OneHandAxe22':
                 '',
             # =================================================================
+            # Two Hand Swords
+            # =================================================================
+
+            'Metadata/Items/Weapons/TwoHandWeapons/TwoHandSwords/TwoHand'
+            'Sword13': '',
+            # =================================================================
             # Boots
             # =================================================================
 
             'Metadata/Items/Armours/Boots/BootsInt4': '',
             # Legion Boots
             'Metadata/Items/Armours/Boots/BootsStrInt7': '',
+            'Metadata/Items/Armours/Boots/BootsStrInt8': '',
             'Metadata/Items/Armours/Boots/BootsAtlas1':
                 ' (сопротивление холоду и молнии)',
             'Metadata/Items/Armours/Boots/BootsAtlas2':
@@ -778,13 +791,20 @@ class ItemsParser(SkillParserShared):
             # Gloves
             # =================================================================
 
+            'Metadata/Items/Armours/Helmets/HelmetStrInt4': '',
+            # =================================================================
+            # Helmets
+            # =================================================================
+
             # Legion Gloves
             'Metadata/Items/Armours/Gloves/GlovesStrInt7': '',
+            'Metadata/Items/Armours/Gloves/GlovesStrInt8': '',
             # =================================================================
             # Quivers
             # =================================================================
 
             'Metadata/Items/Quivers/QuiverDescent': ' (Спуск)',
+            'Metadata/Items/Quivers/Quiver6': '',
             # =================================================================
             # Rings
             # =================================================================
@@ -1020,6 +1040,18 @@ class ItemsParser(SkillParserShared):
                 ' (7 из 8)',
             'Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade4_8':
                 ' (8 из 8)',
+            'Metadata/Items/QuestItems/Act4/Organ2':
+                '',
+            # =================================================================
+            # Harvest Infrastructure
+            # =================================================================
+
+            'Metadata/Items/Harvest/HarvestPole': '',
+            # =================================================================
+            # Heist Objective
+            # =================================================================
+
+            'Metadata/Items/Heist/HeistFinalObjective12': ' (предмет кражи)',
         },
         'German': {
             # =================================================================
